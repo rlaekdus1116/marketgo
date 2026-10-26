@@ -1,0 +1,944 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>시장에 가면</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+:root{
+  --bg:#FFF9F4; --ink:#5B4B57; --sub:#A3919C; --line:#F2E6EC; --card:#FFFFFF;
+  --pink:#FFE3EA; --pinkD:#F4A9BD; --mint:#DDF5EA; --mintD:#8FD5B5;
+  --lemon:#FFF5CC; --lemonD:#F2D477; --lav:#ECE5FF; --lavD:#B8A7EE;
+  --sky:#E0F0FF; --skyD:#93C4EE; --peach:#FFE9DA; --peachD:#F5B48C;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;min-height:100%}
+body{
+  font-family:'Jua',sans-serif;color:var(--ink);
+  background:var(--bg);
+  background-image:radial-gradient(#F6E3EA 1.4px,transparent 1.4px);
+  background-size:22px 22px;
+}
+button{font-family:inherit;color:inherit;cursor:pointer;border:none}
+input{font-family:inherit;color:var(--ink)}
+.wrap{max-width:1100px;margin:0 auto;padding:18px 16px 40px}
+.muted{color:var(--sub)}
+.center{text-align:center}
+.card{background:var(--card);border:2px solid var(--line);border-radius:26px;padding:18px 20px;box-shadow:0 6px 0 var(--line)}
+.btn{background:var(--pink);border-radius:20px;padding:14px 22px;font-size:20px;box-shadow:0 5px 0 var(--pinkD);transition:transform .08s}
+.btn:active{transform:translateY(4px);box-shadow:0 1px 0 var(--pinkD)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.mint{background:var(--mint);box-shadow:0 5px 0 var(--mintD)}
+.btn.lemon{background:var(--lemon);box-shadow:0 5px 0 var(--lemonD)}
+.btn.lav{background:var(--lav);box-shadow:0 5px 0 var(--lavD)}
+.btn.sky{background:var(--sky);box-shadow:0 5px 0 var(--skyD)}
+.btn.big{font-size:28px;padding:18px 36px}
+.btn.sm{font-size:15px;padding:8px 14px;border-radius:14px;box-shadow:0 3px 0 var(--pinkD)}
+.btn.sm.mint{box-shadow:0 3px 0 var(--mintD)} .btn.sm.lav{box-shadow:0 3px 0 var(--lavD)} .btn.sm.sky{box-shadow:0 3px 0 var(--skyD)} .btn.sm.lemon{box-shadow:0 3px 0 var(--lemonD)}
+.title{font-size:44px;margin:6px 0;letter-spacing:1px}
+.title span{color:var(--pinkD)}
+.topbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+.topbar .logo{font-size:26px;margin-right:auto}
+.pill{background:#fff;border:2px solid var(--line);border-radius:999px;padding:6px 14px;font-size:16px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{display:inline-flex;align-items:center;gap:6px;background:var(--lemon);border-radius:999px;padding:7px 8px 7px 14px;font-size:18px}
+.chip small{color:var(--sub);font-size:13px}
+.chip.soft{background:var(--sky);padding:6px 14px}
+.chip .x{background:#fff;border-radius:50%;width:24px;height:24px;font-size:15px;line-height:24px;padding:0}
+.lobby{display:grid;grid-template-columns:300px 1fr;gap:16px}
+@media (max-width:820px){.lobby{grid-template-columns:1fr}}
+.bigcode{font-size:72px;letter-spacing:8px;color:var(--pinkD);line-height:1}
+#qr{display:flex;justify-content:center;margin:14px 0}
+#qr img,#qr canvas{border:10px solid #fff;border-radius:14px}
+h3{margin:0 0 12px;font-size:22px;font-weight:normal}
+.stage{min-height:62vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:16px}
+.chant{font-size:52px;color:var(--sub)}
+.itemCard{background:#fff;border:4px solid var(--pink);border-radius:40px;padding:30px 60px;font-size:96px;box-shadow:0 10px 0 var(--pinkD);min-width:50%}
+.itemCard .tail{display:block;font-size:40px;color:var(--sub);margin-top:4px}
+.author{font-size:30px;background:var(--lav);border-radius:999px;padding:6px 20px}
+.pop{animation:pop .35s cubic-bezier(.2,1.6,.4,1)}
+@keyframes pop{0%{transform:scale(.4);opacity:0}100%{transform:scale(1);opacity:1}}
+.beatRow{display:flex;gap:14px;justify-content:center}
+.beatDot{width:34px;height:34px;border-radius:50%;background:var(--line);transition:transform .08s,background .08s}
+.beatDot.on{transform:scale(1.35);background:var(--pinkD)}
+.beatDot.on.c{background:var(--mintD)}
+.prog{font-size:24px;color:var(--sub)}
+.roundBadge{display:inline-block;background:var(--lemon);border-radius:999px;padding:8px 22px;font-size:24px;box-shadow:0 4px 0 var(--lemonD)}
+.bigEmoji{font-size:110px;line-height:1}
+.rule{font-size:28px;line-height:1.5}
+.timer{font-size:120px;line-height:1;color:var(--pinkD)}
+.bar{height:22px;background:var(--line);border-radius:999px;overflow:hidden;width:100%}
+.bar>i{display:block;height:100%;background:linear-gradient(90deg,var(--mintD),var(--skyD));border-radius:999px;transition:width .2s linear}
+.bar.hurry>i{background:linear-gradient(90deg,var(--peachD),var(--pinkD))}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media (max-width:820px){.grid2{grid-template-columns:1fr}}
+.ansList{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px}
+.ans{background:var(--sky);border-radius:18px;padding:10px 14px;font-size:22px}
+.ans small{display:block;font-size:14px;color:var(--sub)}
+.ans .n{display:inline-block;background:#fff;border-radius:50%;width:28px;height:28px;text-align:center;line-height:28px;font-size:15px;margin-right:6px}
+.rank{display:flex;align-items:center;gap:12px;font-size:26px;padding:8px 6px;border-bottom:2px dashed var(--line)}
+.rank b{font-weight:normal;margin-left:auto;color:var(--pinkD)}
+.medal{font-size:32px;width:42px;text-align:center}
+.hl{background:var(--lemon);border-radius:20px;padding:14px 18px;font-size:22px;line-height:1.5;margin-top:12px}
+.hl.lav{background:var(--lav)} .hl.mint{background:var(--mint)}
+/* student */
+.s-wrap{max-width:1000px;margin:0 auto;padding:14px 14px 40px}
+.s-top{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.s-top .me{margin-right:auto;font-size:20px}
+.field{width:100%;font-size:26px;padding:14px 18px;border-radius:18px;border:3px solid var(--line);background:#fff;outline:none}
+.field:focus{border-color:var(--pinkD)}
+.slots{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+.slot{min-width:92px;padding:10px 12px;border-radius:16px;background:#fff;border:3px dashed var(--line);font-size:19px;text-align:center}
+.slot .k{display:block;font-size:12px;color:var(--sub)}
+.slot.f{border-style:solid;border-color:var(--mintD);background:var(--mint)}
+.slot.gift{border-style:solid;border-color:var(--lemonD);background:var(--lemon)}
+.slot.cur{border-color:var(--pinkD);border-style:solid;animation:blink 1s infinite}
+@keyframes blink{50%{background:var(--pink)}}
+.opts{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px}
+.opt{background:#fff;border:3px solid var(--line);border-radius:18px;padding:16px 8px;font-size:22px;box-shadow:0 4px 0 var(--line)}
+.opt:active{transform:translateY(3px);box-shadow:none}
+.opt.used{opacity:.25;pointer-events:none}
+.tgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
+.tin{width:100%;font-size:22px;padding:12px 14px;border-radius:16px;border:3px solid var(--line);background:#fff;outline:none}
+.tin:focus{border-color:var(--pinkD)}
+.tin[readonly]{background:var(--lemon);border-color:var(--lemonD)}
+.tlab{font-size:13px;color:var(--sub);margin:0 0 3px 6px}
+.doneBox{background:var(--mint);border-radius:24px;padding:22px;font-size:28px;text-align:center;margin-top:14px}
+.luck{perspective:800px;margin:16px auto;width:240px;height:150px}
+.luck .in{position:relative;width:100%;height:100%;transition:transform .8s;transform-style:preserve-3d;animation:flip 1s .4s forwards}
+@keyframes flip{to{transform:rotateY(180deg)}}
+.luck .fa,.luck .ba{position:absolute;inset:0;border-radius:22px;display:flex;align-items:center;justify-content:center;font-size:30px;backface-visibility:hidden}
+.luck .fa{background:var(--lav)}
+.luck .ba{background:var(--lemon);transform:rotateY(180deg);flex-direction:column}
+.brk{display:flex;justify-content:space-between;font-size:22px;padding:6px 4px;border-bottom:2px dashed var(--line)}
+.score{font-size:64px;color:var(--pinkD)}
+.toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);background:#fff;border:3px solid var(--pinkD);border-radius:20px;padding:14px 22px;font-size:22px;z-index:99;box-shadow:0 6px 0 var(--pinkD);max-width:92vw;text-align:center}
+.shake{animation:shake .4s}
+@keyframes shake{20%,60%{transform:translateX(-8px)}40%,80%{transform:translateX(8px)}}
+.bounce{animation:bounce 1s infinite}
+@keyframes bounce{50%{transform:translateY(-10px)}}
+.toggle{display:inline-flex;align-items:center;gap:6px}
+.setup{max-width:640px;margin:60px auto;line-height:1.7;font-size:19px}
+.setup code{background:var(--lemon);padding:2px 6px;border-radius:6px;font-family:monospace;font-size:15px}
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script type="module">
+/* =========================================================
+   🔧 1) 여기에 파이어베이스 설정을 붙여 넣으세요
+   (파이어베이스 콘솔 → 프로젝트 설정 → 내 앱 → SDK 설정)
+   Realtime Database를 꼭 만들어 두고 databaseURL도 넣어야 해요.
+   ========================================================= */
+const firebaseConfig = {
+  apiKey: "AIzaSyDiehLZ1aKv8E3N_pD4bNmw0zgMexau99U",
+  authDomain: "marketgo-80ab5.firebaseapp.com",
+  // ⚠️ Realtime Database 화면 맨 위에 보이는 주소와 같아야 해요.
+  //    싱가포르(asia-southeast1)로 만들었다면 아래 주소로 바꾸세요:
+  //    https://marketgo-80ab5-default-rtdb.asia-southeast1.firebasedatabase.app
+  databaseURL: "https://marketgo-80ab5-default-rtdb.firebaseio.com",
+  projectId: "marketgo-80ab5",
+  storageBucket: "marketgo-80ab5.firebasestorage.app",
+  messagingSenderId: "666715038541",
+  appId: "1:666715038541:web:b0f84a9703aa70aeca4d04"
+};
+
+/* =========================================================
+   🎮 2) 라운드 설정 (원하면 숫자만 바꾸세요)
+   count: 외울 물건 수 / others: 다른 친구 물건 섞기 / traps: 함정 보기
+   bpm: 박자 빠르기 / per: 1개당 점수 / limit: 답 고르는 시간(초)
+   ========================================================= */
+const ROUNDS = [
+  {name:'정방향',   emoji:'🍎', desc:'나온 순서대로 눌러요!',                 count:10, others:6, traps:0, bpm:84,  per:10, reverse:false, typing:false, limit:60},
+  {name:'함정 주의', emoji:'🪤', desc:'비슷한 가짜가 숨어 있어요!',             count:12, others:4, traps:4, bpm:96,  per:10, reverse:false, typing:false, limit:60},
+  {name:'거꾸로',   emoji:'🔄', desc:'마지막 물건부터 거꾸로! 점수 3배!',       count:10, others:5, traps:5, bpm:104, per:30, reverse:true,  typing:false, limit:70},
+  {name:'직접 쓰기', emoji:'✍️', desc:'보기 없이 직접 써요! (오타 1글자는 봐줌)', count:8,  others:0, traps:0, bpm:96,  per:20, reverse:false, typing:true,  limit:90},
+];
+const COMBO_MIN = 5, COMBO_BONUS = 50;   // 5개 이상 연속 정답 보너스
+const BREAKER_PER = 3;                   // 내 물건을 친구 1명이 틀릴 때마다 +3
+const SPEED_MAX = 30;                    // 빨리 다 고르면 최대 +30
+const MIN_ITEMS = 6;                     // 게임 시작에 필요한 최소 물건 수
+
+const LOOK = {
+  '사과':['풋사과','사과즙'],'계란':['메추리알','달걀말이'],'달걀':['메추리알','계란말이'],'우유':['두유','딸기우유'],
+  '바나나':['바나나우유','몽키바나나'],'딸기':['산딸기','딸기잼'],'포도':['청포도','건포도'],'수박':['참외','멜론'],
+  '참외':['멜론','수박'],'귤':['한라봉','오렌지'],'오렌지':['귤','자몽'],'라면':['컵라면','짜파게티'],
+  '떡볶이':['로제떡볶이','떡꼬치'],'김밥':['참치김밥','꼬마김밥'],'치킨':['양념치킨','닭강정'],'피자':['피자빵','콤비네이션피자'],
+  '햄버거':['치즈버거','불고기버거'],'빵':['식빵','크림빵'],'식빵':['토스트','모닝빵'],'과자':['쿠키','비스킷'],
+  '사탕':['막대사탕','젤리'],'젤리':['곰젤리','사탕'],'콜라':['사이다','제로콜라'],'사이다':['콜라','환타'],
+  '고등어':['꽁치','갈치'],'생선':['물고기','고등어'],'배추':['양배추','배춧잎'],'양배추':['배추','적양배추'],
+  '감자':['고구마','감자칩'],'고구마':['감자','군고구마'],'당근':['무','당근주스'],'무':['당근','총각무'],
+  '양파':['대파','적양파'],'대파':['쪽파','양파'],'마늘':['생강','다진마늘'],'두부':['순두부','연두부'],
+  '돼지고기':['소고기','삼겹살'],'소고기':['돼지고기','한우'],'삼겹살':['목살','돼지고기'],'닭':['오리','병아리'],
+  '고양이':['강아지','아기고양이'],'강아지':['고양이','강아지인형'],'신발':['슬리퍼','운동화'],'운동화':['신발','실내화'],
+  '양말':['장갑','덧신'],'모자':['헬멧','털모자'],'가방':['지갑','책가방'],'휴대폰':['태블릿','핸드폰케이스'],
+  '연필':['샤프','색연필'],'지우개':['수정테이프','지우개가루'],'꽃':['화분','꽃다발'],'시계':['손목시계','알람시계'],
+  '아이스크림':['빙수','아이스크림콘'],'떡':['인절미','송편'],'호떡':['붕어빵','꿀호떡'],'붕어빵':['호떡','국화빵'],
+  '순대':['떡볶이','순대국'],'어묵':['오뎅','어묵탕'],'만두':['군만두','찐빵'],'우산':['양산','우비'],'장화':['장갑','운동화'],
+  '마라탕':['마라샹궈','마라떡볶이'],'탕후루':['딸기탕후루','샤인머스캣'],'샤인머스캣':['청포도','포도'],'두쫀쿠':['두바이초콜릿','쫀득쿠키'],
+};
+const RESERVE = ['사과','계란','바나나','라면','떡볶이','붕어빵','고등어','두부','양말','우산','김밥','호떡','수박','치킨','콜라','당근','만두','젤리','빗자루','장화','고무장갑','참기름','멸치','국자'];
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getDatabase, ref, set, get, update, onValue, runTransaction, remove, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+/* ---------------- 공통 ---------------- */
+const app = document.getElementById('app');
+const params = new URLSearchParams(location.search);
+const isTeacher = params.has('t');
+const el = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const rid = () => Math.random().toString(36).slice(2, 10);
+const shuffle = arr => { const a = [...arr]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+function norm(s){
+  let n = String(s || '').normalize('NFC').toLowerCase().replace(/[\s.,!?~'"`#$\[\]\/·\-_()^*:;]/g, '');
+  if (n.length > 2 && n.endsWith('들')) n = n.slice(0, -1);
+  return n;
+}
+function lev(a, b){
+  const m = a.length, n = b.length; const d = Array.from({length:m+1}, (_, i) => [i, ...Array(n).fill(0)]);
+  for (let j = 1; j <= n; j++) d[0][j] = j;
+  for (let i = 1; i <= m; i++) for (let j = 1; j <= n; j++)
+    d[i][j] = Math.min(d[i-1][j] + 1, d[i][j-1] + 1, d[i-1][j-1] + (a[i-1] === b[j-1] ? 0 : 1));
+  return d[m][n];
+}
+function fuzzyEq(a, b){
+  a = norm(a); b = norm(b);
+  if (!a || !b) return false;
+  if (a === b) return true;
+  if (Math.min(a.length, b.length) >= 3 && Math.abs(a.length - b.length) <= 1) return lev(a, b) <= 1;
+  return false;
+}
+let toastT;
+function toast(msg){
+  document.querySelectorAll('.toast').forEach(t => t.remove());
+  const t = document.createElement('div'); t.className = 'toast pop'; t.textContent = msg;
+  document.body.appendChild(t); clearTimeout(toastT); toastT = setTimeout(() => t.remove(), 2600);
+}
+const configured = firebaseConfig.databaseURL && !firebaseConfig.databaseURL.includes('여기');
+let db = null, offset = 0;
+const now = () => Date.now() + offset;
+if (configured) {
+  db = getDatabase(initializeApp(firebaseConfig));
+  onValue(ref(db, '.info/serverTimeOffset'), s => { offset = s.val() || 0; });
+  let connected = false;
+  onValue(ref(db, '.info/connected'), s => { connected = !!s.val(); });
+  setTimeout(() => { if (!connected) toast('⚠️ 데이터베이스에 연결이 안 돼요. Realtime Database 주소와 규칙을 확인해 주세요'); }, 7000);
+}
+
+/* ---------------- 박자 엔진 (쿵-짝) ---------------- */
+const Beat = {
+  ctx:null, master:null, noise:null, bpm:90, next:0, idx:0, timer:null, cb:null, gen:0, muted:false,
+  ensure(){
+    if (!this.ctx) {
+      const C = window.AudioContext || window.webkitAudioContext; this.ctx = new C();
+      this.master = this.ctx.createGain(); this.master.gain.value = 0.8; this.master.connect(this.ctx.destination);
+      const len = Math.floor(this.ctx.sampleRate * 0.3); const b = this.ctx.createBuffer(1, len, this.ctx.sampleRate);
+      const d = b.getChannelData(0); for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1; this.noise = b;
+    }
+    if (this.ctx.state === 'suspended') this.ctx.resume();
+  },
+  get running(){ return !!this.timer; },
+  start(bpm, cb){ this.ensure(); this.stop(); this.bpm = bpm; this.cb = cb; this.idx = 0; this.gen++; this.next = this.ctx.currentTime + 0.15; this.timer = setInterval(() => this.tick(), 25); },
+  setCb(cb){ this.cb = cb; },
+  stop(){ if (this.timer) clearInterval(this.timer); this.timer = null; this.gen++; },
+  tick(){
+    const ctx = this.ctx;
+    while (this.next < ctx.currentTime + 0.12) {
+      const i = this.idx, t = this.next, g = this.gen;
+      this.play(i, t);
+      setTimeout(() => { if (g === this.gen && this.cb) this.cb(i); }, Math.max(0, (t - ctx.currentTime) * 1000));
+      this.next += 60 / this.bpm; this.idx++;
+    }
+  },
+  play(i, t){ if (this.muted) return; if (i % 2 === 0) this.kick(t); else this.clap(t); this.shaker(t + 30 / this.bpm); },
+  kick(t){
+    const c = this.ctx, o = c.createOscillator(), g = c.createGain();
+    o.frequency.setValueAtTime(160, t); o.frequency.exponentialRampToValueAtTime(45, t + 0.16);
+    g.gain.setValueAtTime(0.9, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.28);
+    o.connect(g).connect(this.master); o.start(t); o.stop(t + 0.3);
+  },
+  clap(t){
+    const c = this.ctx;
+    [0, 0.012, 0.024].forEach((d, k) => {
+      const s = c.createBufferSource(); s.buffer = this.noise;
+      const f = c.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 1400; f.Q.value = 0.8;
+      const g = c.createGain(); const tt = t + d;
+      g.gain.setValueAtTime(0.0001, tt); g.gain.exponentialRampToValueAtTime(k === 2 ? 0.75 : 0.4, tt + 0.002);
+      g.gain.exponentialRampToValueAtTime(0.0001, tt + (k === 2 ? 0.15 : 0.02));
+      s.connect(f).connect(g).connect(this.master); s.start(tt); s.stop(tt + 0.2);
+    });
+  },
+  shaker(t){
+    const c = this.ctx, s = c.createBufferSource(); s.buffer = this.noise;
+    const f = c.createBiquadFilter(); f.type = 'highpass'; f.frequency.value = 7000;
+    const g = c.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.18, t + 0.003); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.05);
+    s.connect(f).connect(g).connect(this.master); s.start(t); s.stop(t + 0.08);
+  },
+  tone(freq, t, dur = 0.25, vol = 0.35, type = 'triangle'){
+    const c = this.ctx, o = c.createOscillator(), g = c.createGain(); o.type = type; o.frequency.value = freq;
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g).connect(this.master); o.start(t); o.stop(t + dur + 0.02);
+  },
+  ding(){ if (this.muted || !this.ctx) return; const ns = [523.25, 587.33, 659.25, 783.99, 880]; const t = this.ctx.currentTime; this.tone(ns[Math.floor(Math.random() * ns.length)], t); this.tone(ns[Math.floor(Math.random() * ns.length)] * 2, t + 0.07, 0.2, 0.12); },
+  fanfare(){ if (this.muted) return; this.ensure(); const t = this.ctx.currentTime; [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => this.tone(f, t + i * 0.11, 0.35, 0.3)); },
+};
+
+/* ---------------- 시작 ---------------- */
+if (!configured) {
+  app.innerHTML = `<div class="setup card">
+    <div class="title">🧺 시장에 <span>가면</span></div>
+    <p>파이어베이스 설정이 아직 없어요!</p>
+    <p>1. 파이어베이스 콘솔에서 <b>Realtime Database</b>를 만들어요.<br>
+       2. 프로젝트 설정 → 내 앱 → SDK 설정 값을 이 파일 위쪽 <code>firebaseConfig</code>에 붙여 넣어요.<br>
+       3. 선생님 화면: <code>주소?t=1</code> / 학생 화면: <code>주소</code></p>
+  </div>`;
+} else if (isTeacher) {
+  T_init();
+} else {
+  S_init();
+}
+
+/* =========================================================
+   👩‍🏫 선생님 화면
+   ========================================================= */
+let room = null, code = params.get('room'), tKey = '', finalizing = false, roundStarting = false;
+
+function T_init(){
+  if (!code) {
+    const saved = localStorage.getItem('market_teacher_room');
+    app.innerHTML = `<div class="wrap"><div class="stage">
+      <div class="bigEmoji bounce">🧺</div>
+      <div class="title">시장에 <span>가면</span></div>
+      <p class="muted" style="font-size:22px">모두가 같이 외우는 실시간 기억 게임</p>
+      <button class="btn big" data-act="newRoom">새 게임 만들기 ✨</button>
+      ${saved ? `<button class="btn sky" data-act="resume" data-code="${esc(saved)}">이어서 하기 (방 ${esc(saved)})</button>` : ''}
+    </div></div>`;
+    return;
+  }
+  localStorage.setItem('market_teacher_room', code);
+  onValue(ref(db, 'rooms/' + code), s => {
+    room = s.val();
+    if (!room) { app.innerHTML = `<div class="wrap stage"><p style="font-size:24px">방을 찾을 수 없어요 😢</p><button class="btn" data-act="newRoom">새 게임 만들기</button></div>`; tKey = ''; return; }
+    T_render();
+  });
+  setInterval(T_tick, 250);
+}
+
+async function T_newRoom(){
+  let c;
+  for (let i = 0; i < 15; i++) { c = String(Math.floor(1000 + Math.random() * 9000)); const s = await get(ref(db, 'rooms/' + c + '/state')); if (!s.exists()) break; }
+  await set(ref(db, 'rooms/' + c), { createdAt: Date.now(), state: { phase:'lobby', round:0, showNames:true, revealIdx:-1, answerEndsAt:0 } });
+  localStorage.setItem('market_teacher_room', c);
+  location.href = location.pathname + '?t=1&room=' + c;
+}
+
+function T_topbar(){
+  const st = room.state;
+  return `<div class="topbar">
+    <div class="logo">🧺 시장에 가면</div>
+    <span class="pill">방 코드 <b style="color:var(--pinkD)">${esc(code)}</b></span>
+    <button class="btn sm lav" data-act="toggleNames">${st.showNames ? '👤 이름 보이기 ON' : '🙈 이름 숨기기'}</button>
+    <button class="btn sm sky" data-act="toggleMute" id="muteBtn">${Beat.muted ? '🔇 소리 꺼짐' : '🔊 소리 켜짐'}</button>
+    <button class="btn sm" data-act="newGame">새 게임</button>
+  </div>`;
+}
+
+function T_render(){
+  const st = room.state;
+  const key = st.phase + ':' + st.round + ':' + st.showNames;
+  if (key !== tKey) { tKey = key; T_shell(); }
+  T_update();
+}
+
+function T_shell(){
+  const st = room.state, r = st.round, cfg = ROUNDS[r - 1];
+  if (st.phase === 'lobby') {
+    const url = location.origin + location.pathname + '?room=' + code;
+    app.innerHTML = `<div class="wrap">${T_topbar()}
+      <div class="lobby">
+        <div class="card center">
+          <h3>태블릿으로 들어와요!</h3>
+          <div class="muted">입장 코드</div>
+          <div class="bigcode">${esc(code)}</div>
+          <div id="qr"></div>
+          <div class="muted" style="font-size:13px;word-break:break-all">${esc(url)}</div>
+        </div>
+        <div style="display:grid;gap:16px;align-content:start">
+          <div class="card"><h3>🧺 시장 물건 <span id="itemCount" class="muted"></span></h3>
+            <div id="itemChips" class="chips"></div>
+            <div style="margin-top:12px"><button class="btn sm lemon" data-act="addReserve">➕ 예비 물건 5개 넣기</button></div>
+          </div>
+          <div class="card"><h3>🙋 들어온 친구 <span id="playerCount" class="muted"></span></h3><div id="playerChips" class="chips"></div></div>
+        </div>
+      </div>
+      <div class="center" style="margin-top:22px">
+        <button class="btn big mint" id="startBtn" data-act="startRound" data-r="1">1라운드 시작 ▶</button>
+        <p class="muted" id="startHint"></p>
+      </div></div>`;
+    if (window.QRCode) new QRCode(el('qr'), { text: url, width: 200, height: 200, colorDark: '#5B4B57', colorLight: '#ffffff' });
+  }
+  else if (st.phase === 'intro') {
+    app.innerHTML = `<div class="wrap">${T_topbar()}<div class="stage">
+      <span class="roundBadge">${r}라운드 / 4</span>
+      <div class="bigEmoji bounce">${cfg.emoji}</div>
+      <div class="title">${esc(cfg.name)}</div>
+      <div class="rule">${esc(cfg.desc)}<br>
+        <span class="muted">물건 ${room.rounds[r].seq.length}개 · 1개당 ${cfg.per}점 · 첫 칸은 선물 🎁</span></div>
+      <button class="btn big" data-act="playShow">▶ 박자 시작!</button>
+    </div></div>`;
+  }
+  else if (st.phase === 'show') {
+    app.innerHTML = `<div class="wrap">${T_topbar()}<div class="stage">
+      <span class="roundBadge">${r}라운드 · ${esc(cfg.name)}</span>
+      <div class="chant" id="chant">시장에 가면~</div>
+      <div id="itemSlot" style="min-height:220px;display:flex;flex-direction:column;align-items:center;gap:14px"></div>
+      <div class="beatRow">${[0,1,2,3].map(i => `<div class="beatDot" id="bd${i}"></div>`).join('')}</div>
+      <div class="prog" id="prog"></div>
+      ${Beat.running ? '' : `<button class="btn sky" data-act="playShow">▶ 처음부터 다시 보여주기</button>`}
+    </div></div>`;
+  }
+  else if (st.phase === 'answer') {
+    app.innerHTML = `<div class="wrap">${T_topbar()}<div class="stage">
+      <span class="roundBadge">${r}라운드 · ${esc(cfg.name)}</span>
+      <div class="rule">${cfg.reverse ? '⬅️ 거꾸로! 마지막 물건부터 눌러요' : cfg.typing ? '✍️ 순서대로 직접 써요' : '👆 순서대로 눌러요'}</div>
+      <div class="timer" id="tTimer">--</div>
+      <div class="bar" id="tBar" style="max-width:700px"><i></i></div>
+      <div class="beatRow">${[0,1,2,3].map(i => `<div class="beatDot" id="bd${i}"></div>`).join('')}</div>
+      <div class="rule" id="doneCount"></div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center">
+        ${Beat.running ? '' : `<button class="btn sky" data-act="resumeBeat">🥁 박자 켜기</button>`}
+        <button class="btn lemon" data-act="closeNow">⏹ 지금 마감</button>
+      </div>
+    </div></div>`;
+  }
+  else if (st.phase === 'result') {
+    app.innerHTML = `<div class="wrap">${T_topbar()}<div id="resultBody"></div></div>`;
+  }
+  else if (st.phase === 'end') {
+    app.innerHTML = `<div class="wrap">${T_topbar()}<div id="endBody"></div></div>`;
+    Beat.fanfare();
+  }
+}
+
+function T_update(){
+  const st = room.state, r = st.round;
+  if (st.phase === 'lobby') {
+    const items = Object.entries(room.items || {}).sort((a, b) => (a[1].at || 0) - (b[1].at || 0));
+    el('itemCount').textContent = items.length + '개';
+    el('itemChips').innerHTML = items.map(([id, it]) =>
+      `<span class="chip">${esc(it.text)}<small>${esc(it.author)}</small><button class="x" data-act="delItem" data-id="${id}" title="지우기">×</button></span>`).join('')
+      || '<p class="muted">학생들이 물건을 넣으면 여기에 쌓여요!</p>';
+    const ps = Object.values(room.players || {});
+    el('playerCount').textContent = ps.length + '명';
+    el('playerChips').innerHTML = ps.map(p => `<span class="chip soft">${esc(p.name)}</span>`).join('') || '<p class="muted">아직 아무도 없어요</p>';
+    el('startBtn').disabled = items.length < MIN_ITEMS;
+    el('startHint').textContent = items.length < MIN_ITEMS ? `물건이 ${MIN_ITEMS}개 이상 있어야 시작할 수 있어요` : '이상한 물건은 × 로 지우고 시작하세요';
+  }
+  else if (st.phase === 'answer') {
+    const total = Object.keys(room.players || {}).length;
+    const picks = (room.picks && room.picks[r]) || {};
+    const done = Object.values(picks).filter(p => p.doneAt).length;
+    el('doneCount').textContent = `✅ ${done} / ${total}명 완료`;
+  }
+  else if (st.phase === 'result') { el('resultBody').innerHTML = T_resultHTML(); }
+  else if (st.phase === 'end') { el('endBody').innerHTML = T_endHTML(); }
+}
+
+function T_tick(){
+  if (!room || room.state.phase !== 'answer') return;
+  const st = room.state, rem = st.answerEndsAt - now();
+  const cfg = ROUNDS[st.round - 1];
+  const t = el('tTimer'), bar = el('tBar');
+  if (t) t.textContent = Math.max(0, Math.ceil(rem / 1000));
+  if (bar) { bar.firstElementChild.style.width = Math.max(0, Math.min(100, rem / (cfg.limit * 1000) * 100)) + '%'; bar.classList.toggle('hurry', rem < 10000); }
+  const total = Object.keys(room.players || {}).length;
+  const picks = (room.picks && room.picks[st.round]) || {};
+  const done = Object.values(picks).filter(p => p.doneAt).length;
+  if (rem <= -500 || (total > 0 && done >= total)) T_finalize();
+}
+
+function beatVis(i){
+  for (let k = 0; k < 4; k++) { const d = el('bd' + k); if (d) d.className = 'beatDot' + (k === i % 4 ? ' on' + (i % 2 ? ' c' : '') : ''); }
+}
+
+function makeTraps(seqTexts, usedNorms, k){
+  const out = [], used = new Set(usedNorms), cands = [];
+  for (const t of shuffle(seqTexts)) { const list = LOOK[norm(t)]; if (list) cands.push(...list); }
+  for (const c of shuffle(cands)) { if (out.length >= k) break; const n = norm(c); if (!used.has(n)) { used.add(n); out.push(c); } }
+  const pre = ['왕', '미니', '꼬마', '황금', '아기', '쪼꼬미'];
+  for (let g = 0; out.length < k && g < 200; g++) {
+    const c = pre[Math.floor(Math.random() * pre.length)] + seqTexts[Math.floor(Math.random() * seqTexts.length)];
+    const n = norm(c); if (!used.has(n)) { used.add(n); out.push(c); }
+  }
+  return out;
+}
+
+async function T_startRound(r){
+  if (roundStarting) return; roundStarting = true;
+  try {
+    const cfg = ROUNDS[r - 1];
+    const items = room.items || {};
+    const ids = Object.keys(items);
+    const usage = {};
+    Object.values(room.rounds || {}).forEach(rd => (rd.seq || []).forEach(id => usage[id] = (usage[id] || 0) + 1));
+    const ordered = shuffle(ids).sort((a, b) => (usage[a] || 0) - (usage[b] || 0));
+    const count = Math.min(cfg.count, ids.length);
+    const seq = shuffle(ordered.slice(0, count));
+    const labels = {}; seq.forEach(id => labels[id] = items[id].text);
+    const target = cfg.reverse ? [...seq].reverse() : seq;
+    let options = [];
+    if (!cfg.typing) {
+      const others = shuffle(ids.filter(id => !seq.includes(id))).slice(0, cfg.others);
+      const traps = makeTraps(seq.map(id => items[id].text), ids.map(id => items[id].norm), cfg.traps);
+      options = shuffle([
+        ...seq.map(id => ({ id, text: items[id].text })),
+        ...others.map(id => ({ id, text: items[id].text })),
+        ...traps.map((t, i) => ({ id: 'trap' + i, text: t })),
+      ]);
+    }
+    const pids = Object.keys(room.players || {});
+    const luck = shuffle(pids).slice(0, Math.max(1, Math.round(pids.length / 8)));
+    finalizing = false;
+    await update(ref(db, 'rooms/' + code), {
+      ['rounds/' + r]: { seq, labels, options, first: target[0], slotCount: seq.length, reverse: cfg.reverse, typing: cfg.typing, luck },
+      ['picks/' + r]: null,
+      'state/phase': 'intro', 'state/round': r, 'state/revealIdx': -1, 'state/answerEndsAt': 0,
+    });
+  } finally { roundStarting = false; }
+}
+
+function T_playShow(){
+  const st = room.state, r = st.round, cfg = ROUNDS[r - 1], rd = room.rounds[r];
+  const n = rd.seq.length;
+  update(ref(db, 'rooms/' + code + '/state'), { phase: 'show', revealIdx: -1 });
+  Beat.start(cfg.bpm, i => {
+    beatVis(i);
+    const chant = el('chant'), slot = el('itemSlot'), prog = el('prog');
+    if (!chant) return;
+    if (i < 4) {
+      chant.textContent = '시장에 가면~'; chant.classList.remove('pop'); void chant.offsetWidth; chant.classList.add('pop');
+      if (slot) slot.innerHTML = ''; if (prog) prog.textContent = '준비~';
+      return;
+    }
+    const j = i - 4;
+    if (j < 2 * n) {
+      if (j % 2 === 0) {
+        const k = j / 2, id = rd.seq[k], last = k === n - 1;
+        const author = (room.items && room.items[id] && room.items[id].author) || '';
+        chant.textContent = '시장에 가면~';
+        slot.innerHTML = `<div class="itemCard pop">${esc(rd.labels[id])}<span class="tail">${last ? '도 있다!' : '도 있고~'}</span></div>
+          ${room.state.showNames && author ? `<div class="author pop">by ${esc(author)}</div>` : ''}`;
+        prog.textContent = `${k + 1} / ${n}`;
+        Beat.ding();
+        update(ref(db, 'rooms/' + code + '/state'), { revealIdx: k });
+      }
+      return;
+    }
+    if (j === 2 * n) { slot.innerHTML = '<div class="bigEmoji pop">🤔</div>'; chant.textContent = '자, 기억나니?'; prog.textContent = ''; }
+    if (j === 2 * n + 2) T_startAnswer();
+  });
+  tKey = 'show:' + r + ':' + room.state.showNames;
+  room.state.phase = 'show';
+  T_shell();
+}
+
+function T_startAnswer(){
+  const cfg = ROUNDS[room.state.round - 1];
+  Beat.setCb(i => beatVis(i));
+  update(ref(db, 'rooms/' + code + '/state'), { phase: 'answer', answerEndsAt: now() + cfg.limit * 1000, revealIdx: -1 });
+}
+
+async function T_finalize(){
+  if (finalizing) return; finalizing = true;
+  try {
+    const R = (await get(ref(db, 'rooms/' + code))).val();
+    if (!R || R.state.phase !== 'answer') return;
+    Beat.stop();
+    const r = R.state.round, cfg = ROUNDS[r - 1], rd = R.rounds[r];
+    const items = R.items || {}, players = R.players || {}, picks = (R.picks && R.picks[r]) || {};
+    const target = rd.reverse ? [...rd.seq].reverse() : rd.seq;
+    const missed = {}; target.forEach(id => missed[id] = 0);
+    const res = {};
+    for (const pid of Object.keys(players)) {
+      const p = picks[pid];
+      if (!p) { res[pid] = { absent: true, correct: 0, base: 0, combo: 0, speed: 0, breaker: 0, lucky: false, score: 0 }; continue; }
+      const list = p.list || [];
+      const flags = target.map((id, i) => i === 0 ? true : (rd.typing ? fuzzyEq(list[i], rd.labels[id]) : list[i] === id));
+      flags.forEach((f, i) => { const id = target[i]; if (!f && items[id] && items[id].pid !== pid) missed[id]++; });
+      let run = 0, best = 0; flags.forEach(f => { run = f ? run + 1 : 0; best = Math.max(best, run); });
+      const correct = flags.filter(Boolean).length;
+      const complete = rd.typing ? !!p.doneAt : list.length >= rd.slotCount;
+      const speed = (complete && p.doneAt) ? Math.min(SPEED_MAX, Math.max(0, Math.floor((R.state.answerEndsAt - p.doneAt) / 2000))) : 0;
+      res[pid] = { correct, flags, base: correct * cfg.per, combo: best >= COMBO_MIN ? COMBO_BONUS : 0, speed, breaker: 0, lucky: (rd.luck || []).includes(pid), score: 0 };
+    }
+    target.forEach(id => { const a = items[id] && items[id].pid; if (a && res[a]) res[a].breaker += missed[id] * BREAKER_PER; });
+    const upd = {};
+    for (const [pid, x] of Object.entries(res)) {
+      if (!x.absent) x.score = (x.base + x.combo + x.speed + x.breaker) * (x.lucky ? 2 : 1);
+      else if (x.breaker) x.score = x.breaker;
+      upd['players/' + pid + '/total'] = (players[pid].total || 0) + x.score;
+      upd['players/' + pid + '/breakerTotal'] = (players[pid].breakerTotal || 0) + x.breaker;
+    }
+    const played = Object.values(res).filter(x => !x.absent).length;
+    for (const id of target) {
+      upd['missTotal/' + id] = ((R.missTotal && R.missTotal[id]) || 0) + missed[id];
+    }
+    upd['rounds/' + r + '/results'] = res;
+    upd['rounds/' + r + '/missed'] = missed;
+    upd['rounds/' + r + '/played'] = played;
+    upd['state/phase'] = 'result';
+    await update(ref(db, 'rooms/' + code), upd);
+    Beat.fanfare();
+  } finally { finalizing = false; }
+}
+
+function topPlayers(n = 5){
+  return Object.entries(room.players || {}).map(([pid, p]) => ({ pid, ...p, total: p.total || 0 }))
+    .sort((a, b) => b.total - a.total).slice(0, n);
+}
+const MEDAL = ['🥇', '🥈', '🥉', '🎀', '🌷'];
+
+function T_resultHTML(){
+  const r = room.state.round, cfg = ROUNDS[r - 1], rd = room.rounds[r];
+  const res = rd.results || {}, missed = rd.missed || {}, played = rd.played || 0;
+  const items = room.items || {}, players = room.players || {};
+  const target = rd.reverse ? [...rd.seq].reverse() : rd.seq;
+  const lucky = Object.entries(res).filter(([, x]) => x.lucky && !x.absent).map(([pid]) => players[pid] && players[pid].name).filter(Boolean);
+  let worst = null; target.forEach(id => { if (!worst || missed[id] > missed[worst]) worst = id; });
+  const worstItem = worst && items[worst];
+  const ans = target.map((id, i) => `<div class="ans"><span class="n">${i + 1}</span>${esc(rd.labels[id])}
+     <small>${room.state.showNames && items[id] ? esc(items[id].author) + ' · ' : ''}😵 ${missed[id] || 0}명 깜빡</small></div>`).join('');
+  const ranks = topPlayers().map((p, i) => `<div class="rank"><span class="medal">${MEDAL[i]}</span>${esc(p.name)}<b>${p.total}점</b></div>`).join('');
+  return `<div class="center" style="margin-bottom:14px"><span class="roundBadge">${r}라운드 결과 · ${esc(cfg.name)}</span></div>
+    <div class="grid2">
+      <div class="card"><h3>✅ 정답 순서 ${rd.reverse ? '(거꾸로)' : ''}</h3><div class="ansList">${ans}</div></div>
+      <div class="card"><h3>🏆 TOP 5</h3>${ranks || '<p class="muted">아직 없어요</p>'}
+        ${lucky.length ? `<div class="hl">🍀 <b>행운 카드!</b> ${lucky.map(esc).join(', ')} — 이번 라운드 점수 2배!</div>` : ''}
+        ${worstItem && missed[worst] > 0 ? `<div class="hl lav">💥 <b>기억 브레이커</b> ${room.state.showNames ? esc(worstItem.author) + '의 ' : ''}'${esc(worstItem.text)}' — ${missed[worst]}명이 깜빡했어요!</div>` : ''}
+        <div class="hl mint">🙌 참여 ${played}명</div>
+      </div>
+    </div>
+    <div class="center" style="margin-top:22px">
+      ${r < 4 ? `<button class="btn big mint" data-act="startRound" data-r="${r + 1}">${r + 1}라운드 ▶ ${ROUNDS[r].emoji} ${esc(ROUNDS[r].name)}</button>`
+              : `<button class="btn big lemon" data-act="toEnd">🎉 최종 결과 보기</button>`}
+    </div>`;
+}
+
+function T_endHTML(){
+  const players = room.players || {}, items = room.items || {}, mt = room.missTotal || {};
+  const top = topPlayers();
+  const brk = Object.values(players).filter(p => (p.breakerTotal || 0) > 0).sort((a, b) => (b.breakerTotal || 0) - (a.breakerTotal || 0))[0];
+  const worst3 = Object.entries(mt).filter(([id, v]) => items[id] && v > 0).sort((a, b) => b[1] - a[1]).slice(0, 3);
+  return `<div class="stage" style="min-height:auto">
+      <div class="bigEmoji bounce">🎉</div><div class="title">시장 <span>폐장!</span></div></div>
+    <div class="grid2" style="margin-top:10px">
+      <div class="card"><h3>🏆 최종 TOP 5</h3>${top.map((p, i) => `<div class="rank"><span class="medal">${MEDAL[i]}</span>${esc(p.name)}<b>${p.total}점</b></div>`).join('')}</div>
+      <div class="card"><h3>✨ 특별상</h3>
+        ${brk ? `<div class="hl lav">💥 <b>기억 브레이커 왕</b><br>${esc(brk.name)} — 친구들을 ${Math.round(brk.breakerTotal / BREAKER_PER)}번 헷갈리게 했어요!</div>` : ''}
+        ${worst3.length ? `<div class="hl">😵 <b>가장 많이 깜빡한 물건</b><br>${worst3.map(([id, v], i) => `${i + 1}. ${esc(items[id].text)} (${v}번)`).join('<br>')}</div>` : ''}
+      </div>
+    </div>`;
+}
+
+/* =========================================================
+   🧒 학생 화면
+   ========================================================= */
+const S = { code: params.get('room') || '', pid: null, name: '', state: null, me: null, rd: null, rdRound: 0, list: [], listRound: 0,
+            hintUsed: false, done: false, locked: false, view: '', myItem: null, unsub: [] };
+
+function S_init(){
+  app.innerHTML = `<div class="s-wrap"><div class="stage">
+    <div class="bigEmoji bounce">🧺</div>
+    <div class="title">시장에 <span>가면</span></div>
+    <div class="card" style="width:min(460px,100%);display:grid;gap:12px">
+      <input class="field" id="jCode" inputmode="numeric" maxlength="4" placeholder="입장 코드 4자리" value="${esc(S.code)}">
+      <input class="field" id="jName" maxlength="8" placeholder="내 이름" value="${esc(localStorage.getItem('market_name') || '')}">
+      <button class="btn big mint" data-act="join">들어가기 🚪</button>
+    </div>
+  </div></div>`;
+}
+
+async function S_join(){
+  const c = el('jCode').value.trim(), name = el('jName').value.trim();
+  if (!/^\d{4}$/.test(c)) { toast('입장 코드 4자리를 써 주세요'); return; }
+  if (!name) { toast('이름을 써 주세요'); return; }
+  const st = await get(ref(db, 'rooms/' + c + '/state'));
+  if (!st.exists()) { toast('그런 방이 없어요 😢 코드를 확인해 주세요'); return; }
+  S.code = c; S.name = name; localStorage.setItem('market_name', name);
+  let pid = localStorage.getItem('market_pid_' + c);
+  if (!pid) { pid = rid(); localStorage.setItem('market_pid_' + c, pid); }
+  S.pid = pid;
+  const pref = ref(db, `rooms/${c}/players/${pid}`);
+  const ex = await get(pref);
+  if (ex.exists()) await update(pref, { name });
+  else await set(pref, { name, total: 0, breakerTotal: 0, joinedAt: serverTimestamp() });
+  S.myItem = localStorage.getItem(`market_item_${c}_${pid}`);
+  onValue(pref, s => { S.me = s.val(); const t = el('myTotal'); if (t && S.me) t.textContent = (S.me.total || 0) + '점'; });
+  onValue(ref(db, `rooms/${c}/state`), s => { S.state = s.val(); S_render(); });
+  setInterval(S_tick, 200);
+}
+
+function S_top(){
+  return `<div class="s-top"><span class="me">🙂 ${esc(S.name)}</span><span class="pill">⭐ <span id="myTotal">${(S.me && S.me.total) || 0}점</span></span></div>`;
+}
+
+async function S_loadRound(r){
+  if (S.rdRound === r && S.rd) return;
+  const s = await get(ref(db, `rooms/${S.code}/rounds/${r}`));
+  S.rd = s.val(); S.rdRound = r;
+}
+
+async function S_render(){
+  const st = S.state; if (!st) return;
+  const key = st.phase + ':' + st.round;
+  if (key === S.view) return;
+  S.view = key;
+  const r = st.round, cfg = ROUNDS[r - 1];
+  if (st.phase === 'lobby') {
+    app.innerHTML = `<div class="s-wrap">${S_top()}<div class="stage" style="min-height:70vh">
+      <div class="title" style="font-size:36px">시장에 무엇을 넣을까? 🧺</div>
+      <div id="itemZone" style="width:min(560px,100%)"></div></div></div>`;
+    S_lobbyZone();
+    if (S.myItem) onValue(ref(db, `rooms/${S.code}/items/${S.myItem}`), s => { if (!s.exists() && S.myItem) { S.myItem = null; localStorage.removeItem(`market_item_${S.code}_${S.pid}`); if (S.state.phase === 'lobby') { S_lobbyZone(); toast('선생님이 물건을 지웠어요. 다른 걸로 넣어 볼까요?'); } } });
+    return;
+  }
+  if (st.phase === 'intro' || st.phase === 'show') {
+    S_loadRound(r);
+    app.innerHTML = `<div class="s-wrap">${S_top()}<div class="stage">
+      <span class="roundBadge">${r}라운드 · ${esc(cfg.name)}</span>
+      <div class="bigEmoji bounce">👀</div>
+      <div class="title" style="font-size:40px">${st.phase === 'intro' ? '곧 시작해요!' : '프로젝터를 봐요!'}</div>
+      <div class="rule">${esc(cfg.desc)}</div>
+      <div class="muted" style="font-size:20px">${st.phase === 'show' ? '순서를 꼭 외워요 🧠' : '1개당 ' + cfg.per + '점'}</div>
+    </div></div>`;
+    return;
+  }
+  if (st.phase === 'answer') {
+    await S_loadRound(r);
+    if (S.listRound !== r) {
+      S.listRound = r; S.hintUsed = false; S.done = false; S.locked = false;
+      const ex = (await get(ref(db, `rooms/${S.code}/picks/${r}/${S.pid}`))).val();
+      S.list = (ex && ex.list) || (S.rd.typing ? [] : [S.rd.first]);
+      S.done = !!(ex && ex.doneAt);
+      if (!ex) set(ref(db, `rooms/${S.code}/picks/${r}/${S.pid}/list`), S.list);
+    }
+    S_answerShell(r);
+    return;
+  }
+  if (st.phase === 'result') {
+    const res = (await get(ref(db, `rooms/${S.code}/rounds/${r}/results/${S.pid}`))).val();
+    S_resultView(r, res);
+    return;
+  }
+  if (st.phase === 'end') {
+    const ps = (await get(ref(db, `rooms/${S.code}/players`))).val() || {};
+    const sorted = Object.entries(ps).sort((a, b) => (b[1].total || 0) - (a[1].total || 0));
+    const inTop = sorted.slice(0, 5).some(([pid]) => pid === S.pid);
+    app.innerHTML = `<div class="s-wrap">${S_top()}<div class="stage">
+      <div class="bigEmoji bounce">🎉</div><div class="title">시장 <span>폐장!</span></div>
+      <div class="muted" style="font-size:22px">내 최종 점수</div>
+      <div class="score">${(S.me && S.me.total) || 0}점</div>
+      ${inTop ? '<div class="hl">🏆 TOP 5 안에 들었어요!</div>' : '<div class="hl mint">끝까지 함께해서 최고였어요 🙌</div>'}
+      ${(S.me && S.me.breakerTotal) ? `<div class="hl lav">💥 내 물건으로 친구들을 ${Math.round(S.me.breakerTotal / BREAKER_PER)}번 헷갈리게 했어요!</div>` : ''}
+    </div></div>`;
+  }
+}
+
+function S_lobbyZone(){
+  const z = el('itemZone'); if (!z) return;
+  if (S.myItem) {
+    get(ref(db, `rooms/${S.code}/items/${S.myItem}`)).then(s => {
+      const it = s.val(); if (!it || !el('itemZone')) return;
+      el('itemZone').innerHTML = `<div class="card center"><div class="muted">내가 넣은 물건</div>
+        <div class="itemCard pop" style="font-size:54px;padding:20px;margin:14px auto;min-width:0">${esc(it.text)}</div>
+        <div class="rule bounce">친구들 기다리는 중... ⏳</div></div>`;
+    });
+    return;
+  }
+  z.innerHTML = `<div class="card" style="display:grid;gap:12px">
+    <div class="rule">시장에 가면 ___ 도 있고~</div>
+    <input class="field" id="itemInput" maxlength="12" placeholder="예) 치킨, 교감선생님, 고무장갑">
+    <div class="muted">먹을 거, 물건, 사람 다 OK! 엉뚱할수록 친구들이 헷갈려서 💥브레이커 점수를 받아요</div>
+    <button class="btn big" data-act="addItem">시장에 넣기 🧺</button></div>`;
+  el('itemInput').addEventListener('keydown', e => { if (e.key === 'Enter') S_addItem(); });
+}
+
+async function S_addItem(){
+  const inp = el('itemInput'); if (!inp) return;
+  const v = inp.value.trim();
+  if (!v) { toast('물건을 써 주세요'); return; }
+  const n = norm(v);
+  if (!n) { toast('다른 걸로 써 볼까요?'); return; }
+  if (S.state.phase !== 'lobby') { toast('이미 게임이 시작됐어요!'); return; }
+  const id = rid();
+  const tx = await runTransaction(ref(db, `rooms/${S.code}/norms/${n}`), cur => cur === null ? id : undefined);
+  if (!tx.committed) { toast('앗! 이미 누가 시장에 넣었어요 😮 다른 걸로!'); inp.classList.remove('shake'); void inp.offsetWidth; inp.classList.add('shake'); return; }
+  await set(ref(db, `rooms/${S.code}/items/${id}`), { text: v, norm: n, author: S.name, pid: S.pid, at: serverTimestamp() });
+  S.myItem = id; localStorage.setItem(`market_item_${S.code}_${S.pid}`, id);
+  onValue(ref(db, `rooms/${S.code}/items/${id}`), s => { if (!s.exists() && S.myItem === id) { S.myItem = null; localStorage.removeItem(`market_item_${S.code}_${S.pid}`); if (S.state.phase === 'lobby') { S_lobbyZone(); toast('선생님이 물건을 지웠어요. 다른 걸로 넣어 볼까요?'); } } });
+  S_lobbyZone();
+}
+
+function S_target(){ const rd = S.rd; return rd.reverse ? [...rd.seq].reverse() : rd.seq; }
+
+function S_answerShell(r){
+  const cfg = ROUNDS[r - 1], rd = S.rd;
+  app.innerHTML = `<div class="s-wrap">${S_top()}
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <span class="roundBadge" style="font-size:18px">${r}라운드 · ${esc(cfg.name)}</span>
+      <span class="rule" style="font-size:20px">${rd.reverse ? '⬅️ 마지막 물건부터 거꾸로!' : rd.typing ? '✍️ 순서대로 써요' : '👆 순서대로 눌러요 (취소 안 돼요!)'}</span>
+      <span style="margin-left:auto;font-size:26px;color:var(--pinkD)" id="sTime"></span>
+    </div>
+    <div class="bar" id="sBar" style="margin:10px 0"><i></i></div>
+    <div id="ansArea"></div>
+    <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap">
+      <button class="btn sm lemon" id="hintBtn" data-act="hint">💡 힌트 (1번)</button>
+      ${rd.typing ? '<button class="btn mint" id="submitBtn" data-act="submitTyping" style="margin-left:auto">다 썼어요! 제출 ✅</button>' : ''}
+    </div>
+    <div id="doneArea"></div></div>`;
+  S_drawAnswer();
+}
+
+function S_drawAnswer(){
+  const rd = S.rd, area = el('ansArea'); if (!area) return;
+  const target = S_target(), labelOf = id => (rd.labels && rd.labels[id]) || ((rd.options || []).find(o => o.id === id) || {}).text || '';
+  if (rd.typing) {
+    if (!area.querySelector('.tgrid')) {
+      area.innerHTML = `<div class="tgrid">${target.map((id, i) => `<div><div class="tlab">${i + 1}번째${i === 0 ? ' 🎁 선물' : ''}</div>
+        <input class="tin" data-i="${i}" maxlength="14" ${i === 0 ? `readonly value="${esc(labelOf(id))}"` : `value="${esc(S.list[i] || '')}"`} autocomplete="off"></div>`).join('')}</div>`;
+      let tm;
+      area.querySelectorAll('.tin').forEach(inp => inp.addEventListener('input', () => { clearTimeout(tm); tm = setTimeout(S_saveTyping, 400); }));
+    }
+    area.querySelectorAll('.tin').forEach(inp => { if (S.done || S.locked) inp.disabled = true; });
+  } else {
+    const filled = S.list.length;
+    const slots = target.map((id, i) => {
+      const v = S.list[i];
+      const cls = i === 0 ? 'slot gift' : v ? 'slot f' : i === filled ? 'slot cur' : 'slot';
+      return `<div class="${cls}"><span class="k">${i + 1}${i === 0 ? ' 🎁' : ''}</span>${v ? esc(labelOf(v)) : '?'}</div>`;
+    }).join('');
+    const opts = (rd.options || []).map(o => `<button class="opt${S.list.includes(o.id) ? ' used' : ''}" data-act="pick" data-id="${esc(o.id)}">${esc(o.text)}</button>`).join('');
+    area.innerHTML = `<div class="slots">${slots}</div>${S.done || S.locked ? '' : `<div class="opts">${opts}</div>`}`;
+  }
+  const hb = el('hintBtn'); if (hb) { hb.disabled = S.hintUsed || S.done || S.locked; if (S.hintUsed) hb.textContent = '💡 힌트 사용함'; }
+  const sb = el('submitBtn'); if (sb) sb.disabled = S.done || S.locked;
+  const da = el('doneArea');
+  if (da) da.innerHTML = S.done ? '<div class="doneBox pop">제출 완료! 🎉<br><span style="font-size:20px">프로젝터를 보며 기다려요</span></div>'
+                      : S.locked ? '<div class="doneBox pop" style="background:var(--lemon)">시간 끝! ⏰<br><span style="font-size:20px">고른 만큼 점수를 받아요</span></div>' : '';
+}
+
+function S_pick(id){
+  if (S.done || S.locked || !S.rd) return;
+  if (S.list.includes(id)) return;
+  S.list.push(id);
+  const base = `rooms/${S.code}/picks/${S.state.round}/${S.pid}`;
+  set(ref(db, base + '/list'), S.list);
+  if (S.list.length >= S.rd.slotCount) { S.done = true; set(ref(db, base + '/doneAt'), serverTimestamp()); }
+  S_drawAnswer();
+}
+
+function S_collectTyping(){
+  const vals = []; document.querySelectorAll('.tin').forEach(inp => vals[+inp.dataset.i] = inp.value.trim());
+  return vals;
+}
+function S_saveTyping(){
+  if (!S.rd || !S.rd.typing || S.done) return;
+  S.list = S_collectTyping();
+  set(ref(db, `rooms/${S.code}/picks/${S.state.round}/${S.pid}/list`), S.list);
+}
+function S_submitTyping(){
+  if (S.done || S.locked) return;
+  S.list = S_collectTyping();
+  const base = `rooms/${S.code}/picks/${S.state.round}/${S.pid}`;
+  set(ref(db, base + '/list'), S.list);
+  set(ref(db, base + '/doneAt'), serverTimestamp());
+  S.done = true; S_drawAnswer();
+}
+
+function S_hint(){
+  if (S.hintUsed || S.done || S.locked || !S.rd) return;
+  const target = S_target();
+  let idx;
+  if (S.rd.typing) { const vals = S_collectTyping(); idx = target.findIndex((_, i) => i > 0 && !vals[i]); if (idx < 0) idx = target.length - 1; }
+  else idx = S.list.length;
+  if (idx >= target.length) return;
+  const text = S.rd.labels[target[idx]] || '';
+  S.hintUsed = true;
+  toast(`💡 ${idx + 1}번째는 '${text.charAt(0)}'(으)로 시작해요! (${text.length}글자)`);
+  S_drawAnswer();
+}
+
+function S_tick(){
+  const st = S.state; if (!st || st.phase !== 'answer' || !S.rd) return;
+  const cfg = ROUNDS[st.round - 1], rem = st.answerEndsAt - now();
+  const t = el('sTime'), bar = el('sBar');
+  if (t) t.textContent = '⏱ ' + Math.max(0, Math.ceil(rem / 1000)) + '초';
+  if (bar) { bar.firstElementChild.style.width = Math.max(0, Math.min(100, rem / (cfg.limit * 1000) * 100)) + '%'; bar.classList.toggle('hurry', rem < 10000); }
+  if (rem <= 0 && !S.locked && !S.done) { if (S.rd.typing) S_saveTyping(); S.locked = true; S_drawAnswer(); }
+}
+
+function S_resultView(r, res){
+  const cfg = ROUNDS[r - 1];
+  if (!res || res.absent) {
+    app.innerHTML = `<div class="s-wrap">${S_top()}<div class="stage"><div class="bigEmoji">☕</div>
+      <div class="title" style="font-size:36px">이번 라운드는 쉬었어요</div>
+      ${res && res.breaker ? `<div class="hl lav">그래도 💥 내 물건 덕분에 +${res.breaker}점!</div>` : ''}
+      <div class="rule">다음 라운드에 같이 해요 🙌</div></div></div>`;
+    return;
+  }
+  const slots = S.rd ? S.rd.slotCount : '';
+  app.innerHTML = `<div class="s-wrap">${S_top()}<div class="stage" style="gap:10px">
+    <span class="roundBadge">${r}라운드 결과</span>
+    <div class="rule">${slots}개 중 <b style="color:var(--pinkD)">${res.correct}개</b> 맞혔어요!</div>
+    ${res.lucky ? `<div class="luck"><div class="in"><div class="fa">🎴 ?</div><div class="ba">🍀 행운 카드!<span style="font-size:20px">점수 2배</span></div></div></div>` : ''}
+    <div class="card" style="width:min(460px,100%)">
+      <div class="brk"><span>✅ 맞힌 점수</span><span>+${res.base}</span></div>
+      ${res.combo ? `<div class="brk"><span>🔥 연속 콤보</span><span>+${res.combo}</span></div>` : ''}
+      ${res.speed ? `<div class="brk"><span>⚡ 스피드</span><span>+${res.speed}</span></div>` : ''}
+      ${res.breaker ? `<div class="brk"><span>💥 기억 브레이커</span><span>+${res.breaker}</span></div>` : ''}
+      ${res.lucky ? `<div class="brk"><span>🍀 행운 카드</span><span>×2</span></div>` : ''}
+      <div class="brk" style="border:none;font-size:28px"><span>이번 라운드</span><span style="color:var(--pinkD)">+${res.score}점</span></div>
+    </div>
+    <div class="muted" style="font-size:20px">${res.correct >= 1 ? '잘했어요! 프로젝터에서 정답을 확인해요 👀' : '괜찮아요, 다음 라운드에 또!'}</div>
+  </div></div>`;
+}
+
+/* ---------------- 클릭 처리 ---------------- */
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-act]'); if (!b || b.disabled) return;
+  const a = b.dataset.act;
+  if (a === 'join') return S_join();
+  if (a === 'addItem') return S_addItem();
+  if (a === 'pick') return S_pick(b.dataset.id);
+  if (a === 'hint') return S_hint();
+  if (a === 'submitTyping') return S_submitTyping();
+  if (a === 'newRoom') return T_newRoom();
+  if (a === 'resume') { location.href = location.pathname + '?t=1&room=' + b.dataset.code; return; }
+  if (!room) return;
+  if (a === 'toggleNames') return update(ref(db, `rooms/${code}/state`), { showNames: !room.state.showNames });
+  if (a === 'toggleMute') { Beat.muted = !Beat.muted; b.textContent = Beat.muted ? '🔇 소리 꺼짐' : '🔊 소리 켜짐'; return; }
+  if (a === 'newGame') { if (confirm('새 게임을 만들까요? (지금 방은 그대로 남아요)')) T_newRoom(); return; }
+  if (a === 'addReserve') {
+    const used = new Set(Object.values(room.items || {}).map(i => i.norm));
+    const upd = {}; let k = 0;
+    for (const t of shuffle(RESERVE)) { const n = norm(t); if (used.has(n)) continue; const id = rid(); upd['items/' + id] = { text: t, norm: n, author: '선생님', pid: 'teacher', at: Date.now() }; upd['norms/' + n] = id; if (++k >= 5) break; }
+    return update(ref(db, 'rooms/' + code), upd);
+  }
+  if (a === 'delItem') {
+    const it = room.items && room.items[b.dataset.id]; if (!it) return;
+    return update(ref(db, 'rooms/' + code), { ['items/' + b.dataset.id]: null, ['norms/' + it.norm]: null });
+  }
+  if (a === 'startRound') { Beat.ensure(); return T_startRound(+b.dataset.r); }
+  if (a === 'playShow') return T_playShow();
+  if (a === 'resumeBeat') { Beat.start(ROUNDS[room.state.round - 1].bpm, i => beatVis(i)); b.remove(); return; }
+  if (a === 'closeNow') { if (confirm('지금 마감할까요?')) T_finalize(); return; }
+  if (a === 'toEnd') return update(ref(db, `rooms/${code}/state`), { phase: 'end' });
+});
+</script>
+</body>
+</html>
