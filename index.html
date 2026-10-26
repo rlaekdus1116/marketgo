@@ -288,21 +288,6 @@ const Beat = {
   fanfare(){ if (this.muted) return; this.ensure(); const t = this.ctx.currentTime; [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => this.tone(f, t + i * 0.11, 0.35, 0.3)); },
 };
 
-/* ---------------- 시작 ---------------- */
-if (!configured) {
-  app.innerHTML = `<div class="setup card">
-    <div class="title">🧺 시장에 <span>가면</span></div>
-    <p>파이어베이스 설정이 아직 없어요!</p>
-    <p>1. 파이어베이스 콘솔에서 <b>Realtime Database</b>를 만들어요.<br>
-       2. 프로젝트 설정 → 내 앱 → SDK 설정 값을 이 파일 위쪽 <code>firebaseConfig</code>에 붙여 넣어요.<br>
-       3. 선생님 화면: <code>주소?t=1</code> / 학생 화면: <code>주소</code></p>
-  </div>`;
-} else if (isTeacher) {
-  T_init();
-} else {
-  S_init();
-}
-
 /* =========================================================
    👩‍🏫 선생님 화면
    ========================================================= */
@@ -939,6 +924,21 @@ document.addEventListener('click', e => {
   if (a === 'closeNow') { if (confirm('지금 마감할까요?')) T_finalize(); return; }
   if (a === 'toEnd') return update(ref(db, `rooms/${code}/state`), { phase: 'end' });
 });
+/* ---------------- 시작 ---------------- */
+if (!configured) {
+  app.innerHTML = `<div class="setup card">
+    <div class="title">🧺 시장에 <span>가면</span></div>
+    <p>파이어베이스 설정이 아직 없어요!</p>
+    <p>1. 파이어베이스 콘솔에서 <b>Realtime Database</b>를 만들어요.<br>
+       2. 프로젝트 설정 → 내 앱 → SDK 설정 값을 이 파일 위쪽 <code>firebaseConfig</code>에 붙여 넣어요.<br>
+       3. 선생님 화면: <code>주소?t=1</code> / 학생 화면: <code>주소</code></p>
+  </div>`;
+} else if (isTeacher) {
+  T_init();
+} else {
+  S_init();
+}
+
 </script>
 </body>
 </html>
