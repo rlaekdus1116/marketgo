@@ -12,21 +12,16 @@
   --bg:#FFF9F4; --ink:#5B4B57; --sub:#A3919C; --line:#F2E6EC; --card:#FFFFFF;
   --pink:#FFE3EA; --pinkD:#F4A9BD; --mint:#DDF5EA; --mintD:#8FD5B5;
   --lemon:#FFF5CC; --lemonD:#F2D477; --lav:#ECE5FF; --lavD:#B8A7EE;
-  --sky:#E0F0FF; --skyD:#93C4EE; --peach:#FFE9DA; --peachD:#F5B48C;
+  --sky:#E0F0FF; --skyD:#93C4EE; --peach:#FFE9DA; --peachD:#F5B48C; --red:#FFD9D9; --redD:#EE9A9A;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;min-height:100%}
-body{
-  font-family:'Jua',sans-serif;color:var(--ink);
-  background:var(--bg);
-  background-image:radial-gradient(#F6E3EA 1.4px,transparent 1.4px);
-  background-size:22px 22px;
-}
+body{font-family:'Jua',sans-serif;color:var(--ink);background:var(--bg);
+  background-image:radial-gradient(#F6E3EA 1.4px,transparent 1.4px);background-size:22px 22px}
 button{font-family:inherit;color:inherit;cursor:pointer;border:none}
 input{font-family:inherit;color:var(--ink)}
 .wrap{max-width:1100px;margin:0 auto;padding:18px 16px 40px}
-.muted{color:var(--sub)}
-.center{text-align:center}
+.muted{color:var(--sub)} .center{text-align:center}
 .card{background:var(--card);border:2px solid var(--line);border-radius:26px;padding:18px 20px;box-shadow:0 6px 0 var(--line)}
 .btn{background:var(--pink);border-radius:20px;padding:14px 22px;font-size:20px;box-shadow:0 5px 0 var(--pinkD);transition:transform .08s}
 .btn:active{transform:translateY(4px);box-shadow:0 1px 0 var(--pinkD)}
@@ -38,8 +33,7 @@ input{font-family:inherit;color:var(--ink)}
 .btn.big{font-size:28px;padding:18px 36px}
 .btn.sm{font-size:15px;padding:8px 14px;border-radius:14px;box-shadow:0 3px 0 var(--pinkD)}
 .btn.sm.mint{box-shadow:0 3px 0 var(--mintD)} .btn.sm.lav{box-shadow:0 3px 0 var(--lavD)} .btn.sm.sky{box-shadow:0 3px 0 var(--skyD)} .btn.sm.lemon{box-shadow:0 3px 0 var(--lemonD)}
-.title{font-size:44px;margin:6px 0;letter-spacing:1px}
-.title span{color:var(--pinkD)}
+.title{font-size:44px;margin:6px 0;letter-spacing:1px} .title span{color:var(--pinkD)}
 .topbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px}
 .topbar .logo{font-size:26px;margin-right:auto}
 .pill{background:#fff;border:2px solid var(--line);border-radius:999px;padding:6px 14px;font-size:16px}
@@ -55,30 +49,29 @@ input{font-family:inherit;color:var(--ink)}
 #qr img,#qr canvas{border:10px solid #fff;border-radius:14px}
 h3{margin:0 0 12px;font-size:22px;font-weight:normal}
 .stage{min-height:62vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:16px}
-.chant{font-size:52px;color:var(--sub)}
+.chant{font-size:50px;color:var(--sub)}
 .itemCard{background:#fff;border:4px solid var(--pink);border-radius:40px;padding:30px 60px;font-size:96px;box-shadow:0 10px 0 var(--pinkD);min-width:50%}
 .itemCard .tail{display:block;font-size:40px;color:var(--sub);margin-top:4px}
 .author{font-size:30px;background:var(--lav);border-radius:999px;padding:6px 20px}
 .pop{animation:pop .35s cubic-bezier(.2,1.6,.4,1)}
 @keyframes pop{0%{transform:scale(.4);opacity:0}100%{transform:scale(1);opacity:1}}
 .beatRow{display:flex;gap:14px;justify-content:center}
-.beatDot{width:34px;height:34px;border-radius:50%;background:var(--line);transition:transform .08s,background .08s}
-.beatDot.on{transform:scale(1.35);background:var(--pinkD)}
-.beatDot.on.c{background:var(--mintD)}
-.prog{font-size:24px;color:var(--sub)}
+.beatDot{width:30px;height:30px;border-radius:50%;background:var(--line);transition:transform .08s,background .08s}
+.beatDot.on{transform:scale(1.35);background:var(--pinkD)} .beatDot.on.c{background:var(--mintD)}
 .roundBadge{display:inline-block;background:var(--lemon);border-radius:999px;padding:8px 22px;font-size:24px;box-shadow:0 4px 0 var(--lemonD)}
 .bigEmoji{font-size:110px;line-height:1}
 .rule{font-size:28px;line-height:1.5}
-.timer{font-size:120px;line-height:1;color:var(--pinkD)}
+.timer{font-size:110px;line-height:1;color:var(--pinkD)}
 .bar{height:22px;background:var(--line);border-radius:999px;overflow:hidden;width:100%}
 .bar>i{display:block;height:100%;background:linear-gradient(90deg,var(--mintD),var(--skyD));border-radius:999px;transition:width .2s linear}
 .bar.hurry>i{background:linear-gradient(90deg,var(--peachD),var(--pinkD))}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 @media (max-width:820px){.grid2{grid-template-columns:1fr}}
-.ansList{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px}
-.ans{background:var(--sky);border-radius:18px;padding:10px 14px;font-size:22px}
-.ans small{display:block;font-size:14px;color:var(--sub)}
-.ans .n{display:inline-block;background:#fff;border-radius:50%;width:28px;height:28px;text-align:center;line-height:28px;font-size:15px;margin-right:6px}
+.chainRow{display:flex;flex-wrap:wrap;gap:12px;justify-content:center}
+.ans{background:var(--sky);border-radius:20px;padding:12px 18px;font-size:30px;text-align:center}
+.ans small{display:block;font-size:15px;color:var(--sub)}
+.ans .n{display:inline-block;background:#fff;border-radius:50%;width:32px;height:32px;text-align:center;line-height:32px;font-size:16px;margin-right:6px}
+.ans.new{background:var(--lemon);box-shadow:0 0 0 4px var(--lemonD)}
 .rank{display:flex;align-items:center;gap:12px;font-size:26px;padding:8px 6px;border-bottom:2px dashed var(--line)}
 .rank b{font-weight:normal;margin-left:auto;color:var(--pinkD)}
 .medal{font-size:32px;width:42px;text-align:center}
@@ -90,56 +83,46 @@ h3{margin:0 0 12px;font-size:22px;font-weight:normal}
 .s-top .me{margin-right:auto;font-size:20px}
 .field{width:100%;font-size:26px;padding:14px 18px;border-radius:18px;border:3px solid var(--line);background:#fff;outline:none}
 .field:focus{border-color:var(--pinkD)}
-.slots{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
-.slot{min-width:92px;padding:10px 12px;border-radius:16px;background:#fff;border:3px dashed var(--line);font-size:19px;text-align:center}
-.slot .k{display:block;font-size:12px;color:var(--sub)}
-.slot.f{border-style:solid;border-color:var(--mintD);background:var(--mint)}
-.slot.gift{border-style:solid;border-color:var(--lemonD);background:var(--lemon)}
+.slots{display:flex;flex-wrap:wrap;gap:10px;margin:14px 0}
+.slot{min-width:110px;padding:12px 14px;border-radius:18px;background:#fff;border:3px dashed var(--line);font-size:24px;text-align:center}
+.slot .k{display:block;font-size:13px;color:var(--sub)}
+.slot.f{border-style:solid;border-color:var(--mintD);background:var(--mint);cursor:pointer}
+.slot.f::after{content:' ✕';font-size:14px;color:var(--sub)}
 .slot.cur{border-color:var(--pinkD);border-style:solid;animation:blink 1s infinite}
+.slot.ok{border-style:solid;border-color:var(--mintD);background:var(--mint)}
+.slot.bad{border-style:solid;border-color:var(--redD);background:var(--red)}
+.slot .ca{display:block;font-size:15px;color:var(--ink);margin-top:4px}
 @keyframes blink{50%{background:var(--pink)}}
-.opts{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px}
-.opt{background:#fff;border:3px solid var(--line);border-radius:18px;padding:16px 8px;font-size:22px;box-shadow:0 4px 0 var(--line)}
+.opts{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px}
+.opt{background:#fff;border:3px solid var(--line);border-radius:20px;padding:20px 8px;font-size:26px;box-shadow:0 4px 0 var(--line)}
 .opt:active{transform:translateY(3px);box-shadow:none}
 .opt.used{opacity:.25;pointer-events:none}
-.tgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
-.tin{width:100%;font-size:22px;padding:12px 14px;border-radius:16px;border:3px solid var(--line);background:#fff;outline:none}
+.tgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin:14px 0}
+.tin{width:100%;font-size:24px;padding:12px 14px;border-radius:16px;border:3px solid var(--line);background:#fff;outline:none}
 .tin:focus{border-color:var(--pinkD)}
-.tin[readonly]{background:var(--lemon);border-color:var(--lemonD)}
 .tlab{font-size:13px;color:var(--sub);margin:0 0 3px 6px}
 .doneBox{background:var(--mint);border-radius:24px;padding:22px;font-size:28px;text-align:center;margin-top:14px}
 .luck{perspective:800px;margin:16px auto;width:240px;height:150px}
 .luck .in{position:relative;width:100%;height:100%;transition:transform .8s;transform-style:preserve-3d;animation:flip 1s .4s forwards}
 @keyframes flip{to{transform:rotateY(180deg)}}
 .luck .fa,.luck .ba{position:absolute;inset:0;border-radius:22px;display:flex;align-items:center;justify-content:center;font-size:30px;backface-visibility:hidden}
-.luck .fa{background:var(--lav)}
-.luck .ba{background:var(--lemon);transform:rotateY(180deg);flex-direction:column}
-.brk{display:flex;justify-content:space-between;font-size:22px;padding:6px 4px;border-bottom:2px dashed var(--line)}
+.luck .fa{background:var(--lav)} .luck .ba{background:var(--lemon);transform:rotateY(180deg);flex-direction:column}
 .score{font-size:64px;color:var(--pinkD)}
 .toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);background:#fff;border:3px solid var(--pinkD);border-radius:20px;padding:14px 22px;font-size:22px;z-index:99;box-shadow:0 6px 0 var(--pinkD);max-width:92vw;text-align:center}
 .shake{animation:shake .4s}
 @keyframes shake{20%,60%{transform:translateX(-8px)}40%,80%{transform:translateX(8px)}}
 .bounce{animation:bounce 1s infinite}
 @keyframes bounce{50%{transform:translateY(-10px)}}
-.toggle{display:inline-flex;align-items:center;gap:6px}
-.setup{max-width:640px;margin:60px auto;line-height:1.7;font-size:19px}
-.setup code{background:var(--lemon);padding:2px 6px;border-radius:6px;font-family:monospace;font-size:15px}
 </style>
 </head>
 <body>
 <div id="app"></div>
 
 <script type="module">
-/* =========================================================
-   🔧 1) 여기에 파이어베이스 설정을 붙여 넣으세요
-   (파이어베이스 콘솔 → 프로젝트 설정 → 내 앱 → SDK 설정)
-   Realtime Database를 꼭 만들어 두고 databaseURL도 넣어야 해요.
-   ========================================================= */
+/* ========== 🔧 파이어베이스 설정 ========== */
 const firebaseConfig = {
   apiKey: "AIzaSyDiehLZ1aKv8E3N_pD4bNmw0zgMexau99U",
   authDomain: "marketgo-80ab5.firebaseapp.com",
-  // ⚠️ Realtime Database 화면 맨 위에 보이는 주소와 같아야 해요.
-  //    싱가포르(asia-southeast1)로 만들었다면 아래 주소로 바꾸세요:
-  //    https://marketgo-80ab5-default-rtdb.asia-southeast1.firebasedatabase.app
   databaseURL: "https://marketgo-80ab5-default-rtdb.firebaseio.com",
   projectId: "marketgo-80ab5",
   storageBucket: "marketgo-80ab5.firebasestorage.app",
@@ -147,21 +130,23 @@ const firebaseConfig = {
   appId: "1:666715038541:web:b0f84a9703aa70aeca4d04"
 };
 
-/* =========================================================
-   🎮 2) 라운드 설정 (원하면 숫자만 바꾸세요)
-   count: 외울 물건 수 / others: 다른 친구 물건 섞기 / traps: 함정 보기
-   bpm: 박자 빠르기 / per: 1개당 점수 / limit: 답 고르는 시간(초)
-   ========================================================= */
+/* ========== 🎮 라운드 설정 (숫자만 바꾸면 돼요) ==========
+   start: 첫 단계 물건 수 / max: 마지막 단계 물건 수 (한 단계마다 1개씩 늘어남)
+   others: 가짜 보기(다른 친구 물건) / traps: 비슷한 함정 보기
+   mult: 점수 배수 (0이면 연습) / reverse: 거꾸로 / typing: 직접 쓰기 */
 const ROUNDS = [
-  {name:'정방향',   emoji:'🍎', desc:'나온 순서대로 눌러요!',                 count:10, others:6, traps:0, bpm:84,  per:10, reverse:false, typing:false, limit:60},
-  {name:'함정 주의', emoji:'🪤', desc:'비슷한 가짜가 숨어 있어요!',             count:12, others:4, traps:4, bpm:96,  per:10, reverse:false, typing:false, limit:60},
-  {name:'거꾸로',   emoji:'🔄', desc:'마지막 물건부터 거꾸로! 점수 3배!',       count:10, others:5, traps:5, bpm:104, per:30, reverse:true,  typing:false, limit:70},
-  {name:'직접 쓰기', emoji:'✍️', desc:'보기 없이 직접 써요! (오타 1글자는 봐줌)', count:8,  others:0, traps:0, bpm:96,  per:20, reverse:false, typing:true,  limit:90},
+  {name:'연습',     emoji:'🧪', desc:'점수 없이 몸풀기!',                         start:2, max:3, others:1, traps:0, bpm:80, mult:0, practice:true},
+  {name:'차근차근', emoji:'🍎', desc:'하나씩 늘어나요. 처음부터 순서대로 눌러요!',   start:2, max:5, others:1, traps:0, bpm:82, mult:1},
+  {name:'함정 주의', emoji:'🪤', desc:'비슷한 가짜가 숨어 있어요!',                 start:2, max:6, others:1, traps:2, bpm:88, mult:1},
+  {name:'거꾸로',   emoji:'🔄', desc:'마지막 물건부터 거꾸로! 점수 3배!',           start:2, max:5, others:2, traps:0, bpm:92, mult:3, reverse:true},
+  {name:'끝판왕',   emoji:'👑', desc:'끝까지 가 보자! 점수 2배!',                  start:2, max:7, others:1, traps:2, bpm:96, mult:2},
+  {name:'번외: 직접 쓰기', emoji:'✍️', desc:'보기 없이 직접 써요! (오타 1글자는 봐줌)', start:2, max:5, others:0, traps:0, bpm:84, mult:1, typing:true, bonus:true},
 ];
-const COMBO_MIN = 5, COMBO_BONUS = 50;   // 5개 이상 연속 정답 보너스
-const BREAKER_PER = 3;                   // 내 물건을 친구 1명이 틀릴 때마다 +3
-const SPEED_MAX = 30;                    // 빨리 다 고르면 최대 +30
-const MIN_ITEMS = 6;                     // 게임 시작에 필요한 최소 물건 수
+const SHOW_MS = 3500;        // 물건 한 개 보여주는 시간
+const CHECK_MS = 6000;       // 단계마다 정답 순서 다시 보여주는 시간
+const answerSec = (cfg, k) => cfg.typing ? 12 + 6 * k : 10 + 3 * k;   // 답하는 시간(초)
+const PT_ITEM = 5, PT_POS = 5, PT_PERFECT = 20, SPEED_MAX = 10, BREAKER_PER = 1;
+const MIN_ITEMS = 8;
 
 const LOOK = {
   '사과':['풋사과','사과즙'],'계란':['메추리알','달걀말이'],'달걀':['메추리알','계란말이'],'우유':['두유','딸기우유'],
@@ -179,12 +164,12 @@ const LOOK = {
   '연필':['샤프','색연필'],'지우개':['수정테이프','지우개가루'],'꽃':['화분','꽃다발'],'시계':['손목시계','알람시계'],
   '아이스크림':['빙수','아이스크림콘'],'떡':['인절미','송편'],'호떡':['붕어빵','꿀호떡'],'붕어빵':['호떡','국화빵'],
   '순대':['떡볶이','순대국'],'어묵':['오뎅','어묵탕'],'만두':['군만두','찐빵'],'우산':['양산','우비'],'장화':['장갑','운동화'],
-  '마라탕':['마라샹궈','마라떡볶이'],'탕후루':['딸기탕후루','샤인머스캣'],'샤인머스캣':['청포도','포도'],'두쫀쿠':['두바이초콜릿','쫀득쿠키'],
+  '마라탕':['마라샹궈','마라떡볶이'],'탕후루':['딸기탕후루','샤인머스캣'],'샤인머스캣':['청포도','포도'],
 };
 const RESERVE = ['사과','계란','바나나','라면','떡볶이','붕어빵','고등어','두부','양말','우산','김밥','호떡','수박','치킨','콜라','당근','만두','젤리','빗자루','장화','고무장갑','참기름','멸치','국자'];
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getDatabase, ref, set, get, update, onValue, runTransaction, remove, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import { getDatabase, ref, set, get, update, onValue, runTransaction, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
 /* ---------------- 공통 ---------------- */
 const app = document.getElementById('app');
@@ -194,6 +179,7 @@ const el = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const rid = () => Math.random().toString(36).slice(2, 10);
 const shuffle = arr => { const a = [...arr]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const sleep = ms => new Promise(r => setTimeout(r, ms));
 function norm(s){
   let n = String(s || '').normalize('NFC').toLowerCase().replace(/[\s.,!?~'"`#$\[\]\/·\-_()^*:;]/g, '');
   if (n.length > 2 && n.endsWith('들')) n = n.slice(0, -1);
@@ -219,16 +205,14 @@ function toast(msg){
   const t = document.createElement('div'); t.className = 'toast pop'; t.textContent = msg;
   document.body.appendChild(t); clearTimeout(toastT); toastT = setTimeout(() => t.remove(), 2600);
 }
-const configured = firebaseConfig.databaseURL && !firebaseConfig.databaseURL.includes('여기');
-let db = null, offset = 0;
+const db = getDatabase(initializeApp(firebaseConfig));
+let offset = 0, connected = false;
 const now = () => Date.now() + offset;
-if (configured) {
-  db = getDatabase(initializeApp(firebaseConfig));
-  onValue(ref(db, '.info/serverTimeOffset'), s => { offset = s.val() || 0; });
-  let connected = false;
-  onValue(ref(db, '.info/connected'), s => { connected = !!s.val(); });
-  setTimeout(() => { if (!connected) toast('⚠️ 데이터베이스에 연결이 안 돼요. Realtime Database 주소와 규칙을 확인해 주세요'); }, 7000);
-}
+onValue(ref(db, '.info/serverTimeOffset'), s => { offset = s.val() || 0; });
+onValue(ref(db, '.info/connected'), s => { connected = !!s.val(); });
+setTimeout(() => { if (!connected) toast('⚠️ 인터넷 연결을 확인해 주세요'); }, 7000);
+const targetOf = (rd, k, reverse) => { const c = rd.chain.slice(0, k); return reverse ? c.reverse() : c; };
+const roundLabel = (r, cfg) => cfg.practice ? '연습' : cfg.bonus ? '번외' : r + '라운드';
 
 /* ---------------- 박자 엔진 (쿵-짝) ---------------- */
 const Beat = {
@@ -236,15 +220,13 @@ const Beat = {
   ensure(){
     if (!this.ctx) {
       const C = window.AudioContext || window.webkitAudioContext; this.ctx = new C();
-      this.master = this.ctx.createGain(); this.master.gain.value = 0.8; this.master.connect(this.ctx.destination);
+      this.master = this.ctx.createGain(); this.master.gain.value = 0.7; this.master.connect(this.ctx.destination);
       const len = Math.floor(this.ctx.sampleRate * 0.3); const b = this.ctx.createBuffer(1, len, this.ctx.sampleRate);
       const d = b.getChannelData(0); for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1; this.noise = b;
     }
     if (this.ctx.state === 'suspended') this.ctx.resume();
   },
-  get running(){ return !!this.timer; },
   start(bpm, cb){ this.ensure(); this.stop(); this.bpm = bpm; this.cb = cb; this.idx = 0; this.gen++; this.next = this.ctx.currentTime + 0.15; this.timer = setInterval(() => this.tick(), 25); },
-  setCb(cb){ this.cb = cb; },
   stop(){ if (this.timer) clearInterval(this.timer); this.timer = null; this.gen++; },
   tick(){
     const ctx = this.ctx;
@@ -276,22 +258,38 @@ const Beat = {
   shaker(t){
     const c = this.ctx, s = c.createBufferSource(); s.buffer = this.noise;
     const f = c.createBiquadFilter(); f.type = 'highpass'; f.frequency.value = 7000;
-    const g = c.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.18, t + 0.003); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.05);
+    const g = c.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.15, t + 0.003); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.05);
     s.connect(f).connect(g).connect(this.master); s.start(t); s.stop(t + 0.08);
   },
-  tone(freq, t, dur = 0.25, vol = 0.35, type = 'triangle'){
-    const c = this.ctx, o = c.createOscillator(), g = c.createGain(); o.type = type; o.frequency.value = freq;
+  tone(freq, t, dur = 0.25, vol = 0.35){
+    const c = this.ctx, o = c.createOscillator(), g = c.createGain(); o.type = 'triangle'; o.frequency.value = freq;
     g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
     o.connect(g).connect(this.master); o.start(t); o.stop(t + dur + 0.02);
   },
-  ding(){ if (this.muted || !this.ctx) return; const ns = [523.25, 587.33, 659.25, 783.99, 880]; const t = this.ctx.currentTime; this.tone(ns[Math.floor(Math.random() * ns.length)], t); this.tone(ns[Math.floor(Math.random() * ns.length)] * 2, t + 0.07, 0.2, 0.12); },
+  ding(){ if (this.muted || !this.ctx) return; const ns = [523.25, 587.33, 659.25, 783.99, 880]; const t = this.ctx.currentTime; this.tone(ns[Math.floor(Math.random() * 5)], t); this.tone(ns[Math.floor(Math.random() * 5)] * 2, t + 0.07, 0.2, 0.12); },
   fanfare(){ if (this.muted) return; this.ensure(); const t = this.ctx.currentTime; [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => this.tone(f, t + i * 0.11, 0.35, 0.3)); },
 };
+function beatVis(i){
+  for (let k = 0; k < 4; k++) { const d = el('bd' + k); if (d) d.className = 'beatDot' + (k === i % 4 ? ' on' + (i % 2 ? ' c' : '') : ''); }
+}
+const beatRow = () => `<div class="beatRow">${[0,1,2,3].map(i => `<div class="beatDot" id="bd${i}"></div>`).join('')}</div>`;
+
+/* 정답 채점 (보기 / 직접 쓰기 공통) */
+function gradeList(target, labels, list, typing){
+  const eq = (pick, id) => typing ? fuzzyEq(pick, labels[id]) : pick === id;
+  const flags = target.map((id, i) => !!list[i] && eq(list[i], id));
+  const used = new Set(); let inc = 0;
+  for (const id of target) {
+    const j = list.findIndex((p, i) => !used.has(i) && p && eq(p, id));
+    if (j >= 0) { used.add(j); inc++; }
+  }
+  return { flags, inc, pos: flags.filter(Boolean).length };
+}
 
 /* =========================================================
    👩‍🏫 선생님 화면
    ========================================================= */
-let room = null, code = params.get('room'), tKey = '', finalizing = false, roundStarting = false;
+let room = null, code = params.get('room'), tKey = '', loopGen = 0, looping = false, paused = false, forceClose = false, starting = false;
 
 function T_init(){
   if (!code) {
@@ -299,7 +297,7 @@ function T_init(){
     app.innerHTML = `<div class="wrap"><div class="stage">
       <div class="bigEmoji bounce">🧺</div>
       <div class="title">시장에 <span>가면</span></div>
-      <p class="muted" style="font-size:22px">모두가 같이 외우는 실시간 기억 게임</p>
+      <p class="muted" style="font-size:22px">차곡차곡 늘어나는 실시간 기억 게임</p>
       <button class="btn big" data-act="newRoom">새 게임 만들기 ✨</button>
       ${saved ? `<button class="btn sky" data-act="resume" data-code="${esc(saved)}">이어서 하기 (방 ${esc(saved)})</button>` : ''}
     </div></div>`;
@@ -317,31 +315,33 @@ function T_init(){
 async function T_newRoom(){
   let c;
   for (let i = 0; i < 15; i++) { c = String(Math.floor(1000 + Math.random() * 9000)); const s = await get(ref(db, 'rooms/' + c + '/state')); if (!s.exists()) break; }
-  await set(ref(db, 'rooms/' + c), { createdAt: Date.now(), state: { phase:'lobby', round:0, showNames:true, revealIdx:-1, answerEndsAt:0 } });
+  await set(ref(db, 'rooms/' + c), { createdAt: Date.now(), state: { phase:'lobby', round:-1, step:0, showNames:true, answerEndsAt:0 } });
   localStorage.setItem('market_teacher_room', c);
   location.href = location.pathname + '?t=1&room=' + c;
 }
 
 function T_topbar(){
-  const st = room.state;
+  const st = room.state, inRound = ['show','answer','check'].includes(st.phase);
   return `<div class="topbar">
     <div class="logo">🧺 시장에 가면</div>
     <span class="pill">방 코드 <b style="color:var(--pinkD)">${esc(code)}</b></span>
+    ${inRound ? `<button class="btn sm lemon" data-act="togglePause">${paused ? '▶ 다음 단계 진행' : '⏸ 다음 단계 전 멈추기'}</button>` : ''}
     <button class="btn sm lav" data-act="toggleNames">${st.showNames ? '👤 이름 보이기 ON' : '🙈 이름 숨기기'}</button>
-    <button class="btn sm sky" data-act="toggleMute" id="muteBtn">${Beat.muted ? '🔇 소리 꺼짐' : '🔊 소리 켜짐'}</button>
+    <button class="btn sm sky" data-act="toggleMute">${Beat.muted ? '🔇 소리 꺼짐' : '🔊 소리 켜짐'}</button>
     <button class="btn sm" data-act="newGame">새 게임</button>
   </div>`;
 }
+const resumeBtn = () => looping ? '' : `<button class="btn big sky" data-act="resumeLoop">▶ 이어서 하기</button>`;
 
 function T_render(){
   const st = room.state;
-  const key = st.phase + ':' + st.round + ':' + st.showNames;
+  const key = [st.phase, st.round, st.step, st.showNames, looping].join(':');
   if (key !== tKey) { tKey = key; T_shell(); }
   T_update();
 }
 
 function T_shell(){
-  const st = room.state, r = st.round, cfg = ROUNDS[r - 1];
+  const st = room.state, r = st.round, cfg = ROUNDS[r], rd = room.rounds && room.rounds[r];
   if (st.phase === 'lobby') {
     const url = location.origin + location.pathname + '?room=' + code;
     app.innerHTML = `<div class="wrap">${T_topbar()}
@@ -361,44 +361,54 @@ function T_shell(){
           <div class="card"><h3>🙋 들어온 친구 <span id="playerCount" class="muted"></span></h3><div id="playerChips" class="chips"></div></div>
         </div>
       </div>
-      <div class="center" style="margin-top:22px">
+      <div class="center" style="margin-top:22px;display:flex;gap:14px;justify-content:center;flex-wrap:wrap">
+        <button class="btn big lav" id="practiceBtn" data-act="startRound" data-r="0">🧪 연습하기</button>
         <button class="btn big mint" id="startBtn" data-act="startRound" data-r="1">1라운드 시작 ▶</button>
-        <p class="muted" id="startHint"></p>
-      </div></div>`;
+      </div>
+      <p class="muted center" id="startHint"></p></div>`;
     if (window.QRCode) new QRCode(el('qr'), { text: url, width: 200, height: 200, colorDark: '#5B4B57', colorLight: '#ffffff' });
   }
   else if (st.phase === 'intro') {
     app.innerHTML = `<div class="wrap">${T_topbar()}<div class="stage">
-      <span class="roundBadge">${r}라운드 / 4</span>
+      <span class="roundBadge">${cfg.practice ? '연습 라운드' : cfg.bonus ? '번외 라운드' : r + '라운드 / 4'}</span>
       <div class="bigEmoji bounce">${cfg.emoji}</div>
       <div class="title">${esc(cfg.name)}</div>
       <div class="rule">${esc(cfg.desc)}<br>
-        <span class="muted">물건 ${room.rounds[r].seq.length}개 · 1개당 ${cfg.per}점 · 첫 칸은 선물 🎁</span></div>
-      <button class="btn big" data-act="playShow">▶ 박자 시작!</button>
+        <span class="muted">물건 ${cfg.start}개로 시작 → 한 단계마다 1개씩 늘어나서 ${rd.chain.length}개까지!</span><br>
+        <span class="muted" style="font-size:22px">🧺 기억한 물건 ${PT_ITEM}점 + 순서까지 맞으면 ${PT_POS}점 더${cfg.mult > 1 ? ` · ×${cfg.mult}` : ''}${cfg.practice ? ' (연습은 점수 없음)' : ''}</span></div>
+      <button class="btn big" data-act="playRound">▶ 시작!</button>
     </div></div>`;
   }
   else if (st.phase === 'show') {
     app.innerHTML = `<div class="wrap">${T_topbar()}<div class="stage">
-      <span class="roundBadge">${r}라운드 · ${esc(cfg.name)}</span>
+      <span class="roundBadge">${roundLabel(r, cfg)} · ${esc(cfg.name)} · 물건 ${st.step}개째</span>
       <div class="chant" id="chant">시장에 가면~</div>
-      <div id="itemSlot" style="min-height:220px;display:flex;flex-direction:column;align-items:center;gap:14px"></div>
-      <div class="beatRow">${[0,1,2,3].map(i => `<div class="beatDot" id="bd${i}"></div>`).join('')}</div>
-      <div class="prog" id="prog"></div>
-      ${Beat.running ? '' : `<button class="btn sky" data-act="playShow">▶ 처음부터 다시 보여주기</button>`}
+      <div id="itemSlot" style="min-height:240px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px"></div>
+      ${beatRow()}
+      ${resumeBtn()}
     </div></div>`;
   }
   else if (st.phase === 'answer') {
     app.innerHTML = `<div class="wrap">${T_topbar()}<div class="stage">
-      <span class="roundBadge">${r}라운드 · ${esc(cfg.name)}</span>
-      <div class="rule">${cfg.reverse ? '⬅️ 거꾸로! 마지막 물건부터 눌러요' : cfg.typing ? '✍️ 순서대로 직접 써요' : '👆 순서대로 눌러요'}</div>
+      <span class="roundBadge">${roundLabel(r, cfg)} · ${esc(cfg.name)} · 물건 ${st.step}개</span>
+      <div class="rule">${cfg.reverse ? '⬅️ 마지막 물건부터 거꾸로 눌러요!' : cfg.typing ? '✍️ 처음부터 순서대로 써요!' : '👆 처음부터 순서대로 눌러요!'}</div>
       <div class="timer" id="tTimer">--</div>
       <div class="bar" id="tBar" style="max-width:700px"><i></i></div>
-      <div class="beatRow">${[0,1,2,3].map(i => `<div class="beatDot" id="bd${i}"></div>`).join('')}</div>
+      ${beatRow()}
       <div class="rule" id="doneCount"></div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center">
-        ${Beat.running ? '' : `<button class="btn sky" data-act="resumeBeat">🥁 박자 켜기</button>`}
-        <button class="btn lemon" data-act="closeNow">⏹ 지금 마감</button>
+        ${looping ? `<button class="btn lemon" data-act="closeNow">⏹ 지금 마감</button>` : resumeBtn()}
       </div>
+    </div></div>`;
+  }
+  else if (st.phase === 'check') {
+    app.innerHTML = `<div class="wrap">${T_topbar()}<div class="stage" style="gap:20px">
+      <span class="roundBadge">정답 확인 · 물건 ${st.step}개</span>
+      <div class="chant" style="font-size:34px">${cfg.reverse ? '거꾸로 순서는~' : '시장에 가면~'}</div>
+      <div id="checkBody" class="chainRow"></div>
+      <div class="rule" id="checkInfo"></div>
+      ${beatRow()}
+      ${resumeBtn()}
     </div></div>`;
   }
   else if (st.phase === 'result') {
@@ -421,41 +431,45 @@ function T_update(){
     const ps = Object.values(room.players || {});
     el('playerCount').textContent = ps.length + '명';
     el('playerChips').innerHTML = ps.map(p => `<span class="chip soft">${esc(p.name)}</span>`).join('') || '<p class="muted">아직 아무도 없어요</p>';
-    el('startBtn').disabled = items.length < MIN_ITEMS;
-    el('startHint').textContent = items.length < MIN_ITEMS ? `물건이 ${MIN_ITEMS}개 이상 있어야 시작할 수 있어요` : '이상한 물건은 × 로 지우고 시작하세요';
+    const ok = items.length >= MIN_ITEMS;
+    el('startBtn').disabled = !ok; el('practiceBtn').disabled = !ok;
+    el('startHint').textContent = ok ? '이상한 물건은 × 로 지우고 시작하세요' : `물건이 ${MIN_ITEMS}개 이상 있어야 시작할 수 있어요 (예비 물건으로 채워도 돼요)`;
   }
   else if (st.phase === 'answer') {
     const total = Object.keys(room.players || {}).length;
-    const picks = (room.picks && room.picks[r]) || {};
+    const picks = (room.picks && room.picks[r] && room.picks[r][st.step]) || {};
     const done = Object.values(picks).filter(p => p.doneAt).length;
     el('doneCount').textContent = `✅ ${done} / ${total}명 완료`;
   }
-  else if (st.phase === 'result') { el('resultBody').innerHTML = T_resultHTML(); }
-  else if (st.phase === 'end') { el('endBody').innerHTML = T_endHTML(); }
+  else if (st.phase === 'check') {
+    const rd = room.rounds[r], cfg = ROUNDS[r], k = st.step;
+    const target = targetOf(rd, k, cfg.reverse);
+    const miss = (rd.miss && rd.miss[k]) || {};
+    const items = room.items || {};
+    const newId = rd.chain[k - 1];
+    el('checkBody').innerHTML = target.map((id, i) => `<div class="ans pop${id === newId ? ' new' : ''}"><span class="n">${i + 1}</span>${esc(rd.labels[id])}
+      <small>${st.showNames && items[id] ? esc(items[id].author) + ' · ' : ''}${miss[id] ? '😵 ' + miss[id] + '명 깜빡' : '👍 다 맞힘'}</small></div>`).join('');
+    const vals = Object.values((rd.steps && rd.steps[k]) || {}).filter(x => !x.absent);
+    const perfect = vals.filter(x => x.perfect).length;
+    el('checkInfo').innerHTML = `🌟 순서까지 완벽: <b>${perfect}명</b> / ${vals.length}명` + (k < rd.chain.length ? ' · 다음엔 하나 더!' : ' · 라운드 끝!');
+  }
+  else if (st.phase === 'result') el('resultBody').innerHTML = T_resultHTML();
+  else if (st.phase === 'end') el('endBody').innerHTML = T_endHTML();
 }
 
 function T_tick(){
   if (!room || room.state.phase !== 'answer') return;
-  const st = room.state, rem = st.answerEndsAt - now();
-  const cfg = ROUNDS[st.round - 1];
+  const st = room.state, rem = st.answerEndsAt - now(), lim = answerSec(ROUNDS[st.round], st.step) * 1000;
   const t = el('tTimer'), bar = el('tBar');
   if (t) t.textContent = Math.max(0, Math.ceil(rem / 1000));
-  if (bar) { bar.firstElementChild.style.width = Math.max(0, Math.min(100, rem / (cfg.limit * 1000) * 100)) + '%'; bar.classList.toggle('hurry', rem < 10000); }
-  const total = Object.keys(room.players || {}).length;
-  const picks = (room.picks && room.picks[st.round]) || {};
-  const done = Object.values(picks).filter(p => p.doneAt).length;
-  if (rem <= -500 || (total > 0 && done >= total)) T_finalize();
-}
-
-function beatVis(i){
-  for (let k = 0; k < 4; k++) { const d = el('bd' + k); if (d) d.className = 'beatDot' + (k === i % 4 ? ' on' + (i % 2 ? ' c' : '') : ''); }
+  if (bar) { bar.firstElementChild.style.width = Math.max(0, Math.min(100, rem / lim * 100)) + '%'; bar.classList.toggle('hurry', rem < 6000); }
 }
 
 function makeTraps(seqTexts, usedNorms, k){
   const out = [], used = new Set(usedNorms), cands = [];
   for (const t of shuffle(seqTexts)) { const list = LOOK[norm(t)]; if (list) cands.push(...list); }
   for (const c of shuffle(cands)) { if (out.length >= k) break; const n = norm(c); if (!used.has(n)) { used.add(n); out.push(c); } }
-  const pre = ['왕', '미니', '꼬마', '황금', '아기', '쪼꼬미'];
+  const pre = ['왕', '미니', '꼬마', '황금', '아기'];
   for (let g = 0; out.length < k && g < 200; g++) {
     const c = pre[Math.floor(Math.random() * pre.length)] + seqTexts[Math.floor(Math.random() * seqTexts.length)];
     const n = norm(c); if (!used.has(n)) { used.add(n); out.push(c); }
@@ -464,122 +478,134 @@ function makeTraps(seqTexts, usedNorms, k){
 }
 
 async function T_startRound(r){
-  if (roundStarting) return; roundStarting = true;
+  if (starting) return; starting = true;
   try {
-    const cfg = ROUNDS[r - 1];
-    const items = room.items || {};
-    const ids = Object.keys(items);
+    loopGen++; looping = false; Beat.stop();
+    const cfg = ROUNDS[r], items = room.items || {}, ids = Object.keys(items);
     const usage = {};
-    Object.values(room.rounds || {}).forEach(rd => (rd.seq || []).forEach(id => usage[id] = (usage[id] || 0) + 1));
+    Object.entries(room.rounds || {}).forEach(([rr, rd]) => { if (+rr > 0) (rd.chain || []).forEach(id => usage[id] = (usage[id] || 0) + 1); });
     const ordered = shuffle(ids).sort((a, b) => (usage[a] || 0) - (usage[b] || 0));
-    const count = Math.min(cfg.count, ids.length);
-    const seq = shuffle(ordered.slice(0, count));
-    const labels = {}; seq.forEach(id => labels[id] = items[id].text);
-    const target = cfg.reverse ? [...seq].reverse() : seq;
-    let options = [];
-    if (!cfg.typing) {
-      const others = shuffle(ids.filter(id => !seq.includes(id))).slice(0, cfg.others);
-      const traps = makeTraps(seq.map(id => items[id].text), ids.map(id => items[id].norm), cfg.traps);
-      options = shuffle([
-        ...seq.map(id => ({ id, text: items[id].text })),
-        ...others.map(id => ({ id, text: items[id].text })),
-        ...traps.map((t, i) => ({ id: 'trap' + i, text: t })),
-      ]);
-    }
+    const len = Math.max(cfg.start, Math.min(cfg.max, ids.length - cfg.others));
+    const chain = shuffle(ordered.slice(0, len));
+    const labels = {}; chain.forEach(id => labels[id] = items[id].text);
+    const others = shuffle(ids.filter(id => !chain.includes(id))).slice(0, cfg.others);
+    const traps = makeTraps(chain.map(id => items[id].text), ids.map(id => items[id].norm), cfg.traps);
+    const decoys = [...others.map(id => ({ id, text: items[id].text })), ...traps.map((t, i) => ({ id: 'trap' + i, text: t }))];
     const pids = Object.keys(room.players || {});
-    const luck = shuffle(pids).slice(0, Math.max(1, Math.round(pids.length / 8)));
-    finalizing = false;
+    const luck = (cfg.practice || cfg.bonus) ? [] : shuffle(pids).slice(0, Math.max(1, Math.round(pids.length / 8)));
+    paused = false;
     await update(ref(db, 'rooms/' + code), {
-      ['rounds/' + r]: { seq, labels, options, first: target[0], slotCount: seq.length, reverse: cfg.reverse, typing: cfg.typing, luck },
+      ['rounds/' + r]: { chain, labels, decoys, luck, start: cfg.start },
       ['picks/' + r]: null,
-      'state/phase': 'intro', 'state/round': r, 'state/revealIdx': -1, 'state/answerEndsAt': 0,
+      'state/phase': 'intro', 'state/round': r, 'state/step': 0, 'state/answerEndsAt': 0,
     });
-  } finally { roundStarting = false; }
+  } finally { starting = false; }
 }
 
-function T_playShow(){
-  const st = room.state, r = st.round, cfg = ROUNDS[r - 1], rd = room.rounds[r];
-  const n = rd.seq.length;
-  update(ref(db, 'rooms/' + code + '/state'), { phase: 'show', revealIdx: -1 });
-  Beat.start(cfg.bpm, i => {
-    beatVis(i);
-    const chant = el('chant'), slot = el('itemSlot'), prog = el('prog');
-    if (!chant) return;
-    if (i < 4) {
-      chant.textContent = '시장에 가면~'; chant.classList.remove('pop'); void chant.offsetWidth; chant.classList.add('pop');
-      if (slot) slot.innerHTML = ''; if (prog) prog.textContent = '준비~';
-      return;
-    }
-    const j = i - 4;
-    if (j < 2 * n) {
-      if (j % 2 === 0) {
-        const k = j / 2, id = rd.seq[k], last = k === n - 1;
-        const author = (room.items && room.items[id] && room.items[id].author) || '';
-        chant.textContent = '시장에 가면~';
-        slot.innerHTML = `<div class="itemCard pop">${esc(rd.labels[id])}<span class="tail">${last ? '도 있다!' : '도 있고~'}</span></div>
-          ${room.state.showNames && author ? `<div class="author pop">by ${esc(author)}</div>` : ''}`;
-        prog.textContent = `${k + 1} / ${n}`;
-        Beat.ding();
-        update(ref(db, 'rooms/' + code + '/state'), { revealIdx: k });
-      }
-      return;
-    }
-    if (j === 2 * n) { slot.innerHTML = '<div class="bigEmoji pop">🤔</div>'; chant.textContent = '자, 기억나니?'; prog.textContent = ''; }
-    if (j === 2 * n + 2) T_startAnswer();
-  });
-  tKey = 'show:' + r + ':' + room.state.showNames;
-  room.state.phase = 'show';
-  T_shell();
-}
-
-function T_startAnswer(){
-  const cfg = ROUNDS[room.state.round - 1];
-  Beat.setCb(i => beatVis(i));
-  update(ref(db, 'rooms/' + code + '/state'), { phase: 'answer', answerEndsAt: now() + cfg.limit * 1000, revealIdx: -1 });
-}
-
-async function T_finalize(){
-  if (finalizing) return; finalizing = true;
+/* 라운드 진행: 보여주기 → 답하기 → 정답 확인 → 하나 더 ... */
+async function T_runRound(fromStep){
+  const g = ++loopGen; looping = true; forceClose = false;
+  const r = room.state.round, cfg = ROUNDS[r];
+  Beat.start(cfg.bpm, beatVis);
+  tKey = ''; T_render();
+  const alive = () => g === loopGen;
   try {
-    const R = (await get(ref(db, 'rooms/' + code))).val();
-    if (!R || R.state.phase !== 'answer') return;
+    const len = room.rounds[r].chain.length;
+    for (let k = fromStep; k <= len; k++) {
+      if (!alive()) return;
+      await T_show(r, k, alive);
+      if (!alive()) return;
+      await T_answer(r, k, alive);
+      if (!alive()) return;
+      await T_score(r, k);
+      await sleep(CHECK_MS);
+      while (paused && alive()) await sleep(300);
+    }
+    if (!alive()) return;
     Beat.stop();
-    const r = R.state.round, cfg = ROUNDS[r - 1], rd = R.rounds[r];
-    const items = R.items || {}, players = R.players || {}, picks = (R.picks && R.picks[r]) || {};
-    const target = rd.reverse ? [...rd.seq].reverse() : rd.seq;
-    const missed = {}; target.forEach(id => missed[id] = 0);
-    const res = {};
-    for (const pid of Object.keys(players)) {
-      const p = picks[pid];
-      if (!p) { res[pid] = { absent: true, correct: 0, base: 0, combo: 0, speed: 0, breaker: 0, lucky: false, score: 0 }; continue; }
-      const list = p.list || [];
-      const flags = target.map((id, i) => i === 0 ? true : (rd.typing ? fuzzyEq(list[i], rd.labels[id]) : list[i] === id));
-      flags.forEach((f, i) => { const id = target[i]; if (!f && items[id] && items[id].pid !== pid) missed[id]++; });
-      let run = 0, best = 0; flags.forEach(f => { run = f ? run + 1 : 0; best = Math.max(best, run); });
-      const correct = flags.filter(Boolean).length;
-      const complete = rd.typing ? !!p.doneAt : list.length >= rd.slotCount;
-      const speed = (complete && p.doneAt) ? Math.min(SPEED_MAX, Math.max(0, Math.floor((R.state.answerEndsAt - p.doneAt) / 2000))) : 0;
-      res[pid] = { correct, flags, base: correct * cfg.per, combo: best >= COMBO_MIN ? COMBO_BONUS : 0, speed, breaker: 0, lucky: (rd.luck || []).includes(pid), score: 0 };
-    }
-    target.forEach(id => { const a = items[id] && items[id].pid; if (a && res[a]) res[a].breaker += missed[id] * BREAKER_PER; });
-    const upd = {};
-    for (const [pid, x] of Object.entries(res)) {
-      if (!x.absent) x.score = (x.base + x.combo + x.speed + x.breaker) * (x.lucky ? 2 : 1);
-      else if (x.breaker) x.score = x.breaker;
-      upd['players/' + pid + '/total'] = (players[pid].total || 0) + x.score;
-      upd['players/' + pid + '/breakerTotal'] = (players[pid].breakerTotal || 0) + x.breaker;
-    }
-    const played = Object.values(res).filter(x => !x.absent).length;
-    for (const id of target) {
-      upd['missTotal/' + id] = ((R.missTotal && R.missTotal[id]) || 0) + missed[id];
-    }
-    upd['rounds/' + r + '/results'] = res;
-    upd['rounds/' + r + '/missed'] = missed;
-    upd['rounds/' + r + '/played'] = played;
-    upd['state/phase'] = 'result';
-    await update(ref(db, 'rooms/' + code), upd);
+    await update(ref(db, `rooms/${code}/state`), { phase: 'result' });
     Beat.fanfare();
-  } finally { finalizing = false; }
+  } finally { if (g === loopGen) { looping = false; tKey = ''; if (room) T_render(); } }
+}
+
+async function T_show(r, k, alive){
+  const rd = room.rounds[r];
+  await update(ref(db, `rooms/${code}/state`), { phase: 'show', step: k });
+  const newIds = k === rd.start ? rd.chain.slice(0, k) : [rd.chain[k - 1]];
+  const chant = () => el('chant'), slot = () => el('itemSlot');
+  if (chant()) chant().textContent = '시장에 가면~';
+  if (slot()) slot().innerHTML = k === rd.start ? '<div class="bigEmoji pop">🧺</div>' : `<div class="rule pop">지금까지 물건 ${k - 1}개! 그리고...</div>`;
+  await sleep(1500);
+  for (let i = 0; i < newIds.length; i++) {
+    if (!alive()) return;
+    const id = newIds[i], last = (k === rd.chain.length) && i === newIds.length - 1;
+    const author = (room.items && room.items[id] && room.items[id].author) || '';
+    if (slot()) slot().innerHTML = `<div class="itemCard pop">${esc(rd.labels[id])}<span class="tail">${last ? '도 있다!' : '도 있고~'}</span></div>
+      ${room.state.showNames && author ? `<div class="author pop">by ${esc(author)}</div>` : ''}`;
+    Beat.ding();
+    await sleep(SHOW_MS);
+  }
+  if (slot()) slot().innerHTML = '<div class="bigEmoji pop">🤔</div><div class="rule">자, 처음부터 기억나니?</div>';
+  await sleep(1200);
+}
+
+async function T_answer(r, k, alive){
+  forceClose = false;
+  await update(ref(db, `rooms/${code}/state`), { phase: 'answer', step: k, answerEndsAt: now() + answerSec(ROUNDS[r], k) * 1000 });
+  while (alive()) {
+    const st = room.state;
+    const total = Object.keys(room.players || {}).length;
+    const picks = (room.picks && room.picks[r] && room.picks[r][k]) || {};
+    const done = Object.values(picks).filter(p => p.doneAt).length;
+    if (forceClose || now() > st.answerEndsAt + 600 || (total > 0 && done >= total)) break;
+    await sleep(250);
+  }
+}
+
+async function T_score(r, k){
+  const R = (await get(ref(db, 'rooms/' + code))).val();
+  const rd = R.rounds[r], cfg = ROUNDS[r];
+  if (rd.steps && rd.steps[k]) { await update(ref(db, `rooms/${code}/state`), { phase: 'check', step: k }); return; }
+  const items = R.items || {}, players = R.players || {}, picks = (R.picks && R.picks[r] && R.picks[r][k]) || {};
+  const target = targetOf(rd, k, cfg.reverse);
+  const miss = {}; target.forEach(id => miss[id] = 0);
+  const res = {};
+  for (const pid of Object.keys(players)) {
+    const p = picks[pid];
+    if (!p) { res[pid] = { absent: true, score: 0, breaker: 0 }; continue; }
+    const list = p.list || [];
+    const { flags, inc, pos } = gradeList(target, rd.labels, list, !!cfg.typing);
+    const perfect = pos === k;
+    flags.forEach((f, i) => { const id = target[i]; if (!f && items[id] && items[id].pid !== pid) miss[id]++; });
+    const speed = (perfect && p.doneAt) ? Math.min(SPEED_MAX, Math.max(0, Math.floor((R.state.answerEndsAt - p.doneAt) / 2000))) : 0;
+    const base = (inc * PT_ITEM + pos * PT_POS + (perfect ? PT_PERFECT : 0) + speed) * cfg.mult;
+    res[pid] = { inc, pos, perfect, speed, base, flags, breaker: 0, lucky: (rd.luck || []).includes(pid), score: 0 };
+  }
+  if (!cfg.practice) target.forEach(id => { const a = items[id] && items[id].pid; if (a && res[a]) res[a].breaker += miss[id] * BREAKER_PER; });
+  const upd = {};
+  for (const [pid, x] of Object.entries(res)) {
+    x.score = cfg.practice ? 0 : ((x.base || 0) + x.breaker) * (x.lucky ? 2 : 1);
+    upd[`rounds/${r}/sum/${pid}`] = ((rd.sum && rd.sum[pid]) || 0) + x.score;
+    upd[`rounds/${r}/brk/${pid}`] = ((rd.brk && rd.brk[pid]) || 0) + x.breaker;
+    if (!cfg.practice) {
+      upd[`players/${pid}/total`] = (players[pid].total || 0) + x.score;
+      upd[`players/${pid}/breakerTotal`] = (players[pid].breakerTotal || 0) + x.breaker;
+    }
+  }
+  if (!cfg.practice) for (const id of target) upd['missTotal/' + id] = ((R.missTotal && R.missTotal[id]) || 0) + miss[id];
+  upd[`rounds/${r}/steps/${k}`] = res;
+  upd[`rounds/${r}/miss/${k}`] = miss;
+  upd['state/phase'] = 'check'; upd['state/step'] = k;
+  await update(ref(db, 'rooms/' + code), upd);
+}
+
+function T_resume(){
+  const st = room.state;
+  if (st.phase === 'check') {
+    const len = room.rounds[st.round].chain.length;
+    if (st.step >= len) { update(ref(db, `rooms/${code}/state`), { phase: 'result' }); return; }
+    T_runRound(st.step + 1);
+  } else T_runRound(Math.max(st.step || 0, room.rounds[st.round].start));
 }
 
 function topPlayers(n = 5){
@@ -589,29 +615,35 @@ function topPlayers(n = 5){
 const MEDAL = ['🥇', '🥈', '🥉', '🎀', '🌷'];
 
 function T_resultHTML(){
-  const r = room.state.round, cfg = ROUNDS[r - 1], rd = room.rounds[r];
-  const res = rd.results || {}, missed = rd.missed || {}, played = rd.played || 0;
-  const items = room.items || {}, players = room.players || {};
-  const target = rd.reverse ? [...rd.seq].reverse() : rd.seq;
-  const lucky = Object.entries(res).filter(([, x]) => x.lucky && !x.absent).map(([pid]) => players[pid] && players[pid].name).filter(Boolean);
-  let worst = null; target.forEach(id => { if (!worst || missed[id] > missed[worst]) worst = id; });
-  const worstItem = worst && items[worst];
-  const ans = target.map((id, i) => `<div class="ans"><span class="n">${i + 1}</span>${esc(rd.labels[id])}
-     <small>${room.state.showNames && items[id] ? esc(items[id].author) + ' · ' : ''}😵 ${missed[id] || 0}명 깜빡</small></div>`).join('');
+  const r = room.state.round, cfg = ROUNDS[r], rd = room.rounds[r];
+  const players = room.players || {}, items = room.items || {};
+  const ans = rd.chain.map((id, i) => `<div class="ans"><span class="n">${i + 1}</span>${esc(rd.labels[id])}${room.state.showNames && items[id] ? `<small>${esc(items[id].author)}</small>` : ''}</div>`).join('');
+  if (cfg.practice) {
+    return `<div class="stage" style="min-height:auto"><div class="bigEmoji bounce">🧪</div><div class="title">연습 <span>끝!</span></div>
+      <div class="rule">이제 진짜로 해 볼까요?</div><div class="chainRow">${ans}</div></div>
+      <div class="center" style="margin-top:22px;display:flex;gap:14px;justify-content:center;flex-wrap:wrap">
+        <button class="btn big lav" data-act="startRound" data-r="0">🧪 한 번 더 연습</button>
+        <button class="btn big mint" data-act="startRound" data-r="1">1라운드 시작 ▶</button></div>`;
+  }
+  const missAll = {}; Object.values(rd.miss || {}).forEach(m => Object.entries(m).forEach(([id, v]) => missAll[id] = (missAll[id] || 0) + v));
+  let worst = null; Object.keys(missAll).forEach(id => { if (!worst || missAll[id] > missAll[worst]) worst = id; });
+  const lucky = (rd.luck || []).map(pid => players[pid] && players[pid].name).filter(Boolean);
   const ranks = topPlayers().map((p, i) => `<div class="rank"><span class="medal">${MEDAL[i]}</span>${esc(p.name)}<b>${p.total}점</b></div>`).join('');
-  return `<div class="center" style="margin-bottom:14px"><span class="roundBadge">${r}라운드 결과 · ${esc(cfg.name)}</span></div>
+  const next = ROUNDS[r + 1];
+  let buttons;
+  if (next && !next.bonus) buttons = `<button class="btn big mint" data-act="startRound" data-r="${r + 1}">${r + 1}라운드 ▶ ${next.emoji} ${esc(next.name)}</button>`;
+  else if (next && next.bonus) buttons = `<button class="btn big lav" data-act="startRound" data-r="${r + 1}">${next.emoji} ${esc(next.name)}</button>
+      <button class="btn big lemon" data-act="toEnd">🎉 최종 결과 보기</button>`;
+  else buttons = `<button class="btn big lemon" data-act="toEnd">🎉 최종 결과 보기</button>`;
+  return `<div class="center" style="margin-bottom:14px"><span class="roundBadge">${roundLabel(r, cfg)} 결과 · ${esc(cfg.name)}</span></div>
     <div class="grid2">
-      <div class="card"><h3>✅ 정답 순서 ${rd.reverse ? '(거꾸로)' : ''}</h3><div class="ansList">${ans}</div></div>
+      <div class="card"><h3>🧺 이번 시장 물건</h3><div class="chainRow" style="justify-content:flex-start">${ans}</div></div>
       <div class="card"><h3>🏆 TOP 5</h3>${ranks || '<p class="muted">아직 없어요</p>'}
         ${lucky.length ? `<div class="hl">🍀 <b>행운 카드!</b> ${lucky.map(esc).join(', ')} — 이번 라운드 점수 2배!</div>` : ''}
-        ${worstItem && missed[worst] > 0 ? `<div class="hl lav">💥 <b>기억 브레이커</b> ${room.state.showNames ? esc(worstItem.author) + '의 ' : ''}'${esc(worstItem.text)}' — ${missed[worst]}명이 깜빡했어요!</div>` : ''}
-        <div class="hl mint">🙌 참여 ${played}명</div>
+        ${worst && missAll[worst] > 0 && items[worst] ? `<div class="hl lav">💥 <b>기억 브레이커</b> ${room.state.showNames ? esc(items[worst].author) + '의 ' : ''}'${esc(items[worst].text)}' — ${missAll[worst]}번 깜빡했어요!</div>` : ''}
       </div>
     </div>
-    <div class="center" style="margin-top:22px">
-      ${r < 4 ? `<button class="btn big mint" data-act="startRound" data-r="${r + 1}">${r + 1}라운드 ▶ ${ROUNDS[r].emoji} ${esc(ROUNDS[r].name)}</button>`
-              : `<button class="btn big lemon" data-act="toEnd">🎉 최종 결과 보기</button>`}
-    </div>`;
+    <div class="center" style="margin-top:22px;display:flex;gap:14px;justify-content:center;flex-wrap:wrap">${buttons}</div>`;
 }
 
 function T_endHTML(){
@@ -619,12 +651,11 @@ function T_endHTML(){
   const top = topPlayers();
   const brk = Object.values(players).filter(p => (p.breakerTotal || 0) > 0).sort((a, b) => (b.breakerTotal || 0) - (a.breakerTotal || 0))[0];
   const worst3 = Object.entries(mt).filter(([id, v]) => items[id] && v > 0).sort((a, b) => b[1] - a[1]).slice(0, 3);
-  return `<div class="stage" style="min-height:auto">
-      <div class="bigEmoji bounce">🎉</div><div class="title">시장 <span>폐장!</span></div></div>
+  return `<div class="stage" style="min-height:auto"><div class="bigEmoji bounce">🎉</div><div class="title">시장 <span>폐장!</span></div></div>
     <div class="grid2" style="margin-top:10px">
       <div class="card"><h3>🏆 최종 TOP 5</h3>${top.map((p, i) => `<div class="rank"><span class="medal">${MEDAL[i]}</span>${esc(p.name)}<b>${p.total}점</b></div>`).join('')}</div>
       <div class="card"><h3>✨ 특별상</h3>
-        ${brk ? `<div class="hl lav">💥 <b>기억 브레이커 왕</b><br>${esc(brk.name)} — 친구들을 ${Math.round(brk.breakerTotal / BREAKER_PER)}번 헷갈리게 했어요!</div>` : ''}
+        ${brk ? `<div class="hl lav">💥 <b>기억 브레이커 왕</b><br>${esc(brk.name)} — 친구들을 ${brk.breakerTotal}번 헷갈리게 했어요!</div>` : ''}
         ${worst3.length ? `<div class="hl">😵 <b>가장 많이 깜빡한 물건</b><br>${worst3.map(([id, v], i) => `${i + 1}. ${esc(items[id].text)} (${v}번)`).join('<br>')}</div>` : ''}
       </div>
     </div>`;
@@ -633,8 +664,8 @@ function T_endHTML(){
 /* =========================================================
    🧒 학생 화면
    ========================================================= */
-const S = { code: params.get('room') || '', pid: null, name: '', state: null, me: null, rd: null, rdRound: 0, list: [], listRound: 0,
-            hintUsed: false, done: false, locked: false, view: '', myItem: null, unsub: [] };
+const S = { code: params.get('room') || '', pid: null, name: '', state: null, me: null, rd: null, rdRound: -9,
+            list: [], stepKey: '', opts: [], hintRound: -9, done: false, locked: false, view: '', myItem: null };
 
 function S_init(){
   app.innerHTML = `<div class="s-wrap"><div class="stage">
@@ -668,70 +699,84 @@ async function S_join(){
   setInterval(S_tick, 200);
 }
 
-function S_top(){
-  return `<div class="s-top"><span class="me">🙂 ${esc(S.name)}</span><span class="pill">⭐ <span id="myTotal">${(S.me && S.me.total) || 0}점</span></span></div>`;
-}
+const S_top = () => `<div class="s-top"><span class="me">🙂 ${esc(S.name)}</span><span class="pill">⭐ <span id="myTotal">${(S.me && S.me.total) || 0}점</span></span></div>`;
 
 async function S_loadRound(r){
   if (S.rdRound === r && S.rd) return;
-  const s = await get(ref(db, `rooms/${S.code}/rounds/${r}`));
-  S.rd = s.val(); S.rdRound = r;
+  S.rd = (await get(ref(db, `rooms/${S.code}/rounds/${r}`))).val(); S.rdRound = r;
 }
 
 async function S_render(){
   const st = S.state; if (!st) return;
-  const key = st.phase + ':' + st.round;
+  const key = st.phase + ':' + st.round + ':' + st.step;
   if (key === S.view) return;
   S.view = key;
-  const r = st.round, cfg = ROUNDS[r - 1];
+  const r = st.round, cfg = ROUNDS[r];
   if (st.phase === 'lobby') {
     app.innerHTML = `<div class="s-wrap">${S_top()}<div class="stage" style="min-height:70vh">
       <div class="title" style="font-size:36px">시장에 무엇을 넣을까? 🧺</div>
       <div id="itemZone" style="width:min(560px,100%)"></div></div></div>`;
     S_lobbyZone();
-    if (S.myItem) onValue(ref(db, `rooms/${S.code}/items/${S.myItem}`), s => { if (!s.exists() && S.myItem) { S.myItem = null; localStorage.removeItem(`market_item_${S.code}_${S.pid}`); if (S.state.phase === 'lobby') { S_lobbyZone(); toast('선생님이 물건을 지웠어요. 다른 걸로 넣어 볼까요?'); } } });
+    if (S.myItem) S_watchItem(S.myItem);
     return;
   }
   if (st.phase === 'intro' || st.phase === 'show') {
+    if (st.phase === 'intro') S.rdRound = -9;
     S_loadRound(r);
     app.innerHTML = `<div class="s-wrap">${S_top()}<div class="stage">
-      <span class="roundBadge">${r}라운드 · ${esc(cfg.name)}</span>
+      <span class="roundBadge">${roundLabel(r, cfg)} · ${esc(cfg.name)}</span>
       <div class="bigEmoji bounce">👀</div>
       <div class="title" style="font-size:40px">${st.phase === 'intro' ? '곧 시작해요!' : '프로젝터를 봐요!'}</div>
-      <div class="rule">${esc(cfg.desc)}</div>
-      <div class="muted" style="font-size:20px">${st.phase === 'show' ? '순서를 꼭 외워요 🧠' : '1개당 ' + cfg.per + '점'}</div>
+      <div class="rule">${st.phase === 'show' ? `물건 ${st.step}개째! 새 물건을 외워요 🧠` : esc(cfg.desc)}</div>
     </div></div>`;
     return;
   }
   if (st.phase === 'answer') {
     await S_loadRound(r);
-    if (S.listRound !== r) {
-      S.listRound = r; S.hintUsed = false; S.done = false; S.locked = false;
-      const ex = (await get(ref(db, `rooms/${S.code}/picks/${r}/${S.pid}`))).val();
-      S.list = (ex && ex.list) || (S.rd.typing ? [] : [S.rd.first]);
+    const sk = r + ':' + st.step;
+    if (S.stepKey !== sk) {
+      S.stepKey = sk; S.done = false; S.locked = false;
+      const k = st.step;
+      S.opts = shuffle([...S.rd.chain.slice(0, k).map(id => ({ id, text: S.rd.labels[id] })), ...(S.rd.decoys || [])]);
+      const ex = (await get(ref(db, `rooms/${S.code}/picks/${r}/${k}/${S.pid}`))).val();
+      S.list = (ex && ex.list) || [];
       S.done = !!(ex && ex.doneAt);
-      if (!ex) set(ref(db, `rooms/${S.code}/picks/${r}/${S.pid}/list`), S.list);
+      if (!ex) set(ref(db, `rooms/${S.code}/picks/${r}/${k}/${S.pid}/list`), []);
     }
-    S_answerShell(r);
+    S_answerShell();
+    return;
+  }
+  if (st.phase === 'check') {
+    await S_loadRound(r);
+    const res = (await get(ref(db, `rooms/${S.code}/rounds/${r}/steps/${st.step}/${S.pid}`))).val();
+    S_checkView(r, st.step, res);
     return;
   }
   if (st.phase === 'result') {
-    const res = (await get(ref(db, `rooms/${S.code}/rounds/${r}/results/${S.pid}`))).val();
-    S_resultView(r, res);
+    const rr = (await get(ref(db, `rooms/${S.code}/rounds/${r}`))).val() || {};
+    S_resultView(r, rr);
     return;
   }
   if (st.phase === 'end') {
     const ps = (await get(ref(db, `rooms/${S.code}/players`))).val() || {};
-    const sorted = Object.entries(ps).sort((a, b) => (b[1].total || 0) - (a[1].total || 0));
-    const inTop = sorted.slice(0, 5).some(([pid]) => pid === S.pid);
+    const inTop = Object.entries(ps).sort((a, b) => (b[1].total || 0) - (a[1].total || 0)).slice(0, 5).some(([pid]) => pid === S.pid);
     app.innerHTML = `<div class="s-wrap">${S_top()}<div class="stage">
       <div class="bigEmoji bounce">🎉</div><div class="title">시장 <span>폐장!</span></div>
       <div class="muted" style="font-size:22px">내 최종 점수</div>
       <div class="score">${(S.me && S.me.total) || 0}점</div>
       ${inTop ? '<div class="hl">🏆 TOP 5 안에 들었어요!</div>' : '<div class="hl mint">끝까지 함께해서 최고였어요 🙌</div>'}
-      ${(S.me && S.me.breakerTotal) ? `<div class="hl lav">💥 내 물건으로 친구들을 ${Math.round(S.me.breakerTotal / BREAKER_PER)}번 헷갈리게 했어요!</div>` : ''}
+      ${(S.me && S.me.breakerTotal) ? `<div class="hl lav">💥 내 물건으로 친구들을 ${S.me.breakerTotal}번 헷갈리게 했어요!</div>` : ''}
     </div></div>`;
   }
+}
+
+function S_watchItem(id){
+  onValue(ref(db, `rooms/${S.code}/items/${id}`), s => {
+    if (!s.exists() && S.myItem === id) {
+      S.myItem = null; localStorage.removeItem(`market_item_${S.code}_${S.pid}`);
+      if (S.state && S.state.phase === 'lobby') { S_lobbyZone(); toast('선생님이 물건을 지웠어요. 다른 걸로 넣어 볼까요?'); }
+    }
+  });
 }
 
 function S_lobbyZone(){
@@ -765,131 +810,143 @@ async function S_addItem(){
   if (!tx.committed) { toast('앗! 이미 누가 시장에 넣었어요 😮 다른 걸로!'); inp.classList.remove('shake'); void inp.offsetWidth; inp.classList.add('shake'); return; }
   await set(ref(db, `rooms/${S.code}/items/${id}`), { text: v, norm: n, author: S.name, pid: S.pid, at: serverTimestamp() });
   S.myItem = id; localStorage.setItem(`market_item_${S.code}_${S.pid}`, id);
-  onValue(ref(db, `rooms/${S.code}/items/${id}`), s => { if (!s.exists() && S.myItem === id) { S.myItem = null; localStorage.removeItem(`market_item_${S.code}_${S.pid}`); if (S.state.phase === 'lobby') { S_lobbyZone(); toast('선생님이 물건을 지웠어요. 다른 걸로 넣어 볼까요?'); } } });
+  S_watchItem(id);
   S_lobbyZone();
 }
 
-function S_target(){ const rd = S.rd; return rd.reverse ? [...rd.seq].reverse() : rd.seq; }
-
-function S_answerShell(r){
-  const cfg = ROUNDS[r - 1], rd = S.rd;
+function S_answerShell(){
+  const st = S.state, r = st.round, cfg = ROUNDS[r];
   app.innerHTML = `<div class="s-wrap">${S_top()}
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-      <span class="roundBadge" style="font-size:18px">${r}라운드 · ${esc(cfg.name)}</span>
-      <span class="rule" style="font-size:20px">${rd.reverse ? '⬅️ 마지막 물건부터 거꾸로!' : rd.typing ? '✍️ 순서대로 써요' : '👆 순서대로 눌러요 (취소 안 돼요!)'}</span>
+      <span class="roundBadge" style="font-size:18px">${roundLabel(r, cfg)} · 물건 ${st.step}개</span>
+      <span class="rule" style="font-size:20px">${cfg.reverse ? '⬅️ 마지막 물건부터 거꾸로!' : cfg.typing ? '✍️ 처음부터 순서대로 써요!' : '👆 처음부터 순서대로!'}</span>
       <span style="margin-left:auto;font-size:26px;color:var(--pinkD)" id="sTime"></span>
     </div>
     <div class="bar" id="sBar" style="margin:10px 0"><i></i></div>
     <div id="ansArea"></div>
-    <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap">
-      <button class="btn sm lemon" id="hintBtn" data-act="hint">💡 힌트 (1번)</button>
-      ${rd.typing ? '<button class="btn mint" id="submitBtn" data-act="submitTyping" style="margin-left:auto">다 썼어요! 제출 ✅</button>' : ''}
+    <div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+      <button class="btn sm lemon" id="hintBtn" data-act="hint">💡 힌트 (라운드에 1번)</button>
+      ${cfg.typing ? '' : '<button class="btn sm sky" id="undoBtn" data-act="undo">↩️ 하나 빼기</button>'}
+      <button class="btn mint" id="submitBtn" data-act="submit" style="margin-left:auto">다 했어요! ✅</button>
     </div>
+    <div class="muted" style="margin-top:8px">${cfg.typing ? '기억나는 칸만 써도 점수를 받아요 · 오타 1글자는 봐줘요' : '채운 칸을 누르면 빠져요 · 순서가 헷갈려도 기억나는 물건은 다 눌러요!'}</div>
     <div id="doneArea"></div></div>`;
   S_drawAnswer();
 }
 
 function S_drawAnswer(){
-  const rd = S.rd, area = el('ansArea'); if (!area) return;
-  const target = S_target(), labelOf = id => (rd.labels && rd.labels[id]) || ((rd.options || []).find(o => o.id === id) || {}).text || '';
-  if (rd.typing) {
-    if (!area.querySelector('.tgrid')) {
-      area.innerHTML = `<div class="tgrid">${target.map((id, i) => `<div><div class="tlab">${i + 1}번째${i === 0 ? ' 🎁 선물' : ''}</div>
-        <input class="tin" data-i="${i}" maxlength="14" ${i === 0 ? `readonly value="${esc(labelOf(id))}"` : `value="${esc(S.list[i] || '')}"`} autocomplete="off"></div>`).join('')}</div>`;
+  const st = S.state, area = el('ansArea'); if (!area || !S.rd) return;
+  const cfg = ROUNDS[st.round], k = st.step, lock = S.done || S.locked;
+  if (cfg.typing) {
+    if (area.querySelectorAll('.tin').length !== k) {
+      area.innerHTML = `<div class="tgrid">${Array.from({ length: k }, (_, i) => `<div><div class="tlab">${i + 1}번째</div>
+        <input class="tin" data-i="${i}" maxlength="14" autocomplete="off" value="${esc(S.list[i] || '')}"></div>`).join('')}</div>`;
       let tm;
-      area.querySelectorAll('.tin').forEach(inp => inp.addEventListener('input', () => { clearTimeout(tm); tm = setTimeout(S_saveTyping, 400); }));
+      area.querySelectorAll('.tin').forEach(inp => inp.addEventListener('input', () => { clearTimeout(tm); tm = setTimeout(() => { S.list = S_collect(); S_save(); }, 400); }));
     }
-    area.querySelectorAll('.tin').forEach(inp => { if (S.done || S.locked) inp.disabled = true; });
+    area.querySelectorAll('.tin').forEach(inp => inp.disabled = lock);
   } else {
-    const filled = S.list.length;
-    const slots = target.map((id, i) => {
+    const lab = id => (S.opts.find(o => o.id === id) || {}).text || '';
+    const slots = Array.from({ length: k }, (_, i) => {
       const v = S.list[i];
-      const cls = i === 0 ? 'slot gift' : v ? 'slot f' : i === filled ? 'slot cur' : 'slot';
-      return `<div class="${cls}"><span class="k">${i + 1}${i === 0 ? ' 🎁' : ''}</span>${v ? esc(labelOf(v)) : '?'}</div>`;
+      const cls = v ? 'slot f' : i === S.list.length ? 'slot cur' : 'slot';
+      return `<div class="${cls}" ${v && !lock ? `data-act="unslot" data-i="${i}"` : ''}><span class="k">${i + 1}번째</span>${v ? esc(lab(v)) : '?'}</div>`;
     }).join('');
-    const opts = (rd.options || []).map(o => `<button class="opt${S.list.includes(o.id) ? ' used' : ''}" data-act="pick" data-id="${esc(o.id)}">${esc(o.text)}</button>`).join('');
-    area.innerHTML = `<div class="slots">${slots}</div>${S.done || S.locked ? '' : `<div class="opts">${opts}</div>`}`;
+    const opts = S.opts.map(o => `<button class="opt${S.list.includes(o.id) ? ' used' : ''}" data-act="pick" data-id="${esc(o.id)}">${esc(o.text)}</button>`).join('');
+    area.innerHTML = `<div class="slots">${slots}</div>${lock ? '' : `<div class="opts">${opts}</div>`}`;
   }
-  const hb = el('hintBtn'); if (hb) { hb.disabled = S.hintUsed || S.done || S.locked; if (S.hintUsed) hb.textContent = '💡 힌트 사용함'; }
-  const sb = el('submitBtn'); if (sb) sb.disabled = S.done || S.locked;
+  const hb = el('hintBtn'); if (hb) { hb.disabled = S.hintRound === st.round || lock; if (S.hintRound === st.round) hb.textContent = '💡 힌트 사용함'; }
+  const ub = el('undoBtn'); if (ub) ub.disabled = lock || S.list.length === 0;
+  const sb = el('submitBtn'); if (sb) sb.disabled = lock;
   const da = el('doneArea');
   if (da) da.innerHTML = S.done ? '<div class="doneBox pop">제출 완료! 🎉<br><span style="font-size:20px">프로젝터를 보며 기다려요</span></div>'
                       : S.locked ? '<div class="doneBox pop" style="background:var(--lemon)">시간 끝! ⏰<br><span style="font-size:20px">고른 만큼 점수를 받아요</span></div>' : '';
 }
 
+function S_collect(){ const v = []; document.querySelectorAll('.tin').forEach(inp => v[+inp.dataset.i] = inp.value.trim()); return v; }
+function S_save(){ set(ref(db, `rooms/${S.code}/picks/${S.state.round}/${S.state.step}/${S.pid}/list`), S.list); }
 function S_pick(id){
   if (S.done || S.locked || !S.rd) return;
-  if (S.list.includes(id)) return;
-  S.list.push(id);
-  const base = `rooms/${S.code}/picks/${S.state.round}/${S.pid}`;
-  set(ref(db, base + '/list'), S.list);
-  if (S.list.length >= S.rd.slotCount) { S.done = true; set(ref(db, base + '/doneAt'), serverTimestamp()); }
-  S_drawAnswer();
+  if (S.list.includes(id) || S.list.length >= S.state.step) return;
+  S.list.push(id); S_save(); S_drawAnswer();
 }
-
-function S_collectTyping(){
-  const vals = []; document.querySelectorAll('.tin').forEach(inp => vals[+inp.dataset.i] = inp.value.trim());
-  return vals;
-}
-function S_saveTyping(){
-  if (!S.rd || !S.rd.typing || S.done) return;
-  S.list = S_collectTyping();
-  set(ref(db, `rooms/${S.code}/picks/${S.state.round}/${S.pid}/list`), S.list);
-}
-function S_submitTyping(){
+function S_unslot(i){ if (S.done || S.locked) return; S.list.splice(i, 1); S_save(); S_drawAnswer(); }
+function S_undo(){ if (S.done || S.locked || !S.list.length) return; S.list.pop(); S_save(); S_drawAnswer(); }
+function S_submit(){
   if (S.done || S.locked) return;
-  S.list = S_collectTyping();
-  const base = `rooms/${S.code}/picks/${S.state.round}/${S.pid}`;
-  set(ref(db, base + '/list'), S.list);
-  set(ref(db, base + '/doneAt'), serverTimestamp());
+  const typing = ROUNDS[S.state.round].typing;
+  if (typing) S.list = S_collect();
+  const filled = S.list.filter(Boolean).length;
+  if (!filled) { toast('하나라도 골라 볼까요?'); return; }
+  if (filled < S.state.step && !confirm('아직 빈 칸이 있어요. 그래도 낼까요?')) return;
+  S_save();
+  set(ref(db, `rooms/${S.code}/picks/${S.state.round}/${S.state.step}/${S.pid}/doneAt`), serverTimestamp());
   S.done = true; S_drawAnswer();
 }
-
 function S_hint(){
-  if (S.hintUsed || S.done || S.locked || !S.rd) return;
-  const target = S_target();
+  const st = S.state, cfg = ROUNDS[st.round];
+  if (S.hintRound === st.round || S.done || S.locked || !S.rd) return;
+  const target = targetOf(S.rd, st.step, cfg.reverse);
   let idx;
-  if (S.rd.typing) { const vals = S_collectTyping(); idx = target.findIndex((_, i) => i > 0 && !vals[i]); if (idx < 0) idx = target.length - 1; }
+  if (cfg.typing) { const v = S_collect(); idx = target.findIndex((_, i) => !v[i]); if (idx < 0) idx = target.length - 1; }
   else idx = S.list.length;
   if (idx >= target.length) return;
   const text = S.rd.labels[target[idx]] || '';
-  S.hintUsed = true;
+  S.hintRound = st.round;
   toast(`💡 ${idx + 1}번째는 '${text.charAt(0)}'(으)로 시작해요! (${text.length}글자)`);
   S_drawAnswer();
 }
 
 function S_tick(){
   const st = S.state; if (!st || st.phase !== 'answer' || !S.rd) return;
-  const cfg = ROUNDS[st.round - 1], rem = st.answerEndsAt - now();
+  const rem = st.answerEndsAt - now(), lim = answerSec(ROUNDS[st.round], st.step) * 1000;
   const t = el('sTime'), bar = el('sBar');
   if (t) t.textContent = '⏱ ' + Math.max(0, Math.ceil(rem / 1000)) + '초';
-  if (bar) { bar.firstElementChild.style.width = Math.max(0, Math.min(100, rem / (cfg.limit * 1000) * 100)) + '%'; bar.classList.toggle('hurry', rem < 10000); }
-  if (rem <= 0 && !S.locked && !S.done) { if (S.rd.typing) S_saveTyping(); S.locked = true; S_drawAnswer(); }
+  if (bar) { bar.firstElementChild.style.width = Math.max(0, Math.min(100, rem / lim * 100)) + '%'; bar.classList.toggle('hurry', rem < 6000); }
+  if (rem <= 0 && !S.locked && !S.done) {
+    if (ROUNDS[st.round].typing) { S.list = S_collect(); S_save(); }
+    S.locked = true; S_drawAnswer();
+  }
 }
 
-function S_resultView(r, res){
-  const cfg = ROUNDS[r - 1];
+function S_checkView(r, k, res){
+  const cfg = ROUNDS[r], target = targetOf(S.rd, k, cfg.reverse);
   if (!res || res.absent) {
     app.innerHTML = `<div class="s-wrap">${S_top()}<div class="stage"><div class="bigEmoji">☕</div>
-      <div class="title" style="font-size:36px">이번 라운드는 쉬었어요</div>
-      ${res && res.breaker ? `<div class="hl lav">그래도 💥 내 물건 덕분에 +${res.breaker}점!</div>` : ''}
-      <div class="rule">다음 라운드에 같이 해요 🙌</div></div></div>`;
+      <div class="rule">이번 단계는 쉬었어요. 프로젝터로 정답을 봐요!</div></div></div>`;
     return;
   }
-  const slots = S.rd ? S.rd.slotCount : '';
+  const list = S.list || [];
+  const lab = v => cfg.typing ? v : ((S.rd.labels && S.rd.labels[v]) || ((S.rd.decoys || []).find(d => d.id === v) || {}).text || '');
+  const slots = target.map((id, i) => {
+    const ok = res.flags && res.flags[i];
+    return `<div class="slot ${ok ? 'ok' : 'bad'}"><span class="k">${i + 1}번째 ${ok ? '✅' : '❌'}</span>${list[i] ? esc(lab(list[i])) : '—'}${ok ? '' : `<span class="ca">정답: ${esc(S.rd.labels[id])}</span>`}</div>`;
+  }).join('');
+  app.innerHTML = `<div class="s-wrap">${S_top()}<div class="stage" style="gap:10px;min-height:auto;margin-top:20px">
+    <div class="title" style="font-size:38px">${res.perfect ? '완벽해요! 🌟' : res.inc ? '좋아요! 👍' : '괜찮아요, 다음에 또! 💪'}</div>
+    <div class="rule">기억한 물건 <b style="color:var(--pinkD)">${res.inc}개</b> · 순서까지 <b style="color:var(--pinkD)">${res.pos}개</b></div>
+    <div class="slots" style="justify-content:center">${slots}</div>
+    ${cfg.practice ? '<div class="muted" style="font-size:20px">연습이라 점수는 없어요</div>' : `<div class="score" style="font-size:44px">+${res.score}점</div>`}
+    <div class="muted" style="font-size:20px">${k < S.rd.chain.length ? '다음 단계에선 하나 더 늘어나요!' : '라운드 끝! 프로젝터를 봐요 👀'}</div>
+  </div></div>`;
+}
+
+function S_resultView(r, rr){
+  const cfg = ROUNDS[r];
+  if (cfg.practice) {
+    app.innerHTML = `<div class="s-wrap">${S_top()}<div class="stage"><div class="bigEmoji bounce">🧪</div>
+      <div class="title" style="font-size:40px">연습 끝!</div><div class="rule">이제 진짜 시작이에요 💪</div></div></div>`;
+    return;
+  }
+  const sum = (rr.sum && rr.sum[S.pid]) || 0, brk = (rr.brk && rr.brk[S.pid]) || 0;
+  const lucky = (rr.luck || []).includes(S.pid);
   app.innerHTML = `<div class="s-wrap">${S_top()}<div class="stage" style="gap:10px">
-    <span class="roundBadge">${r}라운드 결과</span>
-    <div class="rule">${slots}개 중 <b style="color:var(--pinkD)">${res.correct}개</b> 맞혔어요!</div>
-    ${res.lucky ? `<div class="luck"><div class="in"><div class="fa">🎴 ?</div><div class="ba">🍀 행운 카드!<span style="font-size:20px">점수 2배</span></div></div></div>` : ''}
-    <div class="card" style="width:min(460px,100%)">
-      <div class="brk"><span>✅ 맞힌 점수</span><span>+${res.base}</span></div>
-      ${res.combo ? `<div class="brk"><span>🔥 연속 콤보</span><span>+${res.combo}</span></div>` : ''}
-      ${res.speed ? `<div class="brk"><span>⚡ 스피드</span><span>+${res.speed}</span></div>` : ''}
-      ${res.breaker ? `<div class="brk"><span>💥 기억 브레이커</span><span>+${res.breaker}</span></div>` : ''}
-      ${res.lucky ? `<div class="brk"><span>🍀 행운 카드</span><span>×2</span></div>` : ''}
-      <div class="brk" style="border:none;font-size:28px"><span>이번 라운드</span><span style="color:var(--pinkD)">+${res.score}점</span></div>
-    </div>
-    <div class="muted" style="font-size:20px">${res.correct >= 1 ? '잘했어요! 프로젝터에서 정답을 확인해요 👀' : '괜찮아요, 다음 라운드에 또!'}</div>
+    <span class="roundBadge">${roundLabel(r, cfg)} 결과</span>
+    ${lucky ? `<div class="luck"><div class="in"><div class="fa">🎴 ?</div><div class="ba">🍀 행운 카드!<span style="font-size:20px">이번 라운드 2배</span></div></div></div>` : ''}
+    <div class="muted" style="font-size:22px">이번 라운드에서 받은 점수</div>
+    <div class="score">+${sum}점</div>
+    ${brk ? `<div class="hl lav">💥 내 물건 덕분에 친구들이 ${brk}번 헷갈렸어요! (브레이커 점수 포함)</div>` : ''}
+    <div class="muted" style="font-size:20px">프로젝터에서 순위를 확인해요 👀</div>
   </div></div>`;
 }
 
@@ -900,14 +957,17 @@ document.addEventListener('click', e => {
   if (a === 'join') return S_join();
   if (a === 'addItem') return S_addItem();
   if (a === 'pick') return S_pick(b.dataset.id);
+  if (a === 'unslot') return S_unslot(+b.dataset.i);
+  if (a === 'undo') return S_undo();
+  if (a === 'submit') return S_submit();
   if (a === 'hint') return S_hint();
-  if (a === 'submitTyping') return S_submitTyping();
   if (a === 'newRoom') return T_newRoom();
   if (a === 'resume') { location.href = location.pathname + '?t=1&room=' + b.dataset.code; return; }
   if (!room) return;
   if (a === 'toggleNames') return update(ref(db, `rooms/${code}/state`), { showNames: !room.state.showNames });
   if (a === 'toggleMute') { Beat.muted = !Beat.muted; b.textContent = Beat.muted ? '🔇 소리 꺼짐' : '🔊 소리 켜짐'; return; }
-  if (a === 'newGame') { if (confirm('새 게임을 만들까요? (지금 방은 그대로 남아요)')) T_newRoom(); return; }
+  if (a === 'togglePause') { paused = !paused; b.textContent = paused ? '▶ 다음 단계 진행' : '⏸ 다음 단계 전 멈추기'; return; }
+  if (a === 'newGame') { if (confirm('새 게임을 만들까요? (지금 방은 그대로 남아요)')) { loopGen++; Beat.stop(); T_newRoom(); } return; }
   if (a === 'addReserve') {
     const used = new Set(Object.values(room.items || {}).map(i => i.norm));
     const upd = {}; let k = 0;
@@ -919,26 +979,14 @@ document.addEventListener('click', e => {
     return update(ref(db, 'rooms/' + code), { ['items/' + b.dataset.id]: null, ['norms/' + it.norm]: null });
   }
   if (a === 'startRound') { Beat.ensure(); return T_startRound(+b.dataset.r); }
-  if (a === 'playShow') return T_playShow();
-  if (a === 'resumeBeat') { Beat.start(ROUNDS[room.state.round - 1].bpm, i => beatVis(i)); b.remove(); return; }
-  if (a === 'closeNow') { if (confirm('지금 마감할까요?')) T_finalize(); return; }
+  if (a === 'playRound') { Beat.ensure(); return T_runRound(room.rounds[room.state.round].start); }
+  if (a === 'resumeLoop') { Beat.ensure(); return T_resume(); }
+  if (a === 'closeNow') { forceClose = true; return; }
   if (a === 'toEnd') return update(ref(db, `rooms/${code}/state`), { phase: 'end' });
 });
-/* ---------------- 시작 ---------------- */
-if (!configured) {
-  app.innerHTML = `<div class="setup card">
-    <div class="title">🧺 시장에 <span>가면</span></div>
-    <p>파이어베이스 설정이 아직 없어요!</p>
-    <p>1. 파이어베이스 콘솔에서 <b>Realtime Database</b>를 만들어요.<br>
-       2. 프로젝트 설정 → 내 앱 → SDK 설정 값을 이 파일 위쪽 <code>firebaseConfig</code>에 붙여 넣어요.<br>
-       3. 선생님 화면: <code>주소?t=1</code> / 학생 화면: <code>주소</code></p>
-  </div>`;
-} else if (isTeacher) {
-  T_init();
-} else {
-  S_init();
-}
 
+/* ---------------- 시작 ---------------- */
+if (isTeacher) T_init(); else S_init();
 </script>
 </body>
 </html>
