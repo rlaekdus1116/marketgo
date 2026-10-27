@@ -52,7 +52,11 @@ input{font-family:inherit;color:var(--ink)}
 #qr{display:flex;justify-content:center;margin:14px 0}
 #qr img,#qr canvas{border:10px solid #fff;border-radius:14px}
 h3{margin:0 0 12px;font-size:22px;font-weight:normal}
-.roundPick{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.roundPick{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;align-items:flex-end}
+.rpCard{display:flex;flex-direction:column;align-items:center;gap:8px}
+.tgt{display:flex;align-items:center;gap:8px;font-size:18px;background:#fff;border:2px solid var(--line);border-radius:999px;padding:4px 6px}
+.tgt b{color:var(--pinkD);font-weight:normal;font-size:22px}
+.tgt .btn.sm{padding:4px 12px;font-size:18px}
 .stage{min-height:62vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:16px}
 .chant{font-size:50px;color:var(--sub)}
 .itemCard{background:#fff;border:4px solid var(--pink);border-radius:40px;padding:30px 60px;font-size:96px;box-shadow:0 10px 0 var(--pinkD);min-width:50%}
@@ -140,15 +144,20 @@ const firebaseConfig = {
   appId: "1:666715038541:web:b0f84a9703aa70aeca4d04"
 };
 
-/* ========== 🎮 라운드 설정 (숫자만 바꾸면 돼요) ==========
-   plan: 단계마다 외울 물건 수. 'R' = 깜짝 리버스(새 물건 없이 바로 거꾸로)
+/* ========== 🎮 라운드 설정 ==========
+   def: 기본 목표 개수 (선생님 화면에서 −/+ 로 바꿀 수 있어요)
+   jumpFrom: 이 개수부터는 2개씩 늘어남 / rev: 중간에 깜짝 리버스
    others: 섞이는 가짜 보기 수 / mult: 점수 배수 (0이면 연습) / typing: 직접 쓰기 */
 const ROUNDS = [
-  {name:'연습',          emoji:'🧪', desc:'점수 없이 몸풀기!',                       plan:[2,3],                    others:1, bpm:108, mult:0, practice:true},
-  {name:'차근차근',       emoji:'🍎', desc:'하나씩 늘어나요! 처음부터 순서대로!',         plan:[2,3,4,'R',5,6],          others:2, bpm:112, mult:1},
-  {name:'끝판왕',        emoji:'👑', desc:'10개까지 가 보자! 점수 2배!',               plan:[2,3,4,5,6,'R',8,10],     others:2, bpm:118, mult:2},
-  {name:'번외: 직접 쓰기', emoji:'✍️', desc:'보기 없이 직접 써요! (오타 1글자는 봐줌)',   plan:[2,3,4,5,6],              others:0, bpm:108, mult:1, typing:true, bonus:true},
+  {name:'연습',          emoji:'🧪', desc:'점수 없이 몸풀기!',                     def:3,  others:1, bpm:108, mult:0, practice:true},
+  {name:'차근차근',       emoji:'🍎', desc:'하나씩 늘어나요! 처음부터 순서대로!',       def:10, others:2, bpm:112, mult:1, rev:true},
+  {name:'끝판왕',        emoji:'👑', desc:'끝까지 가 보자! 점수 2배!',               def:12, others:2, bpm:118, mult:2, rev:true, jumpFrom:6},
+  {name:'번외: 직접 쓰기', emoji:'✍️', desc:'보기 없이 직접 써요! (오타 1글자는 봐줌)', def:6,  others:0, bpm:108, mult:1, typing:true, bonus:true},
 ];
+const MIN_K = 3, MAX_K = 20;
+let targets = ROUNDS.map(c => c.def);
+try { const t = JSON.parse(localStorage.getItem('market_targets') || 'null'); if (Array.isArray(t) && t.length === ROUNDS.length) targets = t.map((v, i) => Math.max(MIN_K, Math.min(MAX_K, +v || ROUNDS[i].def))); } catch (e) {}
+const saveTargets = () => { try { localStorage.setItem('market_targets', JSON.stringify(targets)); } catch (e) {} };
 const SHOW_MS = 2500;        // 물건 한 개 보여주는 시간
 const CHECK_MS = 4000;       // 단계마다 정답 순서 보여주는 시간
 const REV_MULT = 3;          // 리버스 점수 배수
@@ -203,15 +212,15 @@ setTimeout(() => { if (!connected) toast('⚠️ 인터넷 연결을 확인해 �
 
 const targetOf = (rd, k, rev) => { const c = rd.chain.slice(0, k); return rev ? c.reverse() : c; };
 const roundLabel = cfg => cfg.practice ? '연습' : cfg.bonus ? '번외' : cfg.name;
-function buildPlan(cfg, avail){
-  const out = []; let last = 0;
-  for (const p of cfg.plan) {
-    if (p === 'R') { if (last) out.push({ k: last, rev: true }); }
-    else if (p <= avail) { out.push({ k: p, rev: false }); last = p; }
+function buildPlan(cfg, target, avail){
+  const K = Math.max(2, Math.min(target, avail));
+  const ks = [2];
+  while (ks[ks.length - 1] < K) { const k = ks[ks.length - 1]; ks.push(Math.min(K, k + (cfg.jumpFrom && k >= cfg.jumpFrom ? 2 : 1))); }
+  const out = ks.map(k => ({ k, rev: false }));
+  if (cfg.rev && ks.length >= 3) {
+    const at = out.findIndex(p => p.k >= Math.ceil(K * 0.6));
+    if (at >= 0 && at < out.length - 1) out.splice(at + 1, 0, { k: out[at].k, rev: true });
   }
-  const maxK = Math.max(...cfg.plan.filter(n => n !== 'R'));
-  const cap = Math.min(maxK, avail);
-  if (last < cap) out.push({ k: cap, rev: false });
   return out;
 }
 function prevK(plan, si){ for (let j = si - 1; j >= 0; j--) if (!plan[j].rev) return plan[j].k; return 0; }
@@ -404,7 +413,10 @@ function T_topbar(){
   </div>`;
 }
 const resumeBtn = () => looping ? '' : `<button class="btn big sky" data-act="resumeLoop">▶ 이어서 하기</button>`;
-const roundPicker = hi => `<div class="roundPick">${ROUNDS.map((c, i) => `<button class="btn ${i === hi ? 'big mint' : c.practice ? 'lav' : c.bonus ? 'peach' : 'lemon'}" data-act="startRound" data-r="${i}">${c.emoji} ${esc(c.name)}${room.rounds && room.rounds[i] && room.rounds[i].done ? ' ✓' : ''}</button>`).join('')}</div>`;
+const roundPicker = hi => `<div class="roundPick">${ROUNDS.map((c, i) => `<div class="rpCard">
+    <button class="btn ${i === hi ? 'big mint' : c.practice ? 'lav' : c.bonus ? 'peach' : 'lemon'}" data-act="startRound" data-r="${i}">${c.emoji} ${esc(c.name)}${room.rounds && room.rounds[i] && room.rounds[i].done ? ' ✓' : ''}</button>
+    <div class="tgt"><button class="btn sm sky" data-act="tgt" data-r="${i}" data-d="-1">−</button><span><b id="tgt${i}">${targets[i]}</b>개까지</span><button class="btn sm sky" data-act="tgt" data-r="${i}" data-d="1">+</button></div>
+  </div>`).join('')}</div>`;
 
 function T_render(){
   const st = room.state;
@@ -508,9 +520,10 @@ function T_update(){
     el('playerCount').textContent = `${ps.filter(p => p.online === true).length}명 접속 중`;
     el('playerChips').innerHTML = ps.map(p => `<span class="chip soft${p.online === true ? '' : ' off'}">${esc(p.name)}</span>`).join('') || '<p class="muted">아직 아무도 없어요</p>';
     const ok = items.length >= MIN_ITEMS;
-    document.querySelectorAll('.roundPick button').forEach(b => b.disabled = !ok);
+    document.querySelectorAll('.roundPick [data-act=startRound]').forEach(b => b.disabled = !ok);
+    const need = Math.max(...targets) + 2;
     el('startHint').textContent = !ok ? `물건이 ${MIN_ITEMS}개 이상 있어야 시작할 수 있어요 (예비 물건으로 채워도 돼요)`
-      : items.length < 12 ? `👑 끝판왕을 10개까지 하려면 물건이 12개 이상 있어야 해요 (지금은 ${items.length - 2}개까지)` : '이상한 물건은 × 로 지우고 원하는 라운드를 골라요!';
+      : items.length < need ? `${Math.max(...targets)}개까지 하려면 물건이 ${need}개 이상 있어야 해요 (지금은 ${items.length - 2}개까지 가능) · 예비 물건으로 채울 수 있어요` : '이상한 물건은 × 로 지우고 −/+ 로 개수를 정한 다음 라운드를 골라요!';
   }
   if (['show', 'answer', 'check'].includes(st.phase) && rd) {
     const sv = el('surv');
@@ -565,7 +578,8 @@ async function T_startRound(r){
     const usage = {};
     Object.entries(room.rounds || {}).forEach(([rr, rd]) => { if (+rr > 0 && rd) (rd.chain || []).forEach(id => usage[id] = (usage[id] || 0) + 1); });
     const ordered = shuffle(ids).sort((a, b) => (usage[a] || 0) - (usage[b] || 0));
-    const plan = buildPlan(cfg, ids.length - cfg.others);
+    const plan = buildPlan(cfg, targets[r], ids.length - cfg.others);
+    if (Math.max(...plan.map(p => p.k)) < targets[r]) toast(`물건이 모자라서 ${Math.max(...plan.map(p => p.k))}개까지만 해요`);
     const len = Math.max(...plan.map(p => p.k));
     const chain = shuffle(ordered.slice(0, len));
     const labels = {}; chain.forEach(id => labels[id] = items[id].text);
@@ -1092,6 +1106,12 @@ document.addEventListener('click', e => {
   if (a === 'musicFile') { if (!Music.audio) el('musicInput').click(); else { Music.setMode('file'); rerender(); } return; }
   if (a === 'musicPick') { el('musicInput').click(); return; }
   if (a === 'togglePause') { paused = !paused; return rerender(); }
+  if (a === 'tgt') {
+    const i = +b.dataset.r; targets[i] = Math.max(MIN_K, Math.min(MAX_K, targets[i] + (+b.dataset.d))); saveTargets();
+    const t = el('tgt' + i); if (t) t.textContent = targets[i];
+    if (room.state.phase === 'lobby') T_update();
+    return;
+  }
   if (a === 'revNext') return T_revNext();
   if (a === 'skipCheck') { skipCheck = true; paused = false; return; }
   if (a === 'newGame') { if (confirm('새 게임을 만들까요? (지금 방은 그대로 남아요)')) { loopGen++; Music.stop(); T_newRoom(); } return; }
