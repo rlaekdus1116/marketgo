@@ -40,6 +40,8 @@ input{font-family:inherit;color:var(--ink)}
 .topbar .logo{font-size:26px;margin-right:auto}
 .pill{background:#fff;border:2px solid var(--line);border-radius:999px;padding:6px 14px;font-size:16px}
 .hot{display:inline-block;background:var(--peach);border-radius:999px;padding:8px 20px;font-size:26px;box-shadow:0 4px 0 var(--peachD)}
+.hot.lead{background:var(--lemon);box-shadow:0 4px 0 var(--lemonD)}
+#surv{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
 .chips{display:flex;flex-wrap:wrap;gap:8px}
 .chip{display:inline-flex;align-items:center;gap:6px;background:var(--lemon);border-radius:999px;padding:7px 8px 7px 14px;font-size:18px}
 .chip small{color:var(--sub);font-size:13px}
@@ -152,8 +154,10 @@ const ROUNDS = [
   {name:'연습',          emoji:'🧪', desc:'점수 없이 몸풀기!',                     def:3,  others:1, bpm:108, mult:0, practice:true},
   {name:'차근차근',       emoji:'🍎', desc:'하나씩 늘어나요! 처음부터 순서대로!',       def:10, others:2, bpm:112, mult:1, rev:true},
   {name:'끝판왕',        emoji:'👑', desc:'끝까지 가 보자! 점수 2배!',               def:12, others:2, bpm:118, mult:2, rev:true, jumpFrom:6},
-  {name:'번외: 직접 쓰기', emoji:'✍️', desc:'보기 없이 직접 써요! (오타 1글자는 봐줌)', def:6,  others:0, bpm:108, mult:1, typing:true, bonus:true},
+  {name:'번외: 직접 쓰기', emoji:'✍️', desc:'보기 없이 직접 써요! (오타 1글자는 봐줌)', def:6,  others:0, bpm:108, mult:1, typing:true, bonus:true, rev:true},
+  {name:'플래시 와다다',   emoji:'⚡', desc:'한꺼번에 휙휙 보여줄게요! 기억나는 대로 와다다 써요!', def:8, others:0, bpm:126, mult:2, typing:true, flash:true},
 ];
+const FLASH_MS = 1300;       // 플래시 라운드에서 물건 한 개 보여주는 시간
 const MIN_K = 3, MAX_K = 20;
 let targets = ROUNDS.map(c => c.def);
 try { const t = JSON.parse(localStorage.getItem('market_targets') || 'null'); if (Array.isArray(t) && t.length === ROUNDS.length) targets = t.map((v, i) => Math.max(MIN_K, Math.min(MAX_K, +v || ROUNDS[i].def))); } catch (e) {}
@@ -161,7 +165,7 @@ const saveTargets = () => { try { localStorage.setItem('market_targets', JSON.st
 const SHOW_MS = 2500;        // 물건 한 개 보여주는 시간
 const CHECK_MS = 4000;       // 단계마다 정답 순서 보여주는 시간
 const REV_MULT = 3;          // 리버스 점수 배수
-const answerSec = (cfg, k, rev) => Math.round((cfg.typing ? 12 + 5 * k : 8 + 2.5 * k) * (rev ? 1.5 : 1));
+const answerSec = (cfg, k, rev) => Math.round((cfg.flash ? 10 + 4 * k : cfg.typing ? 12 + 5 * k : 8 + 2.5 * k) * (rev ? 1.5 : 1));
 const PT_ITEM = 5, PT_POS = 5, PT_PERFECT = 20, SPEED_MAX = 10, BREAKER_PER = 1;
 const MIN_ITEMS = 8;
 const RESERVE = ['사과','계란','바나나','라면','떡볶이','붕어빵','고등어','두부','양말','우산','김밥','호떡','수박','치킨','콜라','당근','만두','젤리','빗자루','장화','고무장갑','참기름','멸치','국자'];
@@ -214,6 +218,7 @@ const targetOf = (rd, k, rev) => { const c = rd.chain.slice(0, k); return rev ? 
 const roundLabel = cfg => cfg.practice ? '연습' : cfg.bonus ? '번외' : cfg.name;
 function buildPlan(cfg, target, avail){
   const K = Math.max(2, Math.min(target, avail));
+  if (cfg.flash) return [{ k: K, rev: false }];
   const ks = [2];
   while (ks[ks.length - 1] < K) { const k = ks[ks.length - 1]; ks.push(Math.min(K, k + (cfg.jumpFrom && k >= cfg.jumpFrom ? 2 : 1))); }
   const out = ks.map(k => ({ k, rev: false }));
@@ -227,12 +232,13 @@ function prevK(plan, si){ for (let j = si - 1; j >= 0; j--) if (!plan[j].rev) re
 function gradeList(target, labels, list, typing){
   const eq = (pick, id) => typing ? fuzzyEq(pick, labels[id]) : pick === id;
   const flags = target.map((id, i) => !!list[i] && eq(list[i], id));
-  const used = new Set(); let inc = 0;
-  for (const id of target) {
+  const used = new Set();
+  const hit = target.map(id => {
     const j = list.findIndex((p, i) => !used.has(i) && p && eq(p, id));
-    if (j >= 0) { used.add(j); inc++; }
-  }
-  return { flags, inc, pos: flags.filter(Boolean).length };
+    if (j >= 0) { used.add(j); return true; }
+    return false;
+  });
+  return { flags, hit, inc: hit.filter(Boolean).length, pos: flags.filter(Boolean).length };
 }
 function survivors(rd, si){
   const res = rd.res || {}; let s = null;
@@ -458,7 +464,7 @@ function T_shell(){
       <div class="bigEmoji bounce">${cfg.emoji}</div>
       <div class="title">${esc(cfg.name)}</div>
       <div class="rule">${esc(cfg.desc)}<br>
-        <span class="muted">물건 ${plan[0].k}개로 시작 → 차곡차곡 ${maxK}개까지!</span><br>
+        <span class="muted">${cfg.flash ? `물건 ${maxK}개를 한꺼번에 휙휙! → 기억나는 대로 와다다 쓰기 (순서 맞으면 보너스)` : `물건 ${plan[0].k}개로 시작 → 차곡차곡 ${maxK}개까지!`}</span><br>
         ${plan.some(p => p.rev) ? '<span style="color:var(--peachD)">🔄 중간에 깜짝 리버스가 올 수도...?</span><br>' : ''}
         <span class="muted" style="font-size:22px">🧺 기억한 물건 ${PT_ITEM}점 + 순서까지 맞으면 ${PT_POS}점 더${cfg.mult > 1 ? ` · ×${cfg.mult}` : ''} · 리버스는 ×${REV_MULT}${cfg.practice ? ' (연습은 점수 없음)' : ''}</span></div>
       <button class="btn big" data-act="playRound">▶ 시작!</button>
@@ -467,7 +473,7 @@ function T_shell(){
   else if (st.phase === 'show') {
     app.innerHTML = `<div class="wrap">${T_topbar()}<div class="stage">
       ${badge()}
-      <div class="chant" id="chant">${st.rev ? '' : '시장에 가면~'}</div>
+      <div class="chant" id="chant">${st.rev ? '' : cfg.flash ? '눈 크게 뜨고~ 👀' : '시장에 가면~'}</div>
       <div id="itemSlot" style="min-height:240px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px"></div>
       <div id="surv"></div>
       ${beatRow()}
@@ -477,7 +483,7 @@ function T_shell(){
   else if (st.phase === 'answer') {
     app.innerHTML = `<div class="wrap">${T_topbar()}<div class="stage">
       ${badge()}
-      <div class="rule">${st.rev ? '🔄 <b>리버스!</b> 마지막 물건부터 거꾸로!' : cfg.typing ? '✍️ 처음부터 순서대로 써요!' : '👆 처음부터 순서대로 눌러요!'}</div>
+      <div class="rule">${st.rev ? '🔄 <b>리버스!</b> 마지막 물건부터 거꾸로!' : cfg.flash ? '⚡ 기억나는 대로 와다다 써요! (순서 맞으면 보너스)' : cfg.typing ? '✍️ 처음부터 순서대로 써요!' : '👆 처음부터 순서대로 눌러요!'}</div>
       <div class="timer" id="tTimer">--</div>
       <div class="bar" id="tBar" style="max-width:700px"><i></i></div>
       ${beatRow()}
@@ -529,8 +535,8 @@ function T_update(){
     const sv = el('surv');
     if (sv) {
       const lastScored = st.phase === 'check' ? st.si : st.si - 1;
-      const n = lastScored >= 0 ? survivors(rd, lastScored) : null;
-      sv.innerHTML = n !== null && !ROUNDS[r].practice ? `<span class="hot">🔥 완벽 생존자 ${n}명</span>` : '';
+      const n = lastScored >= 0 && !ROUNDS[r].flash ? survivors(rd, lastScored) : null;
+      sv.innerHTML = (n !== null && !ROUNDS[r].practice ? `<span class="hot">🔥 완벽 생존자 ${n}명</span>` : '') + leaderHTML(st.phase === 'check');
     }
   }
   if (st.phase === 'answer') {
@@ -632,6 +638,19 @@ async function T_show(r, si, alive){
     return;
   }
   const pk = prevK(rd.plan, si), newIds = rd.chain.slice(pk, p.k);
+  if (cfg.flash) {
+    for (const n of ['⚡ 플래시!', '3', '2', '1']) { if (slot()) slot().innerHTML = `<div class="revText pop">${n}</div>`; Music.tickSnd(n === '1'); await sleep(650); }
+    for (let i = 0; i < newIds.length; i++) {
+      if (!alive()) return;
+      const id = newIds[i];
+      if (slot()) slot().innerHTML = `<div class="itemCard pop">${esc(rd.labels[id])}</div><div class="rule muted">${i + 1} / ${newIds.length}</div>`;
+      Music.ding();
+      await sleep(FLASH_MS);
+    }
+    if (slot()) slot().innerHTML = '<div class="revText pop">와다다 써요! ✍️</div>';
+    await sleep(900);
+    return;
+  }
   if (slot()) slot().innerHTML = pk ? `<div class="rule pop">지금까지 ${pk}개! 그리고...</div>` : '<div class="bigEmoji pop">🧺</div>';
   await sleep(1200);
   for (let i = 0; i < newIds.length; i++) {
@@ -674,12 +693,12 @@ async function T_score(r, si){
     const pk = picks[pid];
     if (!pk) { res[pid] = { absent: true, score: 0, breaker: 0 }; continue; }
     const list = pk.list || [];
-    const { flags, inc, pos } = gradeList(target, rd.labels, list, !!cfg.typing);
-    const perfect = pos === k;
-    flags.forEach((f, i) => { const id = target[i]; if (!f && items[id] && items[id].pid !== pid) miss[id]++; });
+    const { flags, hit, inc, pos } = gradeList(target, rd.labels, list, !!cfg.typing);
+    const perfect = cfg.flash ? inc === k : pos === k;
+    (cfg.flash ? hit : flags).forEach((f, i) => { const id = target[i]; if (!f && items[id] && items[id].pid !== pid) miss[id]++; });
     const speed = (perfect && pk.doneAt) ? Math.min(SPEED_MAX, Math.max(0, Math.floor((R.state.answerEndsAt - pk.doneAt) / 2000))) : 0;
     const base = (inc * PT_ITEM + pos * PT_POS + (perfect ? PT_PERFECT : 0) + speed) * mult;
-    res[pid] = { inc, pos, perfect, speed, base, flags, breaker: 0, lucky: (rd.luck || []).includes(pid), score: 0 };
+    res[pid] = { inc, pos, perfect, speed, base, flags, hit, breaker: 0, lucky: (rd.luck || []).includes(pid), score: 0 };
   }
   if (!cfg.practice) target.forEach(id => { const a = items[id] && items[id].pid; if (a && res[a]) res[a].breaker += miss[id] * BREAKER_PER; });
   const upd = {};
@@ -713,6 +732,14 @@ function T_revNext(){
   plan.splice(cur + 1, 0, { k: plan[cur].k, rev: true });
   set(ref(db, `rooms/${code}/rounds/${st.round}/plan`), plan);
   toast(`🔄 다음 문제는 리버스! (물건 ${plan[cur].k}개 거꾸로)`);
+}
+
+function leaderHTML(top3){
+  const ps = Object.values(room.players || {}).filter(p => (p.total || 0) > 0).sort((a, b) => b.total - a.total);
+  if (!ps.length) return '';
+  if (top3) return `<span class="hot lead">${ps.slice(0, 3).map((p, i) => `${MEDAL[i]} ${esc(p.name)} ${p.total}점`).join('&nbsp;&nbsp;')}</span>`;
+  const max = ps[0].total, names = ps.filter(p => p.total === max).map(p => esc(p.name));
+  return `<span class="hot lead">👑 지금 1등: ${names.join(', ')} · ${max}점</span>`;
 }
 
 function topPlayers(n = 5){
@@ -859,7 +886,7 @@ async function S_render(){
       <span class="roundBadge">${cfg.emoji} ${esc(roundLabel(cfg))}</span>
       <div class="bigEmoji bounce">👀</div>
       <div class="title" style="font-size:40px">${st.phase === 'intro' ? '곧 시작해요!' : '칠판을 보세요!'}</div>
-      <div class="rule">${st.phase === 'show' ? `새 물건이 나와요! 외워요 🧠` : esc(cfg.desc)}</div>
+      <div class="rule">${st.phase === 'show' ? (cfg.flash ? '⚡ 휙휙 지나가요! 집중! 🧠' : '새 물건이 나와요! 외워요 🧠') : esc(cfg.desc)}</div>
     </div></div>`;
     return;
   }
@@ -883,7 +910,11 @@ async function S_render(){
     const res = allRes[st.si] && allRes[st.si][S.pid];
     let streak = 0; for (let j = st.si; j >= 0; j--) { const x = allRes[j] && allRes[j][S.pid]; if (x && x.perfect) streak++; else break; }
     if (S.stepKey !== r + ':' + st.si) S.list = [];
-    S_checkView(r, st, res, streak);
+    const ps = (await get(ref(db, `rooms/${S.code}/players`))).val() || {};
+    const sorted = Object.entries(ps).filter(([, p]) => (p.total || 0) > 0).sort((a, b) => b[1].total - a[1].total);
+    const myIdx = sorted.findIndex(([pid]) => pid === S.pid);
+    const rank = myIdx >= 0 ? sorted.filter(([, p]) => p.total > sorted[myIdx][1].total).length + 1 : 0;
+    S_checkView(r, st, res, streak, rank);
     return;
   }
   if (st.phase === 'result') {
@@ -953,7 +984,7 @@ function S_answerShell(){
   app.innerHTML = `<div class="s-wrap">${S_top()}
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
       <span class="roundBadge${st.rev ? ' rev' : ''}" style="font-size:18px">${st.rev ? '🔄 리버스!' : esc(roundLabel(cfg))} · 물건 ${st.k}개</span>
-      <span class="rule" style="font-size:20px">${st.rev ? '⬅️ 마지막 물건부터 거꾸로!' : cfg.typing ? '✍️ 처음부터 순서대로 써요!' : '👆 처음부터 순서대로!'}</span>
+      <span class="rule" style="font-size:20px">${st.rev ? '⬅️ 마지막 물건부터 거꾸로!' : cfg.flash ? '⚡ 기억나는 대로 와다다!' : cfg.typing ? '✍️ 처음부터 순서대로 써요!' : '👆 처음부터 순서대로!'}</span>
       <span style="margin-left:auto;font-size:26px;color:var(--pinkD)" id="sTime"></span>
     </div>
     <div class="bar" id="sBar" style="margin:10px 0"><i></i></div>
@@ -963,7 +994,7 @@ function S_answerShell(){
       ${cfg.typing ? '' : '<button class="btn sm sky" id="undoBtn" data-act="undo">↩️ 하나 빼기</button>'}
       <button class="btn mint" id="submitBtn" data-act="submit" style="margin-left:auto">다 했어요! ✅</button>
     </div>
-    <div class="muted" style="margin-top:8px">${cfg.typing ? '기억나는 칸만 써도 점수를 받아요 · 오타 1글자는 봐줘요' : '채운 칸을 누르면 빠져요 · 순서가 헷갈려도 기억나는 물건은 다 눌러요!'}</div>
+    <div class="muted" style="margin-top:8px">${cfg.flash ? '쓰고 엔터! 순서는 몰라도 OK · 본 순서대로 쓰면 보너스 · 쓴 걸 누르면 빠져요' : cfg.typing ? '기억나는 칸만 써도 점수를 받아요 · 오타 1글자는 봐줘요' : '채운 칸을 누르면 빠져요 · 순서가 헷갈려도 기억나는 물건은 다 눌러요!'}</div>
     <div id="doneArea"></div></div>`;
   S_drawAnswer();
 }
@@ -971,7 +1002,18 @@ function S_answerShell(){
 function S_drawAnswer(){
   const st = S.state, area = el('ansArea'); if (!area || !S.rd) return;
   const cfg = ROUNDS[st.round], k = st.k, lock = S.done || S.locked;
-  if (cfg.typing) {
+  if (cfg.flash) {
+    if (!el('wIn')) {
+      area.innerHTML = `<div class="rule" id="wCount" style="font-size:22px;margin-top:10px"></div>
+        <div class="slots" id="wList"></div>
+        <div style="display:flex;gap:10px"><input class="field" id="wIn" maxlength="14" autocomplete="off" placeholder="기억나는 물건 쓰고 엔터! ⏎"><button class="btn mint" data-act="wAdd">➕</button></div>`;
+      el('wIn').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); S_wAdd(); } });
+      setTimeout(() => el('wIn') && el('wIn').focus(), 50);
+    }
+    el('wList').innerHTML = S.list.map((v, i) => `<div class="slot f" ${lock ? '' : `data-act="unslot" data-i="${i}"`}><span class="k">${i + 1}</span>${esc(v)}</div>`).join('');
+    el('wCount').innerHTML = `${k}개 중 <b style="color:var(--pinkD)">${S.list.length}개</b> 썼어요!`;
+    el('wIn').disabled = lock;
+  } else if (cfg.typing) {
     if (area.querySelectorAll('.tin').length !== k) {
       area.innerHTML = `<div class="tgrid">${Array.from({ length: k }, (_, i) => `<div><div class="tlab">${i + 1}번째</div>
         <input class="tin" data-i="${i}" maxlength="14" autocomplete="off" value="${esc(S.list[i] || '')}"></div>`).join('')}</div>`;
@@ -1005,10 +1047,19 @@ function S_pick(id){
   S.list.push(id); S_save(); S_drawAnswer();
 }
 function S_unslot(i){ if (S.done || S.locked) return; S.list.splice(i, 1); S_save(); S_drawAnswer(); }
+function S_wAdd(){
+  const inp = el('wIn'); if (!inp || S.done || S.locked) return;
+  const v = inp.value.trim(); if (!v) return;
+  if (S.list.some(x => fuzzyEq(x, v))) { toast('이미 썼어요! 다른 거 ✍️'); inp.classList.remove('shake'); void inp.offsetWidth; inp.classList.add('shake'); inp.select(); return; }
+  if (S.list.length >= S.state.k) { toast(`${S.state.k}개 다 썼어요! 다 했으면 제출 ✅`); return; }
+  S.list.push(v); inp.value = ''; S_save(); S_drawAnswer(); inp.focus();
+}
 function S_undo(){ if (S.done || S.locked || !S.list.length) return; S.list.pop(); S_save(); S_drawAnswer(); }
 function S_submit(){
   if (S.done || S.locked) return;
-  if (ROUNDS[S.state.round].typing) S.list = S_collect();
+  const cfgS = ROUNDS[S.state.round];
+  if (cfgS.flash) { if (el('wIn') && el('wIn').value.trim()) S_wAdd(); }
+  else if (cfgS.typing) S.list = S_collect();
   const filled = S.list.filter(Boolean).length;
   if (!filled) { toast('하나라도 골라 볼까요?'); return; }
   if (filled < S.state.k && !confirm('아직 빈 칸이 있어요. 그래도 낼까요?')) return;
@@ -1021,6 +1072,14 @@ function S_hint(){
   if (S.hintRound === st.round || S.done || S.locked || !S.rd) return;
   const target = targetOf(S.rd, st.k, st.rev);
   let idx;
+  if (cfg.flash) {
+    const { hit } = gradeList(target, S.rd.labels, S.list, true);
+    idx = hit.findIndex(h => !h); if (idx < 0) { toast('벌써 다 썼어요! 👍'); return; }
+    const text = S.rd.labels[target[idx]] || '';
+    S.hintRound = st.round;
+    toast(`💡 아직 안 쓴 것 중에 '${text.charAt(0)}'(으)로 시작하는 게 있어요! (${text.length}글자)`);
+    S_drawAnswer(); return;
+  }
   if (cfg.typing) { const v = S_collect(); idx = target.findIndex((_, i) => !v[i]); if (idx < 0) idx = target.length - 1; }
   else idx = S.list.length;
   if (idx >= target.length) return;
@@ -1037,12 +1096,13 @@ function S_tick(){
   if (t) t.textContent = '⏱ ' + Math.max(0, Math.ceil(rem / 1000)) + '초';
   if (bar) { bar.firstElementChild.style.width = Math.max(0, Math.min(100, rem / lim * 100)) + '%'; bar.classList.toggle('hurry', rem < 6000); }
   if (rem <= 0 && !S.locked && !S.done) {
-    if (ROUNDS[st.round].typing) { S.list = S_collect(); S_save(); }
+    if (ROUNDS[st.round].flash) { if (el('wIn') && el('wIn').value.trim()) S_wAdd(); }
+    else if (ROUNDS[st.round].typing) { S.list = S_collect(); S_save(); }
     S.locked = true; S_drawAnswer();
   }
 }
 
-function S_checkView(r, st, res, streak){
+function S_checkView(r, st, res, streak, rank){
   const cfg = ROUNDS[r], target = targetOf(S.rd, st.k, st.rev);
   if (!res || res.absent) {
     app.innerHTML = `<div class="s-wrap">${S_top()}<div class="stage"><div class="bigEmoji">☕</div>
@@ -1051,18 +1111,21 @@ function S_checkView(r, st, res, streak){
   }
   const list = S.list || [];
   const lab = v => cfg.typing ? v : ((S.rd.labels && S.rd.labels[v]) || ((S.rd.decoys || []).find(d => d.id === v) || {}).text || '');
-  const slots = target.map((id, i) => {
+  const slots = cfg.flash
+    ? target.map((id, i) => { const ok = res.hit && res.hit[i]; return `<div class="slot ${ok ? 'ok' : 'bad'}"><span class="k">${i + 1}번째 ${ok ? '✅ 기억함' : '❌ 놓침'}</span>${esc(S.rd.labels[id])}</div>`; }).join('')
+    : target.map((id, i) => {
     const ok = res.flags && res.flags[i];
     return `<div class="slot ${ok ? 'ok' : 'bad'}"><span class="k">${i + 1}번째 ${ok ? '✅' : '❌'}</span>${list[i] ? esc(lab(list[i])) : '—'}${ok ? '' : `<span class="ca">정답: ${esc(S.rd.labels[id])}</span>`}</div>`;
   }).join('');
   const last = st.si >= (S.rd.plan || []).length - 1;
   app.innerHTML = `<div class="s-wrap">${S_top()}<div class="stage" style="gap:10px;min-height:auto;margin-top:20px">
     <div class="title" style="font-size:38px">${res.perfect ? '완벽해요! 🌟' : res.inc ? '좋아요! 👍' : '괜찮아요, 다음에 또! 💪'}</div>
-    ${streak >= 2 ? `<div class="hot">🔥 ${streak}단계 연속 완벽!</div>` : ''}
+    ${streak >= 2 && !cfg.flash ? `<div class="hot">🔥 ${streak}단계 연속 완벽!</div>` : ''}
+    ${rank >= 1 && rank <= 3 && !cfg.practice ? `<div class="hot lead">${['🥇', '🥈', '🥉'][rank - 1]} 지금 ${rank}등!</div>` : ''}
     <div class="rule">기억한 물건 <b style="color:var(--pinkD)">${res.inc}개</b> · 순서까지 <b style="color:var(--pinkD)">${res.pos}개</b></div>
     <div class="slots" style="justify-content:center">${slots}</div>
     ${cfg.practice ? '<div class="muted" style="font-size:20px">연습이라 점수는 없어요</div>' : `<div class="score" style="font-size:44px">+${res.score}점</div>`}
-    <div class="muted" style="font-size:20px">${last ? '라운드 끝! 칠판을 보세요 👀' : '다음엔 또 늘어나요! 칠판을 보세요 👀'}</div>
+    <div class="muted" style="font-size:20px">${last ? '라운드 끝! 칠판을 보세요 👀' : st.rev ? '이제 다시 앞으로! 칠판을 보세요 👀' : '다음엔 또 늘어나요! 칠판을 보세요 👀'}</div>
   </div></div>`;
 }
 
@@ -1093,6 +1156,7 @@ document.addEventListener('click', e => {
   if (a === 'addItem') return S_addItem();
   if (a === 'pick') return S_pick(b.dataset.id);
   if (a === 'unslot') return S_unslot(+b.dataset.i);
+  if (a === 'wAdd') return S_wAdd();
   if (a === 'undo') return S_undo();
   if (a === 'submit') return S_submit();
   if (a === 'hint') return S_hint();
