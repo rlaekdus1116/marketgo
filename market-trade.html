@@ -164,7 +164,8 @@ const hintOpen = new Set();     // 결과 질문에서 힌트 펼친 번호
 let sel = { r: 0, partner: '', price: 0 };   // 학생이 고르는 중인 상대·가격
 let editing = false;            // 학생이 기록을 고치는 중
 let chartRound = 0;             // 그래프: 0 = 전체, 1~3 = 회차만
-let showTable = false;          // 그래프 ↔ 표 전환
+let chartMode = 'sd';           // 'sd' 수요·공급 그래프 / 'bar' 가격별 건수 / 'table' 표
+let showEq = false;             // 균형 가격 표시 (정답이라 기본은 숨김)
 const ROUND_COLORS = ['#3B8FD9', '#E8803E', '#2FA67A'];   // 1·2·3회차 (색각이상 검사 통과, 범례·숫자와 함께 사용)
 const annSeen = new Set();      // 이미 띄운 안내문
 let firstPass = true;           // 처음 접속·새로고침 땐 안내문 안 띄움
@@ -412,10 +413,15 @@ function renderTeacher() {
     tbody += sumRow('평균 가격', r => { const ps = pairsOf(r); return ps.length ? won(Math.round(ps.reduce((s, x) => s + x.price, 0) / ps.length)) : '-'; });
     const tabs = `<div class="chips" style="margin-bottom:10px">
       ${[0, ...cols.filter(roundStarted)].map(r => `<button class="btn sm ${chartRound === r ? 'lemon' : 'sky'}" data-cr="${r}">${r ? r + '회차' : '전체'}</button>`).join('')}
-      <button class="btn sm" id="toggleTable" style="margin-left:auto">${showTable ? '📊 그래프로 보기' : '📋 표로 보기'}</button></div>`;
-    return `<div class="card"><h3>📊 거래 가격 그래프 <span class="muted" style="font-size:16px">어느 가격에서 거래가 가장 많았을까?</span></h3>${tabs}
-      ${showTable ? `<table><thead>${thead}</thead><tbody>${tbody}</tbody></table><p class="muted" style="font-size:15px">숫자 = 그 가격에 성사된 거래 건수</p>`
-        : chartHTML(chartRound ? [chartRound] : cols.filter(roundStarted))}</div>`;
+      <span style="margin-left:auto"></span>
+      ${[['sd', '📈 수요·공급'], ['bar', '📊 가격별 건수'], ['table', '📋 표']].map(([m, t]) => `<button class="btn sm ${chartMode === m ? 'mint' : ''}" data-mode="${m}">${t}</button>`).join('')}
+      ${chartMode === 'sd' ? `<button class="btn sm ${showEq ? 'lemon' : 'sky'}" id="eq">⚖️ 균형 가격 ${showEq ? '숨기기' : '보이기'}</button>` : ''}</div>`;
+    const rs = chartRound ? [chartRound] : cols.filter(roundStarted);
+    const titles = { sd: '📈 수요·공급 그래프 <span class="muted" style="font-size:16px">내 카드들로 그린 수요 곡선과 공급 곡선, 그리고 실제 거래</span>',
+      bar: '📊 가격별 거래 건수 <span class="muted" style="font-size:16px">어느 가격에서 거래가 가장 많았을까?</span>', table: '📋 전체 거래 결과표' };
+    return `<div class="card"><h3>${titles[chartMode]}</h3>${tabs}
+      ${chartMode === 'table' ? `<table><thead>${thead}</thead><tbody>${tbody}</tbody></table><p class="muted" style="font-size:15px">숫자 = 그 가격에 성사된 거래 건수</p>`
+        : chartMode === 'bar' ? chartHTML(rs) : sdHTML(rs)}</div>`;
   })();
 
   // 이름 보기 켰을 때만: 누가 누구와 거래했는지
@@ -429,7 +435,8 @@ function renderTeacher() {
 
   const bind = (id, fn) => { const b = el(id); if (b) b.onclick = fn; };
   bind('names', () => { showNames = !showNames; render(); });
-  bind('toggleTable', () => { showTable = !showTable; render(); });
+  bind('eq', () => { showEq = !showEq; render(); });
+  app.querySelectorAll('[data-mode]').forEach(b => b.onclick = () => { chartMode = b.dataset.mode; render(); });
   app.querySelectorAll('[data-cr]').forEach(b => b.onclick = () => { chartRound = Number(b.dataset.cr); render(); });
   bind('next', () => {
     closing = false;
@@ -464,6 +471,70 @@ function makeCards(ids) {
   return cards;
 }
 
+
+/* ========== 수요·공급 그래프 ==========
+   수요 곡선: 그 가격 이상을 낼 수 있는 수요자 수 (카드 금액 높은 순으로 계단)
+   공급 곡선: 그 가격 이하로 팔 수 있는 공급자 수 (카드 금액 낮은 순으로 계단)
+   '전체'는 회차들의 카드를 모두 합친 시장 */
+function sdHTML(rs) {
+  const cs = rs.flatMap(r => Object.values(cardsOf(r)));
+  const D = cs.filter(c => c.role === 'buyer').map(c => c.limit).sort((a, b) => b - a);
+  const Sp = cs.filter(c => c.role === 'seller').map(c => c.limit).sort((a, b) => a - b);
+  if (!D.length || !Sp.length) return `<div class="stage" style="min-height:220px"><div class="rule muted">카드가 나오면 그래프가 그려져요</div></div>`;
+  const deals = rs.flatMap(r => pairsOf(r));
+  const pMin = Math.min(2000, ...deals.map(d => d.price - 500)), pMax = Math.max(6500, ...deals.map(d => d.price + 500));
+  const qMax = Math.max(D.length, Sp.length);
+  const W = 1000, H = 470, L = 86, Rr = 120, Tp = 24, B = 64;
+  const pw = W - L - Rr, ph = H - Tp - B;
+  const x = q => L + q / qMax * pw, y = p => Tp + (pMax - p) / (pMax - pMin) * ph;
+  const BLUE = '#3B8FD9', ORANGE = '#E8803E', GREEN = '#2FA67A';
+  let g = '';
+  // 눈금
+  for (let p = Math.ceil(pMin / 1000) * 1000; p <= pMax; p += 1000) g += `<line x1="${L}" x2="${W - Rr}" y1="${y(p)}" y2="${y(p)}" stroke="#F2E6EC"/><text x="${L - 10}" y="${y(p) + 6}" text-anchor="end" font-size="17" fill="#A3919C">${p.toLocaleString('ko-KR')}</text>`;
+  const qStep = qMax <= 12 ? 1 : qMax <= 30 ? 5 : 10;
+  for (let q = 0; q <= qMax; q += qStep) g += `<text x="${x(q)}" y="${H - B + 24}" text-anchor="middle" font-size="16" fill="#A3919C">${q}</text>`;
+  g += `<line x1="${L}" x2="${L}" y1="${Tp}" y2="${Tp + ph}" stroke="#A3919C" stroke-width="1.5"/><line x1="${L}" x2="${W - Rr}" y1="${Tp + ph}" y2="${Tp + ph}" stroke="#A3919C" stroke-width="1.5"/>`;
+  g += `<text x="${L - 10}" y="${Tp - 4}" text-anchor="end" font-size="16" fill="#5B4B57">가격(원)</text><text x="${W - Rr + 10}" y="${H - B + 24}" font-size="16" fill="#5B4B57">수량(개)</text>`;
+
+  // 균형: 높은 수요자 q번째 ≥ 낮은 공급자 q번째 인 가장 큰 q = 균형 거래량, 두 곡선이 겹치는 가격 = 균형 가격
+  let eqQ = 0;
+  while (eqQ < Math.min(D.length, Sp.length) && D[eqQ] >= Sp[eqQ]) eqQ++;
+  const eqLo = eqQ ? Math.max(Sp[eqQ - 1], D[eqQ] ?? -Infinity) : Sp[0];
+  const eqHi = eqQ ? Math.min(D[eqQ - 1], Sp[eqQ] ?? Infinity) : D[0];
+  const qd = p => D.filter(v => v >= p).length, qs = p => Sp.filter(v => v <= p).length;
+  if (showEq) {
+    g += `<rect x="${L}" y="${y(eqHi + 50)}" width="${pw}" height="${Math.max(6, y(eqLo - 50) - y(eqHi + 50))}" fill="#FFF5CC"/>
+      <text x="${W - Rr + 8}" y="${(y(eqHi) + y(eqLo)) / 2 + 6}" font-size="17" fill="#5B4B57">⚖️ 균형</text>`;
+  }
+
+  // 계단 곡선
+  const steps = vals => vals.map((v, i) => `${i ? 'V' : 'M' + x(0) + ','}${y(v)}H${x(i + 1)}`).join('');
+  g += `<path d="${steps(D)}" fill="none" stroke="${BLUE}" stroke-width="4" stroke-linejoin="round"/>`;
+  g += `<path d="${steps(Sp)}" fill="none" stroke="${ORANGE}" stroke-width="4" stroke-linejoin="round"/>`;
+  g += `<text x="${x(D.length) + 8}" y="${y(D[D.length - 1]) + 6}" font-size="20" fill="${BLUE}">수요 D</text>`;
+  g += `<text x="${x(Sp.length) + 8}" y="${y(Sp[Sp.length - 1]) + 6}" font-size="20" fill="${ORANGE}">공급 S</text>`;
+  // 계단 꼭짓점에 마우스 올리면 설명
+  D.forEach((v, i) => g += `<circle cx="${x(i + 1)}" cy="${y(v)}" r="9" fill="transparent"><title>${won(v)} 이상이면 사겠다는 수요자 ${qd(v)}명</title></circle>`);
+  Sp.forEach((v, i) => g += `<circle cx="${x(i + 1)}" cy="${y(v)}" r="9" fill="transparent"><title>${won(v)} 이하로도 팔겠다는 공급자 ${qs(v)}명</title></circle>`);
+
+  // 실제 거래: 거래된 가격들(작은 점) + 평균(큰 점) — 가로 위치는 실제 거래 건수
+  let note = '<span class="muted">아직 성사된 거래가 없어요</span>';
+  if (deals.length) {
+    const n = deals.length, avg = Math.round(deals.reduce((s, d) => s + d.price, 0) / n);
+    deals.forEach(d => g += `<circle cx="${x(n)}" cy="${y(d.price)}" r="6" fill="#fff" stroke="${GREEN}" stroke-width="2"><title>거래 ${won(d.price)}</title></circle>`);
+    g += `<line x1="${L}" x2="${x(n)}" y1="${y(avg)}" y2="${y(avg)}" stroke="${GREEN}" stroke-width="2" stroke-dasharray="6 6"/>
+      <line x1="${x(n)}" x2="${x(n)}" y1="${y(avg)}" y2="${Tp + ph}" stroke="${GREEN}" stroke-width="2" stroke-dasharray="6 6"/>
+      <circle cx="${x(n)}" cy="${y(avg)}" r="11" fill="${GREEN}" stroke="#fff" stroke-width="3"><title>실제 거래 ${n}건 · 평균 ${won(avg)}</title></circle>
+      <text x="${x(n) + 16}" y="${y(avg) - 12}" font-size="19" fill="#5B4B57">실제 거래</text>`;
+    note = `🟢 실제 거래 <b>${n}건</b> · 평균 가격 <b>${won(avg)}</b>`;
+  }
+  const legend = `<div class="chips" style="justify-content:center;margin-top:4px">
+    <span class="pill"><span style="display:inline-block;width:22px;height:4px;background:${BLUE};vertical-align:4px;border-radius:2px"></span> 수요 곡선 (수요자 ${D.length}명)</span>
+    <span class="pill"><span style="display:inline-block;width:22px;height:4px;background:${ORANGE};vertical-align:4px;border-radius:2px"></span> 공급 곡선 (공급자 ${Sp.length}명)</span>
+    <span class="pill"><span style="display:inline-block;width:12px;height:12px;background:${GREEN};border-radius:50%;vertical-align:-1px"></span> 실제 거래</span></div>`;
+  return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;font-family:Jua,sans-serif" role="img" aria-label="수요 공급 그래프">${g}</svg>${legend}
+    <div class="hl lemon center" style="font-size:22px">${note}${showEq ? `<br>⚖️ 균형 가격 <b>${eqLo === eqHi ? won(eqLo) : won(eqLo) + ' ~ ' + won(eqHi)}</b> · 균형 거래량 약 <b>${eqQ}개</b>` : ''}</div>`;
+}
 
 /* ========== 거래 가격 그래프 (가격별 거래 건수, 회차별로 쌓기) ========== */
 function chartHTML(rs) {
