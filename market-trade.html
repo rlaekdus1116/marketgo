@@ -533,9 +533,11 @@ function questionsHTML(cols) {
   });
   const totalCards = cols.reduce((s, r) => s + Object.keys(cardsOf(r)).length, 0);
   const noTrade = totalCards - all.length * 2;
+  if (!all.length) return `<div class="card"><h3>📋 결과표 보며 이야기해 봐요</h3>
+    <div class="hl peach">이번 게임에서는 성사된 거래가 한 건도 없어서 질문을 만들 수 없어요.<br><span class="muted" style="font-size:18px">학생들이 서로 같은 상대·같은 가격을 기록해야 거래로 잡혀요.</span></div></div>`;
 
   const Q = [
-    [top ? `가장 많이 거래된 가격은 <b>${won(top[0])}</b> (${top[1]}건)이에요. 왜 이 가격 근처에서 거래가 많았을까요?` : '거래가 거의 없었어요. 왜 그랬을까요?',
+    [`가장 많이 거래된 가격은 <b>${won(top[0])}</b> (${top[1]}건)이에요. 왜 이 가격 근처에서 거래가 많았을까요?`,
      '사려는 사람 수(수요량)와 팔려는 사람 수(공급량)가 비슷해지는 가격에서 거래가 가장 잘 이루어져요 → <b>균형 가격</b>. 이번 카드 분포에서는 4,000~4,500원 사이예요.'],
     [`평균 거래 가격: ${cols.map(r => `${r}회차 <b>${avg(r)}</b>`).join(' → ')}. 회차가 거듭될수록 가격은 어떻게 변했나요?`,
      '거래를 반복하면서 "다른 친구들은 얼마에 사고팔았는지" 정보가 퍼지고, 가격이 균형 가격 쪽으로 모여요.'],
