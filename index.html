@@ -107,6 +107,8 @@ h3{margin:0 0 12px;font-size:22px;font-weight:normal}
 .slot.ok{border-style:solid;border-color:var(--mintD);background:var(--mint)}
 .slot.bad{border-style:solid;border-color:var(--redD);background:var(--red)}
 .slot .ca{display:block;font-size:15px;color:var(--ink);margin-top:4px}
+.slot.mid{border-style:solid;border-color:var(--lemonD);background:var(--lemon)}
+.brk{display:flex;justify-content:space-between;gap:10px;font-size:19px;padding:6px 4px;border-bottom:2px dashed var(--line)}
 @keyframes blink{50%{background:var(--pink)}}
 .opts{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
 .opt{background:#fff;border:3px solid var(--line);border-radius:20px;padding:18px 8px;font-size:25px;box-shadow:0 4px 0 var(--line)}
@@ -153,9 +155,9 @@ const firebaseConfig = {
 const ROUNDS = [
   {name:'연습',          emoji:'🧪', desc:'점수 없이 몸풀기!',                     def:3,  others:1, bpm:108, mult:0, practice:true},
   {name:'차근차근',       emoji:'🍎', desc:'하나씩 늘어나요! 처음부터 순서대로!',       def:10, others:2, bpm:112, mult:1, rev:true},
-  {name:'끝판왕',        emoji:'👑', desc:'끝까지 가 보자! 점수 2배!',               def:12, others:2, bpm:118, mult:2, rev:true, jumpFrom:6},
+  {name:'끝판왕',        emoji:'👑', desc:'끝까지 가 보자!',                       def:12, others:2, bpm:118, mult:1, rev:true, jumpFrom:6},
   {name:'번외: 직접 쓰기', emoji:'✍️', desc:'보기 없이 직접 써요! (오타 1글자는 봐줌)', def:6,  others:0, bpm:108, mult:1, typing:true, bonus:true, rev:true},
-  {name:'플래시 와다다',   emoji:'⚡', desc:'한꺼번에 휙휙 보여줄게요! 기억나는 대로 와다다 써요!', def:8, others:0, bpm:126, mult:2, typing:true, flash:true},
+  {name:'플래시 와다다',   emoji:'⚡', desc:'한꺼번에 휙휙 보여줄게요! 기억나는 대로 와다다 써요!', def:8, others:0, bpm:126, mult:1, typing:true, flash:true},
 ];
 const FLASH_MS = 1300;       // 플래시 라운드에서 물건 한 개 보여주는 시간
 const MIN_K = 3, MAX_K = 20;
@@ -164,9 +166,9 @@ try { const t = JSON.parse(localStorage.getItem('market_targets') || 'null'); if
 const saveTargets = () => { try { localStorage.setItem('market_targets', JSON.stringify(targets)); } catch (e) {} };
 const SHOW_MS = 2500;        // 물건 한 개 보여주는 시간
 const CHECK_MS = 4000;       // 단계마다 정답 순서 보여주는 시간
-const REV_MULT = 3;          // 리버스 점수 배수
+const REV_MULT = 1;          // 리버스 점수 배수 (보너스 없음)
 const answerSec = (cfg, k, rev) => Math.round((cfg.flash ? 10 + 4 * k : cfg.typing ? 12 + 5 * k : 8 + 2.5 * k) * (rev ? 1.5 : 1));
-const PT_ITEM = 5, PT_POS = 5, PT_PERFECT = 20, SPEED_MAX = 10, BREAKER_PER = 1;
+const PT_ITEM = 5, PT_POS = 5, PT_PERFECT = 20, SPEED_MAX = 10, BREAKER_PER = 0;   // 점수 = 정확도 + 스피드만
 const MIN_ITEMS = 8;
 const RESERVE = ['사과','계란','바나나','라면','떡볶이','붕어빵','고등어','두부','양말','우산','김밥','호떡','수박','치킨','콜라','당근','만두','젤리','빗자루','장화','고무장갑','참기름','멸치','국자'];
 
@@ -230,15 +232,25 @@ function buildPlan(cfg, target, avail){
 }
 function prevK(plan, si){ for (let j = si - 1; j >= 0; j--) if (!plan[j].rev) return plan[j].k; return 0; }
 function gradeList(target, labels, list, typing){
-  const eq = (pick, id) => typing ? fuzzyEq(pick, labels[id]) : pick === id;
-  const flags = target.map((id, i) => !!list[i] && eq(list[i], id));
+  const eq = (pick, id) => !!pick && (typing ? fuzzyEq(pick, labels[id]) : pick === id);
+  // 기억한 물건 (순서 상관없이)
   const used = new Set();
   const hit = target.map(id => {
-    const j = list.findIndex((p, i) => !used.has(i) && p && eq(p, id));
+    const j = list.findIndex((p, i) => !used.has(i) && eq(p, id));
     if (j >= 0) { used.add(j); return true; }
     return false;
   });
-  return { flags, hit, inc: hit.filter(Boolean).length, pos: flags.filter(Boolean).length };
+  // 순서 맞은 물건: 하나 빠뜨려도 뒤가 다 틀리지 않게, 앞뒤 순서가 맞게 이어진 물건 수로 셈
+  const n = target.length, m = list.length;
+  const dp = Array.from({ length: n + 1 }, () => Array(m + 1).fill(0));
+  for (let i = 1; i <= n; i++) for (let j = 1; j <= m; j++)
+    dp[i][j] = eq(list[j - 1], target[i - 1]) ? dp[i - 1][j - 1] + 1 : Math.max(dp[i - 1][j], dp[i][j - 1]);
+  const flags = Array(n).fill(false);
+  for (let i = n, j = m; i > 0 && j > 0;) {
+    if (eq(list[j - 1], target[i - 1]) && dp[i][j] === dp[i - 1][j - 1] + 1) { flags[i - 1] = true; i--; j--; }
+    else if (dp[i - 1][j] >= dp[i][j - 1]) i--; else j--;
+  }
+  return { flags, hit, inc: hit.filter(Boolean).length, pos: dp[n][m] };
 }
 function survivors(rd, si){
   const res = rd.res || {}; let s = null;
@@ -466,7 +478,7 @@ function T_shell(){
       <div class="rule">${esc(cfg.desc)}<br>
         <span class="muted">${cfg.flash ? `물건 ${maxK}개를 한꺼번에 휙휙! → 기억나는 대로 와다다 쓰기 (순서 맞으면 보너스)` : `물건 ${plan[0].k}개로 시작 → 차곡차곡 ${maxK}개까지!`}</span><br>
         ${plan.some(p => p.rev) ? '<span style="color:var(--peachD)">🔄 중간에 깜짝 리버스가 올 수도...?</span><br>' : ''}
-        <span class="muted" style="font-size:22px">🧺 기억한 물건 ${PT_ITEM}점 + 순서까지 맞으면 ${PT_POS}점 더${cfg.mult > 1 ? ` · ×${cfg.mult}` : ''} · 리버스는 ×${REV_MULT}${cfg.practice ? ' (연습은 점수 없음)' : ''}</span></div>
+        <span class="muted" style="font-size:22px">🎯 정확도: 기억한 물건 ${PT_ITEM}점 + 순서까지 맞으면 ${PT_POS}점 더 · 완벽 +${PT_PERFECT} · ⚡ 빨리 내면 스피드 보너스 · 리버스는 거꾸로 맞힌 것만${cfg.practice ? ' (연습은 점수 없음)' : ''}</span></div>
       <button class="btn big" data-act="playRound">▶ 시작!</button>
     </div></div>`;
   }
@@ -591,7 +603,7 @@ async function T_startRound(r){
     const labels = {}; chain.forEach(id => labels[id] = items[id].text);
     const decoys = shuffle(ids.filter(id => !chain.includes(id))).slice(0, cfg.others).map(id => ({ id, text: items[id].text }));
     const pids = Object.keys(room.players || {});
-    const luck = (cfg.practice || cfg.bonus) ? [] : shuffle(pids).slice(0, Math.max(1, Math.round(pids.length / 8)));
+    const luck = [];   // 행운 카드 없음
     paused = false;
     await update(ref(db, 'rooms/' + code), {
       ['rounds/' + r]: { chain, labels, decoys, luck, plan },
@@ -697,7 +709,9 @@ async function T_score(r, si){
     const perfect = cfg.flash ? inc === k : pos === k;
     (cfg.flash ? hit : flags).forEach((f, i) => { const id = target[i]; if (!f && items[id] && items[id].pid !== pid) miss[id]++; });
     const speed = (perfect && pk.doneAt) ? Math.min(SPEED_MAX, Math.max(0, Math.floor((R.state.answerEndsAt - pk.doneAt) / 2000))) : 0;
-    const base = (inc * PT_ITEM + pos * PT_POS + (perfect ? PT_PERFECT : 0) + speed) * mult;
+    // 리버스는 거꾸로 순서가 맞은 물건만 점수 (원래 순서대로 쓰면 점수 거의 없음)
+    const base = rev ? (pos * (PT_ITEM + PT_POS) + (perfect ? PT_PERFECT : 0) + speed) * mult
+                     : (inc * PT_ITEM + pos * PT_POS + (perfect ? PT_PERFECT : 0) + speed) * mult;
     res[pid] = { inc, pos, perfect, speed, base, flags, hit, breaker: 0, lucky: (rd.luck || []).includes(pid), score: 0 };
   }
   if (!cfg.practice) target.forEach(id => { const a = items[id] && items[id].pid; if (a && res[a]) res[a].breaker += miss[id] * BREAKER_PER; });
@@ -768,8 +782,7 @@ function T_resultHTML(){
       <div class="card"><h3>🧺 이번 시장 물건</h3><div class="chainRow" style="justify-content:flex-start">${ans}</div>
         ${surv ? `<div class="hl peach">🔥 끝까지 완벽 생존: <b>${surv}명</b>!</div>` : ''}</div>
       <div class="card"><h3>🤫 순위는 마지막에 공개!</h3><p class="muted" style="font-size:18px">최종 결과에서 TOP 5를 발표해요</p>
-        ${lucky.length ? `<div class="hl">🍀 <b>행운 카드!</b> ${lucky.map(esc).join(', ')} — 이번 라운드 점수 2배!</div>` : ''}
-        ${worst && missAll[worst] > 0 && items[worst] ? `<div class="hl lav">💥 <b>기억 브레이커</b> ${room.state.showNames ? esc(items[worst].author) + '의 ' : ''}'${esc(items[worst].text)}' — ${missAll[worst]}번 깜빡했어요!</div>` : ''}
+        ${worst && missAll[worst] > 0 && items[worst] ? `<div class="hl lav">😵 <b>가장 많이 깜빡한 물건</b> ${room.state.showNames ? esc(items[worst].author) + '의 ' : ''}'${esc(items[worst].text)}' — ${missAll[worst]}번 깜빡했어요!</div>` : ''}
       </div>
     </div>
     <div style="margin-top:22px">${roundPicker(r + 1 < ROUNDS.length ? r + 1 : -1)}</div>
@@ -785,7 +798,6 @@ function T_endHTML(){
     <div class="grid2" style="margin-top:10px">
       <div class="card"><h3>🏆 최종 TOP 5</h3>${top.map((p, i) => `<div class="rank"><span class="medal">${MEDAL[i]}</span>${esc(p.name)}<b>${p.total}점</b></div>`).join('')}</div>
       <div class="card"><h3>✨ 특별상</h3>
-        ${brk ? `<div class="hl lav">💥 <b>기억 브레이커 왕</b><br>${esc(brk.name)} — 친구들을 ${brk.breakerTotal}번 헷갈리게 했어요!</div>` : ''}
         ${worst3.length ? `<div class="hl">😵 <b>가장 많이 깜빡한 물건</b><br>${worst3.map(([id, v], i) => `${i + 1}. ${esc(items[id].text)} (${v}번)`).join('<br>')}</div>` : ''}
       </div>
     </div>`;
@@ -930,7 +942,6 @@ async function S_render(){
       <div class="muted" style="font-size:22px">내 최종 점수</div>
       <div class="score">${(S.me && S.me.total) || 0}점</div>
       ${inTop ? '<div class="hl">🏆 TOP 5 안에 들었어요!</div>' : '<div class="hl mint">끝까지 함께해서 최고였어요 🙌</div>'}
-      ${(S.me && S.me.breakerTotal) ? `<div class="hl lav">💥 내 물건으로 친구들을 ${S.me.breakerTotal}번 헷갈리게 했어요!</div>` : ''}
     </div></div>`;
   }
 }
@@ -958,7 +969,7 @@ function S_lobbyZone(){
   z.innerHTML = `<div class="card" style="display:grid;gap:12px">
     <div class="rule">시장에 가면 ___ 도 있고~</div>
     <input class="field" id="itemInput" maxlength="12" placeholder="예) 치킨, 교감선생님, 고무장갑">
-    <div class="muted">먹을 거, 물건, 사람 다 OK! 엉뚱할수록 친구들이 헷갈려서 💥브레이커 점수를 받아요</div>
+    <div class="muted">먹을 거, 물건, 사람 다 OK! 엉뚱한 것도 환영 😆</div>
     <button class="btn big" data-act="addItem">시장에 넣기 🧺</button></div>`;
   el('itemInput').addEventListener('keydown', e => { if (e.key === 'Enter') S_addItem(); });
 }
@@ -1015,7 +1026,8 @@ function S_drawAnswer(){
     el('wIn').disabled = lock;
   } else if (cfg.typing) {
     if (area.querySelectorAll('.tin').length !== k) {
-      area.innerHTML = `<div class="tgrid">${Array.from({ length: k }, (_, i) => `<div><div class="tlab">${i + 1}번째</div>
+      const revLab = i => !st.rev ? '' : i === 0 ? ' ⬅️ 맨 마지막에 나온 것' : i === k - 1 ? ' (맨 처음에 나온 것)' : '';
+      area.innerHTML = `<div class="tgrid">${Array.from({ length: k }, (_, i) => `<div><div class="tlab">${i + 1}번째${revLab(i)}</div>
         <input class="tin" data-i="${i}" maxlength="14" autocomplete="off" value="${esc(S.list[i] || '')}"></div>`).join('')}</div>`;
       let tm;
       area.querySelectorAll('.tin').forEach(inp => inp.addEventListener('input', () => { clearTimeout(tm); tm = setTimeout(() => { S.list = S_collect(); S_save(); }, 400); }));
@@ -1109,21 +1121,30 @@ function S_checkView(r, st, res, streak, rank){
       <div class="rule">이번 단계는 쉬었어요. 칠판으로 정답을 봐요!</div></div></div>`;
     return;
   }
-  const list = S.list || [];
-  const lab = v => cfg.typing ? v : ((S.rd.labels && S.rd.labels[v]) || ((S.rd.decoys || []).find(d => d.id === v) || {}).text || '');
-  const slots = cfg.flash
-    ? target.map((id, i) => { const ok = res.hit && res.hit[i]; return `<div class="slot ${ok ? 'ok' : 'bad'}"><span class="k">${i + 1}번째 ${ok ? '✅ 기억함' : '❌ 놓침'}</span>${esc(S.rd.labels[id])}</div>`; }).join('')
-    : target.map((id, i) => {
-    const ok = res.flags && res.flags[i];
-    return `<div class="slot ${ok ? 'ok' : 'bad'}"><span class="k">${i + 1}번째 ${ok ? '✅' : '❌'}</span>${list[i] ? esc(lab(list[i])) : '—'}${ok ? '' : `<span class="ca">정답: ${esc(S.rd.labels[id])}</span>`}</div>`;
+  const slots = target.map((id, i) => {
+    const inOrder = res.flags && res.flags[i], got = res.hit && res.hit[i];
+    if (cfg.flash) return `<div class="slot ${got ? 'ok' : 'bad'}"><span class="k">${i + 1}번째 ${got ? '✅ 기억함' : '❌ 놓침'}</span>${esc(S.rd.labels[id])}</div>`;
+    const cls = inOrder ? 'ok' : got ? 'mid' : 'bad', mark = inOrder ? '✅' : got ? '🟡 순서' : '❌ 놓침';
+    return `<div class="slot ${cls}"><span class="k">${i + 1}번째 ${mark}</span>${esc(S.rd.labels[id])}</div>`;
   }).join('');
+  const mult = cfg.mult * (st.rev ? REV_MULT : 1);
+  const rows = st.rev
+    ? [[`🔄 거꾸로 순서 맞은 물건 ${res.pos}개 × ${PT_ITEM + PT_POS}`, res.pos * (PT_ITEM + PT_POS)]]
+    : [[`🧺 기억한 물건 ${res.inc}개 × ${PT_ITEM}`, res.inc * PT_ITEM], [`🔗 순서 맞은 물건 ${res.pos}개 × ${PT_POS}`, res.pos * PT_POS]];
+  if (res.perfect) rows.push(['🌟 완벽 보너스', PT_PERFECT]);
+  if (res.speed) rows.push(['⚡ 스피드 보너스', res.speed]);
+  const breakdown = cfg.practice ? '' : `<div class="card" style="width:min(460px,100%);text-align:left">
+    ${rows.map(([t, v]) => `<div class="brk"><span>${t}</span><span>+${v}</span></div>`).join('')}
+    ${mult > 1 ? `<div class="brk"><span>✖️ ${st.rev ? '리버스' : esc(cfg.name)} 배수</span><span>×${mult}</span></div>` : ''}
+    <div class="brk" style="border:none;font-size:26px"><span>이번 단계</span><span style="color:var(--pinkD)">+${res.score}점</span></div></div>`;
   const last = st.si >= (S.rd.plan || []).length - 1;
   app.innerHTML = `<div class="s-wrap">${S_top()}<div class="stage" style="gap:10px;min-height:auto;margin-top:20px">
     <div class="title" style="font-size:38px">${res.perfect ? '완벽해요! 🌟' : res.inc ? '좋아요! 👍' : '괜찮아요, 다음에 또! 💪'}</div>
     ${streak >= 2 && !cfg.flash ? `<div class="hot">🔥 ${streak}단계 연속 완벽!</div>` : ''}
     <div class="rule">기억한 물건 <b style="color:var(--pinkD)">${res.inc}개</b> · 순서까지 <b style="color:var(--pinkD)">${res.pos}개</b></div>
     <div class="slots" style="justify-content:center">${slots}</div>
-    ${cfg.practice ? '<div class="muted" style="font-size:20px">연습이라 점수는 없어요</div>' : `<div class="score" style="font-size:44px">+${res.score}점</div>`}
+    ${cfg.flash ? '' : '<div class="muted" style="font-size:16px">✅ 순서까지 맞음 · 🟡 기억했지만 순서가 달라요 · ❌ 놓침</div>'}
+    ${cfg.practice ? '<div class="muted" style="font-size:20px">연습이라 점수는 없어요</div>' : breakdown}
     <div class="muted" style="font-size:20px">${last ? '라운드 끝! 칠판을 보세요 👀' : st.rev ? '이제 다시 앞으로! 칠판을 보세요 👀' : '다음엔 또 늘어나요! 칠판을 보세요 👀'}</div>
   </div></div>`;
 }
@@ -1139,10 +1160,8 @@ function S_resultView(r, rr){
   const lucky = (rr.luck || []).includes(S.pid);
   app.innerHTML = `<div class="s-wrap">${S_top()}<div class="stage" style="gap:10px">
     <span class="roundBadge">${cfg.emoji} ${esc(cfg.name)} 결과</span>
-    ${lucky ? `<div class="luck"><div class="in"><div class="fa">🎴 ?</div><div class="ba">🍀 행운 카드!<span style="font-size:20px">이번 라운드 2배</span></div></div></div>` : ''}
     <div class="muted" style="font-size:22px">이번 라운드에서 받은 점수</div>
     <div class="score">+${sum}점</div>
-    ${brk ? `<div class="hl lav">💥 내 물건 덕분에 친구들이 ${brk}번 헷갈렸어요! (브레이커 점수 포함)</div>` : ''}
     <div class="muted" style="font-size:20px">칠판에서 순위를 확인해요 👀</div>
   </div></div>`;
 }
