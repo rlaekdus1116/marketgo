@@ -536,7 +536,7 @@ function T_update(){
     if (sv) {
       const lastScored = st.phase === 'check' ? st.si : st.si - 1;
       const n = lastScored >= 0 && !ROUNDS[r].flash ? survivors(rd, lastScored) : null;
-      sv.innerHTML = (n !== null && !ROUNDS[r].practice ? `<span class="hot">🔥 완벽 생존자 ${n}명</span>` : '') + leaderHTML(st.phase === 'check');
+      sv.innerHTML = (n !== null && !ROUNDS[r].practice ? `<span class="hot">🔥 완벽 생존자 ${n}명</span>` : '');
     }
   }
   if (st.phase === 'answer') {
@@ -767,7 +767,7 @@ function T_resultHTML(){
     <div class="grid2">
       <div class="card"><h3>🧺 이번 시장 물건</h3><div class="chainRow" style="justify-content:flex-start">${ans}</div>
         ${surv ? `<div class="hl peach">🔥 끝까지 완벽 생존: <b>${surv}명</b>!</div>` : ''}</div>
-      <div class="card"><h3>🏆 TOP 5</h3>${ranks || '<p class="muted">아직 없어요</p>'}
+      <div class="card"><h3>🤫 순위는 마지막에 공개!</h3><p class="muted" style="font-size:18px">최종 결과에서 TOP 5를 발표해요</p>
         ${lucky.length ? `<div class="hl">🍀 <b>행운 카드!</b> ${lucky.map(esc).join(', ')} — 이번 라운드 점수 2배!</div>` : ''}
         ${worst && missAll[worst] > 0 && items[worst] ? `<div class="hl lav">💥 <b>기억 브레이커</b> ${room.state.showNames ? esc(items[worst].author) + '의 ' : ''}'${esc(items[worst].text)}' — ${missAll[worst]}번 깜빡했어요!</div>` : ''}
       </div>
@@ -1121,7 +1121,6 @@ function S_checkView(r, st, res, streak, rank){
   app.innerHTML = `<div class="s-wrap">${S_top()}<div class="stage" style="gap:10px;min-height:auto;margin-top:20px">
     <div class="title" style="font-size:38px">${res.perfect ? '완벽해요! 🌟' : res.inc ? '좋아요! 👍' : '괜찮아요, 다음에 또! 💪'}</div>
     ${streak >= 2 && !cfg.flash ? `<div class="hot">🔥 ${streak}단계 연속 완벽!</div>` : ''}
-    ${rank >= 1 && rank <= 3 && !cfg.practice ? `<div class="hot lead">${['🥇', '🥈', '🥉'][rank - 1]} 지금 ${rank}등!</div>` : ''}
     <div class="rule">기억한 물건 <b style="color:var(--pinkD)">${res.inc}개</b> · 순서까지 <b style="color:var(--pinkD)">${res.pos}개</b></div>
     <div class="slots" style="justify-content:center">${slots}</div>
     ${cfg.practice ? '<div class="muted" style="font-size:20px">연습이라 점수는 없어요</div>' : `<div class="score" style="font-size:44px">+${res.score}점</div>`}
