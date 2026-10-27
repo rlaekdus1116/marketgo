@@ -163,6 +163,9 @@ let showNames = false;          // 선생님 화면 전용
 const hintOpen = new Set();     // 결과 질문에서 힌트 펼친 번호
 let sel = { r: 0, partner: '', price: 0 };   // 학생이 고르는 중인 상대·가격
 let editing = false;            // 학생이 기록을 고치는 중
+let chartRound = 0;             // 그래프: 0 = 전체, 1~3 = 회차만
+let showTable = false;          // 그래프 ↔ 표 전환
+const ROUND_COLORS = ['#3B8FD9', '#E8803E', '#2FA67A'];   // 1·2·3회차 (색각이상 검사 통과, 범례·숫자와 함께 사용)
 const annSeen = new Set();      // 이미 띄운 안내문
 let firstPass = true;           // 처음 접속·새로고침 땐 안내문 안 띄움
 
@@ -407,8 +410,12 @@ function renderTeacher() {
     const sumRow = (label, fn) => `<tr><th>${label}</th>${cols.map(r => `<td class="sum">${roundStarted(r) ? fn(r) : '-'}</td>`).join('')}</tr>`;
     tbody += sumRow('거래 건수', r => pairsOf(r).length + '건');
     tbody += sumRow('평균 가격', r => { const ps = pairsOf(r); return ps.length ? won(Math.round(ps.reduce((s, x) => s + x.price, 0) / ps.length)) : '-'; });
-    return `<div class="card"><h3>📊 전체 거래 결과표</h3><table><thead>${thead}</thead><tbody>${tbody}</tbody></table>
-      <p class="muted" style="font-size:15px">숫자 = 그 가격에 성사된 거래 건수</p></div>`;
+    const tabs = `<div class="chips" style="margin-bottom:10px">
+      ${[0, ...cols.filter(roundStarted)].map(r => `<button class="btn sm ${chartRound === r ? 'lemon' : 'sky'}" data-cr="${r}">${r ? r + '회차' : '전체'}</button>`).join('')}
+      <button class="btn sm" id="toggleTable" style="margin-left:auto">${showTable ? '📊 그래프로 보기' : '📋 표로 보기'}</button></div>`;
+    return `<div class="card"><h3>📊 거래 가격 그래프 <span class="muted" style="font-size:16px">어느 가격에서 거래가 가장 많았을까?</span></h3>${tabs}
+      ${showTable ? `<table><thead>${thead}</thead><tbody>${tbody}</tbody></table><p class="muted" style="font-size:15px">숫자 = 그 가격에 성사된 거래 건수</p>`
+        : chartHTML(chartRound ? [chartRound] : cols.filter(roundStarted))}</div>`;
   })();
 
   // 이름 보기 켰을 때만: 누가 누구와 거래했는지
@@ -422,6 +429,8 @@ function renderTeacher() {
 
   const bind = (id, fn) => { const b = el(id); if (b) b.onclick = fn; };
   bind('names', () => { showNames = !showNames; render(); });
+  bind('toggleTable', () => { showTable = !showTable; render(); });
+  app.querySelectorAll('[data-cr]').forEach(b => b.onclick = () => { chartRound = Number(b.dataset.cr); render(); });
   bind('next', () => {
     closing = false;
     const r = (st.round || 0) + 1;
@@ -453,6 +462,57 @@ function makeCards(ids) {
     cards[id] = i < buyerN ? { role: 'buyer', limit: bv[i] } : { role: 'seller', limit: sv[i - buyerN] };
   });
   return cards;
+}
+
+
+/* ========== 거래 가격 그래프 (가격별 거래 건수, 회차별로 쌓기) ========== */
+function chartHTML(rs) {
+  const deals = rs.flatMap(r => pairsOf(r).map(x => ({ r, price: x.price })));
+  if (!deals.length) return `<div class="stage" style="min-height:220px"><div class="bigEmoji">🌶️</div><div class="rule muted">아직 성사된 거래가 없어요</div></div>`;
+  const STEP = 500;
+  const lo = Math.min(BUYER_VALUES[0], ...deals.map(d => Math.floor(d.price / STEP) * STEP));
+  const hi = Math.max(SELLER_VALUES[SELLER_VALUES.length - 1], ...deals.map(d => Math.floor(d.price / STEP) * STEP));
+  // 500원 눈금 + 실제로 거래된 가격(4,800원 같은 값도 따로 한 칸)
+  const grid = new Set(deals.map(d => d.price));
+  for (let v = lo; v <= hi; v += STEP) grid.add(v);
+  const bins = [...grid].sort((a, b) => a - b).map(v => {
+    const at = deals.filter(d => d.price === v);
+    return { v, n: at.length, by: rs.map(r => at.filter(d => d.r === r).length) };
+  });
+  const maxN = Math.max(...bins.map(b => b.n));
+  const W = 1000, H = 380, L = 44, Rr = 12, Tp = 46, B = 56;
+  const pw = W - L - Rr, ph = H - Tp - B, slot = pw / bins.length, bw = Math.min(64, slot * 0.62);
+  const y = n => Tp + ph - (n / maxN) * ph;
+  const step = maxN <= 6 ? 1 : Math.ceil(maxN / 6);
+  let g = '';
+  for (let n = 0; n <= maxN; n += step) {
+    g += `<line x1="${L}" x2="${W - Rr}" y1="${y(n)}" y2="${y(n)}" stroke="#F2E6EC" stroke-width="1"/>
+      <text x="${L - 10}" y="${y(n) + 6}" text-anchor="end" font-size="17" fill="#A3919C">${n}</text>`;
+  }
+  // 위쪽만 둥근 막대 조각
+  const topRounded = (x, yTop, w, h, r) => `M${x},${yTop + h}V${yTop + r}Q${x},${yTop} ${x + r},${yTop}H${x + w - r}Q${x + w},${yTop} ${x + w},${yTop + r}V${yTop + h}Z`;
+  bins.forEach((b, i) => {
+    const cx = L + slot * i + slot / 2, x = cx - bw / 2;
+    let acc = 0;
+    const segs = b.by.map((n, k) => ({ n, k })).filter(s => s.n);
+    segs.forEach((s, j) => {
+      const y0 = y(acc + s.n), h = y(acc) - y0 - (acc ? 2 : 0);   // 조각 사이 2px 틈
+      const top = j === segs.length - 1;
+      g += top ? `<path d="${topRounded(x, y0, bw, h, Math.min(6, h / 2))}" fill="${ROUND_COLORS[rs[s.k] - 1]}"/>`
+               : `<rect x="${x}" y="${y0}" width="${bw}" height="${h}" fill="${ROUND_COLORS[rs[s.k] - 1]}"/>`;
+      acc += s.n;
+    });
+    const isTop = b.n && b.n === maxN;
+    if (b.n) g += `<text x="${cx}" y="${y(b.n) - 10}" text-anchor="middle" font-size="22" fill="#5B4B57">${isTop ? '👑 ' : ''}${b.n}건</text>`;
+    g += `<text x="${cx}" y="${H - B + 26}" text-anchor="middle" font-size="17" fill="${isTop ? '#5B4B57' : '#A3919C'}">${b.v.toLocaleString('ko-KR')}</text>`;
+    // 마우스 올리면 회차별 건수
+    g += `<rect x="${L + slot * i}" y="${Tp}" width="${slot}" height="${ph}" fill="transparent"><title>${won(b.v)}: ${b.n}건${rs.length > 1 ? '\n' + rs.map((r, k) => `${r}회차 ${b.by[k]}건`).join('\n') : ''}</title></rect>`;
+  });
+  g += `<line x1="${L}" x2="${W - Rr}" y1="${Tp + ph}" y2="${Tp + ph}" stroke="#A3919C" stroke-width="1.5"/>`;
+  const topBins = bins.filter(b => b.n === maxN).map(b => won(b.v));
+  const legend = rs.length > 1 ? `<div class="chips" style="justify-content:center;margin-top:4px">${rs.map(r => `<span class="pill"><span style="display:inline-block;width:14px;height:14px;border-radius:4px;background:${ROUND_COLORS[r - 1]};vertical-align:-1px"></span> ${r}회차</span>`).join('')}</div>` : '';
+  return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;font-family:Jua,sans-serif" role="img" aria-label="거래 가격별 거래 건수 그래프">${g}</svg>${legend}
+    <div class="hl lemon center" style="font-size:24px">👑 가장 많이 거래된 가격: <b>${topBins.join(', ')}</b> (${maxN}건)</div>`;
 }
 
 /* ========== 결과표 정리 질문 (마지막 회차 후 선생님 화면) ========== */
@@ -527,7 +587,7 @@ function renderStudent() {
     ? announce('시장 끝~!!', `내 총 손익 ${signed(totalProfit(st))} 💖`, '🎉', 4000)
     : announce('그만~~!!', `${st.round}회차 끝! 결과를 확인해 봐`, '🛑'));
   else maybeAnnounce(`${st.phase}-${st.round}`, () => {});
-  if (myPair) maybeAnnounce(`deal-${st.round}`, () => announce('거래 성사!!', '짝짝짝~ 🎊', '🤝', 2400));
+  if (myPair) maybeAnnounce(`deal-${st.round}`, () => announce('거래 성사!!', '🪑 이제 자리에 가서 앉아요!', '🤝', 6000));
 
   // 같은 상태면 다시 그리지 않음 (입력 중인 내용이 날아가지 않게)
   const sig = JSON.stringify([st.phase, st.round, card, Object.keys(players).length, curSub, !!myPair, partnerSub, claims, editing]);
@@ -568,7 +628,8 @@ function renderStudent() {
     body += `<div class="card">${cardHTML}</div>`;
 
     if (myPair) {
-      body += `<div class="card"><div class="doneBox">✅ ${nameOf(curSub.partner)} 친구와 거래 성사!<br>${won(myPair.price)} · 손익 <b>${signed(profitOf(card, myPair.price))}</b></div></div>`;
+      body += `<div class="card"><div class="doneBox">✅ ${nameOf(curSub.partner)} 친구와 거래 성사!<br>${won(myPair.price)} · 손익 <b>${signed(profitOf(card, myPair.price))}</b></div>
+        <div class="hl peach center pop" style="font-size:30px;margin-top:12px">🪑 자리에 가서 앉아요!<br><span style="font-size:18px">다음 회차를 기다려 주세요</span></div></div>`;
     } else if (curSub && !editing) {
       // 기록은 했는데 아직 짝이 안 맞음 → 무엇이 다른지 보여 주고 바로 고칠 수 있게
       let box, fix = '';
