@@ -2,39 +2,132 @@
 <html lang="ko">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>모의 시장 📈</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>귤 시장 🍊</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
-:root{--bg:#fff8ef;--ink:#4a3b2a;--pink:#ffd6e0;--mint:#c9f2dc;--sky:#cfe8ff;--peach:#ffe2c2;--line:#f0d9c0}
-*{box-sizing:border-box}
-body{margin:0;font-family:"Malgun Gothic","Apple SD Gothic Neo",sans-serif;background:var(--bg);color:var(--ink);min-height:100vh}
-.wrap{max-width:980px;margin:0 auto;padding:18px}
-.card{background:#fff;border:2px solid var(--line);border-radius:18px;padding:18px;box-shadow:0 4px 0 var(--line);margin-bottom:14px}
-h1{font-size:24px;margin:2px 0 10px}
-h2{font-size:18px;margin:4px 0 10px}
-.btn{font:inherit;font-size:16px;border:0;border-radius:14px;padding:12px 18px;cursor:pointer;background:var(--peach);color:var(--ink);box-shadow:0 3px 0 #e6b98f;margin:4px 4px 4px 0}
-.btn:disabled{opacity:.45;cursor:default}
-.btn.mint{background:var(--mint);box-shadow:0 3px 0 #94cdb0}
-.btn.sky{background:var(--sky);box-shadow:0 3px 0 #9cc4e8}
-.btn.pink{background:var(--pink);box-shadow:0 3px 0 #e8a7b8}
-.btn.small{font-size:13px;padding:6px 10px}
-.field,select{font:inherit;font-size:16px;padding:10px 12px;border:2px solid var(--line);border-radius:12px;width:100%;margin:4px 0;background:#fff}
-.muted{color:#9a8875;font-size:14px}
-.big{font-size:20px;font-weight:700}
-.pill{display:inline-block;padding:5px 11px;border-radius:99px;background:var(--sky);margin:3px}
-.timer{font-size:30px;font-weight:800;text-align:center;margin:6px 0}
-.timer.hurry{color:#e0607e}
-.row{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
-table{border-collapse:collapse;width:100%;font-size:15px}
-th,td{border:1px solid var(--line);padding:8px 6px;text-align:center}
-th{background:var(--peach)}
-td.on{background:var(--mint);font-weight:700;font-size:17px}
-td.sum{background:#faf3e8}
-.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:12px 18px;border-radius:14px;z-index:9}
+/* 「시장에 가면」과 같은 디자인 */
+:root{
+  --bg:#FFF9F4; --ink:#5B4B57; --sub:#A3919C; --line:#F2E6EC; --card:#FFFFFF;
+  --pink:#FFE3EA; --pinkD:#F4A9BD; --mint:#DDF5EA; --mintD:#8FD5B5;
+  --lemon:#FFF5CC; --lemonD:#F2D477; --lav:#ECE5FF; --lavD:#B8A7EE;
+  --sky:#E0F0FF; --skyD:#93C4EE; --peach:#FFE9DA; --peachD:#F5B48C; --red:#FFD9D9; --redD:#EE9A9A;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;min-height:100%}
+body{font-family:'Jua',sans-serif;color:var(--ink);background:var(--bg);
+  background-image:radial-gradient(#F6E3EA 1.4px,transparent 1.4px);background-size:22px 22px}
+button{font-family:inherit;color:inherit;cursor:pointer;border:none}
+.wrap{max-width:1100px;margin:0 auto;padding:18px 16px 40px}
+.s-wrap{max-width:760px;margin:0 auto;padding:14px 14px 40px}
+.muted{color:var(--sub)} .center{text-align:center}
+.card{background:var(--card);border:2px solid var(--line);border-radius:26px;padding:18px 20px;box-shadow:0 6px 0 var(--line);margin-bottom:16px}
+h3{margin:0 0 12px;font-size:22px;font-weight:normal}
+.btn{background:var(--pink);border-radius:20px;padding:14px 22px;font-size:20px;box-shadow:0 5px 0 var(--pinkD);transition:transform .08s;margin:4px 4px 4px 0}
+.btn:active{transform:translateY(4px);box-shadow:0 1px 0 var(--pinkD)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.mint{background:var(--mint);box-shadow:0 5px 0 var(--mintD)}
+.btn.lemon{background:var(--lemon);box-shadow:0 5px 0 var(--lemonD)}
+.btn.lav{background:var(--lav);box-shadow:0 5px 0 var(--lavD)}
+.btn.sky{background:var(--sky);box-shadow:0 5px 0 var(--skyD)}
+.btn.peach{background:var(--peach);box-shadow:0 5px 0 var(--peachD)}
+.btn.big{font-size:28px;padding:18px 36px}
+.btn.sm{font-size:15px;padding:8px 14px;border-radius:14px;box-shadow:0 3px 0 var(--pinkD)}
+.btn.sm.mint{box-shadow:0 3px 0 var(--mintD)} .btn.sm.lemon{box-shadow:0 3px 0 var(--lemonD)} .btn.sm.sky{box-shadow:0 3px 0 var(--skyD)}
+.title{font-size:44px;margin:6px 0;letter-spacing:1px} .title span{color:var(--peachD)}
+.topbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.topbar .logo{font-size:26px;margin-right:auto}
+.pill{background:#fff;border:2px solid var(--line);border-radius:999px;padding:6px 14px;font-size:16px;display:inline-block}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{display:inline-flex;align-items:center;gap:6px;background:var(--lemon);border-radius:999px;padding:7px 14px;font-size:18px}
+.chip.soft{background:var(--sky)}
+.chip .x{background:#fff;border-radius:50%;width:24px;height:24px;font-size:13px;line-height:24px;padding:0;margin:0}
+.lobby{display:grid;grid-template-columns:300px 1fr;gap:16px}
+@media (max-width:820px){.lobby{grid-template-columns:1fr}}
+.bigcode{font-size:72px;letter-spacing:8px;color:var(--peachD);line-height:1}
+#qr{display:flex;justify-content:center;margin:14px 0}
+#qr img,#qr canvas{border:10px solid #fff;border-radius:14px}
+.stage{min-height:40vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:14px}
+.bigEmoji{font-size:110px;line-height:1}
+.rule{font-size:26px;line-height:1.5}
+.roundBadge{display:inline-block;background:var(--lemon);border-radius:999px;padding:8px 22px;font-size:24px;box-shadow:0 4px 0 var(--lemonD)}
+.timer{font-size:110px;line-height:1;color:var(--peachD)}
+.timer.s{font-size:56px}
+.timer.hurry{color:var(--redD);animation:beat .5s infinite}
+@keyframes beat{50%{transform:scale(1.08)}}
+.bar{height:22px;background:var(--line);border-radius:999px;overflow:hidden;width:100%}
+.bar>i{display:block;height:100%;background:linear-gradient(90deg,var(--mintD),var(--skyD));border-radius:999px;transition:width .3s linear}
+.bar.hurry>i{background:linear-gradient(90deg,var(--peachD),var(--pinkD))}
+.dur{display:inline-flex;align-items:center;gap:8px;font-size:20px;background:#fff;border:2px solid var(--line);border-radius:999px;padding:4px 6px}
+.dur b{color:var(--peachD);font-weight:normal;font-size:24px}
+.dur .btn{margin:0}
+.hl{background:var(--lemon);border-radius:20px;padding:14px 18px;font-size:22px;line-height:1.5;margin-top:10px}
+.hl.mint{background:var(--mint)} .hl.peach{background:var(--peach)} .hl.lav{background:var(--lav)} .hl.sky{background:var(--sky)} .hl.red{background:var(--red)}
+/* 결과표 */
+table{border-collapse:separate;border-spacing:4px;width:100%;font-size:20px}
+th,td{border-radius:12px;padding:8px 6px;text-align:center;font-weight:normal}
+thead th{background:var(--lemon)}
+tbody th{background:var(--peach)}
+td{background:#fff;border:2px solid var(--line);color:var(--line)}
+td.on{background:var(--mint);border-color:var(--mintD);color:var(--ink);font-size:28px}
+td.sum{background:var(--lav);border-color:var(--lav);color:var(--ink)}
+.q{border-top:2px dashed var(--line);padding:14px 0}
+.q p{font-size:24px;margin:0 0 8px;line-height:1.45}
+.q b{color:var(--peachD);font-weight:normal}
+/* 학생 카드 (교과서 카드 모양) */
+.tcard{border-radius:28px;padding:22px;text-align:center;border:4px solid;position:relative}
+.tcard.buyer{background:var(--sky);border-color:var(--skyD);box-shadow:0 8px 0 var(--skyD)}
+.tcard.seller{background:var(--peach);border-color:var(--peachD);box-shadow:0 8px 0 var(--peachD)}
+.tcard .role{font-size:34px}
+.tcard .amt{display:inline-block;font-size:64px;background:#fff;border-radius:22px;padding:4px 26px;margin:8px 0}
+.tcard .desc{font-size:20px;line-height:1.5}
+.tcard .rn{position:absolute;top:12px;left:16px;font-size:15px;color:var(--sub)}
+.s-top{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.s-top .me{margin-right:auto;font-size:22px}
+.field{width:100%;font-size:26px;padding:14px 18px;border-radius:18px;border:3px solid var(--line);background:#fff;outline:none;font-family:inherit;color:var(--ink);margin:6px 0}
+.field:focus{border-color:var(--peachD)}
+.opts{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;margin:8px 0 14px}
+.opt{background:#fff;border:3px solid var(--line);border-radius:18px;padding:14px 6px;font-size:22px;box-shadow:0 4px 0 var(--line)}
+.opt:active{transform:translateY(3px);box-shadow:none}
+.opt.sel{background:var(--lemon);border-color:var(--lemonD);box-shadow:0 4px 0 var(--lemonD)}
+.lab{font-size:20px;margin-top:6px}
+.doneBox{background:var(--mint);border-radius:24px;padding:22px;font-size:28px;text-align:center}
+.doneBox.wait{background:var(--lemon)} .doneBox.bad{background:var(--red)} .doneBox.none{background:var(--lav)}
+.toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);background:#fff;border:3px solid var(--peachD);border-radius:20px;padding:14px 22px;font-size:22px;z-index:99;box-shadow:0 6px 0 var(--peachD);max-width:92vw;text-align:center}
+.bounce{animation:bounce 1s infinite}
+@keyframes bounce{50%{transform:translateY(-10px)}}
+.pop{animation:pop .35s cubic-bezier(.2,1.6,.4,1)}
+@keyframes pop{0%{transform:scale(.4);opacity:0}100%{transform:scale(1);opacity:1}}
+
+/* ===== 🌈 안내문: 일부러 촌스럽고 눈에 확 띄게 ===== */
+.ann{position:fixed;inset:0;z-index:200;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;overflow:hidden;cursor:pointer;animation:annIn .45s cubic-bezier(.2,1.7,.4,1)}
+.ann::before{content:'';position:absolute;left:50%;top:50%;width:250vmax;height:250vmax;margin:-125vmax 0 0 -125vmax;
+  background:repeating-conic-gradient(#FF9EBB 0 10deg,#FFC48A 10deg 20deg,#FFF08A 20deg 30deg,#A8F0C0 30deg 40deg,#9ED8FF 40deg 50deg,#C9B3FF 50deg 60deg);
+  animation:spinbg 14s linear infinite}
+.ann::after{content:'';position:absolute;inset:0;background:radial-gradient(circle,rgba(255,255,255,.95) 0 22%,rgba(255,255,255,.55) 40%,rgba(255,255,255,0) 70%)}
+.ann > *{position:relative;z-index:1}
+.ann .rb{display:block;font-size:min(15vw,150px);line-height:1.08;text-align:center;padding:0 3vw;
+  background:linear-gradient(90deg,#FF4F8B,#FF8A3D,#FFC81E,#3DD68C,#3DA9FF,#9B5CFF,#FF4F8B);background-size:300% 100%;
+  -webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-stroke:4px #fff;
+  filter:drop-shadow(0 7px 0 #5B4B57) drop-shadow(0 0 18px #fff);
+  animation:rainbow 2s linear infinite,wobble .55s ease-in-out infinite alternate}
+.ann .sub{font-size:min(6.5vw,46px);background:#fff;border:5px solid #5B4B57;border-radius:999px;padding:10px 34px;box-shadow:0 8px 0 #5B4B57;transform:rotate(-3deg);text-align:center;max-width:92vw}
+.ann .emo{font-size:min(20vw,150px);line-height:1;animation:hop .5s ease-in-out infinite alternate}
+.ann .fl{position:absolute;z-index:1;font-size:56px;animation:floaty 3s ease-in-out infinite alternate;pointer-events:none}
+.ann .tap{position:absolute;bottom:18px;z-index:1;font-size:18px;color:#5B4B57;opacity:.7}
+@keyframes spinbg{to{transform:rotate(360deg)}}
+@keyframes rainbow{to{background-position:300% 0}}
+@keyframes wobble{from{transform:rotate(-4deg) scale(1)}to{transform:rotate(4deg) scale(1.07)}}
+@keyframes hop{from{transform:translateY(0) rotate(-8deg)}to{transform:translateY(-22px) rotate(8deg)}}
+@keyframes floaty{from{transform:translateY(0) rotate(-15deg)}to{transform:translateY(-40px) rotate(15deg)}}
+@keyframes annIn{0%{transform:scale(.3) rotate(-20deg);opacity:0}100%{transform:scale(1) rotate(0);opacity:1}}
+@media (prefers-reduced-motion:reduce){.ann,.ann *,.ann::before{animation:none!important}}
 </style>
 </head>
 <body>
-<div class="wrap" id="app"></div>
+<div id="app"></div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
@@ -67,17 +160,43 @@ const isTeacher = P.get('t') === '1';
 const code = P.get('room') || '';
 const app = document.getElementById('app');
 let pid = null, room = null, lastSig = '', closing = false;
-let showNames = false;   // 선생님 화면 전용 (화면에만 적용, 저장 안 됨)
-const hintOpen = new Set();   // 결과 질문에서 힌트 펼친 번호
+let showNames = false;          // 선생님 화면 전용
+const hintOpen = new Set();     // 결과 질문에서 힌트 펼친 번호
+let sel = { r: 0, partner: '', price: 0 };   // 학생이 고르는 중인 상대·가격
+const annSeen = new Set();      // 이미 띄운 안내문
+let firstPass = true;           // 처음 접속·새로고침 땐 안내문 안 띄움
 
+const el = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const won = n => Number(n).toLocaleString('ko-KR') + '원';
 const fmt = s => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
 const T = (c = code) => ref(db, 'trade/' + c);
 const shuffle = a => { a = [...a]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
-const toast = msg => { document.querySelectorAll('.toast').forEach(t => t.remove()); const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg; document.body.appendChild(t); setTimeout(() => t.remove(), 2200); };
+let toastT;
+const toast = msg => { document.querySelectorAll('.toast').forEach(t => t.remove()); const t = document.createElement('div'); t.className = 'toast pop'; t.textContent = msg; document.body.appendChild(t); clearTimeout(toastT); toastT = setTimeout(() => t.remove(), 2400); };
 
-/* ---------- 거래 규칙 ---------- */
+/* ========== 🌈 안내문 (화면 가득, 3초 뒤 또는 터치하면 닫힘) ========== */
+let annT;
+function announce(big, sub = '', emo = '🌈', ms = 3200) {
+  document.querySelectorAll('.ann').forEach(a => a.remove());
+  const a = document.createElement('div');
+  a.className = 'ann';
+  const floaters = ['☁️','🌈','✨','⭐','🍊','💖','☁️','🌟','🍊','🫧','✨','🌈'];
+  a.innerHTML = floaters.map((f, i) => `<span class="fl" style="left:${(i * 83) % 92}%;top:${(i * 47) % 85}%;animation-delay:${(i % 5) * .3}s">${f}</span>`).join('')
+    + `<div class="emo">${emo}</div><span class="rb">${big}</span>${sub ? `<div class="sub">${sub}</div>` : ''}<div class="tap">화면을 누르면 닫혀요</div>`;
+  a.onclick = () => a.remove();
+  document.body.appendChild(a);
+  clearTimeout(annT); annT = setTimeout(() => a.remove(), ms);
+}
+// 상태가 바뀔 때마다 한 번씩만 안내문
+function maybeAnnounce(key, fn) {
+  if (annSeen.has(key)) return;
+  annSeen.add(key);
+  if (firstPass) return;
+  fn();
+}
+
+/* ========== 거래 규칙 ========== */
 // 수요자: 카드 금액 이하로만 산다 / 공급자: 카드 금액 이상이면 판다
 const validPrice = (card, price) => card.role === 'buyer' ? price <= card.limit : price >= card.limit;
 const profitOf = (card, price) => card.role === 'buyer' ? card.limit - price : price - card.limit;
@@ -103,7 +222,7 @@ const pairsOf = r => matchRound(cardsOf(r), ((room.rounds || {})[r] || {}).subs)
 const completedRounds = st => st.phase === 'trading' ? st.round - 1 : (st.round || 0);
 const secLeft = st => st.phase === 'trading' && st.endsAt ? Math.max(0, Math.ceil((st.endsAt - now()) / 1000)) : null;
 
-/* ---------- 입구 ---------- */
+/* ========== 입구 ========== */
 function start() {
   if (isTeacher && !code) return teacherHome();
   if (!code) return studentForm('');
@@ -113,7 +232,7 @@ function start() {
   }
   onValue(T(), s => {
     room = s.val();
-    if (!room) { app.innerHTML = `<div class="card"><p class="big">방을 찾을 수 없어요 😢</p></div>`; return; }
+    if (!room) { app.innerHTML = `<div class="wrap stage"><div class="bigEmoji">😢</div><p class="rule">방을 찾을 수 없어요</p></div>`; return; }
     render();
   });
   setInterval(tick, 300);
@@ -121,15 +240,15 @@ function start() {
 
 function teacherHome() {
   const saved = localStorage.getItem('trade_teacher_room');
-  app.innerHTML = `<div class="card" style="text-align:center">
-    <h1>📈 모의 시장</h1>
-    <p class="muted">카드 배부 → 거래 기록 → 가격 결과표</p>
-    <button class="btn mint" id="newRoom">새 모의 시장 만들기</button>
-    ${saved ? `<button class="btn sky" id="resume">이어서 하기 (코드 ${esc(saved)})</button>` : ''}
-  </div>`;
-  document.getElementById('newRoom').onclick = newRoom;
-  const r = document.getElementById('resume');
-  if (r) r.onclick = () => location.href = `?t=1&room=${saved}`;
+  app.innerHTML = `<div class="wrap"><div class="stage" style="min-height:80vh">
+    <div class="bigEmoji bounce">🍊</div>
+    <div class="title">귤 <span>시장</span></div>
+    <p class="muted" style="font-size:22px">수요자와 공급자가 되어 가격을 정해 봐요</p>
+    <button class="btn big mint" id="newRoom">새 시장 열기 ✨</button>
+    ${saved ? `<button class="btn sky" id="resume">이어서 하기 (방 ${esc(saved)})</button>` : ''}
+  </div></div>`;
+  el('newRoom').onclick = newRoom;
+  if (el('resume')) el('resume').onclick = () => location.href = `?t=1&room=${saved}`;
 }
 
 async function newRoom() {
@@ -144,20 +263,23 @@ async function newRoom() {
 }
 
 function studentForm(prefillCode) {
-  app.innerHTML = `<div class="card" style="max-width:460px;margin:30px auto">
-    <h1>📈 모의 시장 입장</h1>
-    <input class="field" id="jCode" inputmode="numeric" maxlength="4" placeholder="입장 코드 4자리" value="${esc(prefillCode)}">
-    <input class="field" id="jName" maxlength="8" placeholder="내 이름" value="${esc(localStorage.getItem('trade_name') || '')}">
-    <button class="btn mint" id="join">들어가기</button>
-  </div>`;
-  document.getElementById('join').onclick = () => join(document.getElementById('jCode').value.trim(), document.getElementById('jName').value.trim());
+  app.innerHTML = `<div class="s-wrap"><div class="stage" style="min-height:80vh">
+    <div class="bigEmoji bounce">🍊</div>
+    <div class="title">귤 <span>시장</span></div>
+    <div class="card" style="width:min(460px,100%);display:grid;gap:4px">
+      <input class="field" id="jCode" inputmode="numeric" maxlength="4" placeholder="입장 코드 4자리" value="${esc(prefillCode)}">
+      <input class="field" id="jName" maxlength="8" placeholder="내 이름" value="${esc(localStorage.getItem('trade_name') || '')}">
+      <button class="btn big mint" id="join">들어가기 🚪</button>
+    </div>
+  </div></div>`;
+  el('join').onclick = () => join(el('jCode').value.trim(), el('jName').value.trim());
 }
 
 async function join(c, name) {
   if (!/^\d{4}$/.test(c)) return toast('입장 코드 4자리를 써 주세요');
   if (!name) return toast('이름을 써 주세요');
   const snap = await get(T(c));
-  if (!snap.exists()) return toast('그런 방이 없어요 😢');
+  if (!snap.exists()) return toast('그런 방이 없어요 😢 코드를 확인해 주세요');
   let id = localStorage.getItem('trade_pid_' + c);
   if (!id) { id = Math.random().toString(36).slice(2, 10); localStorage.setItem('trade_pid_' + c, id); }
   await update(ref(db, `trade/${c}/players/${id}`), { name, joinedAt: Date.now() });
@@ -165,18 +287,24 @@ async function join(c, name) {
   location.href = `?room=${c}`;
 }
 
-/* ---------- 타이머 (0.3초마다) ---------- */
+/* ========== 타이머 (0.3초마다) ========== */
 function tick() {
   if (!room) return;
   const st = room.state || {};
   const left = secLeft(st);
-  const el = document.getElementById('timer');
-  if (el) {
-    el.textContent = left === null ? '' : left > 0 ? `⏰ 남은 시간 ${fmt(left)}` : '⏰ 시간 끝!';
-    el.className = 'timer' + (left !== null && left <= 30 ? ' hurry' : '');
+  const dur = st.dur || DEFAULT_SEC;
+  const t = el('timer'), bar = el('tbar');
+  if (t) {
+    t.textContent = left === null ? '' : left > 0 ? fmt(left) : '끝!';
+    t.classList.toggle('hurry', left !== null && left <= 30);
   }
-  if (!isTeacher && left === 0) {
-    const b = document.getElementById('submit'); if (b) b.disabled = true;
+  if (bar && left !== null) {
+    bar.classList.toggle('hurry', left <= 30);
+    bar.firstElementChild.style.width = Math.min(100, left / dur * 100) + '%';
+  }
+  if (!isTeacher && left === 0) { const b = el('submit'); if (b) b.disabled = true; }
+  if (isTeacher && left !== null && left <= 10 && left > 0) {
+    maybeAnnounce(`ten-${st.round}`, () => announce('10초 남았다!!', '얼른얼른 기록해~~ 🏃', '⏰', 2200));
   }
   // 시간이 끝나면 선생님 화면이 자동으로 회차 마감
   if (isTeacher && left === 0 && !closing) {
@@ -185,7 +313,7 @@ function tick() {
   }
 }
 
-/* ---------- 선생님 화면 ---------- */
+/* ========== 선생님 화면 ========== */
 function renderTeacher() {
   const players = room.players || {}, rounds = room.rounds || {};
   const st = room.state || { phase: 'lobby', round: 0 };
@@ -193,88 +321,111 @@ function renderTeacher() {
   const pids = Object.keys(players);
   const link = location.origin + location.pathname + '?room=' + code;
   const nm = id => esc((players[id] || {}).name || '?');
-
-  const durCtl = `<span class="row">⏱ 회차 시간 <button class="btn small" data-dur="-30">−30초</button><b>${fmt(dur)}</b><button class="btn small" data-dur="30">+30초</button></span>`;
-  let controls;
-  if (st.phase === 'lobby') {
-    controls = `${durCtl}<div><button class="btn sky" id="next" ${pids.length < 2 ? 'disabled' : ''}>▶ 1회차 시작 (카드 자동 배부 · ${pids.length}명)</button></div>
-      <p class="muted">회차마다 카드가 새로 섞여요. 늦게 들어온 학생은 다음 회차부터 카드를 받아요.</p>`;
-  } else if (st.phase === 'trading') {
-    controls = `<div class="timer" id="timer"></div><div class="row" style="justify-content:center">
-      <button class="btn" id="plus">+1분</button>
-      <button class="btn pink" id="close">⏹ ${st.round}회차 바로 마감</button></div>`;
-  } else if (st.round < ROUNDS) {
-    controls = `${durCtl}<div><button class="btn sky" id="next">▶ ${st.round + 1}회차 시작 (카드 새로 섞기 🎲)</button></div>`;
-  } else {
-    controls = `<span class="big">🎉 ${ROUNDS}회차 모두 끝! 아래 결과표와 질문으로 정리해 보세요</span>`;
-  }
-
-  // 가격 × 회차 결과표
-  const roundStarted = r => r <= (st.phase === 'lobby' ? 0 : st.round);
   const cols = [...Array(ROUNDS)].map((_, i) => i + 1);
-  const thead = `<tr><th>가격</th>${cols.map(r => `<th>${r}회차</th>`).join('')}</tr>`;
-  let tbody = PRICES.map(p => `<tr><th>${won(p)}</th>${cols.map(r => {
-    if (!roundStarted(r)) return `<td>-</td>`;
-    const n = pairsOf(r).filter(x => x.price === p).length;
-    return `<td class="${n ? 'on' : ''}">${n || '·'}</td>`;
-  }).join('')}</tr>`).join('');
-  const sumRow = (label, fn) => `<tr><th>${label}</th>${cols.map(r => `<td class="sum">${roundStarted(r) ? fn(r) : '-'}</td>`).join('')}</tr>`;
-  tbody += sumRow('거래 건수', r => pairsOf(r).length + '건');
-  tbody += sumRow('평균 거래가', r => { const ps = pairsOf(r); return ps.length ? won(Math.round(ps.reduce((s, x) => s + x.price, 0) / ps.length)) : '-'; });
+  const roundStarted = r => r <= (st.phase === 'lobby' ? 0 : st.round);
+  const isEnd = st.phase === 'closed' && st.round >= ROUNDS;
 
-  // 현재 회차 진행 상황
-  let pendingHTML = '';
-  if (st.phase === 'trading') {
+  // 안내문
+  if (st.phase === 'trading') maybeAnnounce(`start-${st.round}`, () => announce(`${st.round}회차 시작!!`, '카드가 새로 섞였어요~ 🎲 흥정 시작!', '🍊'));
+  else if (st.phase === 'closed') maybeAnnounce(`close-${st.round}`, () => isEnd
+    ? announce('시장 끝~!!', `${ROUNDS}회차 끝! 다들 수고했어 💖`, '🎉', 4000)
+    : announce('그만~~!!', `${st.round}회차 거래 끝! ⏰`, '🛑'));
+  else maybeAnnounce('lobby', () => {});
+
+  const durCtl = `<span class="dur">⏱ 회차 시간 <button class="btn sm" data-dur="-30">−30초</button><b>${fmt(dur)}</b><button class="btn sm" data-dur="30">+30초</button></span>`;
+  const topbar = `<div class="topbar">
+    <span class="logo">🍊 귤 시장</span>
+    ${st.round ? `<span class="pill">${st.round} / ${ROUNDS}회차</span>` : ''}
+    <span class="pill">🙋 ${pids.length}명</span>
+    <span class="pill">방 ${esc(code)}</span>
+    <button class="btn sm ${showNames ? 'lemon' : 'sky'}" id="names">👀 이름 보기: ${showNames ? '켬' : '끔'}</button>
+  </div>`;
+
+  let main = '';
+  if (st.phase === 'lobby') {
+    main = `<div class="lobby">
+      <div class="card center">
+        <h3>태블릿으로 들어와요!</h3>
+        <div class="muted">입장 코드</div>
+        <div class="bigcode">${esc(code)}</div>
+        <div id="qr"></div>
+        <div class="muted" style="font-size:13px;word-break:break-all">${esc(link)}</div>
+      </div>
+      <div style="display:grid;gap:16px;align-content:start">
+        <div class="card"><h3>🙋 들어온 친구 <span class="muted">${pids.length}명</span></h3>
+          <div class="chips">${pids.map(id => `<span class="chip">${nm(id)} <button class="x" data-kick="${id}">✕</button></span>`).join('') || '<span class="muted">아직 아무도 없어요</span>'}</div>
+        </div>
+        <div class="card"><h3>📜 규칙</h3>
+          <div class="hl sky">🛒 <b>수요자</b>: 카드 금액보다 <b>싸게</b> 사면 이익!</div>
+          <div class="hl peach">🏷️ <b>공급자</b>: 카드 금액보다 <b>비싸게</b> 팔면 이익!</div>
+          <div class="hl lemon">🤝 둘이 <b>서로를 고르고 같은 가격</b>을 적어야 거래 성사<br><span class="muted" style="font-size:18px">회차마다 카드가 새로 섞여요 · 총 ${ROUNDS}회차</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="stage" style="min-height:0;margin-top:20px">
+      ${durCtl}
+      <button class="btn big mint" id="next" ${pids.length < 2 ? 'disabled' : ''}>▶ 1회차 시작! (카드 자동 배부)</button>
+      <p class="muted" style="font-size:16px">늦게 들어온 친구는 다음 회차부터 카드를 받아요</p>
+    </div>`;
+  } else if (st.phase === 'trading') {
     const subs = (rounds[st.round] || {}).subs || {};
     const matched = new Set(pairsOf(st.round).flatMap(x => [x.a, x.b]));
     const unmatched = Object.keys(subs).filter(id => subs[id].partner !== 'none' && !matched.has(id));
-    pendingHTML = `<div class="card"><h2>${st.round}회차 진행 상황</h2>
-      <p>기록 제출 <b>${Object.keys(subs).length}</b> / ${Object.keys(cardsOf(st.round)).length}명 · 성사 <b>${pairsOf(st.round).length}</b>건</p>
-      ${!unmatched.length ? '<p class="muted">짝 안 맞는 기록 없음</p>'
-        : showNames ? `<p class="muted">짝 안 맞는 기록 (상대가 아직 안 적었거나, 서로 다르게 적음)</p>` +
-            unmatched.map(id => `<span class="pill">${nm(id)} <button class="btn small" data-reset="${id}">기록 초기화</button></span>`).join('')
-        : `<p class="muted">짝 안 맞는 기록 ${unmatched.length}건 — 확인·초기화하려면 '이름 보기'를 켜세요</p>`}
+    main = `<div class="card stage" style="min-height:0">
+        <span class="roundBadge">🍊 ${st.round}회차 거래 중</span>
+        <div class="timer" id="timer"></div>
+        <div class="bar" id="tbar"><i></i></div>
+        <div class="rule">기록 <b>${Object.keys(subs).length}</b> / ${Object.keys(cardsOf(st.round)).length}명 · 🤝 성사 <b>${pairsOf(st.round).length}</b>건</div>
+        <div><button class="btn lemon" id="plus">+1분</button><button class="btn" id="close">⏹ 바로 마감</button></div>
+      </div>
+      ${unmatched.length ? `<div class="card"><h3>🤔 짝이 안 맞는 기록 ${unmatched.length}건</h3>${showNames
+        ? `<p class="muted">상대가 아직 안 적었거나, 서로 다르게 적었어요</p><div class="chips">${unmatched.map(id => `<span class="chip soft">${nm(id)} <button class="btn sm" data-reset="${id}">기록 지우기</button></span>`).join('')}</div>`
+        : `<p class="muted">확인·지우기는 '이름 보기'를 켜면 할 수 있어요</p>`}</div>` : ''}`;
+  } else {
+    main = `<div class="card stage" style="min-height:0">
+      ${isEnd
+        ? `<div class="bigEmoji bounce">🎉</div><div class="title">${ROUNDS}회차 <span>끝!</span></div><div class="rule muted">아래 결과표와 질문으로 정리해 봐요</div>`
+        : `<span class="roundBadge">${st.round}회차 끝!</span>${durCtl}<button class="btn big mint" id="next">▶ ${st.round + 1}회차 시작! (카드 새로 섞기 🎲)</button>`}
     </div>`;
   }
 
+  // 가격 × 회차 결과표
+  const table = st.phase === 'lobby' ? '' : (() => {
+    const thead = `<tr><th></th>${cols.map(r => `<th>${r}회차</th>`).join('')}</tr>`;
+    let tbody = PRICES.map(p => `<tr><th>${won(p)}</th>${cols.map(r => {
+      if (!roundStarted(r)) return `<td>-</td>`;
+      const n = pairsOf(r).filter(x => x.price === p).length;
+      return `<td class="${n ? 'on' : ''}">${n || '·'}</td>`;
+    }).join('')}</tr>`).join('');
+    const sumRow = (label, fn) => `<tr><th>${label}</th>${cols.map(r => `<td class="sum">${roundStarted(r) ? fn(r) : '-'}</td>`).join('')}</tr>`;
+    tbody += sumRow('거래 건수', r => pairsOf(r).length + '건');
+    tbody += sumRow('평균 가격', r => { const ps = pairsOf(r); return ps.length ? won(Math.round(ps.reduce((s, x) => s + x.price, 0) / ps.length)) : '-'; });
+    return `<div class="card"><h3>📊 전체 거래 결과표</h3><table><thead>${thead}</thead><tbody>${tbody}</tbody></table>
+      <p class="muted" style="font-size:15px">숫자 = 그 가격에 성사된 거래 건수</p></div>`;
+  })();
+
   // 이름 보기 켰을 때만: 누가 누구와 거래했는지
-  const logHTML = showNames ? `<div class="card"><h2>거래 내역</h2>${cols.filter(roundStarted).map(r => {
+  const logHTML = showNames && st.phase !== 'lobby' ? `<div class="card"><h3>🤝 거래 내역</h3>${cols.filter(roundStarted).map(r => {
     const ps = pairsOf(r);
-    return `<p><b>${r}회차</b> ${ps.length ? ps.map(x => { const s = x.buyer === x.a ? x.b : x.a; return `<span class="pill">🛒 ${nm(x.buyer)} ↔ 🏷️ ${nm(s)} · ${won(x.price)}</span>`; }).join('') : '<span class="muted">거래 없음</span>'}</p>`;
-  }).join('') || '<p class="muted">아직 거래가 없어요</p>'}</div>` : '';
+    return `<div style="margin:8px 0"><span class="roundBadge" style="font-size:16px;padding:4px 14px">${r}회차</span> <span class="chips" style="display:inline-flex">${ps.length ? ps.map(x => { const s = x.buyer === x.a ? x.b : x.a; return `<span class="chip soft">🛒 ${nm(x.buyer)} ↔ 🏷️ ${nm(s)} · ${won(x.price)}</span>`; }).join('') : '<span class="muted">거래 없음</span>'}</span></div>`;
+  }).join('')}</div>` : '';
 
-  app.innerHTML = `
-    <div class="card">
-      <div class="row" style="justify-content:space-between">
-        <h1>📈 모의 시장 (선생님)</h1>
-        <button class="btn small ${showNames ? 'pink' : ''}" id="names">👀 이름 보기: ${showNames ? '켬' : '끔'}</button>
-      </div>
-      <p>입장 코드 <span class="big">${code}</span> · 학생 주소 <code>${esc(link)}</code></p>
-      <p class="muted">접속 학생 ${pids.length}명</p>
-      <div>${pids.map(id => `<span class="pill">${nm(id)}</span>`).join('')}</div>
-    </div>
-    <div class="card">${controls}</div>
-    ${pendingHTML}
-    <div class="card">
-      <h2>거래 결과표 (가격 × 회차)</h2>
-      <table><thead>${thead}</thead><tbody>${tbody}</tbody></table>
-      <p class="muted">숫자는 그 가격에 성사된 거래 건수예요.</p>
-    </div>
-    ${st.phase === 'closed' && st.round >= ROUNDS ? questionsHTML(cols) : ''}
-    ${logHTML}`;
+  app.innerHTML = `<div class="wrap">${topbar}${main}${table}${isEnd ? questionsHTML(cols) : ''}${logHTML}</div>`;
+  if (st.phase === 'lobby' && window.QRCode) new QRCode(el('qr'), { text: link, width: 200, height: 200, colorDark: '#5B4B57', colorLight: '#ffffff' });
 
-  const bind = (id, fn) => { const el = document.getElementById(id); if (el) el.onclick = fn; };
+  const bind = (id, fn) => { const b = el(id); if (b) b.onclick = fn; };
   bind('names', () => { showNames = !showNames; render(); });
   bind('next', () => {
     closing = false;
     const r = (st.round || 0) + 1;
     update(T(), { [`rounds/${r}/cards`]: makeCards(pids), 'state/phase': 'trading', 'state/round': r, 'state/endsAt': now() + dur * 1000 });
   });
-  app.querySelectorAll('[data-hint]').forEach(b => b.onclick = () => { const k = b.dataset.hint; hintOpen.has(k) ? hintOpen.delete(k) : hintOpen.add(k); render(); });
   bind('plus', () => update(T(), { 'state/endsAt': (st.endsAt || now()) + 60000 }));
   bind('close', () => update(T(), { 'state/phase': 'closed' }));
   app.querySelectorAll('[data-dur]').forEach(b => b.onclick = () => update(T(), { 'state/dur': Math.min(600, Math.max(60, dur + Number(b.dataset.dur))) }));
   app.querySelectorAll('[data-reset]').forEach(b => b.onclick = () => set(ref(db, `trade/${code}/rounds/${st.round}/subs/${b.dataset.reset}`), null));
+  app.querySelectorAll('[data-kick]').forEach(b => b.onclick = () => { if (confirm('이 친구를 목록에서 뺄까요?')) set(ref(db, `trade/${code}/players/${b.dataset.kick}`), null); });
+  app.querySelectorAll('[data-hint]').forEach(b => b.onclick = () => { const k = b.dataset.hint; hintOpen.has(k) ? hintOpen.delete(k) : hintOpen.add(k); render(); });
 }
 
 // 교과서 분포(수요자 500~1,100원 / 공급자 600~1,200원)대로 카드를 만들고 학생에게 무작위로 나눠 줌
@@ -297,7 +448,7 @@ function makeCards(ids) {
   return cards;
 }
 
-/* ---------- 결과표 정리 질문 (마지막 회차 후 선생님 화면) ---------- */
+/* ========== 결과표 정리 질문 (마지막 회차 후 선생님 화면) ========== */
 function questionsHTML(cols) {
   const all = cols.flatMap(r => pairsOf(r));
   const byPrice = {};
@@ -329,20 +480,20 @@ function questionsHTML(cols) {
         : '수요자 500원 카드나 공급자 1,200원 카드를 받았다면 거래하기 쉬웠을까요?';
     })(),
      '시장 가격보다 훨씬 싸게 사려 하거나 비싸게 팔려 하면 상대를 찾기 어려워요. 시장 가격에서 사고팔 의사가 있는 사람끼리만 거래가 이루어져요.'],
-    [`3회차 동안 거래를 하지 않은 경우가 <b>${noTrade}번</b> 있었어요. 거래를 못 한 친구는 손해를 본 걸까요?`,
+    [`${ROUNDS}회차 동안 거래를 하지 않은 경우가 <b>${noTrade}번</b> 있었어요. 거래를 못 한 친구는 손해를 본 걸까요?`,
      '이익은 0원이지만 손해는 아니에요. 나에게 손해가 되는 거래를 하지 않은 것도 <b>합리적 선택</b>이에요.'],
     ['만약 귤 풍년으로 공급자 카드가 훨씬 많아진다면, 거래 가격은 어떻게 될까요?',
      '팔려는 사람이 많아지면 공급자끼리 경쟁해서 가격이 내려가요 → 공급 증가 시 가격 하락.']
   ];
-  return `<div class="card"><h2>📋 결과표 보며 이야기해 봐요</h2>${Q.map(([q, h], i) => `
-    <div style="border-top:1px dashed var(--line);padding:12px 0">
-      <p style="font-size:19px;margin:0 0 8px"><b>Q${i + 1}.</b> ${q}</p>
-      <button class="btn small ${hintOpen.has(String(i)) ? 'mint' : ''}" data-hint="${i}">${hintOpen.has(String(i)) ? '힌트 접기' : '💡 힌트 보기'}</button>
-      ${hintOpen.has(String(i)) ? `<p class="pill" style="display:block;border-radius:12px;background:var(--mint);padding:10px 12px">${h}</p>` : ''}
+  return `<div class="card"><h3>📋 결과표 보며 이야기해 봐요</h3>${Q.map(([q, h], i) => `
+    <div class="q">
+      <p>Q${i + 1}. ${q}</p>
+      <button class="btn sm ${hintOpen.has(String(i)) ? 'mint' : 'lemon'}" data-hint="${i}">${hintOpen.has(String(i)) ? '힌트 접기' : '💡 힌트 보기'}</button>
+      ${hintOpen.has(String(i)) ? `<div class="hl mint pop">${h}</div>` : ''}
     </div>`).join('')}</div>`;
 }
 
-/* ---------- 학생 화면 ---------- */
+/* ========== 학생 화면 ========== */
 function renderStudent() {
   const players = room.players || {}, rounds = room.rounds || {};
   const st = room.state || { phase: 'lobby', round: 0 };
@@ -352,76 +503,96 @@ function renderStudent() {
   const curSub = st.phase === 'trading' ? ((rounds[st.round] || {}).subs || {})[pid] : null;
   const curMatch = curSub && curSub.partner !== 'none' ? matchRound(cards, (rounds[st.round] || {}).subs).some(x => x.a === pid || x.b === pid) : false;
   const partnerSubmitted = curSub && curSub.partner !== 'none' && !!((rounds[st.round] || {}).subs || {})[curSub.partner];
+  const isEnd = st.phase === 'closed' && st.round >= ROUNDS;
+
+  // 안내문
+  if (st.phase === 'trading' && card) maybeAnnounce(`start-${st.round}`, () => announce(
+    card.role === 'buyer' ? '너는 수요자!!' : '너는 공급자!!',
+    `${st.round}회차 내 카드: ${card.role === 'buyer' ? '🛒 최대' : '🏷️ 최소'} ${won(card.limit)}`,
+    card.role === 'buyer' ? '🛒' : '🏷️'));
+  else if (st.phase === 'closed') maybeAnnounce(`close-${st.round}`, () => isEnd
+    ? announce('시장 끝~!!', `내 총 이익 ${won(totalProfit(st))} 💖`, '🎉', 4000)
+    : announce('그만~~!!', `${st.round}회차 끝! 결과를 확인해 봐`, '🛑'));
+  else maybeAnnounce(`${st.phase}-${st.round}`, () => {});
+  if (curMatch) maybeAnnounce(`deal-${st.round}`, () => announce('거래 성사!!', '짝짝짝~ 🎊', '🤝', 2400));
 
   // 같은 상태면 다시 그리지 않음 (고르던 선택이 날아가지 않게)
   const sig = JSON.stringify([st.phase, st.round, card?.role, card?.limit, Object.keys(players).length, !!curSub, curMatch, partnerSubmitted]);
   if (sig === lastSig) return;
   lastSig = sig;
+  if (sel.r !== st.round) sel = { r: st.round, partner: '', price: 0 };
 
-  const head = `<div class="card row" style="justify-content:space-between"><span class="big">🙂 ${esc(name)}</span><span class="pill">총 이익 ${won(totalProfit(st))}</span></div>`;
+  const head = `<div class="s-top"><span class="me">🙂 ${esc(name)}</span><span class="pill">⭐ 총 이익 ${won(totalProfit(st))}</span></div>`;
 
   if (!card) {
-    app.innerHTML = head + `<div class="card"><p class="big">${st.phase === 'lobby'
-      ? '선생님이 1회차를 시작하면 카드가 나와요 ⏳'
-      : '이번 회차가 끝나면 다음 회차부터 카드를 받아요 ⏳'}</p></div>`;
+    app.innerHTML = `<div class="s-wrap">${head}<div class="stage" style="min-height:60vh"><div class="bigEmoji bounce">🍊</div><div class="rule">${st.phase === 'lobby'
+      ? '선생님이 시작하면<br>카드가 나와요 ⏳'
+      : '이번 회차가 끝나면<br>다음 회차부터 카드를 받아요 ⏳'}</div></div></div>`;
     return;
   }
 
-  const cardHTML = `<p class="muted">${st.round}회차 내 카드</p>` + (card.role === 'buyer'
-    ? `<div class="big">🛒 나는 <b>수요자</b></div><p>귤 한 송이를 최대한 낮은 가격으로 사세요.<br>당신에게 귤은 <b>${won(card.limit)}</b>만큼의 만족을 줍니다. 이보다 비싸게 사면 손해예요.</p>`
-    : `<div class="big">🏷️ 나는 <b>공급자</b></div><p>귤 한 송이를 최대한 높은 가격으로 파세요.<br>귤 생산에 <b>${won(card.limit)}</b>의 비용이 들었습니다. 이보다 싸게 팔면 손해예요.</p>`);
+  const cardHTML = card.role === 'buyer'
+    ? `<div class="tcard buyer"><span class="rn">${st.round}회차 내 카드</span>
+        <div class="role">🛒 수요자 카드</div><div class="amt">${won(card.limit)}</div>
+        <div class="desc">귤 한 송이를 최대한 <b>낮은 가격</b>으로 사세요.<br>귤은 나에게 ${won(card.limit)}만큼의 만족을 줘요.<br>이보다 비싸게 사면 손해!</div></div>`
+    : `<div class="tcard seller"><span class="rn">${st.round}회차 내 카드</span>
+        <div class="role">🏷️ 공급자 카드</div><div class="amt">${won(card.limit)}</div>
+        <div class="desc">귤 한 송이를 최대한 <b>높은 가격</b>으로 파세요.<br>귤 생산에 ${won(card.limit)}의 비용이 들었어요.<br>이보다 싸게 팔면 손해!</div></div>`;
 
-  let body = `<div class="card">${cardHTML}</div>`;
-
+  let body = '';
   const done = completedRounds(st);
-  if (done > 0) {
+  const lastResult = () => {
+    if (done < 1) return '';
     const pair = pairsOf(done).find(x => x.a === pid || x.b === pid);
-    const doneCard = cardsOf(done)[pid];
-    body += `<div class="card"><h2>${done}회차 결과</h2><p>${pair && doneCard
-      ? `✅ 거래 성사! 가격 <b>${won(pair.price)}</b> · 이익 <b>${won(profitOf(doneCard, pair.price))}</b>`
-      : '거래 없음'}</p></div>`;
-  }
+    const dc = cardsOf(done)[pid];
+    return pair && dc
+      ? `<div class="doneBox pop">🤝 ${done}회차 거래 성사!<br>${won(pair.price)}에 ${dc.role === 'buyer' ? '샀어요' : '팔았어요'} · 이익 <b>${won(profitOf(dc, pair.price))}</b></div>`
+      : `<div class="doneBox none pop">${done}회차는 거래 없음 🙂<br><span style="font-size:20px">손해 본 건 아니에요!</span></div>`;
+  };
 
   if (st.phase === 'trading') {
-    const r = st.round;
+    body += `<div class="card center"><div class="timer s" id="timer"></div><div class="bar" id="tbar"><i></i></div></div>`;
+    body += `<div class="card">${cardHTML}</div>`;
     if (curSub) {
-      let status;
-      if (curSub.partner === 'none') status = '이번 회차는 거래 안 함으로 기록했어요.';
-      else if (curMatch) status = '✅ 상대와 기록이 맞아서 거래가 성사됐어요!';
-      else if (partnerSubmitted) status = '⚠️ 상대 기록과 달라요. 선생님께 말씀드려 주세요.';
-      else status = '기록 완료 ✅ 상대의 기록을 기다리는 중이에요.';
-      body += `<div class="card"><div class="timer" id="timer"></div><h2>${r}회차</h2><p class="big">${status}</p></div>`;
+      let box;
+      if (curSub.partner === 'none') box = `<div class="doneBox none">이번 회차는 거래 안 함 🙂</div>`;
+      else if (curMatch) box = `<div class="doneBox">✅ 거래 성사!<br>${won(curSub.price)} · 이익 <b>${won(profitOf(card, curSub.price))}</b></div>`;
+      else if (partnerSubmitted) box = `<div class="doneBox bad">⚠️ 상대 기록과 달라요!<br><span style="font-size:20px">선생님께 말씀드려 주세요</span></div>`;
+      else box = `<div class="doneBox wait">기록 완료 ✅<br><span style="font-size:20px">상대가 기록하길 기다리는 중... ⏳</span></div>`;
+      body += `<div class="card">${box}</div>`;
     } else {
       const opp = Object.keys(cards).filter(id => id !== pid && cards[id].role !== card.role);
       const prices = PRICES.filter(p => validPrice(card, p));
       body += `<div class="card">
-        <div class="timer" id="timer"></div>
-        <h2>${r}회차 거래 기록</h2>
-        <p class="muted">${card.role === 'buyer' ? '공급자' : '수요자'} 친구를 찾아 말로 흥정하세요. 두 사람이 서로를 고르고 같은 가격을 적어야 거래가 인정돼요.</p>
+        <h3>✍️ 거래 기록하기</h3>
+        <p class="muted" style="font-size:17px;margin-top:-6px">${card.role === 'buyer' ? '🏷️ 공급자' : '🛒 수요자'} 친구를 찾아 말로 흥정! 둘 다 서로를 고르고 같은 가격을 적어야 성사돼요.</p>
         ${opp.length && prices.length ? `
-          <label>상대 이름</label><select class="field" id="partner"><option value="">선택</option>${opp.map(id => `<option value="${id}">${esc((players[id] || {}).name || '?')}</option>`).join('')}</select>
-          <label>거래 가격</label><select class="field" id="price"><option value="">선택</option>${prices.map(p => `<option value="${p}">${won(p)}</option>`).join('')}</select>
-          <button class="btn mint" id="submit">거래 기록하기 ✅</button>
-          <p class="muted">기록은 한 번만 할 수 있어요.</p>` : `<p class="muted">지금은 거래할 수 있는 가격이 없어요.</p>`}
-        <button class="btn" id="none">이번 회차 거래 안 함</button>
+          <div class="lab">누구랑 거래했나요?</div>
+          <div class="opts">${opp.map(id => `<button class="opt${sel.partner === id ? ' sel' : ''}" data-partner="${id}">${esc((players[id] || {}).name || '?')}</button>`).join('')}</div>
+          <div class="lab">얼마에 거래했나요?</div>
+          <div class="opts">${prices.map(p => `<button class="opt${sel.price === p ? ' sel' : ''}" data-price="${p}">${won(p)}</button>`).join('')}</div>
+          <button class="btn big mint" id="submit" style="width:100%">거래 기록하기 ✅</button>
+          <p class="muted center" style="font-size:15px">기록은 한 번만 할 수 있어요!</p>` : `<p class="rule muted">지금은 거래할 수 있는 가격이 없어요</p>`}
+        <button class="btn sm lemon" id="none">이번 회차는 거래 안 할래요</button>
       </div>`;
     }
-  } else if (st.phase === 'closed' && st.round >= ROUNDS) {
-    body += `<div class="card"><p class="big">🎉 모든 회차 끝! 내 총 이익은 ${won(totalProfit(st))}</p></div>`;
-  } else if (st.phase !== 'trading') {
-    body += `<div class="card"><p class="big">🎲 다음 회차에는 카드가 새로 섞여요! 선생님이 시작할 때까지 기다려 주세요 ⏳</p></div>`;
+    body += lastResult();
+  } else if (isEnd) {
+    body += `<div class="stage"><div class="bigEmoji bounce">🎉</div><div class="title">수고했어요!</div>
+      <div class="doneBox">내 총 이익<br><span style="font-size:56px">${won(totalProfit(st))}</span></div></div>${lastResult()}`;
+  } else {
+    body += lastResult() + `<div class="stage" style="min-height:30vh"><div class="bigEmoji bounce">🎲</div><div class="rule">다음 회차엔 카드가 새로 섞여요!<br><span class="muted">선생님이 시작할 때까지 기다려요 ⏳</span></div></div>`;
   }
 
-  app.innerHTML = head + body;
-  const sub = document.getElementById('submit');
-  if (sub) sub.onclick = () => {
-    const partner = document.getElementById('partner').value;
-    const price = Number(document.getElementById('price').value);
-    if (!partner || !price) return toast('상대와 가격을 골라 주세요');
-    submit(partner, price);
+  app.innerHTML = `<div class="s-wrap">${head}${body}</div>`;
+  app.querySelectorAll('[data-partner]').forEach(b => b.onclick = () => { sel.partner = b.dataset.partner; app.querySelectorAll('[data-partner]').forEach(x => x.classList.toggle('sel', x === b)); });
+  app.querySelectorAll('[data-price]').forEach(b => b.onclick = () => { sel.price = Number(b.dataset.price); app.querySelectorAll('[data-price]').forEach(x => x.classList.toggle('sel', x === b)); });
+  if (el('submit')) el('submit').onclick = () => {
+    if (!sel.partner || !sel.price) return toast('상대와 가격을 골라 주세요 👆');
+    const who = esc((players[sel.partner] || {}).name || '?');
+    if (confirm(`${who} 친구와 ${won(sel.price)}에 거래했다고 기록할까요?\n한 번 기록하면 바꿀 수 없어요.`)) submit(sel.partner, sel.price);
   };
-  const none = document.getElementById('none');
-  if (none) none.onclick = () => { if (confirm('이번 회차는 거래 안 함으로 기록할까요? 한 번 기록하면 바꿀 수 없어요.')) submit('none', 0); };
+  if (el('none')) el('none').onclick = () => { if (confirm('이번 회차는 거래 안 함으로 기록할까요? 한 번 기록하면 바꿀 수 없어요.')) submit('none', 0); };
 }
 
 function totalProfit(st) {
@@ -443,8 +614,8 @@ async function submit(partner, price) {
   toast('기록했어요 ✅');
 }
 
-/* ---------- 실행 ---------- */
-function render() { if (isTeacher) renderTeacher(); else renderStudent(); tick(); }
+/* ========== 실행 ========== */
+function render() { if (isTeacher) renderTeacher(); else renderStudent(); tick(); firstPass = false; }
 start();
 </script>
 </body>
