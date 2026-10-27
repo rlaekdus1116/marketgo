@@ -149,7 +149,6 @@ onValue(ref(db, '.info/serverTimeOffset'), s => { offset = s.val() || 0; });
 const now = () => Date.now() + offset;   // 모든 기기가 같은 시계를 보도록 서버 시간 기준
 
 /* ========== 설정 ========== */
-const PRICES = [2500, 3000, 3500, 4000, 4500, 5000, 5500, 6000];   // 떡볶이 1인분 가격대
 const BUYER_VALUES  = [2500, 3000, 3500, 4000, 4500, 5000, 5500];   // 교과서 활동 길잡이 표를 떡볶이 가격으로 ×5
 const SELLER_VALUES = [3000, 3500, 4000, 4500, 5000, 5500, 6000];
 const ROUNDS = 3;
@@ -163,12 +162,14 @@ let pid = null, room = null, lastSig = '', closing = false;
 let showNames = false;          // 선생님 화면 전용
 const hintOpen = new Set();     // 결과 질문에서 힌트 펼친 번호
 let sel = { r: 0, partner: '', price: 0 };   // 학생이 고르는 중인 상대·가격
+let editing = false;            // 학생이 기록을 고치는 중
 const annSeen = new Set();      // 이미 띄운 안내문
 let firstPass = true;           // 처음 접속·새로고침 땐 안내문 안 띄움
 
 const el = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const won = n => Number(n).toLocaleString('ko-KR') + '원';
+const signed = n => (n > 0 ? '+' : n < 0 ? '−' : '') + won(Math.abs(n));
 const fmt = s => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
 const T = (c = code) => ref(db, 'rooms/trade_' + c);
 const shuffle = a => { a = [...a]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
@@ -197,11 +198,10 @@ function maybeAnnounce(key, fn) {
 }
 
 /* ========== 거래 규칙 ========== */
-// 수요자: 카드 금액 이하로만 산다 / 공급자: 카드 금액 이상이면 판다
-const validPrice = (card, price) => card.role === 'buyer' ? price <= card.limit : price >= card.limit;
+// 손익 = 수요자: 카드 금액 − 거래가 / 공급자: 거래가 − 카드 금액 (손해 거래도 그대로 기록됨)
 const profitOf = (card, price) => card.role === 'buyer' ? card.limit - price : price - card.limit;
 
-// 거래 성사 조건: 서로 상대를 지목 + 같은 가격 + 역할이 반대 + 둘 다 카드 조건에 맞음
+// 거래 성사 조건: 서로 상대를 지목 + 같은 가격 + 역할이 반대
 function matchRound(cards, subs) {
   const pairs = [], seen = new Set();
   for (const [a, sa] of Object.entries(subs || {})) {
@@ -209,7 +209,6 @@ function matchRound(cards, subs) {
     const b = sa.partner, sb = (subs || {})[b], ca = (cards || {})[a], cb = (cards || {})[b];
     if (!sb || sb.partner !== a || !ca || !cb || ca.role === cb.role) continue;
     if (sa.price !== sb.price) continue;
-    if (!validPrice(ca, sa.price) || !validPrice(cb, sb.price)) continue;
     const key = [a, b].sort().join('|');
     if (seen.has(key)) continue;
     seen.add(key);
@@ -398,7 +397,9 @@ function renderTeacher() {
   // 가격 × 회차 결과표
   const table = st.phase === 'lobby' ? '' : (() => {
     const thead = `<tr><th></th>${cols.map(r => `<th>${r}회차</th>`).join('')}</tr>`;
-    let tbody = PRICES.map(p => `<tr><th>${won(p)}</th>${cols.map(r => {
+    const prices = [...new Set(cols.flatMap(r => pairsOf(r).map(x => x.price)))].sort((a, b) => a - b);
+    let tbody = prices.length ? '' : `<tr><td colspan="${ROUNDS + 1}" style="color:var(--sub)">아직 성사된 거래가 없어요</td></tr>`;
+    tbody += prices.map(p => `<tr><th>${won(p)}</th>${cols.map(r => {
       if (!roundStarted(r)) return `<td>-</td>`;
       const n = pairsOf(r).filter(x => x.price === p).length;
       return `<td class="${n ? 'on' : ''}">${n || '·'}</td>`;
@@ -506,29 +507,35 @@ function renderStudent() {
   const cards = st.round ? cardsOf(st.round) : {};
   const card = cards[pid];
   const name = (players[pid] || {}).name || localStorage.getItem('trade_name') || '';
-  const curSub = st.phase === 'trading' ? ((rounds[st.round] || {}).subs || {})[pid] : null;
-  const curMatch = curSub && curSub.partner !== 'none' ? matchRound(cards, (rounds[st.round] || {}).subs).some(x => x.a === pid || x.b === pid) : false;
-  const partnerSubmitted = curSub && curSub.partner !== 'none' && !!((rounds[st.round] || {}).subs || {})[curSub.partner];
+  const nameOf = id => esc((players[id] || {}).name || '?');
+  const subs = st.phase === 'trading' ? ((rounds[st.round] || {}).subs || {}) : {};
+  const curSub = subs[pid] || null;
+  const myPair = st.phase === 'trading' ? pairsOf(st.round).find(x => x.a === pid || x.b === pid) : null;
+  const partnerSub = curSub && curSub.partner !== 'none' ? subs[curSub.partner] || null : null;
+  // 나를 거래 상대로 적은 친구들 (아직 내가 그 친구와 맞춰 적지 않은 경우)
+  const claims = card ? Object.entries(subs).filter(([id, s]) => s.partner === pid && cards[id] && cards[id].role !== card.role
+    && !(curSub && curSub.partner === id)) : [];   // 이미 내가 고른 친구는 위 '가격이 달라요'에서 보여 줌
   const isEnd = st.phase === 'closed' && st.round >= ROUNDS;
+  if (myPair) editing = false;   // 성사되면 잠금
 
   // 안내문
   if (st.phase === 'trading' && card) maybeAnnounce(`start-${st.round}`, () => announce(
     card.role === 'buyer' ? '너는 수요자!!' : '너는 공급자!!',
-    `${st.round}회차 내 카드: ${card.role === 'buyer' ? '🛒 최대' : '🏷️ 최소'} ${won(card.limit)}`,
+    `${st.round}회차 내 카드: ${card.role === 'buyer' ? '🛒' : '🏷️'} ${won(card.limit)}`,
     card.role === 'buyer' ? '🛒' : '🏷️'));
   else if (st.phase === 'closed') maybeAnnounce(`close-${st.round}`, () => isEnd
-    ? announce('시장 끝~!!', `내 총 이익 ${won(totalProfit(st))} 💖`, '🎉', 4000)
+    ? announce('시장 끝~!!', `내 총 손익 ${signed(totalProfit(st))} 💖`, '🎉', 4000)
     : announce('그만~~!!', `${st.round}회차 끝! 결과를 확인해 봐`, '🛑'));
   else maybeAnnounce(`${st.phase}-${st.round}`, () => {});
-  if (curMatch) maybeAnnounce(`deal-${st.round}`, () => announce('거래 성사!!', '짝짝짝~ 🎊', '🤝', 2400));
+  if (myPair) maybeAnnounce(`deal-${st.round}`, () => announce('거래 성사!!', '짝짝짝~ 🎊', '🤝', 2400));
 
-  // 같은 상태면 다시 그리지 않음 (고르던 선택이 날아가지 않게)
-  const sig = JSON.stringify([st.phase, st.round, card?.role, card?.limit, Object.keys(players).length, !!curSub, curMatch, partnerSubmitted]);
+  // 같은 상태면 다시 그리지 않음 (입력 중인 내용이 날아가지 않게)
+  const sig = JSON.stringify([st.phase, st.round, card, Object.keys(players).length, curSub, !!myPair, partnerSub, claims, editing]);
   if (sig === lastSig) return;
   lastSig = sig;
-  if (sel.r !== st.round) sel = { r: st.round, partner: '', price: 0 };
+  if (sel.r !== st.round) { sel = { r: st.round, partner: '', price: 0 }; editing = false; }
 
-  const head = `<div class="s-top"><span class="me">🙂 ${esc(name)}</span><span class="pill">⭐ 총 이익 ${won(totalProfit(st))}</span></div>`;
+  const head = `<div class="s-top"><span class="me">🙂 ${esc(name)}</span><span class="pill">⭐ 총 손익 ${signed(totalProfit(st))}</span></div>`;
 
   if (!card) {
     app.innerHTML = `<div class="s-wrap">${head}<div class="stage" style="min-height:60vh"><div class="bigEmoji bounce">🌶️</div><div class="rule">${st.phase === 'lobby'
@@ -552,53 +559,89 @@ function renderStudent() {
     const pair = pairsOf(done).find(x => x.a === pid || x.b === pid);
     const dc = cardsOf(done)[pid];
     return pair && dc
-      ? `<div class="doneBox pop">🤝 ${done}회차 거래 성사!<br>${won(pair.price)}에 ${dc.role === 'buyer' ? '샀어요' : '팔았어요'} · 이익 <b>${won(profitOf(dc, pair.price))}</b></div>`
-      : `<div class="doneBox none pop">${done}회차는 거래 없음 🙂<br><span style="font-size:20px">손해 본 건 아니에요!</span></div>`;
+      ? `<div class="doneBox pop">🤝 ${done}회차 거래 성사!<br>${won(pair.price)}에 ${dc.role === 'buyer' ? '샀어요' : '팔았어요'} · 손익 <b>${signed(profitOf(dc, pair.price))}</b></div>`
+      : `<div class="doneBox none pop">${done}회차는 거래 없음 🙂<br><span style="font-size:20px">손익 0원</span></div>`;
   };
 
   if (st.phase === 'trading') {
     body += `<div class="card center"><div class="timer s" id="timer"></div><div class="bar" id="tbar"><i></i></div></div>`;
     body += `<div class="card">${cardHTML}</div>`;
-    if (curSub) {
-      let box;
-      if (curSub.partner === 'none') box = `<div class="doneBox none">이번 회차는 거래 안 함 🙂</div>`;
-      else if (curMatch) box = `<div class="doneBox">✅ 거래 성사!<br>${won(curSub.price)} · 이익 <b>${won(profitOf(card, curSub.price))}</b></div>`;
-      else if (partnerSubmitted) box = `<div class="doneBox bad">⚠️ 상대 기록과 달라요!<br><span style="font-size:20px">선생님께 말씀드려 주세요</span></div>`;
-      else box = `<div class="doneBox wait">기록 완료 ✅<br><span style="font-size:20px">상대가 기록하길 기다리는 중... ⏳</span></div>`;
-      body += `<div class="card">${box}</div>`;
+
+    if (myPair) {
+      body += `<div class="card"><div class="doneBox">✅ ${nameOf(curSub.partner)} 친구와 거래 성사!<br>${won(myPair.price)} · 손익 <b>${signed(profitOf(card, myPair.price))}</b></div></div>`;
+    } else if (curSub && !editing) {
+      // 기록은 했는데 아직 짝이 안 맞음 → 무엇이 다른지 보여 주고 바로 고칠 수 있게
+      let box, fix = '';
+      if (curSub.partner === 'none') {
+        box = `<div class="doneBox none">이번 회차는 거래 안 함 🙂</div>`;
+      } else {
+        const who = nameOf(curSub.partner);
+        const mine = `<span style="font-size:20px">내 기록: ${who} · ${won(curSub.price)}</span>`;
+        if (!partnerSub) box = `<div class="doneBox wait">기록 완료 ✅<br>${mine}<br><span style="font-size:20px">${who} 친구가 적기를 기다리는 중... ⏳</span></div>`;
+        else if (partnerSub.partner === 'none') box = `<div class="doneBox bad">${who} 친구는 '거래 안 함'으로 적었어요<br>${mine}</div>`;
+        else if (partnerSub.partner !== pid) box = `<div class="doneBox bad">${who} 친구는 다른 친구와 거래했다고 적었어요<br>${mine}</div>`;
+        else {
+          box = `<div class="doneBox bad">가격이 달라요!<br><span style="font-size:20px">나: ${won(curSub.price)} · ${who}: ${won(partnerSub.price)}</span></div>`;
+          fix = `<button class="btn big mint" style="width:100%" data-fix="${curSub.partner}" data-fixprice="${partnerSub.price}">${who} 친구처럼 ${won(partnerSub.price)}으로 맞추기</button>`;
+        }
+      }
+      body += `<div class="card">${box}${fix}<button class="btn lemon" id="edit" style="width:100%;margin-top:10px">✏️ 내 기록 고치기</button></div>`;
     } else {
       const opp = Object.keys(cards).filter(id => id !== pid && cards[id].role !== card.role);
-      const prices = PRICES.filter(p => validPrice(card, p));
+      if (curSub && editing && !sel.partner) sel = { r: st.round, partner: curSub.partner === 'none' ? '' : curSub.partner, price: curSub.price || 0 };
       body += `<div class="card">
         <h3>✍️ 거래 기록하기</h3>
         <p class="muted" style="font-size:17px;margin-top:-6px">${card.role === 'buyer' ? '🏷️ 공급자' : '🛒 수요자'} 친구를 찾아 말로 흥정! 둘 다 서로를 고르고 같은 가격을 적어야 성사돼요.</p>
-        ${opp.length && prices.length ? `
-          <div class="lab">누구랑 거래했나요?</div>
-          <div class="opts">${opp.map(id => `<button class="opt${sel.partner === id ? ' sel' : ''}" data-partner="${id}">${esc((players[id] || {}).name || '?')}</button>`).join('')}</div>
-          <div class="lab">얼마에 거래했나요?</div>
-          <div class="opts">${prices.map(p => `<button class="opt${sel.price === p ? ' sel' : ''}" data-price="${p}">${won(p)}</button>`).join('')}</div>
-          <button class="btn big mint" id="submit" style="width:100%">거래 기록하기 ✅</button>
-          <p class="muted center" style="font-size:15px">기록은 한 번만 할 수 있어요!</p>` : `<p class="rule muted">지금은 거래할 수 있는 가격이 없어요</p>`}
+        <div class="lab">누구랑 거래했나요?</div>
+        <div class="opts">${opp.map(id => `<button class="opt${sel.partner === id ? ' sel' : ''}" data-partner="${id}">${nameOf(id)}</button>`).join('') || '<span class="muted">거래할 친구가 없어요</span>'}</div>
+        <div class="lab">얼마에 거래했나요? <span class="muted" style="font-size:16px">(100원 단위)</span></div>
+        <input class="field" id="price" type="number" inputmode="numeric" min="100" step="100" placeholder="예: 4000" value="${sel.price || ''}">
+        <div id="pl" class="muted center" style="font-size:20px;min-height:28px"></div>
+        <button class="btn big mint" id="submit" style="width:100%">거래 기록하기 ✅</button>
+        <p class="muted center" style="font-size:15px">상대와 기록이 맞으면 거래 성사! 성사되면 더 못 고쳐요.</p>
         <button class="btn sm lemon" id="none">이번 회차는 거래 안 할래요</button>
+        ${editing ? '<button class="btn sm sky" id="cancelEdit">← 고치기 취소</button>' : ''}
       </div>`;
+    }
+
+    // 나랑 거래했다고 적은 친구가 있으면 한 번에 맞출 수 있게
+    if (!myPair && claims.length) {
+      body += `<div class="card"><h3>📨 나랑 거래했다고 적은 친구</h3>${claims.map(([id, s]) =>
+        `<div class="hl sky" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <span style="margin-right:auto">${nameOf(id)} · ${won(s.price)}</span>
+          <button class="btn sm mint" data-fix="${id}" data-fixprice="${s.price}">맞아요! 똑같이 기록</button></div>`).join('')}</div>`;
     }
     body += lastResult();
   } else if (isEnd) {
     body += `<div class="stage"><div class="bigEmoji bounce">🎉</div><div class="title">수고했어요!</div>
-      <div class="doneBox">내 총 이익<br><span style="font-size:56px">${won(totalProfit(st))}</span></div></div>${lastResult()}`;
+      <div class="doneBox">내 총 손익<br><span style="font-size:56px">${signed(totalProfit(st))}</span></div></div>${lastResult()}`;
   } else {
     body += lastResult() + `<div class="stage" style="min-height:30vh"><div class="bigEmoji bounce">🎲</div><div class="rule">다음 회차엔 카드가 새로 섞여요!<br><span class="muted">선생님이 시작할 때까지 기다려요 ⏳</span></div></div>`;
   }
 
   app.innerHTML = `<div class="s-wrap">${head}${body}</div>`;
-  app.querySelectorAll('[data-partner]').forEach(b => b.onclick = () => { sel.partner = b.dataset.partner; app.querySelectorAll('[data-partner]').forEach(x => x.classList.toggle('sel', x === b)); });
-  app.querySelectorAll('[data-price]').forEach(b => b.onclick = () => { sel.price = Number(b.dataset.price); app.querySelectorAll('[data-price]').forEach(x => x.classList.toggle('sel', x === b)); });
-  if (el('submit')) el('submit').onclick = () => {
-    if (!sel.partner || !sel.price) return toast('상대와 가격을 골라 주세요 👆');
-    const who = esc((players[sel.partner] || {}).name || '?');
-    if (confirm(`${who} 친구와 ${won(sel.price)}에 거래했다고 기록할까요?\n한 번 기록하면 바꿀 수 없어요.`)) submit(sel.partner, sel.price);
+
+  // 가격 입력하면 손익 미리 보기
+  const showPL = () => {
+    const v = Number(el('price').value);
+    const box = el('pl'); if (!box) return;
+    if (!v) { box.textContent = ''; return; }
+    const pl = profitOf(card, v);
+    box.innerHTML = pl > 0 ? `이 가격이면 <b style="color:#3BB37A">${signed(pl)} 이익</b> 😆` : pl < 0 ? `이 가격이면 <b style="color:#E0607E">${signed(pl)} 손해</b> 😱` : '이 가격이면 손익 0원';
   };
-  if (el('none')) el('none').onclick = () => { if (confirm('이번 회차는 거래 안 함으로 기록할까요? 한 번 기록하면 바꿀 수 없어요.')) submit('none', 0); };
+  if (el('price')) { el('price').oninput = () => { sel.price = Number(el('price').value) || 0; showPL(); }; showPL(); }
+  app.querySelectorAll('[data-partner]').forEach(b => b.onclick = () => { sel.partner = b.dataset.partner; app.querySelectorAll('[data-partner]').forEach(x => x.classList.toggle('sel', x === b)); });
+  app.querySelectorAll('[data-fix]').forEach(b => b.onclick = () => submit(b.dataset.fix, Number(b.dataset.fixprice)));
+  if (el('edit')) el('edit').onclick = () => { editing = true; sel.partner = ''; render(); };
+  if (el('cancelEdit')) el('cancelEdit').onclick = () => { editing = false; render(); };
+  if (el('submit')) el('submit').onclick = () => {
+    const v = Number(el('price').value);
+    if (!sel.partner) return toast('누구랑 거래했는지 골라 주세요 👆');
+    if (!v || v < 100 || v % 100) return toast('가격을 100원 단위로 써 주세요 (예: 4000)');
+    if (v > 100000) return toast('가격이 너무 커요! 다시 확인해 주세요');
+    submit(sel.partner, v);
+  };
+  if (el('none')) el('none').onclick = () => submit('none', 0);
 }
 
 function totalProfit(st) {
@@ -611,13 +654,16 @@ function totalProfit(st) {
   return sum;
 }
 
+// 짝이 맞기 전까지는 몇 번이든 고칠 수 있고, 성사된 거래는 잠김 (장난으로 바꾸기 방지)
 async function submit(partner, price) {
   const st = room.state;
   if (st.phase !== 'trading' || secLeft(st) === 0) return toast('시간이 끝나서 기록할 수 없어요');
-  const path = `rooms/trade_${code}/rounds/${st.round}/subs/${pid}`;
-  if ((await get(ref(db, path))).exists()) return toast('이미 기록했어요');   // 한 번 기록하면 잠금
-  await set(ref(db, path), { partner, price, at: Date.now() });
-  toast('기록했어요 ✅');
+  const base = `rooms/trade_${code}/rounds/${st.round}`;
+  const fresh = (await get(ref(db, base))).val() || {};
+  if (matchRound(fresh.cards, fresh.subs).some(x => x.a === pid || x.b === pid)) return toast('이미 성사된 거래라 못 고쳐요 🔒');
+  await set(ref(db, `${base}/subs/${pid}`), { partner, price, at: Date.now() });
+  editing = false; sel.partner = '';
+  toast(partner === 'none' ? '거래 안 함으로 기록했어요' : '기록했어요 ✅');
 }
 
 /* ========== 실행 ========== */
