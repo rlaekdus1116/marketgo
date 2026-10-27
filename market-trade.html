@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>귤 시장 🍊</title>
+<title>떡볶이 시장 🌶️</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -133,7 +133,7 @@ td.sum{background:var(--lav);border-color:var(--lav);color:var(--ink)}
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getDatabase, ref, set, get, update, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-/* 「시장에 가면」과 같은 Firebase 프로젝트 사용 (데이터는 trade/ 아래에 따로 저장) */
+/* 「시장에 가면」과 같은 Firebase 프로젝트 사용 (데이터는 rooms/trade_코드 에 저장 → 기존 보안 규칙 그대로 통과) */
 const firebaseConfig = {
   apiKey: "AIzaSyDiehLZ1aKv8E3N_pD4bNmw0zgMexau99U",
   authDomain: "marketgo-80ab5.firebaseapp.com",
@@ -149,9 +149,9 @@ onValue(ref(db, '.info/serverTimeOffset'), s => { offset = s.val() || 0; });
 const now = () => Date.now() + offset;   // 모든 기기가 같은 시계를 보도록 서버 시간 기준
 
 /* ========== 설정 ========== */
-const PRICES = [500, 600, 700, 800, 900, 1000, 1100, 1200];
-const BUYER_VALUES  = [500, 600, 700, 800, 900, 1000, 1100];   // 교과서 활동 길잡이 표 기준
-const SELLER_VALUES = [600, 700, 800, 900, 1000, 1100, 1200];
+const PRICES = [2500, 3000, 3500, 4000, 4500, 5000, 5500, 6000];   // 떡볶이 1인분 가격대
+const BUYER_VALUES  = [2500, 3000, 3500, 4000, 4500, 5000, 5500];   // 교과서 활동 길잡이 표를 떡볶이 가격으로 ×5
+const SELLER_VALUES = [3000, 3500, 4000, 4500, 5000, 5500, 6000];
 const ROUNDS = 3;
 const DEFAULT_SEC = 180;   // 회차당 기본 3분
 
@@ -170,7 +170,7 @@ const el = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const won = n => Number(n).toLocaleString('ko-KR') + '원';
 const fmt = s => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
-const T = (c = code) => ref(db, 'trade/' + c);
+const T = (c = code) => ref(db, 'rooms/trade_' + c);
 const shuffle = a => { a = [...a]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 let toastT;
 const toast = msg => { document.querySelectorAll('.toast').forEach(t => t.remove()); const t = document.createElement('div'); t.className = 'toast pop'; t.textContent = msg; document.body.appendChild(t); clearTimeout(toastT); toastT = setTimeout(() => t.remove(), 2400); };
@@ -181,7 +181,7 @@ function announce(big, sub = '', emo = '🌈', ms = 3200) {
   document.querySelectorAll('.ann').forEach(a => a.remove());
   const a = document.createElement('div');
   a.className = 'ann';
-  const floaters = ['☁️','🌈','✨','⭐','🍊','💖','☁️','🌟','🍊','🫧','✨','🌈'];
+  const floaters = ['☁️','🌈','✨','⭐','🌶️','💖','☁️','🌟','🍢','🫧','✨','🌈'];
   a.innerHTML = floaters.map((f, i) => `<span class="fl" style="left:${(i * 83) % 92}%;top:${(i * 47) % 85}%;animation-delay:${(i % 5) * .3}s">${f}</span>`).join('')
     + `<div class="emo">${emo}</div><span class="rb">${big}</span>${sub ? `<div class="sub">${sub}</div>` : ''}<div class="tap">화면을 누르면 닫혀요</div>`;
   a.onclick = () => a.remove();
@@ -234,15 +234,15 @@ function start() {
     room = s.val();
     if (!room) { app.innerHTML = `<div class="wrap stage"><div class="bigEmoji">😢</div><p class="rule">방을 찾을 수 없어요</p></div>`; return; }
     render();
-  });
+  }, e => { console.error(e); toast('데이터를 못 불러왔어요 😢 Firebase 권한을 확인해 주세요'); });
   setInterval(tick, 300);
 }
 
 function teacherHome() {
   const saved = localStorage.getItem('trade_teacher_room');
   app.innerHTML = `<div class="wrap"><div class="stage" style="min-height:80vh">
-    <div class="bigEmoji bounce">🍊</div>
-    <div class="title">귤 <span>시장</span></div>
+    <div class="bigEmoji bounce">🌶️</div>
+    <div class="title">떡볶이 <span>시장</span></div>
     <p class="muted" style="font-size:22px">수요자와 공급자가 되어 가격을 정해 봐요</p>
     <button class="btn big mint" id="newRoom">새 시장 열기 ✨</button>
     ${saved ? `<button class="btn sky" id="resume">이어서 하기 (방 ${esc(saved)})</button>` : ''}
@@ -252,20 +252,25 @@ function teacherHome() {
 }
 
 async function newRoom() {
-  let c;
-  for (let i = 0; i < 20; i++) {
-    c = String(Math.floor(1000 + Math.random() * 9000));
-    if (!(await get(T(c))).exists()) break;
+  try {
+    let c;
+    for (let i = 0; i < 20; i++) {
+      c = String(Math.floor(1000 + Math.random() * 9000));
+      if (!(await get(T(c))).exists()) break;
+    }
+    await set(T(c), { createdAt: Date.now(), state: { phase: 'lobby', round: 0, dur: DEFAULT_SEC } });
+    localStorage.setItem('trade_teacher_room', c);
+    location.href = `?t=1&room=${c}`;
+  } catch (e) {
+    console.error(e);
+    toast('시장을 못 열었어요 😢 ' + (String(e.message || e).includes('ermission') ? 'Firebase 권한(규칙) 문제예요' : '인터넷 연결을 확인해 주세요'));
   }
-  await set(T(c), { createdAt: Date.now(), state: { phase: 'lobby', round: 0, dur: DEFAULT_SEC } });
-  localStorage.setItem('trade_teacher_room', c);
-  location.href = `?t=1&room=${c}`;
 }
 
 function studentForm(prefillCode) {
   app.innerHTML = `<div class="s-wrap"><div class="stage" style="min-height:80vh">
-    <div class="bigEmoji bounce">🍊</div>
-    <div class="title">귤 <span>시장</span></div>
+    <div class="bigEmoji bounce">🌶️</div>
+    <div class="title">떡볶이 <span>시장</span></div>
     <div class="card" style="width:min(460px,100%);display:grid;gap:4px">
       <input class="field" id="jCode" inputmode="numeric" maxlength="4" placeholder="입장 코드 4자리" value="${esc(prefillCode)}">
       <input class="field" id="jName" maxlength="8" placeholder="내 이름" value="${esc(localStorage.getItem('trade_name') || '')}">
@@ -278,11 +283,12 @@ function studentForm(prefillCode) {
 async function join(c, name) {
   if (!/^\d{4}$/.test(c)) return toast('입장 코드 4자리를 써 주세요');
   if (!name) return toast('이름을 써 주세요');
-  const snap = await get(T(c));
+  let snap;
+  try { snap = await get(T(c)); } catch (e) { console.error(e); return toast('접속을 못 했어요 😢 인터넷을 확인해 주세요'); }
   if (!snap.exists()) return toast('그런 방이 없어요 😢 코드를 확인해 주세요');
   let id = localStorage.getItem('trade_pid_' + c);
   if (!id) { id = Math.random().toString(36).slice(2, 10); localStorage.setItem('trade_pid_' + c, id); }
-  await update(ref(db, `trade/${c}/players/${id}`), { name, joinedAt: Date.now() });
+  await update(ref(db, `rooms/trade_${c}/players/${id}`), { name, joinedAt: Date.now() });
   localStorage.setItem('trade_name', name);
   location.href = `?room=${c}`;
 }
@@ -326,7 +332,7 @@ function renderTeacher() {
   const isEnd = st.phase === 'closed' && st.round >= ROUNDS;
 
   // 안내문
-  if (st.phase === 'trading') maybeAnnounce(`start-${st.round}`, () => announce(`${st.round}회차 시작!!`, '카드가 새로 섞였어요~ 🎲 흥정 시작!', '🍊'));
+  if (st.phase === 'trading') maybeAnnounce(`start-${st.round}`, () => announce(`${st.round}회차 시작!!`, '카드가 새로 섞였어요~ 🎲 흥정 시작!', '🌶️'));
   else if (st.phase === 'closed') maybeAnnounce(`close-${st.round}`, () => isEnd
     ? announce('시장 끝~!!', `${ROUNDS}회차 끝! 다들 수고했어 💖`, '🎉', 4000)
     : announce('그만~~!!', `${st.round}회차 거래 끝! ⏰`, '🛑'));
@@ -334,7 +340,7 @@ function renderTeacher() {
 
   const durCtl = `<span class="dur">⏱ 회차 시간 <button class="btn sm" data-dur="-30">−30초</button><b>${fmt(dur)}</b><button class="btn sm" data-dur="30">+30초</button></span>`;
   const topbar = `<div class="topbar">
-    <span class="logo">🍊 귤 시장</span>
+    <span class="logo">🌶️ 떡볶이 시장</span>
     ${st.round ? `<span class="pill">${st.round} / ${ROUNDS}회차</span>` : ''}
     <span class="pill">🙋 ${pids.length}명</span>
     <span class="pill">방 ${esc(code)}</span>
@@ -372,7 +378,7 @@ function renderTeacher() {
     const matched = new Set(pairsOf(st.round).flatMap(x => [x.a, x.b]));
     const unmatched = Object.keys(subs).filter(id => subs[id].partner !== 'none' && !matched.has(id));
     main = `<div class="card stage" style="min-height:0">
-        <span class="roundBadge">🍊 ${st.round}회차 거래 중</span>
+        <span class="roundBadge">🌶️ ${st.round}회차 거래 중</span>
         <div class="timer" id="timer"></div>
         <div class="bar" id="tbar"><i></i></div>
         <div class="rule">기록 <b>${Object.keys(subs).length}</b> / ${Object.keys(cardsOf(st.round)).length}명 · 🤝 성사 <b>${pairsOf(st.round).length}</b>건</div>
@@ -423,12 +429,12 @@ function renderTeacher() {
   bind('plus', () => update(T(), { 'state/endsAt': (st.endsAt || now()) + 60000 }));
   bind('close', () => update(T(), { 'state/phase': 'closed' }));
   app.querySelectorAll('[data-dur]').forEach(b => b.onclick = () => update(T(), { 'state/dur': Math.min(600, Math.max(60, dur + Number(b.dataset.dur))) }));
-  app.querySelectorAll('[data-reset]').forEach(b => b.onclick = () => set(ref(db, `trade/${code}/rounds/${st.round}/subs/${b.dataset.reset}`), null));
-  app.querySelectorAll('[data-kick]').forEach(b => b.onclick = () => { if (confirm('이 친구를 목록에서 뺄까요?')) set(ref(db, `trade/${code}/players/${b.dataset.kick}`), null); });
+  app.querySelectorAll('[data-reset]').forEach(b => b.onclick = () => set(ref(db, `rooms/trade_${code}/rounds/${st.round}/subs/${b.dataset.reset}`), null));
+  app.querySelectorAll('[data-kick]').forEach(b => b.onclick = () => { if (confirm('이 친구를 목록에서 뺄까요?')) set(ref(db, `rooms/trade_${code}/players/${b.dataset.kick}`), null); });
   app.querySelectorAll('[data-hint]').forEach(b => b.onclick = () => { const k = b.dataset.hint; hintOpen.has(k) ? hintOpen.delete(k) : hintOpen.add(k); render(); });
 }
 
-// 교과서 분포(수요자 500~1,100원 / 공급자 600~1,200원)대로 카드를 만들고 학생에게 무작위로 나눠 줌
+// 교과서 분포 ×5 (수요자 2,500~5,500원 / 공급자 3,000~6,000원)대로 카드를 만들고 학생에게 무작위로 나눠 줌
 // 회차마다 새로 호출 → 역할(수요자/공급자)과 금액이 매번 다시 섞임
 function makeCards(ids) {
   const order = shuffle(ids);
@@ -455,12 +461,12 @@ function questionsHTML(cols) {
   all.forEach(x => byPrice[x.price] = (byPrice[x.price] || 0) + 1);
   const top = Object.entries(byPrice).sort((a, b) => b[1] - a[1])[0];
   const avg = r => { const ps = pairsOf(r); return ps.length ? won(Math.round(ps.reduce((s, x) => s + x.price, 0) / ps.length)) : '거래 없음'; };
-  // 극단 카드(수요자 500원 / 공급자 1,200원)의 거래 성공 횟수
+  // 극단 카드(가장 낮은 수요자 / 가장 높은 공급자)의 거래 성공 횟수
   const ext = { b: [0, 0], s: [0, 0] };
   cols.forEach(r => {
     const traded = new Set(pairsOf(r).flatMap(x => [x.a, x.b]));
     Object.entries(cardsOf(r)).forEach(([id, c]) => {
-      const k = c.role === 'buyer' && c.limit === 500 ? 'b' : c.role === 'seller' && c.limit === 1200 ? 's' : null;
+      const k = c.role === 'buyer' && c.limit === BUYER_VALUES[0] ? 'b' : c.role === 'seller' && c.limit === SELLER_VALUES[SELLER_VALUES.length - 1] ? 's' : null;
       if (k) { ext[k][0]++; if (traded.has(id)) ext[k][1]++; }
     });
   });
@@ -469,20 +475,20 @@ function questionsHTML(cols) {
 
   const Q = [
     [top ? `가장 많이 거래된 가격은 <b>${won(top[0])}</b> (${top[1]}건)이에요. 왜 이 가격 근처에서 거래가 많았을까요?` : '거래가 거의 없었어요. 왜 그랬을까요?',
-     '사려는 사람 수(수요량)와 팔려는 사람 수(공급량)가 비슷해지는 가격에서 거래가 가장 잘 이루어져요 → <b>균형 가격</b>. 이번 카드 분포에서는 800~900원 사이예요.'],
+     '사려는 사람 수(수요량)와 팔려는 사람 수(공급량)가 비슷해지는 가격에서 거래가 가장 잘 이루어져요 → <b>균형 가격</b>. 이번 카드 분포에서는 4,000~4,500원 사이예요.'],
     [`평균 거래 가격: ${cols.map(r => `${r}회차 <b>${avg(r)}</b>`).join(' → ')}. 회차가 거듭될수록 가격은 어떻게 변했나요?`,
      '거래를 반복하면서 "다른 친구들은 얼마에 사고팔았는지" 정보가 퍼지고, 가격이 균형 가격 쪽으로 모여요.'],
     [(() => {
       const parts = [];
-      if (ext.b[0]) parts.push(`수요자 500원 카드는 ${ext.b[0]}번 중 <b>${ext.b[1]}번</b>`);
-      if (ext.s[0]) parts.push(`공급자 1,200원 카드는 ${ext.s[0]}번 중 <b>${ext.s[1]}번</b>`);
+      if (ext.b[0]) parts.push(`수요자 ${won(BUYER_VALUES[0])} 카드는 ${ext.b[0]}번 중 <b>${ext.b[1]}번</b>`);
+      if (ext.s[0]) parts.push(`공급자 ${won(SELLER_VALUES[SELLER_VALUES.length - 1])} 카드는 ${ext.s[0]}번 중 <b>${ext.s[1]}번</b>`);
       return parts.length ? `${parts.join(', ')} 거래에 성공했어요. 이 카드들은 왜 거래가 어려웠을까요?`
-        : '수요자 500원 카드나 공급자 1,200원 카드를 받았다면 거래하기 쉬웠을까요?';
+        : `수요자 ${won(BUYER_VALUES[0])} 카드나 공급자 ${won(SELLER_VALUES[SELLER_VALUES.length - 1])} 카드를 받았다면 거래하기 쉬웠을까요?`;
     })(),
      '시장 가격보다 훨씬 싸게 사려 하거나 비싸게 팔려 하면 상대를 찾기 어려워요. 시장 가격에서 사고팔 의사가 있는 사람끼리만 거래가 이루어져요.'],
     [`${ROUNDS}회차 동안 거래를 하지 않은 경우가 <b>${noTrade}번</b> 있었어요. 거래를 못 한 친구는 손해를 본 걸까요?`,
      '이익은 0원이지만 손해는 아니에요. 나에게 손해가 되는 거래를 하지 않은 것도 <b>합리적 선택</b>이에요.'],
-    ['만약 귤 풍년으로 공급자 카드가 훨씬 많아진다면, 거래 가격은 어떻게 될까요?',
+    ['만약 학교 앞에 떡볶이 가게가 잔뜩 새로 생겨서 공급자가 훨씬 많아진다면, 거래 가격은 어떻게 될까요?',
      '팔려는 사람이 많아지면 공급자끼리 경쟁해서 가격이 내려가요 → 공급 증가 시 가격 하락.']
   ];
   return `<div class="card"><h3>📋 결과표 보며 이야기해 봐요</h3>${Q.map(([q, h], i) => `
@@ -525,7 +531,7 @@ function renderStudent() {
   const head = `<div class="s-top"><span class="me">🙂 ${esc(name)}</span><span class="pill">⭐ 총 이익 ${won(totalProfit(st))}</span></div>`;
 
   if (!card) {
-    app.innerHTML = `<div class="s-wrap">${head}<div class="stage" style="min-height:60vh"><div class="bigEmoji bounce">🍊</div><div class="rule">${st.phase === 'lobby'
+    app.innerHTML = `<div class="s-wrap">${head}<div class="stage" style="min-height:60vh"><div class="bigEmoji bounce">🌶️</div><div class="rule">${st.phase === 'lobby'
       ? '선생님이 시작하면<br>카드가 나와요 ⏳'
       : '이번 회차가 끝나면<br>다음 회차부터 카드를 받아요 ⏳'}</div></div></div>`;
     return;
@@ -534,10 +540,10 @@ function renderStudent() {
   const cardHTML = card.role === 'buyer'
     ? `<div class="tcard buyer"><span class="rn">${st.round}회차 내 카드</span>
         <div class="role">🛒 수요자 카드</div><div class="amt">${won(card.limit)}</div>
-        <div class="desc">귤 한 송이를 최대한 <b>낮은 가격</b>으로 사세요.<br>귤은 나에게 ${won(card.limit)}만큼의 만족을 줘요.<br>이보다 비싸게 사면 손해!</div></div>`
+        <div class="desc">떡볶이 1인분을 최대한 <b>낮은 가격</b>으로 사세요.<br>떡볶이는 나에게 ${won(card.limit)}만큼의 만족을 줘요.<br>이보다 비싸게 사면 손해!</div></div>`
     : `<div class="tcard seller"><span class="rn">${st.round}회차 내 카드</span>
         <div class="role">🏷️ 공급자 카드</div><div class="amt">${won(card.limit)}</div>
-        <div class="desc">귤 한 송이를 최대한 <b>높은 가격</b>으로 파세요.<br>귤 생산에 ${won(card.limit)}의 비용이 들었어요.<br>이보다 싸게 팔면 손해!</div></div>`;
+        <div class="desc">떡볶이 1인분을 최대한 <b>높은 가격</b>으로 파세요.<br>떡볶이 1인분 만드는 데 ${won(card.limit)}의 비용이 들었어요.<br>이보다 싸게 팔면 손해!</div></div>`;
 
   let body = '';
   const done = completedRounds(st);
@@ -608,7 +614,7 @@ function totalProfit(st) {
 async function submit(partner, price) {
   const st = room.state;
   if (st.phase !== 'trading' || secLeft(st) === 0) return toast('시간이 끝나서 기록할 수 없어요');
-  const path = `trade/${code}/rounds/${st.round}/subs/${pid}`;
+  const path = `rooms/trade_${code}/rounds/${st.round}/subs/${pid}`;
   if ((await get(ref(db, path))).exists()) return toast('이미 기록했어요');   // 한 번 기록하면 잠금
   await set(ref(db, path), { partner, price, at: Date.now() });
   toast('기록했어요 ✅');
