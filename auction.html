@@ -1,0 +1,715 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>다연샘 경매소 🔨</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+/* 「떡볶이 시장」과 같은 디자인 */
+:root{
+  --bg:#FFF9F4; --ink:#5B4B57; --sub:#A3919C; --line:#F2E6EC; --card:#FFFFFF;
+  --pink:#FFE3EA; --pinkD:#F4A9BD; --mint:#DDF5EA; --mintD:#8FD5B5;
+  --lemon:#FFF5CC; --lemonD:#F2D477; --lav:#ECE5FF; --lavD:#B8A7EE;
+  --sky:#E0F0FF; --skyD:#93C4EE; --peach:#FFE9DA; --peachD:#F5B48C; --red:#FFD9D9; --redD:#EE9A9A;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;min-height:100%}
+body{font-family:'Jua',sans-serif;color:var(--ink);background:var(--bg);
+  background-image:radial-gradient(#F6E3EA 1.4px,transparent 1.4px);background-size:22px 22px}
+button{font-family:inherit;color:inherit;cursor:pointer;border:none}
+.wrap{max-width:1100px;margin:0 auto;padding:18px 16px 40px}
+.s-wrap{max-width:760px;margin:0 auto;padding:14px 14px 40px}
+.muted{color:var(--sub)} .center{text-align:center}
+.card{background:var(--card);border:2px solid var(--line);border-radius:26px;padding:18px 20px;box-shadow:0 6px 0 var(--line);margin-bottom:16px}
+h3{margin:0 0 12px;font-size:22px;font-weight:normal}
+.btn{background:var(--pink);border-radius:20px;padding:14px 22px;font-size:20px;box-shadow:0 5px 0 var(--pinkD);transition:transform .08s;margin:4px 4px 4px 0}
+.btn:active{transform:translateY(4px);box-shadow:0 1px 0 var(--pinkD)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.mint{background:var(--mint);box-shadow:0 5px 0 var(--mintD)}
+.btn.lemon{background:var(--lemon);box-shadow:0 5px 0 var(--lemonD)}
+.btn.lav{background:var(--lav);box-shadow:0 5px 0 var(--lavD)}
+.btn.sky{background:var(--sky);box-shadow:0 5px 0 var(--skyD)}
+.btn.peach{background:var(--peach);box-shadow:0 5px 0 var(--peachD)}
+.btn.big{font-size:28px;padding:18px 36px}
+.btn.sm{font-size:15px;padding:8px 14px;border-radius:14px;box-shadow:0 3px 0 var(--pinkD)}
+.btn.sm.mint{box-shadow:0 3px 0 var(--mintD)} .btn.sm.lemon{box-shadow:0 3px 0 var(--lemonD)} .btn.sm.sky{box-shadow:0 3px 0 var(--skyD)}
+.title{font-size:44px;margin:6px 0;letter-spacing:1px} .title span{color:var(--peachD)}
+.topbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.topbar .logo{font-size:26px;margin-right:auto}
+.pill{background:#fff;border:2px solid var(--line);border-radius:999px;padding:6px 14px;font-size:16px;display:inline-block}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{display:inline-flex;align-items:center;gap:6px;background:var(--lemon);border-radius:999px;padding:7px 14px;font-size:18px}
+.chip.soft{background:var(--sky)}
+.chip .x{background:#fff;border-radius:50%;width:24px;height:24px;font-size:13px;line-height:24px;padding:0;margin:0}
+.lobby{display:grid;grid-template-columns:300px 1fr;gap:16px}
+@media (max-width:820px){.lobby{grid-template-columns:1fr}}
+.bigcode{font-size:72px;letter-spacing:8px;color:var(--peachD);line-height:1}
+#qr{display:flex;justify-content:center;margin:14px 0}
+#qr img,#qr canvas{border:10px solid #fff;border-radius:14px}
+.stage{min-height:40vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:14px}
+.bigEmoji{font-size:110px;line-height:1}
+.rule{font-size:26px;line-height:1.5}
+.roundBadge{display:inline-block;background:var(--lemon);border-radius:999px;padding:8px 22px;font-size:24px;box-shadow:0 4px 0 var(--lemonD)}
+.timer{font-size:110px;line-height:1;color:var(--peachD)}
+.timer.s{font-size:56px}
+.timer.hurry{color:var(--redD);animation:beat .5s infinite}
+@keyframes beat{50%{transform:scale(1.08)}}
+.bar{height:22px;background:var(--line);border-radius:999px;overflow:hidden;width:100%}
+.bar>i{display:block;height:100%;background:linear-gradient(90deg,var(--mintD),var(--skyD));border-radius:999px;transition:width .3s linear}
+.bar.hurry>i{background:linear-gradient(90deg,var(--peachD),var(--pinkD))}
+.dur{display:inline-flex;align-items:center;gap:8px;font-size:20px;background:#fff;border:2px solid var(--line);border-radius:999px;padding:4px 6px}
+.dur b{color:var(--peachD);font-weight:normal;font-size:24px}
+.dur .btn{margin:0}
+.hl{background:var(--lemon);border-radius:20px;padding:14px 18px;font-size:22px;line-height:1.5;margin-top:10px}
+.hl.mint{background:var(--mint)} .hl.peach{background:var(--peach)} .hl.lav{background:var(--lav)} .hl.sky{background:var(--sky)} .hl.red{background:var(--red)}
+/* 결과표 */
+table{border-collapse:separate;border-spacing:4px;width:100%;font-size:20px}
+th,td{border-radius:12px;padding:8px 6px;text-align:center;font-weight:normal}
+thead th{background:var(--lemon)}
+tbody th{background:var(--peach)}
+td{background:#fff;border:2px solid var(--line);color:var(--line)}
+td.on{background:var(--mint);border-color:var(--mintD);color:var(--ink);font-size:28px}
+td.sum{background:var(--lav);border-color:var(--lav);color:var(--ink)}
+.q{border-top:2px dashed var(--line);padding:14px 0}
+.q p{font-size:24px;margin:0 0 8px;line-height:1.45}
+.q b{color:var(--peachD);font-weight:normal}
+/* 학생 카드 (교과서 카드 모양) */
+.tcard{border-radius:28px;padding:22px;text-align:center;border:4px solid;position:relative}
+.tcard.buyer{background:var(--sky);border-color:var(--skyD);box-shadow:0 8px 0 var(--skyD)}
+.tcard.seller{background:var(--peach);border-color:var(--peachD);box-shadow:0 8px 0 var(--peachD)}
+.tcard .role{font-size:34px}
+.tcard .amt{display:inline-block;font-size:64px;background:#fff;border-radius:22px;padding:4px 26px;margin:8px 0}
+.tcard .desc{font-size:20px;line-height:1.5}
+.tcard .rn{position:absolute;top:12px;left:16px;font-size:15px;color:var(--sub)}
+.s-top{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.s-top .me{margin-right:auto;font-size:22px}
+.field{width:100%;font-size:26px;padding:14px 18px;border-radius:18px;border:3px solid var(--line);background:#fff;outline:none;font-family:inherit;color:var(--ink);margin:6px 0}
+.field:focus{border-color:var(--peachD)}
+.opts{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;margin:8px 0 14px}
+.opt{background:#fff;border:3px solid var(--line);border-radius:18px;padding:14px 6px;font-size:22px;box-shadow:0 4px 0 var(--line)}
+.opt:active{transform:translateY(3px);box-shadow:none}
+.opt.sel{background:var(--lemon);border-color:var(--lemonD);box-shadow:0 4px 0 var(--lemonD)}
+.lab{font-size:20px;margin-top:6px}
+.doneBox{background:var(--mint);border-radius:24px;padding:22px;font-size:28px;text-align:center}
+.doneBox.wait{background:var(--lemon)} .doneBox.bad{background:var(--red)} .doneBox.none{background:var(--lav)}
+.toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);background:#fff;border:3px solid var(--peachD);border-radius:20px;padding:14px 22px;font-size:22px;z-index:99;box-shadow:0 6px 0 var(--peachD);max-width:92vw;text-align:center}
+.bounce{animation:bounce 1s infinite}
+@keyframes bounce{50%{transform:translateY(-10px)}}
+.pop{animation:pop .35s cubic-bezier(.2,1.6,.4,1)}
+@keyframes pop{0%{transform:scale(.4);opacity:0}100%{transform:scale(1);opacity:1}}
+
+/* ===== 🌈 안내문: 일부러 촌스럽고 눈에 확 띄게 ===== */
+.ann{position:fixed;inset:0;z-index:200;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;overflow:hidden;cursor:pointer;animation:annIn .45s cubic-bezier(.2,1.7,.4,1)}
+.ann::before{content:'';position:absolute;left:50%;top:50%;width:250vmax;height:250vmax;margin:-125vmax 0 0 -125vmax;
+  background:repeating-conic-gradient(#FF9EBB 0 10deg,#FFC48A 10deg 20deg,#FFF08A 20deg 30deg,#A8F0C0 30deg 40deg,#9ED8FF 40deg 50deg,#C9B3FF 50deg 60deg);
+  animation:spinbg 14s linear infinite}
+.ann::after{content:'';position:absolute;inset:0;background:radial-gradient(circle,rgba(255,255,255,.95) 0 22%,rgba(255,255,255,.55) 40%,rgba(255,255,255,0) 70%)}
+.ann > *{position:relative;z-index:1}
+.ann .rb{display:block;font-size:min(15vw,150px);line-height:1.08;text-align:center;padding:0 3vw;
+  background:linear-gradient(90deg,#FF4F8B,#FF8A3D,#FFC81E,#3DD68C,#3DA9FF,#9B5CFF,#FF4F8B);background-size:300% 100%;
+  -webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-stroke:4px #fff;
+  filter:drop-shadow(0 7px 0 #5B4B57) drop-shadow(0 0 18px #fff);
+  animation:rainbow 2s linear infinite,wobble .55s ease-in-out infinite alternate}
+.ann .sub{font-size:min(6.5vw,46px);background:#fff;border:5px solid #5B4B57;border-radius:999px;padding:10px 34px;box-shadow:0 8px 0 #5B4B57;transform:rotate(-3deg);text-align:center;max-width:92vw}
+.ann .emo{font-size:min(20vw,150px);line-height:1;animation:hop .5s ease-in-out infinite alternate}
+.ann .fl{position:absolute;z-index:1;font-size:56px;animation:floaty 3s ease-in-out infinite alternate;pointer-events:none}
+.ann .tap{position:absolute;bottom:18px;z-index:1;font-size:18px;color:#5B4B57;opacity:.7}
+@keyframes spinbg{to{transform:rotate(360deg)}}
+@keyframes rainbow{to{background-position:300% 0}}
+@keyframes wobble{from{transform:rotate(-4deg) scale(1)}to{transform:rotate(4deg) scale(1.07)}}
+@keyframes hop{from{transform:translateY(0) rotate(-8deg)}to{transform:translateY(-22px) rotate(8deg)}}
+@keyframes floaty{from{transform:translateY(0) rotate(-15deg)}to{transform:translateY(-40px) rotate(15deg)}}
+@keyframes annIn{0%{transform:scale(.3) rotate(-20deg);opacity:0}100%{transform:scale(1) rotate(0);opacity:1}}
+@media (prefers-reduced-motion:reduce){.ann,.ann *,.ann::before{animation:none!important}}
+
+/* ===== 경매소 전용 ===== */
+.item-hero{display:flex;flex-direction:column;align-items:center;gap:6px}
+.item-hero .ie{font-size:120px;line-height:1;animation:hop .7s ease-in-out infinite alternate}
+.item-hero .in{font-size:40px}
+.item-hero .ip{font-size:22px;background:var(--lemon);border-radius:999px;padding:6px 20px}
+.price-big{font-size:96px;color:var(--peachD);line-height:1}
+.price-big.s{font-size:64px}
+.stepper{display:flex;align-items:center;justify-content:center;gap:12px}
+.stepper .btn{font-size:34px;padding:10px 26px;margin:0}
+input[type=range]{width:100%;accent-color:#F5B48C;height:36px}
+.quick{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.quick .btn{margin:0}
+.lock{background:var(--lav);border-radius:24px;padding:18px;font-size:26px;text-align:center}
+.cv-wrap{background:#fff;border:3px solid var(--line);border-radius:22px;padding:6px;touch-action:none}
+canvas{display:block;width:100%;touch-action:none;border-radius:16px}
+.speech{position:relative;background:#fff;border:4px solid var(--ink);border-radius:26px;padding:12px 26px;font-size:34px;box-shadow:0 6px 0 var(--ink);max-width:92%}
+.speech::after{content:'';position:absolute;left:46px;bottom:-22px;border:12px solid transparent;border-top-color:var(--ink)}
+.hammer{font-size:80px;line-height:1;display:inline-block;transform-origin:80% 80%}
+.hammer.bang{animation:bang .35s ease-in}
+@keyframes bang{0%{transform:rotate(-40deg)}60%{transform:rotate(18deg)}100%{transform:rotate(0)}}
+.acc{font-size:110px;line-height:1;color:var(--peachD)}
+.acc small{font-size:50px}
+.stand{background:var(--mint);border-radius:28px;padding:26px;font-size:40px;text-align:center;box-shadow:0 8px 0 var(--mintD)}
+.sit{background:var(--line);border-radius:28px;padding:26px;font-size:32px;text-align:center}
+.svgbox svg{width:100%;height:auto;display:block}
+.legend{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:6px}
+.sw{display:inline-block;width:22px;height:8px;border-radius:4px;vertical-align:middle;margin-right:4px}
+.edit-row{display:grid;grid-template-columns:70px 1fr 120px 100px 40px;gap:6px;align-items:center;margin-bottom:6px}
+.edit-row input{font-family:inherit;font-size:18px;padding:8px 10px;border-radius:12px;border:2px solid var(--line);color:var(--ink);width:100%}
+@media (max-width:700px){.edit-row{grid-template-columns:56px 1fr 90px 80px 36px}}
+.stat-big{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getDatabase, ref, set, get, update, onValue, onDisconnect } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+/* 「시장에 가면」·「떡볶이 시장」과 같은 Firebase 프로젝트 (데이터는 rooms/auction_코드 에 저장) */
+const firebaseConfig = {
+  apiKey: "AIzaSyDiehLZ1aKv8E3N_pD4bNmw0zgMexau99U",
+  authDomain: "marketgo-80ab5.firebaseapp.com",
+  databaseURL: "https://marketgo-80ab5-default-rtdb.firebaseio.com",
+  projectId: "marketgo-80ab5",
+  storageBucket: "marketgo-80ab5.firebasestorage.app",
+  messagingSenderId: "666715038541",
+  appId: "1:666715038541:web:b0f84a9703aa70aeca4d04"
+};
+const db = getDatabase(initializeApp(firebaseConfig));
+let offset = 0;
+onValue(ref(db, '.info/serverTimeOffset'), s => { offset = s.val() || 0; });
+
+/* ========== 설정 (선생님 화면에서도 물건을 바꿀 수 있어요) ========== */
+const DEFAULT_ITEMS = [
+  { emoji: '📄', name: '기말고사 사회 시험지 (답 없음)', max: 10000, step: 500, pitch: '따끈따끈 인쇄 직후! 아직 아무도 안 본 시험지!' },
+  { emoji: '📝', name: '기말고사 사회 시험지 (답 있음) 😏', max: 10000, step: 500, pitch: '※ 실제 판매 아님 · 교무부장님께는 비밀 🤫' },
+  { emoji: '🍫', name: '선생님 책상 위 에너지바', max: 10000, step: 500, pitch: '선생님이 아껴 먹던 바로 그 에너지바! 단 1개!' },
+];
+const SPEEDS = { '느리게': 2600, '보통': 1900, '빠르게': 1300 };
+const COLORS = ['#3B8FD9', '#E8803E', '#2FA67A', '#B44FC9', '#D94F6A'];
+
+const P = new URLSearchParams(location.search);
+const isTeacher = P.get('t') === '1';
+let code = P.get('room') || '';
+const app = document.getElementById('app');
+const el = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const won = n => Number(n).toLocaleString('ko-KR') + '원';
+const A = (c = code) => ref(db, 'rooms/auction_' + c);
+const AP = p => ref(db, `rooms/auction_${code}/${p}`);
+const pick = (arr, i) => arr[((i % arr.length) + arr.length) % arr.length];
+let toastT;
+const toast = msg => { document.querySelectorAll('.toast').forEach(t => t.remove()); const t = document.createElement('div'); t.className = 'toast pop'; t.textContent = msg; document.body.appendChild(t); clearTimeout(toastT); toastT = setTimeout(() => t.remove(), 2400); };
+
+/* ========== 🌈 안내문 (떡볶이 시장과 같은 스타일) ========== */
+let annT;
+function announce(big, sub = '', emo = '🌈', ms = 3200) {
+  document.querySelectorAll('.ann').forEach(a => a.remove());
+  const a = document.createElement('div');
+  a.className = 'ann';
+  const floaters = ['💸','🔨','✨','⭐','💰','💖','🪙','🌟','🧾','🫧','✨','💸'];
+  a.innerHTML = floaters.map((f, i) => `<span class="fl" style="left:${(i * 83) % 92}%;top:${(i * 47) % 85}%;animation-delay:${(i % 5) * .3}s">${f}</span>`).join('')
+    + `<div class="emo">${emo}</div><span class="rb">${big}</span>${sub ? `<div class="sub">${sub}</div>` : ''}<div class="tap">화면을 누르면 닫혀요</div>`;
+  a.onclick = () => a.remove();
+  document.body.appendChild(a);
+  clearTimeout(annT); annT = setTimeout(() => a.remove(), ms);
+}
+const annSeen = new Set(); let firstPass = true;
+function maybeAnnounce(key, fn) { if (annSeen.has(key)) return; annSeen.add(key); if (!firstPass) fn(); }
+
+/* ========== 🔊 효과음 (선생님 화면) ========== */
+const Snd = {
+  ctx: null,
+  ensure() { if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)(); if (this.ctx.state === 'suspended') this.ctx.resume(); },
+  tone(f, t0 = 0, d = .18, v = .25, type = 'triangle') {
+    if (!this.ctx) return; const c = this.ctx, t = c.currentTime + t0, o = c.createOscillator(), g = c.createGain();
+    o.type = type; o.frequency.value = f; g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(v, t + .01); g.gain.exponentialRampToValueAtTime(.0001, t + d);
+    o.connect(g).connect(c.destination); o.start(t); o.stop(t + d + .05);
+  },
+  noise(t0, d, v, freq) {
+    if (!this.ctx) return; const c = this.ctx, t = c.currentTime + t0, len = Math.floor(c.sampleRate * d), b = c.createBuffer(1, len, c.sampleRate), x = b.getChannelData(0);
+    for (let i = 0; i < len; i++) x[i] = (Math.random() * 2 - 1) * (1 - i / len);
+    const s = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain(); s.buffer = b; f.type = 'lowpass'; f.frequency.value = freq; g.gain.value = v;
+    s.connect(f).connect(g).connect(c.destination); s.start(t);
+  },
+  step(hi) { this.tone(hi ? 660 : 440, 0, .12, .18, 'square'); this.noise(0, .05, .25, 3000); },
+  stand(n) { [784, 988, 1175].slice(0, Math.min(3, n)).forEach((f, i) => this.tone(f, i * .07, .25, .22)); },
+  gavel() { this.noise(0, .18, .9, 900); this.tone(110, 0, .25, .5, 'sine'); this.noise(.28, .18, .9, 900); this.tone(110, .28, .25, .5, 'sine'); },
+  fanfare() { [523, 659, 784, 1047].forEach((f, i) => this.tone(f, i * .11, .4, .25, 'square')); },
+};
+
+/* ========== 공통 계산 ========== */
+const itemsOf = () => (room && room.items) || DEFAULT_ITEMS;
+const pricesOf = it => { const out = []; for (let p = it.max; p >= 0; p -= it.step) out.push(p); if (out[out.length - 1] !== 0) out.push(0); return out; };
+// 경매 사다리 시작 때 고정한 입찰 목록 (금액 높은 순)
+const ladderOf = i => (((room.ladder || {})[i]) || []);
+const Qof = (lad, p) => lad.filter(b => b.v >= p).length;
+// 손으로 그린 선 → 가격마다 예측 수요량
+function predQ(pts, p) {
+  if (!pts || pts.length < 2) return null;
+  const s = [...pts].sort((a, b) => a[1] - b[1]);
+  if (p <= s[0][1]) return s[0][0];
+  if (p >= s[s.length - 1][1]) return s[s.length - 1][0];
+  for (let i = 1; i < s.length; i++) {
+    if (s[i][1] >= p) { const [x0, y0] = s[i - 1], [x1, y1] = s[i]; return y1 === y0 ? (x0 + x1) / 2 : x0 + (x1 - x0) * (p - y0) / (y1 - y0); }
+  }
+  return s[s.length - 1][0];
+}
+function accuracy(pts, it, lad) {
+  const N = Math.max(1, lad.length), ps = pricesOf(it);
+  if (!pts || pts.length < 2) return null;
+  const err = ps.reduce((a, p) => a + Math.abs(predQ(pts, p) - Qof(lad, p)), 0) / ps.length;
+  return Math.max(0, Math.round(1000 * (1 - 2 * err / N)) / 10);   // 평균 오차가 반 인원의 절반이면 0%
+}
+const accComment = a => a >= 95 ? '🔮 신내림 받았다!!' : a >= 85 ? '🧠 경제학자 꿈나무!' : a >= 70 ? '👀 오~ 감 좋은데?' : a >= 50 ? '🤔 반쯤 맞았다!' : '🌀 그래프가 우주로 떠났어요';
+const HIGH = ['{p}!! {p} 없나요?! 💸', '{p}에 사실 분~?! 플렉스 가능?!', '부자 손님 어디 계세요~ {p}!!'];
+const MID = ['{p}! 슬슬 일어나 볼까~?', '자자 {p}! 고민은 배송만 늦출 뿐!', '{p}!! 지금 아니면 없어요~'];
+const LOW = ['{p}!! 떨이 떨이~ 🛒', '거의 공짜! {p}!!', '이래도 안 사?! {p}!!'];
+function shout(p, it, idx) {
+  if (p === 0) return '0원!!! 공짜면 양잿물도 마신다 🤣';
+  const r = p / it.max, w = won(p);
+  return pick(r > .66 ? HIGH : r > .33 ? MID : LOW, idx).replaceAll('{p}', w);
+}
+
+/* ========== 그래프 (SVG) ========== */
+const W = 1000, H = 560, ML = 92, MR = 24, MT = 20, MB = 52;
+function axes(it, N) {
+  const ps = pricesOf(it), pw = W - ML - MR, ph = H - MT - MB;
+  const x = q => ML + q / Math.max(1, N) * pw, y = p => MT + (1 - p / it.max) * ph;
+  let g = `<rect x="${ML}" y="${MT}" width="${pw}" height="${ph}" fill="#FFFDF9" stroke="#F2E6EC" stroke-width="2" rx="8"/>`;
+  const every = ps.length > 14 ? 2 : 1;
+  ps.forEach((p, i) => { if (i % every) return; g += `<line x1="${ML}" x2="${W - MR}" y1="${y(p)}" y2="${y(p)}" stroke="#F2E6EC"/><text x="${ML - 10}" y="${y(p) + 6}" text-anchor="end" font-size="17" fill="#A3919C">${Number(p).toLocaleString()}</text>`; });
+  const qs = N <= 12 ? 1 : N <= 30 ? 2 : 5;
+  for (let q = 0; q <= N; q += qs) g += `<line x1="${x(q)}" x2="${x(q)}" y1="${MT}" y2="${H - MB}" stroke="#F6EEF2"/><text x="${x(q)}" y="${H - MB + 24}" text-anchor="middle" font-size="17" fill="#A3919C">${q}</text>`;
+  g += `<text x="${ML - 8}" y="${MT - 4}" text-anchor="end" font-size="15" fill="#A3919C">가격(원)</text><text x="${W - MR}" y="${H - 6}" text-anchor="end" font-size="15" fill="#A3919C">사겠다는 사람 수(명)</text>`;
+  return { g, x, y, ps };
+}
+function stairPath(it, lad, x, y, upto) {
+  const ps = pricesOf(it); let d = '';
+  ps.forEach((p, i) => { if (i > upto) return; const q = Qof(lad, p); d += (i ? ` L${x(q)},${y(p)}` : `M${x(q)},${y(p)}`); const nx = ps[i + 1]; if (nx !== undefined && i + 1 <= upto) d += ` L${x(q)},${y(nx)}`; });
+  return d;
+}
+function predPath(pts, x, y) { return pts && pts.length > 1 ? 'M' + pts.map(([q, p]) => `${x(q)},${y(p)}`).join(' L') : ''; }
+
+// 경매 사다리: 이름 블록 계단 (upto = 지금까지 내려온 가격 칸)
+function ladderSVG(it, lad, upto, names, extra = '') {
+  const N = lad.length, { g, x, y, ps } = axes(it, N);
+  const rh = (H - MT - MB) / Math.max(1, ps.length - 1), bw = (W - ML - MR) / Math.max(1, N);
+  let blocks = '';
+  ps.forEach((p, i) => {
+    if (i > upto) return;
+    const q = Qof(lad, p), prev = i ? Qof(lad, ps[i - 1]) : 0, cur = i === upto;
+    for (let k = 0; k < q; k++) {
+      const isNew = k >= prev;
+      blocks += `<rect x="${x(k) + 1.5}" y="${y(p) - Math.min(rh, 30) / 2}" width="${bw - 3}" height="${Math.min(rh, 30) - 2}" rx="6" fill="${isNew ? (cur ? '#FFC48A' : '#FFE3B8') : '#DDF5EA'}" stroke="${isNew ? '#F5B48C' : '#8FD5B5'}" stroke-width="${isNew && cur ? 3 : 1.5}"/>`;
+      if (isNew && names) blocks += `<text x="${x(k) + bw / 2}" y="${y(p) + 6}" text-anchor="middle" font-size="${Math.max(11, Math.min(18, bw / 3.2))}" fill="#5B4B57">${esc(names(lad[k].pid))}</text>`;
+    }
+  });
+  const stair = upto >= 0 ? `<path d="${stairPath(it, lad, x, y, upto)}" fill="none" stroke="#E8803E" stroke-width="5" stroke-linejoin="round"/>` : '';
+  const curLine = upto >= 0 && upto < ps.length ? `<line x1="${ML}" x2="${W - MR}" y1="${y(ps[upto])}" y2="${y(ps[upto])}" stroke="#F4A9BD" stroke-width="3" stroke-dasharray="8 6"/>` : '';
+  return `<svg viewBox="0 0 ${W} ${H}" font-family="Jua">${g}${curLine}${blocks}${stair}${extra}</svg>`;
+}
+
+/* ========== 입구 ========== */
+let room = null, pid = null, render = null;
+function start() {
+  if (isTeacher && !code) return teacherHome();
+  if (!isTeacher) {
+    if (!code) code = localStorage.getItem('auction_last_room') || '';
+    pid = code ? localStorage.getItem('auction_pid_' + code) : null;
+    if (!code || !pid) return studentForm(code);
+  }
+  render = isTeacher ? renderTeacher : renderStudent;
+  if (isTeacher) localStorage.setItem('auction_teacher_room', code);
+  else {
+    const onl = AP(`players/${pid}/online`);
+    onValue(ref(db, '.info/connected'), s => { if (s.val()) { onDisconnect(onl).set(false); set(onl, true); } });
+  }
+  onValue(A(), s => {
+    room = s.val();
+    if (!room) { app.innerHTML = `<div class="wrap stage"><div class="bigEmoji">😢</div><p class="rule">경매소를 찾을 수 없어요</p></div>`; return; }
+    render(); firstPass = false;
+  }, e => { console.error(e); toast('데이터를 못 불러왔어요 😢'); });
+}
+
+function teacherHome() {
+  const saved = localStorage.getItem('auction_teacher_room');
+  app.innerHTML = `<div class="wrap"><div class="stage" style="min-height:80vh">
+    <div class="hammer bounce">🔨</div>
+    <div class="title">다연샘 <span>경매소</span></div>
+    <p class="muted" style="font-size:22px">얼마까지 낼래? 우리 반 수요 곡선을 몸으로 만들어 봐요</p>
+    <button class="btn big mint" id="newRoom">새 경매소 열기 ✨</button>
+    ${saved ? `<button class="btn sky" id="resume">이어서 하기 (방 ${esc(saved)})</button>` : ''}
+  </div></div>`;
+  el('newRoom').onclick = newRoom;
+  if (el('resume')) el('resume').onclick = () => location.href = `?t=1&room=${saved}`;
+}
+
+async function newRoom() {
+  try {
+    let c;
+    for (let i = 0; i < 20; i++) { c = String(Math.floor(1000 + Math.random() * 9000)); if (!(await get(A(c))).exists()) break; }
+    await set(A(c), { createdAt: Date.now(), items: DEFAULT_ITEMS, state: { phase: 'lobby', item: 0, li: -1, showNames: true } });
+    localStorage.setItem('auction_teacher_room', c);
+    location.href = `?t=1&room=${c}`;
+  } catch (e) { console.error(e); toast('경매소를 못 열었어요 😢 인터넷을 확인해 주세요'); }
+}
+
+function studentForm(prefill) {
+  app.innerHTML = `<div class="s-wrap"><div class="stage" style="min-height:80vh">
+    <div class="hammer bounce">🔨</div>
+    <div class="title">다연샘 <span>경매소</span></div>
+    <div class="card" style="width:min(460px,100%);display:grid;gap:4px">
+      <input class="field" id="jCode" inputmode="numeric" maxlength="4" placeholder="입장 코드 4자리" value="${esc(prefill)}">
+      <input class="field" id="jName" maxlength="8" placeholder="내 이름" value="${esc(localStorage.getItem('auction_name') || '')}">
+      <button class="btn big mint" id="join">입장하기 🚪</button>
+    </div>
+  </div></div>`;
+  el('join').onclick = () => join(el('jCode').value.trim(), el('jName').value.trim());
+}
+
+async function join(c, name) {
+  if (!/^\d{4}$/.test(c)) return toast('입장 코드 4자리를 써 주세요');
+  if (!name) return toast('이름을 써 주세요');
+  let snap;
+  try { snap = await get(A(c)); } catch (e) { return toast('접속을 못 했어요 😢 인터넷을 확인해 주세요'); }
+  if (!snap.exists()) return toast('그런 경매소가 없어요 😢 코드를 확인해 주세요');
+  let id = localStorage.getItem('auction_pid_' + c);
+  if (!id) {
+    const ps = snap.val().players || {};
+    const hit = Object.entries(ps).find(([, p]) => p.name === name && p.online !== true);   // 다른 기기로 다시 들어와도 이어서
+    id = hit ? hit[0] : Math.random().toString(36).slice(2, 10);
+    localStorage.setItem('auction_pid_' + c, id);
+  }
+  await update(ref(db, `rooms/auction_${c}/players/${id}`), { name, joinedAt: Date.now() });
+  localStorage.setItem('auction_name', name); localStorage.setItem('auction_last_room', c);
+  location.href = `?room=${c}`;
+}
+
+/* =========================================================
+   👩‍🏫 선생님 화면
+   ========================================================= */
+let ladderTimer = null, speed = '보통', editT = null;
+const nameOf = id => ((room.players || {})[id] || {}).name || '?';
+const onlineIds = () => Object.entries(room.players || {}).filter(([, p]) => p.online === true).map(([id]) => id);
+
+function topbar(st) {
+  return `<div class="topbar"><div class="logo">🔨 다연샘 경매소</div>
+    <span class="pill">방 코드 <b style="color:var(--peachD)">${esc(code)}</b></span>
+    <span class="pill">🙋 ${onlineIds().length}명 접속</span>
+    <button class="btn sm lav" id="names">${st.showNames ? '👤 이름 보이기 ON' : '🙈 이름 숨기기'}</button>
+    <button class="btn sm" id="home">처음 화면</button></div>`;
+}
+
+function renderTeacher() {
+  const st = room.state || {}, items = itemsOf(), it = items[st.item] || items[0], i = st.item || 0;
+  if (st.phase === 'lobby' && document.activeElement && document.activeElement.closest && document.activeElement.closest('.edit-row')) return;
+  const bids = ((room.bids || {})[i]) || {}, preds = ((room.preds || {})[i]) || {};
+  const sig = [st.phase, i, st.li, st.showNames, ladderTimer ? 1 : 0, speed].join('|');
+  if (st.phase !== 'lobby' && sig === render.sig && st.phase !== 'bid' && st.phase !== 'predict') return;
+  render.sig = sig;
+  let body = '';
+  if (st.phase === 'lobby') {
+    const url = location.origin + location.pathname + '?room=' + code;
+    const ps = Object.values(room.players || {});
+    body = `<div class="lobby">
+      <div class="card center"><h3>태블릿으로 입장!</h3><div class="muted">입장 코드</div><div class="bigcode">${esc(code)}</div><div id="qr"></div>
+        <div class="muted" style="font-size:13px;word-break:break-all">${esc(url)}</div></div>
+      <div>
+        <div class="card"><h3>🧾 오늘의 경매 물건 <span class="muted" style="font-size:16px">(바꿔도 돼요)</span></h3>
+          <div class="muted" style="font-size:15px;display:grid;grid-template-columns:70px 1fr 120px 100px 40px;gap:6px"><span>그림</span><span>물건 이름</span><span>최고 가격</span><span>단위</span><span></span></div>
+          ${items.map((x, k) => `<div class="edit-row"><input data-k="${k}" data-f="emoji" value="${esc(x.emoji)}" maxlength="4"><input data-k="${k}" data-f="name" value="${esc(x.name)}" maxlength="30"><input data-k="${k}" data-f="max" type="number" value="${x.max}" step="100"><input data-k="${k}" data-f="step" type="number" value="${x.step}" step="100"><button class="btn sm" data-del="${k}" style="margin:0;padding:6px">✕</button></div>`).join('')}
+          ${items.length < 5 ? '<button class="btn sm lemon" id="addItem">➕ 물건 추가</button>' : ''}
+        </div>
+        <div class="card"><h3>🙋 입장한 친구 ${ps.length}명</h3><div class="chips">${ps.map(p => `<span class="chip soft" style="${p.online === true ? '' : 'opacity:.4'}">${esc(p.name)}</span>`).join('') || '<span class="muted">아직 아무도 없어요</span>'}</div></div>
+      </div></div>
+      <div class="center"><button class="btn big mint" id="go" ${ps.length ? '' : 'disabled'}>🔨 1번 물건 경매 시작!</button></div>`;
+  }
+  else if (st.phase === 'bid') {
+    const n = Object.keys(bids).length, locked = Object.values(bids).filter(b => b.locked).length;
+    maybeAnnounce('bid' + i, () => announce(`${it.emoji} 경매 시작!!`, esc(it.name), '🔨', 3800));
+    body = `<div class="stage">
+      <span class="roundBadge">${i + 1}번 물건 / ${items.length}</span>
+      <div class="item-hero"><div class="ie">${esc(it.emoji)}</div><div class="in">${esc(it.name)}</div>${it.pitch ? `<div class="ip">${esc(it.pitch)}</div>` : ''}</div>
+      <div class="speech">🤫 태블릿에 <b>최대 얼마까지 낼지</b> 몰래 적고 🔒 잠가요!</div>
+      <div class="rule">🔒 잠근 사람 <b style="color:var(--peachD)">${locked}</b> / ${onlineIds().length}명 <span class="muted">(적는 중 ${n - locked}명)</span></div>
+      <button class="btn big lav" id="toPredict" ${n ? '' : 'disabled'}>🔮 예언 그리기로!</button>
+    </div>`;
+  }
+  else if (st.phase === 'predict') {
+    const N = Object.keys(bids).length, done = Object.keys(preds).length;
+    maybeAnnounce('pred' + i, () => announce('🔮 예언 타임!!', '우리 반 수요 곡선, 손가락으로 쭉~ 그려 봐!', '🔮', 3500));
+    body = `<div class="stage">
+      <span class="roundBadge">${i + 1}번 물건 · ${esc(it.emoji)} ${esc(it.name)}</span>
+      <div class="bigEmoji bounce">🔮</div>
+      <div class="speech">"${won(it.max)}부터 0원까지 내려가면, <b>몇 명이</b> 사겠다고 할까?"</div>
+      <div class="rule">입찰한 친구 <b>${N}명</b> · 예언 제출 <b style="color:var(--peachD)">${done}</b>명</div>
+      <div class="dur">🥁 속도 ${Object.keys(SPEEDS).map(s => `<button class="btn sm ${s === speed ? 'mint' : 'sky'}" data-speed="${s}">${s}</button>`).join('')}</div>
+      <button class="btn big peach" id="toLadder">🔨 경매 사다리 시작!</button>
+    </div>`;
+  }
+  else if (st.phase === 'ladder') {
+    const lad = ladderOf(i), ps = pricesOf(it), li = Math.max(0, st.li), p = ps[li], q = Qof(lad, p);
+    body = `<div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;justify-content:center;margin-bottom:10px">
+        <span class="hammer" id="ham">🔨</span>
+        <div class="speech" id="shout">${esc(shout(p, it, li))}</div>
+        <span class="roundBadge">🙋 ${q} / ${lad.length}명 일어남</span>
+      </div>
+      <div class="card svgbox" id="chart">${ladderSVG(it, lad, li, st.showNames ? nameOf : null)}</div>
+      <div class="center">${ladderTimer ? `<button class="btn lemon" id="pause">⏸ 잠깐 멈춤</button>` : `<button class="btn big mint" id="resumeL">▶ 계속 내리기</button>`}
+        <span class="dur">🥁 ${Object.keys(SPEEDS).map(s => `<button class="btn sm ${s === speed ? 'mint' : 'sky'}" data-speed="${s}">${s}</button>`).join('')}</span></div>`;
+  }
+  else if (st.phase === 'reveal') {
+    const lad = ladderOf(i), N = lad.length, acc = ((room.acc || {})[i]) || {};
+    maybeAnnounce('rev' + i, () => { Snd.gavel(); announce('🔨 낙찰!!', '우리 반 수요 곡선 완성!', '🎉', 3000); });
+    const ranked = Object.entries(acc).filter(([, a]) => a !== null).sort((a, b) => b[1] - a[1]);
+    const top = ranked.slice(0, 3);
+    const { x, y } = axes(it, N);
+    const allPts = Object.values(preds).map(v => v.pts).filter(v => v && v.length > 1);
+    const ps = pricesOf(it);
+    const avgPts = allPts.length ? ps.map(pp => [allPts.reduce((a, pts) => a + predQ(pts, pp), 0) / allPts.length, pp]) : null;
+    let extra = avgPts ? `<path d="${predPath(avgPts, x, y)}" fill="none" stroke="#B8A7EE" stroke-width="4" stroke-dasharray="10 8"/>` : '';
+    top.forEach(([id], k) => { const pts = (preds[id] || {}).pts; extra += `<path d="${predPath(pts, x, y)}" fill="none" stroke="${COLORS[k]}" stroke-width="3.5" opacity=".85"/>`; });
+    const maxV = lad.length ? lad[0].v : 0, flex = lad.filter(b => b.v === it.max).length, zero = lad.filter(b => b.v === 0).length;
+    const avgAcc = ranked.length ? (ranked.reduce((a, [, v]) => a + v, 0) / ranked.length).toFixed(1) : '-';
+    body = `<div class="center" style="margin-bottom:8px"><span class="roundBadge">🔨 ${i + 1}번 물건 낙찰 결과 · ${esc(it.emoji)} ${esc(it.name)}</span></div>
+      <div class="card svgbox">${ladderSVG(it, lad, ps.length - 1, st.showNames ? nameOf : null, extra)}
+        <div class="legend"><span class="pill"><span class="sw" style="background:#E8803E"></span>진짜 수요 곡선</span><span class="pill"><span class="sw" style="background:#B8A7EE"></span>반 평균 예언</span>
+        ${top.map(([id, a], k) => `<span class="pill"><span class="sw" style="background:${COLORS[k]}"></span>${['🥇','🥈','🥉'][k]} ${st.showNames ? esc(nameOf(id)) : `${k + 1}등`} ${a}%</span>`).join('')}</div></div>
+      <div class="grid2" style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div class="card"><h3>🔮 예언왕 TOP 3</h3>${top.map(([id, a], k) => `<div class="rule">${['🥇','🥈','🥉'][k]} ${esc(nameOf(id))} <b style="color:var(--peachD)">${a}%</b></div>`).join('') || '<p class="muted">예언한 친구가 없어요</p>'}
+          <div class="muted" style="font-size:18px;margin-top:8px">반 평균 정확도 ${avgAcc}%</div></div>
+        <div class="card"><h3>📢 경매소 속보</h3>
+          ${flex ? `<div class="hl peach">💸 플렉스 등장!! ${won(it.max)} 지른 사람 <b>${flex}명</b></div>` : `<div class="hl peach">💸 최고 입찰가 <b>${won(maxV)}</b></div>`}
+          ${zero ? `<div class="hl sky">🪙 0원 짠돌이 <b>${zero}명</b>… 공짜 아니면 안 산다!</div>` : ''}
+          <div class="hl lemon">🤔 가격이 내려갈수록 일어난 사람은?</div></div>
+      </div>
+      <div class="center">${i + 1 < items.length ? `<button class="btn big mint" id="next">▶ ${i + 2}번 물건: ${esc(items[i + 1].emoji)} ${esc(items[i + 1].name)}</button>` : ''}
+        <button class="btn big ${i + 1 < items.length ? 'lemon' : 'mint'}" id="final">🏁 곡선 전부 비교하기</button></div>`;
+  }
+  else if (st.phase === 'final') {
+    maybeAnnounce('final', () => { Snd.fanfare(); announce('경매 끝~!!', '곡선끼리 비교해 볼까? 🧐', '🏁', 3000); });
+    const done = items.map((it2, k) => ({ it: it2, k, lad: ladderOf(k) })).filter(o => o.lad.length);
+    const N = Math.max(1, ...done.map(o => o.lad.length)), maxP = Math.max(...done.map(o => o.it.max), 1);
+    const it0 = { max: maxP, step: Math.min(...done.map(o => o.it.step), maxP) };
+    const { g, x, y } = axes(it0, N);
+    const paths = done.map((o, c) => `<path d="${stairPath(o.it, o.lad, x, y, pricesOf(o.it).length - 1)}" fill="none" stroke="${COLORS[c]}" stroke-width="5" stroke-linejoin="round"/>`).join('');
+    const accAll = {};
+    done.forEach(o => Object.entries(((room.acc || {})[o.k]) || {}).forEach(([id, a]) => { if (a !== null) (accAll[id] = accAll[id] || []).push(a); }));
+    const kings = Object.entries(accAll).map(([id, a]) => [id, a.reduce((s, v) => s + v, 0) / a.length]).sort((a, b) => b[1] - a[1]).slice(0, 3);
+    body = `<div class="center" style="margin-bottom:8px"><span class="roundBadge">🏁 물건별 수요 곡선 비교</span></div>
+      <div class="card svgbox"><svg viewBox="0 0 ${W} ${H}" font-family="Jua">${g}${paths}</svg>
+        <div class="legend">${done.map((o, c) => `<span class="pill"><span class="sw" style="background:${COLORS[c]}"></span>${esc(o.it.emoji)} ${esc(o.it.name)}</span>`).join('')}</div></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div class="card"><h3>🧐 생각해 볼 질문</h3>
+          <div class="q"><p>1. 어느 물건이든 <b>가격이 내려갈수록</b> 일어난(사겠다는) 사람 수는 어떻게 변했나요?</p></div>
+          <div class="q"><p>2. 같은 시험지인데 <b>답이 있으면</b> 곡선이 어디로 갔나요? 왜 그럴까요?</p></div>
+          <div class="q"><p>3. 가격 말고 <b>사고 싶은 마음</b>을 바꾸는 건 또 뭐가 있을까요?</p></div></div>
+        <div class="card"><h3>👑 오늘의 예언왕</h3>${kings.map(([id, a], k) => `<div class="rule">${['🥇','🥈','🥉'][k]} ${esc(nameOf(id))} <b style="color:var(--peachD)">평균 ${a.toFixed(1)}%</b></div>`).join('') || '<p class="muted">-</p>'}</div>
+      </div>`;
+  }
+  app.innerHTML = `<div class="wrap">${topbar(st)}${body}</div>`;
+  if (st.phase === 'lobby' && window.QRCode) new QRCode(el('qr'), { text: location.origin + location.pathname + '?room=' + code, width: 200, height: 200, colorDark: '#5B4B57', colorLight: '#ffffff' });
+  wireTeacher(st, items, i, it, bids, preds);
+}
+
+function wireTeacher(st, items, i, it, bids, preds) {
+  const S = (o) => update(AP('state'), o);
+  el('names').onclick = () => S({ showNames: !st.showNames });
+  el('home').onclick = () => { if (confirm('처음 화면으로 갈까요? (경매소는 그대로 남아요)')) location.href = '?t=1'; };
+  document.querySelectorAll('[data-speed]').forEach(b => b.onclick = () => { speed = b.dataset.speed; if (ladderTimer) { stopLadder(); runLadder(); } render.sig = ''; renderTeacher(); });
+  if (st.phase === 'lobby') {
+    document.querySelectorAll('.edit-row input').forEach(inp => inp.oninput = () => {
+      clearTimeout(editT);
+      editT = setTimeout(() => {
+        const next = itemsOf().map(x => ({ ...x }));
+        document.querySelectorAll('.edit-row input').forEach(f => { const k = +f.dataset.k, fl = f.dataset.f; next[k][fl] = (fl === 'max' || fl === 'step') ? Math.max(fl === 'step' ? 100 : 500, Math.round(+f.value / 100) * 100 || 0) : f.value; });
+        next.forEach(x => { if (x.step > x.max) x.step = x.max; });
+        set(AP('items'), next);
+      }, 600);
+    });
+    document.querySelectorAll('[data-del]').forEach(b => b.onclick = () => { const n = itemsOf().filter((_, k) => k !== +b.dataset.del); if (n.length) set(AP('items'), n); });
+    if (el('addItem')) el('addItem').onclick = () => set(AP('items'), [...itemsOf(), { emoji: '🎁', name: '새 물건', max: 10000, step: 500, pitch: '' }]);
+    el('go').onclick = () => { Snd.ensure(); S({ phase: 'bid', item: 0, li: -1 }); };
+  }
+  if (st.phase === 'bid') el('toPredict').onclick = () => { Snd.ensure(); S({ phase: 'predict' }); };
+  if (st.phase === 'predict') el('toLadder').onclick = async () => {
+    Snd.ensure();
+    const lad = Object.entries(bids).map(([id, b]) => ({ pid: id, v: Math.min(it.max, Math.max(0, +b.v || 0)) })).sort((a, b) => b.v - a.v || nameOf(a.pid).localeCompare(nameOf(b.pid)));
+    await update(A(), { [`ladder/${i}`]: lad, 'state/phase': 'ladder', 'state/li': -1 });
+    runLadder();
+  };
+  if (st.phase === 'ladder') {
+    if (el('pause')) el('pause').onclick = () => { stopLadder(); render.sig = ''; renderTeacher(); };
+    if (el('resumeL')) el('resumeL').onclick = () => { Snd.ensure(); runLadder(); };
+  }
+  if (st.phase === 'reveal') {
+    if (el('next')) el('next').onclick = () => S({ phase: 'bid', item: i + 1, li: -1 });
+    el('final').onclick = () => S({ phase: 'final' });
+  }
+}
+
+function stopLadder() { clearInterval(ladderTimer); ladderTimer = null; }
+function runLadder() {
+  stopLadder();
+  const tickL = async () => {
+    const st = room.state, i = st.item, it = itemsOf()[i], ps = pricesOf(it), lad = ladderOf(i);
+    const li = (st.li ?? -1) + 1;
+    if (li >= ps.length) {
+      stopLadder();
+      const preds = ((room.preds || {})[i]) || {}, acc = {};
+      Object.entries(preds).forEach(([id, v]) => { acc[id] = accuracy(v.pts, it, lad); });
+      await update(A(), { [`acc/${i}`]: acc, 'state/phase': 'reveal' });
+      return;
+    }
+    const prev = li ? Qof(lad, ps[li - 1]) : 0, q = Qof(lad, ps[li]);
+    Snd.step(li === 0); if (q > prev) Snd.stand(q - prev);
+    await update(AP('state'), { li });
+    const h = el('ham'); if (h) { h.classList.remove('bang'); void h.offsetWidth; h.classList.add('bang'); }
+  };
+  ladderTimer = setInterval(tickL, SPEEDS[speed]);
+  tickL();
+  render.sig = ''; renderTeacher();
+}
+
+/* =========================================================
+   🧒 학생 화면
+   ========================================================= */
+let myBid = null, stoodKey = '', drawPts = [], drawKey = '';
+function renderStudent() {
+  const st = room.state || {}, items = itemsOf(), i = st.item || 0, it = items[i] || items[0];
+  const me = (room.players || {})[pid];
+  if (!me) { localStorage.removeItem('auction_pid_' + code); return studentForm(code); }
+  const bid = (((room.bids || {})[i]) || {})[pid], pred = (((room.preds || {})[i]) || {})[pid];
+  const top = `<div class="s-top"><span class="me">🙂 ${esc(me.name)}</span><span class="pill">🔨 경매소 ${esc(code)}</span></div>`;
+  const sig = [st.phase, i, st.li, bid && bid.locked, !!pred].join('|');
+  if (sig === renderStudent.sig && st.phase !== 'ladder') return;
+  const prevSig = renderStudent.sig; renderStudent.sig = sig;
+
+  if (st.phase === 'lobby') {
+    app.innerHTML = `<div class="s-wrap">${top}<div class="stage" style="min-height:70vh"><div class="hammer bounce">🔨</div>
+      <div class="title" style="font-size:38px">입장 완료!</div><div class="rule">칠판을 보세요 👀<br>곧 경매가 시작돼요</div></div></div>`;
+    return;
+  }
+  if (st.phase === 'bid') {
+    if (bid && bid.locked) {
+      app.innerHTML = `<div class="s-wrap">${top}<div class="stage"><div class="item-hero"><div class="ie">${esc(it.emoji)}</div><div class="in">${esc(it.name)}</div></div>
+        <div class="lock">🔒 잠금 완료!<br><span style="font-size:20px">내 최대 금액은 <b>${won(bid.v)}</b> (친구들한텐 비밀 🤫)</span></div>
+        <div class="rule muted">칠판을 보세요 👀</div></div></div>`;
+      return;
+    }
+    if (myBid === null || drawKey !== 'bid' + i) { myBid = bid ? bid.v : Math.round(it.max / 2 / it.step) * it.step; drawKey = 'bid' + i; }
+    app.innerHTML = `<div class="s-wrap">${top}<div class="stage" style="gap:12px">
+      <div class="item-hero"><div class="ie">${esc(it.emoji)}</div><div class="in" style="font-size:30px">${esc(it.name)}</div>${it.pitch ? `<div class="ip" style="font-size:18px">${esc(it.pitch)}</div>` : ''}</div>
+      <div class="rule">이거 <b>최대 얼마까지</b> 낼래? 🤔</div>
+      <div class="price-big" id="pv">${won(myBid)}</div>
+      <div class="stepper"><button class="btn sky" id="minus">−</button><button class="btn sky" id="plus">+</button></div>
+      <input type="range" id="rng" min="0" max="${it.max}" step="${it.step}" value="${myBid}">
+      <div class="quick"><button class="btn sm" data-q="0">0원 (안 사!)</button><button class="btn sm lemon" data-q="${Math.round(it.max / 2 / it.step) * it.step}">반값</button><button class="btn sm peach" data-q="${it.max}">💸 ${won(it.max)} 플렉스</button></div>
+      <button class="btn big mint" id="lockBtn">🔒 이 금액으로 잠그기</button>
+      <div class="muted" style="font-size:16px">진짜 돈은 안 내요! 솔직하게만 적어 주세요 😉</div></div></div>`;
+    const setV = v => { myBid = Math.max(0, Math.min(it.max, Math.round(v / it.step) * it.step)); el('pv').textContent = won(myBid); el('rng').value = myBid; set(AP(`bids/${i}/${pid}`), { v: myBid, locked: false }); };
+    el('minus').onclick = () => setV(myBid - it.step); el('plus').onclick = () => setV(myBid + it.step);
+    el('rng').oninput = e => setV(+e.target.value);
+    document.querySelectorAll('[data-q]').forEach(b => b.onclick = () => setV(+b.dataset.q));
+    el('lockBtn').onclick = () => { set(AP(`bids/${i}/${pid}`), { v: myBid, locked: true }); if (myBid === it.max) toast('💸 플렉스 확정!!'); else if (myBid === 0) toast('🪙 짠돌이 확정!'); };
+    return;
+  }
+  if (st.phase === 'predict') {
+    if (!bid) { app.innerHTML = `<div class="s-wrap">${top}<div class="stage"><div class="bigEmoji">☕</div><div class="rule">이번 물건은 입찰을 안 했어요<br>칠판을 구경해요 👀</div></div></div>`; return; }
+    const N = Object.keys(((room.bids || {})[i]) || {}).length;
+    if (pred && prevSig === sig) return;
+    app.innerHTML = `<div class="s-wrap">${top}
+      <div class="center"><span class="roundBadge" style="font-size:18px">🔮 예언 타임 · ${esc(it.emoji)} ${esc(it.name)}</span></div>
+      <div class="rule center" style="font-size:22px;margin:10px 0">가격이 ${won(it.max)}에서 0원까지 내려가면<br><b>우리 반 ${N}명 중 몇 명</b>이 사겠다고 할까? <b>손가락으로 쭉~</b> 그려 봐!</div>
+      <div class="cv-wrap"><canvas id="cv"></canvas></div>
+      <div class="center" style="margin-top:10px">${pred ? '<div class="doneBox" style="font-size:24px">🔮 예언 제출 완료! 다시 그려서 바꿔도 돼요</div>' : ''}
+        <button class="btn sky" id="clr">🧽 다시 그리기</button><button class="btn big mint" id="sendPred">🔮 예언 제출!</button></div></div>`;
+    setupCanvas(it, N, pred ? pred.pts : null, i);
+    return;
+  }
+  if (st.phase === 'ladder') {
+    const lad = ladderOf(i), ps = pricesOf(it), li = Math.max(0, st.li ?? -1), p = ps[li];
+    const mine = lad.find(b => b.pid === pid);
+    if (!mine) { app.innerHTML = `<div class="s-wrap">${top}<div class="stage"><div class="price-big s">${won(p)}</div><div class="rule">이번 물건은 구경만! 칠판을 보세요 👀</div></div></div>`; return; }
+    const up = st.li >= 0 && mine.v >= p;
+    if (up && stoodKey !== 'up' + i) {
+      stoodKey = 'up' + i;
+      if (navigator.vibrate) navigator.vibrate([250, 120, 250, 120, 400]);
+      announce('지금이야!!!', '일어나!!! 🙋 (내 금액 ' + won(mine.v) + ')', '🙋', 2600);
+    }
+    app.innerHTML = `<div class="s-wrap">${top}<div class="stage">
+      <div class="muted" style="font-size:22px">지금 가격</div><div class="price-big">${st.li >= 0 ? won(p) : '두구두구…'}</div>
+      ${up ? `<div class="stand pop">🙋 일어나 있어요!<br><span style="font-size:22px">이 가격이면 산다! (내 금액 ${won(mine.v)})</span></div>`
+           : `<div class="sit">🪑 아직 앉아 있어요…<br><span style="font-size:20px">내 금액 ${won(mine.v)}까지 내려오면 알려줄게!</span></div>`}
+      </div></div>`;
+    return;
+  }
+  if (st.phase === 'reveal') {
+    const lad = ladderOf(i), acc = (((room.acc || {})[i]) || {})[pid];
+    if (acc === undefined || acc === null) {
+      app.innerHTML = `<div class="s-wrap">${top}<div class="stage"><div class="bigEmoji">🔨</div><div class="title" style="font-size:40px">낙찰!</div><div class="rule">이번엔 예언을 안 했어요<br>칠판으로 진짜 곡선을 봐요 👀</div></div></div>`;
+      return;
+    }
+    const { g, x, y } = axes(it, lad.length);
+    const svg = `<svg viewBox="0 0 ${W} ${H}" font-family="Jua">${g}<path d="${stairPath(it, lad, x, y, pricesOf(it).length - 1)}" fill="none" stroke="#E8803E" stroke-width="6"/><path d="${predPath(pred && pred.pts, x, y)}" fill="none" stroke="#3B8FD9" stroke-width="5"/></svg>`;
+    app.innerHTML = `<div class="s-wrap">${top}<div class="stage" style="gap:8px">
+      <div class="muted" style="font-size:22px">내 예언 정확도</div>
+      <div class="acc"><span id="accN">0.0</span><small>%</small></div>
+      <div class="rule" id="accC" style="opacity:0">${accComment(acc)}</div>
+      <div class="card svgbox" style="width:100%">${svg}<div class="legend"><span class="pill"><span class="sw" style="background:#E8803E"></span>진짜 곡선</span><span class="pill"><span class="sw" style="background:#3B8FD9"></span>내 예언</span></div></div></div></div>`;
+    const t0 = performance.now(), D = 1600;
+    const anim = t => { const k = Math.min(1, (t - t0) / D), e = 1 - Math.pow(1 - k, 3); const n = el('accN'); if (!n) return; n.textContent = (acc * e).toFixed(1); if (k < 1) requestAnimationFrame(anim); else { el('accC').style.opacity = 1; el('accC').classList.add('pop'); } };
+    requestAnimationFrame(anim);
+    return;
+  }
+  if (st.phase === 'final') {
+    const mine = itemsOf().map((_, k) => (((room.acc || {})[k]) || {})[pid]).filter(a => a !== undefined && a !== null);
+    const avg = mine.length ? mine.reduce((a, b) => a + b, 0) / mine.length : null;
+    app.innerHTML = `<div class="s-wrap">${top}<div class="stage"><div class="bigEmoji bounce">🏁</div><div class="title" style="font-size:40px">경매 끝!</div>
+      ${avg !== null ? `<div class="muted" style="font-size:22px">내 평균 예언 정확도</div><div class="acc" style="font-size:80px">${avg.toFixed(1)}<small>%</small></div><div class="rule">${accComment(avg)}</div>` : ''}
+      <div class="rule muted">칠판에서 곡선들을 비교해 봐요 🧐</div></div></div>`;
+  }
+}
+
+/* 손가락으로 곡선 그리기 */
+function setupCanvas(it, N, initPts, i) {
+  const cv = el('cv'), ctx = cv.getContext('2d');
+  const dpr = window.devicePixelRatio || 1, cw = cv.clientWidth, ch = Math.min(520, Math.round(cw * 0.78));
+  cv.style.height = ch + 'px'; cv.width = cw * dpr; cv.height = ch * dpr; ctx.scale(dpr, dpr);
+  const L = 62, R = 14, Tp = 14, B = 40, pw = cw - L - R, ph = ch - Tp - B;
+  const X = q => L + q / Math.max(1, N) * pw, Y = p => Tp + (1 - p / it.max) * ph;
+  const toData = (px, py) => [Math.max(0, Math.min(N, (px - L) / pw * N)), Math.max(0, Math.min(it.max, (1 - (py - Tp) / ph) * it.max))];
+  let pts = initPts ? initPts.map(a => [...a]) : [], drawing = false;
+  function draw() {
+    ctx.clearRect(0, 0, cw, ch);
+    ctx.fillStyle = '#FFFDF9'; ctx.fillRect(L, Tp, pw, ph);
+    ctx.font = '13px Jua'; ctx.fillStyle = '#A3919C'; ctx.textAlign = 'right';
+    const ps = pricesOf(it), every = ps.length > 11 ? 2 : 1;
+    ps.forEach((p, k) => { ctx.strokeStyle = '#F2E6EC'; ctx.beginPath(); ctx.moveTo(L, Y(p)); ctx.lineTo(L + pw, Y(p)); ctx.stroke(); if (!(k % every)) ctx.fillText(Number(p).toLocaleString(), L - 6, Y(p) + 4); });
+    ctx.textAlign = 'center';
+    const qs = N <= 12 ? 1 : N <= 30 ? 2 : 5;
+    for (let q = 0; q <= N; q += qs) { ctx.strokeStyle = '#F6EEF2'; ctx.beginPath(); ctx.moveTo(X(q), Tp); ctx.lineTo(X(q), Tp + ph); ctx.stroke(); ctx.fillText(q, X(q), Tp + ph + 18); }
+    ctx.fillText('사겠다는 사람 수(명) →', L + pw / 2, ch - 4);
+    ctx.save(); ctx.translate(12, Tp + ph / 2); ctx.rotate(-Math.PI / 2); ctx.fillText('가격(원) →', 0, 0); ctx.restore();
+    if (pts.length > 1) { ctx.strokeStyle = '#3B8FD9'; ctx.lineWidth = 5; ctx.lineJoin = ctx.lineCap = 'round'; ctx.beginPath(); pts.forEach(([q, p], k) => k ? ctx.lineTo(X(q), Y(p)) : ctx.moveTo(X(q), Y(p))); ctx.stroke(); }
+    else { ctx.fillStyle = '#D9C9D2'; ctx.font = '20px Jua'; ctx.fillText('👆 여기에 손가락으로 쭉~ 그려요', L + pw / 2, Tp + ph / 2); }
+  }
+  const pos = e => { const r = cv.getBoundingClientRect(); return toData(e.clientX - r.left, e.clientY - r.top); };
+  cv.onpointerdown = e => { e.preventDefault(); cv.setPointerCapture(e.pointerId); drawing = true; pts = [pos(e)]; draw(); };
+  cv.onpointermove = e => { if (!drawing) return; e.preventDefault(); const p = pos(e), l = pts[pts.length - 1]; if (Math.abs(p[0] - l[0]) / N + Math.abs(p[1] - l[1]) / it.max > .008) { pts.push(p); draw(); } };
+  cv.onpointerup = cv.onpointercancel = () => { drawing = false; };
+  el('clr').onclick = () => { pts = []; draw(); };
+  el('sendPred').onclick = () => {
+    if (pts.length < 2) return toast('먼저 곡선을 그려 주세요 ✍️');
+    const step = Math.max(1, Math.ceil(pts.length / 80));
+    const slim = pts.filter((_, k) => k % step === 0 || k === pts.length - 1).map(([q, p]) => [Math.round(q * 100) / 100, Math.round(p)]);
+    set(AP(`preds/${i}/${pid}`), { pts: slim, at: Date.now() }).then(() => toast('🔮 예언 제출 완료!'));
+  };
+  draw();
+}
+
+start();
+</script>
+</body>
+</html>
