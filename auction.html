@@ -141,7 +141,7 @@ input[type=range]{width:100%;accent-color:#F5B48C;height:36px}
 .cv-wrap{background:#fff;border:3px solid var(--line);border-radius:22px;padding:6px;touch-action:none}
 canvas{display:block;width:100%;touch-action:none;border-radius:16px}
 .speech{position:relative;background:#fff;border:4px solid var(--ink);border-radius:26px;padding:12px 26px;font-size:34px;box-shadow:0 6px 0 var(--ink);max-width:92%}
-.speech::after{content:'';position:absolute;left:46px;bottom:-22px;border:12px solid transparent;border-top-color:var(--ink)}
+.speech::after{display:none}
 .hammer{font-size:80px;line-height:1;display:inline-block;transform-origin:80% 80%}
 .hammer.bang{animation:bang .35s ease-in}
 @keyframes bang{0%{transform:rotate(-40deg)}60%{transform:rotate(18deg)}100%{transform:rotate(0)}}
@@ -207,7 +207,7 @@ const now = () => Date.now() + offset;   // 모든 기기가 같은 시계를 �
    prices: 부를 가격 (싼 가격부터 올라가요) / supply: 파는 개수 (0이면 공급선 없음) / predict: 🔮 예언하기 */
 const DEFAULT_ITEMS = [
   { emoji: '🍫', name: '선생님 책상 위 에너지바', pitch: '선생님이 아껴 먹던 바로 그 에너지바! 단 1개!', prices: [500, 1000, 2000, 3000, 5000, 10000], supply: 1, predict: false },
-  { emoji: '📄', name: '기말고사 사회 시험지 (답 없음)', pitch: '따끈따끈 인쇄 직후! 단 5명에게만 판매!', prices: [1000, 5000, 10000, 50000, 100000, 1000000, 10000000, 100000000], supply: 5, predict: true },
+  { emoji: '📄', name: '기말고사 사회 시험지', pitch: '따끈따끈 인쇄 직후! 단 5명에게만 판매!', prices: [1000, 5000, 10000, 50000, 100000, 1000000, 10000000, 100000000], supply: 5, predict: true },
 ];
 const SECS = [3, 5, 7, 10];
 const COLORS = ['#3B8FD9', '#E8803E', '#2FA67A', '#B44FC9', '#D94F6A'];
@@ -548,9 +548,6 @@ function renderTeacher() {
     const { x, y } = axes(prices, N, upto);
     let extra = '';
     if (it.predict) {
-      const allPts = Object.values(preds).map(v => v.pts).filter(v => v && v.length > 1);
-      const avgPts = allPts.length ? prices.map((_, lv) => [allPts.reduce((a, pts) => a + predQ(pts, lv), 0) / allPts.length, lv]) : null;
-      if (avgPts) extra += `<path d="${predPath(avgPts, x, y)}" fill="none" stroke="#B8A7EE" stroke-width="4" stroke-dasharray="10 8"/>`;
       top.forEach(([id], k) => { extra += `<path d="${predPath((preds[id] || {}).pts, x, y)}" fill="none" stroke="${COLORS[k]}" stroke-width="3.5" opacity=".85"/>`; });
     }
     if (si) extra += `<circle cx="${x(Math.min(S, N))}" cy="${y(si.lv)}" r="13" fill="#2FA67A" stroke="#fff" stroke-width="4"/>`;
@@ -562,7 +559,7 @@ function renderTeacher() {
     body = `<div class="center" style="margin-bottom:8px"><span class="roundBadge">📊 ${esc(it.emoji)} ${esc(it.name)} 결과</span></div>
       <div class="card svgbox">${barsSVG(ans, prices, N, upto, st.showNames ? nameOf : null, S, extra, false)}
         <div class="legend"><span class="pill"><span class="sw" style="background:#E8803E"></span>우리 반 수요 곡선</span>${S ? '<span class="pill"><span class="sw" style="background:#3B8FD9"></span>파는 개수</span>' : ''}${si ? '<span class="pill">🟢 낙찰 지점</span>' : ''}
-        ${it.predict ? `<span class="pill"><span class="sw" style="background:#B8A7EE"></span>반 평균 예언</span>${top.map(([id, a], k) => `<span class="pill"><span class="sw" style="background:${COLORS[k]}"></span>${['🥇','🥈','🥉'][k]} ${st.showNames ? esc(nameOf(id)) : `${k + 1}등`} ${a}%</span>`).join('')}` : ''}</div></div>
+        ${it.predict ? `${top.map(([id, a], k) => `<span class="pill"><span class="sw" style="background:${COLORS[k]}"></span>${['🥇','🥈','🥉'][k]} ${st.showNames ? esc(nameOf(id)) : `${k + 1}등`} ${a}%</span>`).join('')}` : ''}</div></div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
         <div class="card"><h3>📢 낙찰 결과</h3>${soldBox}<div class="hl lemon">🤔 가격이 올라갈수록 사려는 사람은?</div></div>
         ${it.predict ? `<div class="card"><h3>🔮 예언왕 TOP 3</h3>${top.map(([id, a], k) => `<div class="rule">${['🥇','🥈','🥉'][k]} ${esc(nameOf(id))} <b style="color:var(--peachD)">${a}%</b></div>`).join('') || '<p class="muted">예언한 친구가 없어요</p>'}
