@@ -239,8 +239,8 @@ const Snd = {
 };
 
 /* ========== 공통 계산 ========== */
-const itemsOf = () => (room && room.items) || DEFAULT_ITEMS;
-const pricesOf = it => { const out = []; for (let p = it.max; p >= 0; p -= it.step) out.push(p); if (out[out.length - 1] !== 0) out.push(0); return out; };
+const itemsOf = () => ((room && room.items) || DEFAULT_ITEMS).map(x => { const step = Math.max(100, +x.step || 500); return { ...x, step, max: Math.max(step, Math.round((+x.max || 10000) / step) * step) }; });
+const pricesOf = it => { it = { ...it, max: Math.max(it.step, Math.round(it.max / it.step) * it.step) }; const out = []; for (let p = it.max; p >= 0; p -= it.step) out.push(p); if (out[out.length - 1] !== 0) out.push(0); return out; };
 // 경매 사다리 시작 때 고정한 입찰 목록 (금액 높은 순)
 const ladderOf = i => (((room.ladder || {})[i]) || []);
 const Qof = (lad, p) => lad.filter(b => b.v >= p).length;
@@ -524,7 +524,7 @@ function wireTeacher(st, items, i, it, bids, preds) {
       editT = setTimeout(() => {
         const next = itemsOf().map(x => ({ ...x }));
         document.querySelectorAll('.edit-row input').forEach(f => { const k = +f.dataset.k, fl = f.dataset.f; next[k][fl] = (fl === 'max' || fl === 'step') ? Math.max(fl === 'step' ? 100 : 500, Math.round(+f.value / 100) * 100 || 0) : f.value; });
-        next.forEach(x => { if (x.step > x.max) x.step = x.max; });
+        next.forEach(x => { if (x.step > x.max) x.step = x.max; x.max = Math.max(x.step, Math.round(x.max / x.step) * x.step); });   // 최고 가격은 단위의 배수로
         set(AP('items'), next);
       }, 600);
     });
