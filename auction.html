@@ -182,7 +182,6 @@ onValue(ref(db, '.info/serverTimeOffset'), s => { offset = s.val() || 0; });
 /* ========== 설정 (선생님 화면에서도 물건을 바꿀 수 있어요) ========== */
 const DEFAULT_ITEMS = [
   { emoji: '📄', name: '기말고사 사회 시험지 (답 없음)', max: 10000, step: 500, pitch: '따끈따끈 인쇄 직후! 아직 아무도 안 본 시험지!' },
-  { emoji: '📝', name: '기말고사 사회 시험지 (답 있음) 😏', max: 10000, step: 500, pitch: '※ 실제 판매 아님 · 교무부장님께는 비밀 🤫' },
   { emoji: '🍫', name: '선생님 책상 위 에너지바', max: 10000, step: 500, pitch: '선생님이 아껴 먹던 바로 그 에너지바! 단 1개!' },
 ];
 const SPEEDS = { '느리게': 2600, '보통': 1900, '빠르게': 1300 };
@@ -262,14 +261,7 @@ function accuracy(pts, it, lad) {
   return Math.max(0, Math.round(1000 * (1 - 2 * err / N)) / 10);   // 평균 오차가 반 인원의 절반이면 0%
 }
 const accComment = a => a >= 95 ? '🔮 신내림 받았다!!' : a >= 85 ? '🧠 경제학자 꿈나무!' : a >= 70 ? '👀 오~ 감 좋은데?' : a >= 50 ? '🤔 반쯤 맞았다!' : '🌀 그래프가 우주로 떠났어요';
-const HIGH = ['{p}!! {p} 없나요?! 💸', '{p}에 사실 분~?! 플렉스 가능?!', '부자 손님 어디 계세요~ {p}!!'];
-const MID = ['{p}! 슬슬 일어나 볼까~?', '자자 {p}! 고민은 배송만 늦출 뿐!', '{p}!! 지금 아니면 없어요~'];
-const LOW = ['{p}!! 떨이 떨이~ 🛒', '거의 공짜! {p}!!', '이래도 안 사?! {p}!!'];
-function shout(p, it, idx) {
-  if (p === 0) return '0원!!! 공짜면 양잿물도 마신다 🤣';
-  const r = p / it.max, w = won(p);
-  return pick(r > .66 ? HIGH : r > .33 ? MID : LOW, idx).replaceAll('{p}', w);
-}
+function shout(p) { return p === 0 ? '0원! 공짜면 살 사람~?' : `${won(p)}에 살 사람~?`; }
 
 /* ========== 그래프 (SVG) ========== */
 const W = 1000, H = 560, ML = 92, MR = 24, MT = 20, MB = 52;
@@ -452,7 +444,7 @@ function renderTeacher() {
     const lad = ladderOf(i), ps = pricesOf(it), li = Math.max(0, st.li), p = ps[li], q = Qof(lad, p);
     body = `<div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;justify-content:center;margin-bottom:10px">
         <span class="hammer" id="ham">🔨</span>
-        <div class="speech" id="shout">${esc(shout(p, it, li))}</div>
+        <div class="speech" id="shout">${esc(shout(p))}</div>
         <span class="roundBadge">🙋 ${q} / ${lad.length}명 일어남</span>
       </div>
       <div class="card svgbox" id="chart">${ladderSVG(it, lad, li, st.showNames ? nameOf : null)}</div>
@@ -503,7 +495,7 @@ function renderTeacher() {
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
         <div class="card"><h3>🧐 생각해 볼 질문</h3>
           <div class="q"><p>1. 어느 물건이든 <b>가격이 내려갈수록</b> 일어난(사겠다는) 사람 수는 어떻게 변했나요?</p></div>
-          <div class="q"><p>2. 같은 시험지인데 <b>답이 있으면</b> 곡선이 어디로 갔나요? 왜 그럴까요?</p></div>
+          <div class="q"><p>2. 물건마다 곡선의 <b>위치</b>가 다르죠? 왜 그럴까요?</p></div>
           <div class="q"><p>3. 가격 말고 <b>사고 싶은 마음</b>을 바꾸는 건 또 뭐가 있을까요?</p></div></div>
         <div class="card"><h3>👑 오늘의 예언왕</h3>${kings.map(([id, a], k) => `<div class="rule">${['🥇','🥈','🥉'][k]} ${esc(nameOf(id))} <b style="color:var(--peachD)">평균 ${a.toFixed(1)}%</b></div>`).join('') || '<p class="muted">-</p>'}</div>
       </div>`;
