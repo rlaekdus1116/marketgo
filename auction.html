@@ -589,7 +589,10 @@ function renderTeacher() {
         ${kings.length ? `<div class="card"><h3>👑 오늘의 예언왕</h3>${kings.map(([id, a], k) => `<div class="rule">${['🥇','🥈','🥉'][k]} ${esc(nameOf(id))} <b style="color:var(--peachD)">${a.toFixed(1)}%</b></div>`).join('')}</div>` : ''}
       </div>`;
   }
+  if (!body) body = `<div class="stage" style="min-height:60vh"><div class="bigEmoji">🔄</div><div class="rule">이 방은 예전 버전 경매소라 열 수 없어요 😢</div>
+    <button class="btn big mint" id="fresh">✨ 새 경매소 준비하기</button></div>`;
   app.innerHTML = `<div class="wrap">${topbar(st)}${body}</div>`;
+  if (el('fresh')) { el('fresh').onclick = () => { localStorage.removeItem('auction_teacher_room'); newRoom(); }; return; }
   if (st.phase === 'lobby' && window.QRCode) new QRCode(el('qr'), { text: location.origin + location.pathname + '?room=' + code, width: 200, height: 200, colorDark: '#5B4B57', colorLight: '#ffffff' });
   wireTeacher(st, items, i, it);
 }
@@ -754,6 +757,7 @@ function renderStudent() {
     requestAnimationFrame(anim);
     return;
   }
+  if (!['setup', 'lobby', 'item', 'predict', 'auction', 'result', 'final'].includes(st.phase)) return wait('🔄', '잠깐만요!', '선생님이 새 경매소를 열면<br>새 코드로 다시 들어와요');
   if (st.phase === 'final') {
     const mine = itemsOf().map((_, k) => (((room.acc || {})[k]) || {})[pid]).filter(a => a !== undefined && a !== null);
     const avg = mine.length ? mine.reduce((a, b) => a + b, 0) / mine.length : null;
