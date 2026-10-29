@@ -205,6 +205,7 @@ canvas{display:block;width:100%;touch-action:none;border-radius:16px}
 .tile .te{font-size:44px;line-height:1.1}.tile .tb{font-size:23px;margin-top:4px}.tile .ts{font-size:15px;color:var(--sub)}
 .s-wrap{max-width:1150px}
 .tile .tb{white-space:nowrap;font-size:21px}.sumCard{grid-template-columns:.8fr 1.2fr}
+.raceT .drow{margin:2px 0;font-size:20px}.raceT .dbar{height:26px}.raceT .q{margin:0}
 .nb{display:inline-flex;width:24px;height:24px;border-radius:50%;color:#fff;font-size:16px;align-items:center;justify-content:center;margin-right:5px;vertical-align:2px}
 .tile.last{background:var(--mint);border-color:var(--mintD)}
 .tarr{align-self:center;font-size:26px;color:var(--sub)}
@@ -276,6 +277,7 @@ const firebaseConfig = {
 };
 const db = getDatabase(initializeApp(firebaseConfig));
 let offset = 0;
+const now = () => Date.now() + offset;
 onValue(ref(db, '.info/serverTimeOffset'), s => { offset = s.val() || 0; });
 
 /* ========== 기본 사례 (준비 화면에서 바꿀 수 있어요) ==========
@@ -306,7 +308,8 @@ const PRESETS = {
   ],
 };
 // 총정리: 수요·공급 섞기
-PRESETS.mix = [PRESETS.D[0], PRESETS.S[0], PRESETS.D[2], PRESETS.S[2], PRESETS.D[4], PRESETS.S[3], PRESETS.D[1], PRESETS.S[5], PRESETS.D[5], PRESETS.S[6], PRESETS.D[6], PRESETS.S[4]];
+// 총정리 = 스피드 시험: 곡선 자체가 움직이는 사례만
+PRESETS.mix = [PRESETS.D[2], PRESETS.S[2], PRESETS.D[4], PRESETS.S[3], PRESETS.D[5], PRESETS.S[5], PRESETS.D[3], PRESETS.S[6], PRESETS.D[6], PRESETS.S[4], PRESETS.D[7], PRESETS.S[7]];
 const SET_NAME = { D: '🛒 수요편', S: '🏭 공급편', mix: '🔀 총정리' };
 const DEFAULT_CASES = PRESETS.D;
 
@@ -596,8 +599,8 @@ function topbar(st) {
     <span class="pill">방 코드 <b style="color:var(--peachD)">${esc(code)}</b></span>
     <span class="pill">${SET_NAME[room.set || 'D']}</span>
     ${st.phase !== 'setup' ? `<span class="pill">🙋 ${onlineIds().length}명 접속</span>` : ''}
-    ${play ? `<span class="modeTg"><button class="btn sm mint ${st.mode === 'together' ? 'on' : ''}" id="mTog">👥 같이 하기</button><button class="btn sm sky ${st.mode === 'solo' ? 'on' : ''}" id="mSolo">🏃 각자 하기</button></span>` : ''}
-    ${play && st.mode === 'together' ? `<button class="btn sm ${st.auto ? 'mint on' : ''}" id="auto">⏩ 자동 진행 ${st.auto ? 'ON' : 'OFF'}</button>` : ''}
+    ${play && !isRace() ? `<span class="modeTg"><button class="btn sm mint ${st.mode === 'together' ? 'on' : ''}" id="mTog">👥 같이 하기</button><button class="btn sm sky ${st.mode === 'solo' ? 'on' : ''}" id="mSolo">🏃 각자 하기</button></span>` : ''}
+    ${play && (st.mode === 'together' || isRace()) ? `<button class="btn sm ${st.auto ? 'mint on' : ''}" id="auto">⏩ 자동 진행 ${st.auto ? 'ON' : 'OFF'}</button>` : ''}
     <button class="btn sm lav" id="names">${st.showNames ? '👤 이름 ON' : '🙈 이름 OFF'}</button>
     ${play ? '<button class="btn sm lemon" id="toEnd">🏁 끝내기</button>' : ''}
     <button class="btn sm" id="home">처음 화면</button></div>`;
@@ -614,7 +617,8 @@ function renderTeacher() {
   if (st.phase === 'setup') {
     body = `<div class="card"><h3>⚙️ 사례 준비 <span class="muted" style="font-size:16px">학생들이 들어오기 전에 설정해요 · 정답이 보이니 칠판에 띄우지 마세요 🤫</span></h3>
       <div style="margin-bottom:10px">${['D', 'S', 'mix'].map(k => `<button class="btn ${room.set === k || (!room.set && k === 'D') ? 'mint' : ''}" data-set="${k}">${SET_NAME[k]}</button>`).join(' ')}
-        <span class="muted" style="font-size:16px">버튼을 누르면 그 편의 기본 사례로 바뀌어요 ${room.set === 'mix' ? '· 총정리는 \'누구 마음이 먼저?\' 단계까지 해요' : ''}</span></div>
+        <span class="muted" style="font-size:16px">버튼을 누르면 그 편의 기본 사례로 바뀌어요</span>
+        ${room.set === 'mix' ? `<div class="hl lemon" style="margin-top:8px;font-size:18px">⚡ 총정리는 스피드 시험! 사례마다 <b>① 수요/공급 중 무엇이 증가·감소?</b> <b>② 가격은?</b> 두 개만 빨리 골라요 (곡선 자체가 움직이는 사례만 나와요) · 한 문제 ${[10, 15, 20, 30].map(v => `<button class="btn sm ${RACE_SEC() === v ? 'mint' : ''}" data-sec="${v}" style="margin:0 2px;padding:4px 10px">${v}초</button>`).join('')}</div>` : ''}</div>
       ${cs.map((c, k) => `<div class="cbox">
         <div class="edit-case"><b style="font-size:20px">${k + 1}</b><input data-k="${k}" data-f="emoji" value="${esc(c.emoji)}" maxlength="4"><input data-k="${k}" data-f="market" value="${esc(c.market)}" maxlength="12" placeholder="상품"><input data-k="${k}" data-f="price" value="${esc(c.price || '')}" maxlength="14" placeholder="처음 가격"><input data-k="${k}" data-f="text" value="${esc(c.text)}" maxlength="70" placeholder="사례"></div>
         <div class="edit-sel">요인 <input data-k="${k}" data-f="factor" value="${esc(c.factor || '')}" maxlength="14" style="width:130px"> 정답:
@@ -637,8 +641,10 @@ function renderTeacher() {
       <div class="card"><h3>🙋 입장한 학생 ${ps.length}명</h3><div class="chips">${ps.map(p => `<span class="chip soft" style="${p.online === true ? '' : 'opacity:.4'}">${esc(p.name)}</span>`).join('') || '<span class="muted">아직 아무도 없어요</span>'}</div>
         <div class="hl lav" style="margin-top:16px">📈 사례마다 이렇게 풀어요<br><span style="font-size:19px">${room.set === 'mix' ? '① 가격이 변했나요? → ② 곡선 위의 이동? 곡선 자체의 이동? → ③ 누구 마음이 먼저? → ④ 그래프 움직이기 → ⑤ 최종 결과는?' : '① 가격이 변했나요? → ② 곡선 위의 이동? 곡선 자체의 이동? → ③ 그래프 움직이기 → ④ 최종 결과는?'}</span></div></div>
     </div>
-    <div class="center"><button class="btn big mint" id="go" ${ps.length ? '' : 'disabled'}>👥 같이 첫 사례 풀기</button> <button class="btn big sky" id="goSolo" ${ps.length ? '' : 'disabled'}>🏃 처음부터 각자 풀기</button> <button class="btn sm" id="toSetup">⚙️ 설정 고치기</button></div>`;
+    <div class="center">${room.set === 'mix' ? `<button class="btn big mint" id="goRace" ${ps.length ? '' : 'disabled'}>⚡ 총정리 스피드 시험 시작!</button> <span class="muted">한 문제 ${RACE_SEC()}초</span>` : ''}<button class="btn big mint" id="go" ${ps.length && room.set !== 'mix' ? '' : 'hidden'}>👥 같이 첫 사례 풀기</button> <button class="btn big sky" id="goSolo" ${ps.length && room.set !== 'mix' ? '' : 'hidden'}>🏃 처음부터 각자 풀기</button> <button class="btn sm" id="toSetup">⚙️ 설정 고치기</button></div>`;
   }
+  else if (st.phase === 'play' && isRace()) body = teacherRace(st);
+  else if (st.phase === 'end' && isRace()) body = raceEnd(true);
   else if (st.phase === 'play' && st.mode === 'together') {
     const ci = st.ci || 0, c = cs[ci], steps = stepsOf(c), k = st.step || 0, stp = steps[k - 1];
     if (!c) body = '<div class="stage"><div class="rule">사례가 없어요</div></div>';
@@ -723,6 +729,10 @@ function wireTeacher(st, cs) {
   const S = o => update(AP('state'), o);
   el('names').onclick = () => S({ showNames: !st.showNames });
   if (el('auto')) el('auto').onclick = () => S({ auto: !st.auto });
+  document.querySelectorAll('[data-sec]').forEach(b => b.onclick = () => update(A(), { raceSec: +b.dataset.sec }));
+  if (el('goRace')) el('goRace').onclick = () => S({ phase: 'play', mode: 'race', ci: 0, sub: 'q', qStarts: { 0: now() + 1800 }, auto: true });
+  if (el('raceNext')) el('raceNext').onclick = () => raceAdvance();
+  if (el('raceClose')) el('raceClose').onclick = () => S({ sub: 'res' });
   document.querySelectorAll('[data-peek]').forEach(x => x.onclick = () => { peekId = x.dataset.peek; showPeek(); });
   showPeek();   // 열려 있으면 실시간으로 다시 그림
   el('home').onclick = async () => { if (await ask('처음 화면으로 갈까요?<br><small>(방은 그대로 남아요)</small>')) location.href = '?t=1'; };
@@ -755,6 +765,26 @@ function wireTeacher(st, cs) {
   if (el('toEnd2')) el('toEnd2').onclick = () => S({ phase: 'end' });
 }
 
+/* ⚡ 총정리 스피드 시험: 사례마다 ① 무엇이 증가/감소? ② 가격은? — 빨리·많이 맞힐수록 점수 ↑ */
+const isRace = () => room && room.set === 'mix';
+const raceCases = () => casesOf().filter(c => c.type === 'shift');
+const RACE_SEC = () => (room && room.raceSec) || 15;
+const WHAT_OPTS = [['D+', '🛒 수요 증가'], ['D-', '🛒 수요 감소'], ['S+', '🏭 공급 증가'], ['S-', '🏭 공급 감소']];
+const PRICE_OPTS = [['+', '📈 가격 상승'], ['-', '📉 가격 하락']];
+const raceAns = c => ({ w: c.curve + c.dir, p: priceAfter(c) });
+const raceRec = (id, ci) => (((room.race || {})[ci]) || {})[id] || null;
+function racePts(c, ci, id, qStart) {   // 맞히면 50점 + 빠를수록 최대 50점 (문제당)
+  const r = raceRec(id, ci); if (!r) return 0; const a = raceAns(c), lim = RACE_SEC() * 1000;
+  const one = at => 50 + Math.round(50 * Math.max(0, Math.min(1, 1 - (at - qStart) / lim)));
+  return (r.w === a.w ? one(r.wAt) : 0) + (r.p === a.p ? one(r.pAt) : 0);
+}
+function raceScores() {
+  const rs = raceCases(), qs = (room.state || {}).qStarts || {}, out = {};
+  playerIds().forEach(id => { out[id] = rs.reduce((t, c, ci) => t + (qs[ci] ? racePts(c, ci, id, qs[ci]) : 0), 0); });
+  return out;
+}
+const raceTop = () => { const sc = raceScores(); return Object.keys(sc).sort((a, b) => sc[b] - sc[a]).map(id => ({ id, v: sc[id] })); };
+
 /* 👀 학생 화면 엿보기 (각자 하기) */
 let peekId = null;
 function peekHTML(id) {
@@ -783,6 +813,47 @@ function showPeek() {
   d.innerHTML = `<div class="sumCard" style="display:block;width:min(760px,100%)">${peekHTML(peekId)}</div>`;
 }
 
+function raceAdvance() {
+  const st = room.state || {}, n = raceCases().length, ci = st.ci || 0;
+  if (ci + 1 < n) update(AP('state'), { ci: ci + 1, sub: 'q', [`qStarts/${ci + 1}`]: now() + 1800 });
+  else update(AP('state'), { phase: 'end' });
+}
+const tBar = () => `<div class="bar" style="height:20px"><i class="raceBar" style="width:100%;transition:none"></i></div>`;
+function teacherRace(st) {
+  const rs = raceCases(), ci = st.ci || 0, c = rs[ci]; if (!c) return '<div class="stage"><div class="rule">사례가 없어요</div></div>';
+  const a = raceAns(c), ids = playerIds(), res = st.sub === 'res';
+  maybeAnnounce('race' + ci, () => announce(`⚡ ${ci + 1}번 문제!`, '빨리 고르는 사람이 이겨요', '🚨', 1600));
+  const cnt = (k, v) => ids.filter(id => (raceRec(id, ci) || {})[k] === v).length;
+  const both = ids.filter(id => { const r = raceRec(id, ci); return r && r.w && r.p; }).length;
+  const row = (k, [v, lab], right) => `<div class="drow ${res && right ? 'right' : ''}"><span>${res && right ? '✅ ' : ''}${lab}</span><div class="dbar"><i style="width:${res ? cnt(k, v) / Math.max(1, ids.length) * 100 : 0}%"></i></div><b>${res ? cnt(k, v) + '명' : '?'}</b></div>`;
+  let fast = '';
+  if (res) {
+    const qs = (st.qStarts || {})[ci] || 0;
+    const ok = ids.filter(id => { const r = raceRec(id, ci); return r && r.w === a.w && r.p === a.p; }).map(id => ({ id, t: Math.max(raceRec(id, ci).wAt, raceRec(id, ci).pAt) - qs })).sort((x, y) => x.t - y.t).slice(0, 3);
+    fast = `<div class="hl mint" style="margin:0;font-size:21px">⚡ 가장 빨리 다 맞힌 학생 ${ok.map((o, i) => `${['🥇', '🥈', '🥉'][i]} ${st.showNames ? esc(nameOf(o.id)) : '?'} <span class="muted" style="font-size:16px">${(o.t / 1000).toFixed(1)}초</span>`).join(' &nbsp; ') || '— 없어요 😢'}</div>`;
+  }
+  return `<div class="play2 raceT"><div class="side">
+      <span class="roundBadge">⚡ 총정리 ${ci + 1} / ${rs.length}</span>
+      ${caseRow(c, ci)}
+      ${res ? '' : tBar()}
+      <div class="q" style="font-size:24px">① 무엇이 변했나요?</div><div class="dist">${WHAT_OPTS.map(o => row('w', o, o[0] === a.w)).join('')}</div>
+      <div class="q" style="font-size:24px">② 가격은?</div><div class="dist">${PRICE_OPTS.map(o => row('p', o, o[0] === a.p)).join('')}</div>
+      <div class="muted" style="font-size:19px">✍️ 다 고른 학생 ${both} / ${ids.length}명</div>
+      <div>${res ? `<button class="btn big mint" id="raceNext">${ci + 1 < rs.length ? '⚡ 다음 문제' : '🏆 최종 순위 보기'} <span class="autoCd"></span></button>` : '<button class="btn lemon" id="raceClose">⏹ 지금 마감하고 정답 보기</button>'}</div>
+    </div>
+    <div class="side">${res ? `<div class="graph">${solvedGraph(c, true)}</div>${fast}` : `<div class="graph">${graphSVG({ c, mode: 'base' })}</div>`}</div></div>`;
+}
+function raceEnd(teacher) {
+  const top = raceTop(), st = room.state || {}, cs = raceCases(), qs = st.qStarts || {};
+  maybeAnnounce('raceEnd', () => announce('🏆 최종 순위!!', '두구두구두구…', '🥁', 2600));
+  const medal = ['🥇', '🥈', '🥉', '4등', '5등'];
+  const ids = playerIds();
+  let ok = 0, tot = 0; cs.forEach((c, ci) => { if (!qs[ci]) return; const a = raceAns(c); ids.forEach(id => { const r = raceRec(id, ci) || {}; tot += 2; ok += (r.w === a.w) + (r.p === a.p); }); });
+  return `<div class="center" style="margin-bottom:10px"><span class="roundBadge">🏆 총정리 최종 순위</span></div>
+    <div class="card" style="max-width:720px;margin:0 auto">${top.slice(0, 5).map((r, i) => `<div class="drow" style="grid-template-columns:70px 1fr 120px;font-size:${i < 3 ? 34 : 26}px"><span>${medal[i]}</span><span>${esc(nameOf(r.id))}</span><b>${r.v}점</b></div>`).join('') || '<div class="muted">아직 기록이 없어요</div>'}
+    <div class="muted" style="font-size:18px;margin-top:10px">반 전체 정답률 ${tot ? Math.round(ok / tot * 100) : 0}%</div></div>`;
+}
+
 /* ⏩ 자동 진행 (같이 하기): 사례 읽기 8초 → 다 내면 2초 뒤 정답 공개 → 6초 뒤 다음 단계 → 마지막은 정리 12초 뒤 다음 사례 */
 const AUTO = { read: 8000, afterAll: 2000, next: 6000, sum: 12000 };
 let autoKey = '', autoAt = 0;
@@ -791,6 +862,23 @@ function autoTick() {
   const st = room.state || {}, cs = casesOf();
   const cds = document.querySelectorAll('.autoCd');
   const off = () => { autoKey = ''; cds.forEach(x => x.textContent = ''); };
+  if (st.phase === 'play' && isRace()) {
+    const ci = st.ci || 0, qs = (st.qStarts || {})[ci] || 0, lim = RACE_SEC() * 1000, t = now();
+    document.querySelectorAll('.raceBar').forEach(x => x.style.width = Math.max(0, Math.min(100, (1 - (t - qs) / lim) * 100)) + '%');
+    if (st.sub !== 'res') {
+      const on = onlineIds(), all = on.length > 0 && on.every(id => { const r = raceRec(id, ci); return r && r.w && r.p; });
+      if ((t > qs + lim || (all && t > qs)) && autoKey !== `race${ci}`) { autoKey = `race${ci}`; update(AP('state'), { sub: 'res' }); }
+      return;
+    }
+    if (!st.auto) return off();
+    const key = `raceRes${ci}`;
+    if (autoKey !== key && autoKey !== 'sent') { autoKey = key; autoAt = Date.now() + 8000; }
+    if (autoKey === 'sent') return;
+    const left = Math.ceil((autoAt - Date.now()) / 1000);
+    document.querySelectorAll('.autoCd').forEach(x => x.textContent = left > 0 ? `(${left})` : '');
+    if (Date.now() >= autoAt && ci + 1 < raceCases().length) { autoKey = 'sent'; raceAdvance(); }
+    return;
+  }
   if (!st.auto || st.phase !== 'play' || st.mode !== 'together') return off();
   const ci = st.ci || 0, c = cs[ci]; if (!c) return off();
   const steps = stepsOf(c), k = st.step || 0, stp = steps[k - 1], last = k === steps.length;
@@ -830,6 +918,13 @@ function renderStudent() {
   const wait = (emo, t, s) => { app.innerHTML = `<div class="s-wrap">${top}<div class="stage" style="min-height:70vh"><div class="bigEmoji bounce">${emo}</div><div class="title" style="font-size:38px">${t}</div><div class="rule">${s}</div></div></div>`; };
   if (dragState) return;   // 끄는 중엔 다시 그리지 않음
   if (st.phase === 'setup' || st.phase === 'lobby') { sKey = ''; return wait('📈', '입장 완료!', '칠판을 보세요 👀<br>곧 첫 사례가 나와요'); }
+  if (isRace() && st.phase === 'play') return studentRace(st, top);
+  if (isRace() && st.phase === 'end') {
+    const tp = raceTop(), i = tp.findIndex(r => r.id === pid), v = (tp[i] || {}).v || 0; sKey = '';
+    wait(i > -1 && i < 3 ? ['🥇', '🥈', '🥉'][i] : '🏆', i > -1 && i < 5 ? `${i + 1}등!` : '끝!', `내 점수 <b>${v}점</b><br>칠판에서 최종 순위를 봐요 👀`);
+    const pill = app.querySelector('.s-top .pill'); if (pill) pill.textContent = `⭐ ${v}점`;
+    return;
+  }
   if (st.phase === 'end') { sKey = ''; return wait('🏆', '끝!', `처음에 맞힌 단계 <b>${sc.ok}</b> / ${sc.tot}개<br>수고했어요 👏`); }
   // 지금 풀 사례·단계 고르기
   let ci, k;
@@ -892,6 +987,39 @@ function renderStudent() {
     });
   }
 }
+
+function studentRace(st, top) {
+  const rs = raceCases(), ci = st.ci || 0, c = rs[ci]; if (!c) return;
+  const qs = (st.qStarts || {})[ci] || 0, ready = now() >= qs, r = raceRec(pid, ci) || {}, res = st.sub === 'res', a = raceAns(c);
+  const key = ['race', ci, ready, r.w, r.p, res].join('|'); if (key === sKey) return; sKey = key;
+  if (!res) maybeAnnounce('race' + ci, () => announce(`⚡ ${ci + 1}번 문제!`, '빨리 골라요!', '🚨', 1600));
+  const btn = (k, [v, lab]) => {
+    const mine = r[k] === v, right = (k === 'w' ? a.w : a.p) === v;
+    const cls = res ? (right ? 'right' : mine ? 'wrong' : '') : mine ? 'picked' : '';
+    return `<button class="choice ${cls}" data-k="${k}" data-v="${v}" ${res || r[k] || !ready ? 'disabled' : ''} style="padding:14px 8px;font-size:23px">${lab}</button>`;
+  };
+  let msg = '';
+  if (res) { const pts = racePts(c, ci, pid, qs); msg = pts ? `<div class="good">🎉 +${pts}점!</div>` : `<div class="hint">😅 아쉬워요! 정답: <b>${WHAT_OPTS.find(o => o[0] === a.w)[1]} → ${PRICE_OPTS.find(o => o[0] === a.p)[1]}</b></div>`; }
+  else if (r.w && r.p) msg = '<div class="good" style="background:var(--sky)">✅ 냈어요! 정답을 기다려요 👀</div>';
+  else if (!ready) msg = '<div class="rule muted">준비… 🚦</div>';
+  const myTot = raceScores()[pid] || 0;
+  app.innerHTML = `<div class="s-wrap">${top.replace(/⭐ \d+점/, `⭐ ${res ? myTot : myTot - (racePts(c, ci, pid, qs))}점`)}<div class="s-play two"><div class="col">
+      <span class="roundBadge">⚡ ${ci + 1} / ${rs.length}</span>${caseRow(c, ci)}${res ? '' : tBar()}${msg}</div>
+    <div class="col"><div class="q" style="font-size:23px">① 무엇이 변했나요?</div><div class="choices">${WHAT_OPTS.map(o => btn('w', o)).join('')}</div>
+      <div class="q" style="font-size:23px">② 가격은?</div><div class="choices">${PRICE_OPTS.map(o => btn('p', o)).join('')}</div>
+      ${res ? `<div class="graph">${solvedGraph(c, true)}</div>` : ''}</div></div></div>`;
+  document.querySelectorAll('.choice:not([disabled])').forEach(b => b.onclick = () => {
+    const k = b.dataset.k; b.classList.add('picked'); document.querySelectorAll(`.choice[data-k="${k}"]`).forEach(x => x.disabled = true);
+    update(AP(`race/${ci}/${pid}`), { [k]: b.dataset.v, [k + 'At']: now() });
+  });
+}
+// 학생: 시간 막대·준비 신호
+if (!isTeacher) setInterval(() => {
+  if (!room || !isRace() || (room.state || {}).phase !== 'play') return;
+  const st = room.state, ci = st.ci || 0, qs = (st.qStarts || {})[ci] || 0, lim = RACE_SEC() * 1000;
+  document.querySelectorAll('.raceBar').forEach(x => x.style.width = Math.max(0, Math.min(100, (1 - (now() - qs) / lim) * 100)) + '%');
+  if (sKey.startsWith(`race|${ci}|false`) && now() >= qs) renderStudent();
+}, 200);
 
 // 👥 같이 하기 학생 화면: 내고 → 기다리고 → 정답 공개 때 맞았는지 확인
 function renderTogetherStep(c, ci, k, steps, stp, rec, st, top, caseCard, bar) {
