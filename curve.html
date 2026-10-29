@@ -293,7 +293,7 @@ function maybeAnnounce(key, fn) { if (annSeen.has(key)) return; annSeen.add(key)
 /* ========== 사례 → 단계·정답·힌트 ========== */
 const casesOf = () => ((room && room.cases) || DEFAULT_CASES).map(c => ({ ...c, type: c.type === 'along' ? 'along' : 'shift', curve: c.curve === 'S' ? 'S' : 'D', dir: c.dir === '-' ? '-' : '+' }));
 const stepsOf = c => c.type === 'shift' ? ['price', 'move', 'who', 'drag', 'final'] : ['price', 'move', 'drag', 'final'];
-const STEP_NAME = { price: '가격이 변했나요?', move: '어떻게 움직여?', who: '누구 사정?', drag: '그래프 움직이기', final: '최종 결과' };
+const STEP_NAME = { price: '가격이 변했나요?', move: '어떻게 움직여?', who: '누구 마음이 먼저?', drag: '그래프 움직이기', final: '최종 결과' };
 const curveName = k => k === 'D' ? '수요' : '공급';
 const priceAfter = c => (c.curve === 'D') === (c.dir === '+') ? '+' : '-';                       // 수요↑·공급↓ → 가격↑
 const qtyAfter = c => c.curve === 'D' ? (c.dir === '+' ? '-' : '+') : c.dir;                         // 가격↑ → 수요량↓, 공급량↑
@@ -316,7 +316,7 @@ function optionsOf(c, step) {
 function questionOf(c, step) {
   if (step === 'price') return `<b>${esc(c.market)} 가격</b>이 변했나요?`;
   if (step === 'move') return '그럼 그래프에서는 어떻게 움직일까요?';
-  if (step === 'who') return '누구의 사정이 바뀌었나요?';
+  if (step === 'who') return '<b>가격이 그대로일 때</b>, 누구 마음이 먼저 바뀌었나요?';
   if (step === 'drag') return c.type === 'shift' ? `<b>${curveName(c.curve)} 곡선</b>을 손가락으로 끌어서 옮겨 보세요! 👆` : `<b>${curveName(c.curve)} 곡선 위의 점</b>을 끌어 보세요! 👆`;
   if (c.type === 'shift') return `최종적으로 <b>${esc(c.market)} 가격</b>은 어떻게 될까요?`;
   return c.curve === 'D' ? '그럼 <b>사려는 양(수요량)</b>은?' : '그럼 <b>팔려는 양(공급량)</b>은?';
@@ -326,7 +326,7 @@ function hintOf(c, step) {
     ? `🔍 사례를 다시 읽어 봐요. <b>${esc(c.market)} 가격</b>이 바뀌었다는 말이 있나요? 이건 가격 말고 <b>다른 이유</b>예요!`
     : `🔍 사례를 다시 읽어 봐요. <b>${esc(c.market)} 가격</b>이 바뀌었다고 나와 있어요!`;
   if (step === 'move') return '🔍 <b>그 상품의 가격</b>이 변했으면 → 곡선은 그대로, 점만 곡선 위에서 움직여요.<br>가격 말고 <b>다른 게</b> 변했으면 → 곡선이 통째로 움직여요!';
-  if (step === 'who') return '🔍 사는 사람(소비자)의 <b>마음·사정</b>이 바뀌었으면 → 수요 곡선<br>파는 사람(생산자)의 <b>비용·기술·날씨</b> 같은 사정이 바뀌었으면 → 공급 곡선!';
+  if (step === 'who') return '🔍 <b>같은 가격인데</b> 더 사고 싶어졌다/덜 사고 싶어졌다 → 🛒 사는 사람 (수요 곡선)<br><b>같은 가격인데</b> 더 팔 수 있게 됐다/덜 팔게 됐다 (재료값·기계·날씨) → 🏭 파는 사람 (공급 곡선)';
   if (step === 'drag') return c.type === 'shift'
     ? `🔍 같은 가격에서 ${c.curve === 'D' ? '사려는' : '팔려는'} 양이 <b>늘었으면 오른쪽 ➡️</b>, <b>줄었으면 왼쪽 ⬅️</b>!`
     : '🔍 가격이 <b>올랐으면 점을 위로 ⬆️</b>, <b>내렸으면 아래로 ⬇️</b>!';
@@ -523,7 +523,7 @@ function renderTeacher() {
       <div class="card center"><h3>태블릿으로 입장!</h3><div class="muted">입장 코드</div><div class="bigcode">${esc(code)}</div><div id="qr"></div>
         <div class="muted" style="font-size:13px;word-break:break-all">${esc(url)}</div></div>
       <div class="card"><h3>🙋 입장한 탐정 ${ps.length}명</h3><div class="chips">${ps.map(p => `<span class="chip soft" style="${p.online === true ? '' : 'opacity:.4'}">${esc(p.name)}</span>`).join('') || '<span class="muted">아직 아무도 없어요</span>'}</div>
-        <div class="hl lav" style="margin-top:16px">🕵️ 사건마다 이렇게 풀어요<br><span style="font-size:19px">① 가격이 변했나요? → ② 곡선 위의 이동? 곡선 자체의 이동? → ③ 누구 사정? → ④ 그래프 움직이기 → ⑤ 최종 가격은?</span></div></div>
+        <div class="hl lav" style="margin-top:16px">🕵️ 사건마다 이렇게 풀어요<br><span style="font-size:19px">① 가격이 변했나요? → ② 곡선 위의 이동? 곡선 자체의 이동? → ③ 누구 마음이 먼저? → ④ 그래프 움직이기 → ⑤ 최종 가격은?</span></div></div>
     </div>
     <div class="center"><button class="btn big mint" id="go" ${ps.length ? '' : 'disabled'}>👥 같이 첫 사건 풀기</button> <button class="btn big sky" id="goSolo" ${ps.length ? '' : 'disabled'}>🏃 처음부터 각자 풀기</button> <button class="btn sm" id="toSetup">⚙️ 설정 고치기</button></div>`;
   }
