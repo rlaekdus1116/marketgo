@@ -1,0 +1,738 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>곡선 탐정 🕵️</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+/* 「떡볶이 시장」과 같은 디자인 */
+:root{
+  --bg:#FFF9F4; --ink:#5B4B57; --sub:#A3919C; --line:#F2E6EC; --card:#FFFFFF;
+  --pink:#FFE3EA; --pinkD:#F4A9BD; --mint:#DDF5EA; --mintD:#8FD5B5;
+  --lemon:#FFF5CC; --lemonD:#F2D477; --lav:#ECE5FF; --lavD:#B8A7EE;
+  --sky:#E0F0FF; --skyD:#93C4EE; --peach:#FFE9DA; --peachD:#F5B48C; --red:#FFD9D9; --redD:#EE9A9A;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;min-height:100%}
+body{font-family:'Jua',sans-serif;color:var(--ink);background:var(--bg);
+  background-image:radial-gradient(#F6E3EA 1.4px,transparent 1.4px);background-size:22px 22px}
+button{font-family:inherit;color:inherit;cursor:pointer;border:none}
+.wrap{max-width:1100px;margin:0 auto;padding:18px 16px 40px}
+.s-wrap{max-width:760px;margin:0 auto;padding:14px 14px 40px}
+.muted{color:var(--sub)} .center{text-align:center}
+.card{background:var(--card);border:2px solid var(--line);border-radius:26px;padding:18px 20px;box-shadow:0 6px 0 var(--line);margin-bottom:16px}
+h3{margin:0 0 12px;font-size:22px;font-weight:normal}
+.btn{background:var(--pink);border-radius:20px;padding:14px 22px;font-size:20px;box-shadow:0 5px 0 var(--pinkD);transition:transform .08s;margin:4px 4px 4px 0}
+.btn:active{transform:translateY(4px);box-shadow:0 1px 0 var(--pinkD)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.mint{background:var(--mint);box-shadow:0 5px 0 var(--mintD)}
+.btn.lemon{background:var(--lemon);box-shadow:0 5px 0 var(--lemonD)}
+.btn.lav{background:var(--lav);box-shadow:0 5px 0 var(--lavD)}
+.btn.sky{background:var(--sky);box-shadow:0 5px 0 var(--skyD)}
+.btn.peach{background:var(--peach);box-shadow:0 5px 0 var(--peachD)}
+.btn.big{font-size:28px;padding:18px 36px}
+.btn.sm{font-size:15px;padding:8px 14px;border-radius:14px;box-shadow:0 3px 0 var(--pinkD)}
+.btn.sm.mint{box-shadow:0 3px 0 var(--mintD)} .btn.sm.lemon{box-shadow:0 3px 0 var(--lemonD)} .btn.sm.sky{box-shadow:0 3px 0 var(--skyD)}
+.title{font-size:44px;margin:6px 0;letter-spacing:1px} .title span{color:var(--peachD)}
+.topbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.topbar .logo{font-size:26px;margin-right:auto}
+.pill{background:#fff;border:2px solid var(--line);border-radius:999px;padding:6px 14px;font-size:16px;display:inline-block}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{display:inline-flex;align-items:center;gap:6px;background:var(--lemon);border-radius:999px;padding:7px 14px;font-size:18px}
+.chip.soft{background:var(--sky)}
+.chip .x{background:#fff;border-radius:50%;width:24px;height:24px;font-size:13px;line-height:24px;padding:0;margin:0}
+.lobby{display:grid;grid-template-columns:300px 1fr;gap:16px}
+@media (max-width:820px){.lobby{grid-template-columns:1fr}}
+.bigcode{font-size:72px;letter-spacing:8px;color:var(--peachD);line-height:1}
+#qr{display:flex;justify-content:center;margin:14px 0}
+#qr img,#qr canvas{border:10px solid #fff;border-radius:14px}
+.stage{min-height:40vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:14px}
+.bigEmoji{font-size:110px;line-height:1}
+.rule{font-size:26px;line-height:1.5}
+.roundBadge{display:inline-block;background:var(--lemon);border-radius:999px;padding:8px 22px;font-size:24px;box-shadow:0 4px 0 var(--lemonD)}
+.timer{font-size:110px;line-height:1;color:var(--peachD)}
+.timer.s{font-size:56px}
+.timer.hurry{color:var(--redD);animation:beat .5s infinite}
+@keyframes beat{50%{transform:scale(1.08)}}
+.bar{height:22px;background:var(--line);border-radius:999px;overflow:hidden;width:100%}
+.bar>i{display:block;height:100%;background:linear-gradient(90deg,var(--mintD),var(--skyD));border-radius:999px;transition:width .3s linear}
+.bar.hurry>i{background:linear-gradient(90deg,var(--peachD),var(--pinkD))}
+.dur{display:inline-flex;align-items:center;gap:8px;font-size:20px;background:#fff;border:2px solid var(--line);border-radius:999px;padding:4px 6px}
+.dur b{color:var(--peachD);font-weight:normal;font-size:24px}
+.dur .btn{margin:0}
+.hl{background:var(--lemon);border-radius:20px;padding:14px 18px;font-size:22px;line-height:1.5;margin-top:10px}
+.hl.mint{background:var(--mint)} .hl.peach{background:var(--peach)} .hl.lav{background:var(--lav)} .hl.sky{background:var(--sky)} .hl.red{background:var(--red)}
+/* 결과표 */
+table{border-collapse:separate;border-spacing:4px;width:100%;font-size:20px}
+th,td{border-radius:12px;padding:8px 6px;text-align:center;font-weight:normal}
+thead th{background:var(--lemon)}
+tbody th{background:var(--peach)}
+td{background:#fff;border:2px solid var(--line);color:var(--line)}
+td.on{background:var(--mint);border-color:var(--mintD);color:var(--ink);font-size:28px}
+td.sum{background:var(--lav);border-color:var(--lav);color:var(--ink)}
+.q{border-top:2px dashed var(--line);padding:14px 0}
+.q p{font-size:24px;margin:0 0 8px;line-height:1.45}
+.q b{color:var(--peachD);font-weight:normal}
+/* 학생 카드 (교과서 카드 모양) */
+.tcard{border-radius:28px;padding:22px;text-align:center;border:4px solid;position:relative}
+.tcard.buyer{background:var(--sky);border-color:var(--skyD);box-shadow:0 8px 0 var(--skyD)}
+.tcard.seller{background:var(--peach);border-color:var(--peachD);box-shadow:0 8px 0 var(--peachD)}
+.tcard .role{font-size:34px}
+.tcard .amt{display:inline-block;font-size:64px;background:#fff;border-radius:22px;padding:4px 26px;margin:8px 0}
+.tcard .desc{font-size:20px;line-height:1.5}
+.tcard .rn{position:absolute;top:12px;left:16px;font-size:15px;color:var(--sub)}
+.s-top{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.s-top .me{margin-right:auto;font-size:22px}
+.field{width:100%;font-size:26px;padding:14px 18px;border-radius:18px;border:3px solid var(--line);background:#fff;outline:none;font-family:inherit;color:var(--ink);margin:6px 0}
+.field:focus{border-color:var(--peachD)}
+.opts{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;margin:8px 0 14px}
+.opt{background:#fff;border:3px solid var(--line);border-radius:18px;padding:14px 6px;font-size:22px;box-shadow:0 4px 0 var(--line)}
+.opt:active{transform:translateY(3px);box-shadow:none}
+.opt.sel{background:var(--lemon);border-color:var(--lemonD);box-shadow:0 4px 0 var(--lemonD)}
+.lab{font-size:20px;margin-top:6px}
+.doneBox{background:var(--mint);border-radius:24px;padding:22px;font-size:28px;text-align:center}
+.doneBox.wait{background:var(--lemon)} .doneBox.bad{background:var(--red)} .doneBox.none{background:var(--lav)}
+.toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);background:#fff;border:3px solid var(--peachD);border-radius:20px;padding:14px 22px;font-size:22px;z-index:99;box-shadow:0 6px 0 var(--peachD);max-width:92vw;text-align:center}
+.bounce{animation:bounce 1s infinite}
+@keyframes bounce{50%{transform:translateY(-10px)}}
+.pop{animation:pop .35s cubic-bezier(.2,1.6,.4,1)}
+@keyframes pop{0%{transform:scale(.4);opacity:0}100%{transform:scale(1);opacity:1}}
+
+/* ===== 🌈 안내문: 일부러 촌스럽고 눈에 확 띄게 ===== */
+.ann{position:fixed;inset:0;z-index:200;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;overflow:hidden;cursor:pointer;animation:annIn .45s cubic-bezier(.2,1.7,.4,1)}
+.ann::before{content:'';position:absolute;left:50%;top:50%;width:250vmax;height:250vmax;margin:-125vmax 0 0 -125vmax;
+  background:repeating-conic-gradient(#FF9EBB 0 10deg,#FFC48A 10deg 20deg,#FFF08A 20deg 30deg,#A8F0C0 30deg 40deg,#9ED8FF 40deg 50deg,#C9B3FF 50deg 60deg);
+  animation:spinbg 14s linear infinite}
+.ann::after{content:'';position:absolute;inset:0;background:radial-gradient(circle,rgba(255,255,255,.95) 0 22%,rgba(255,255,255,.55) 40%,rgba(255,255,255,0) 70%)}
+.ann > *{position:relative;z-index:1}
+.ann .rb{display:block;font-size:min(15vw,150px);line-height:1.08;text-align:center;padding:0 3vw;
+  background:linear-gradient(90deg,#FF4F8B,#FF8A3D,#FFC81E,#3DD68C,#3DA9FF,#9B5CFF,#FF4F8B);background-size:300% 100%;
+  -webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-stroke:4px #fff;
+  filter:drop-shadow(0 7px 0 #5B4B57) drop-shadow(0 0 18px #fff);
+  animation:rainbow 2s linear infinite,wobble .55s ease-in-out infinite alternate}
+.ann .sub{font-size:min(6.5vw,46px);background:#fff;border:5px solid #5B4B57;border-radius:999px;padding:10px 34px;box-shadow:0 8px 0 #5B4B57;transform:rotate(-3deg);text-align:center;max-width:92vw}
+.ann .emo{font-size:min(20vw,150px);line-height:1;animation:hop .5s ease-in-out infinite alternate}
+.ann .fl{position:absolute;z-index:1;font-size:56px;animation:floaty 3s ease-in-out infinite alternate;pointer-events:none}
+.ann .tap{position:absolute;bottom:18px;z-index:1;font-size:18px;color:#5B4B57;opacity:.7}
+@keyframes spinbg{to{transform:rotate(360deg)}}
+@keyframes rainbow{to{background-position:300% 0}}
+@keyframes wobble{from{transform:rotate(-4deg) scale(1)}to{transform:rotate(4deg) scale(1.07)}}
+@keyframes hop{from{transform:translateY(0) rotate(-8deg)}to{transform:translateY(-22px) rotate(8deg)}}
+@keyframes floaty{from{transform:translateY(0) rotate(-15deg)}to{transform:translateY(-40px) rotate(15deg)}}
+@keyframes annIn{0%{transform:scale(.3) rotate(-20deg);opacity:0}100%{transform:scale(1) rotate(0);opacity:1}}
+@media (prefers-reduced-motion:reduce){.ann,.ann *,.ann::before{animation:none!important}}
+
+/* ===== 경매소 전용 ===== */
+.item-hero{display:flex;flex-direction:column;align-items:center;gap:6px}
+.item-hero .ie{font-size:120px;line-height:1;animation:hop .7s ease-in-out infinite alternate}
+.item-hero .in{font-size:40px}
+.item-hero .ip{font-size:22px;background:var(--lemon);border-radius:999px;padding:6px 20px}
+.price-big{font-size:96px;color:var(--peachD);line-height:1}
+.price-big.s{font-size:64px}
+.stepper{display:flex;align-items:center;justify-content:center;gap:12px}
+.stepper .btn{font-size:34px;padding:10px 26px;margin:0}
+input[type=range]{width:100%;accent-color:#F5B48C;height:36px}
+.quick{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.quick .btn{margin:0}
+.lock{background:var(--lav);border-radius:24px;padding:18px;font-size:26px;text-align:center}
+.cv-wrap{background:#fff;border:3px solid var(--line);border-radius:22px;padding:6px;touch-action:none}
+canvas{display:block;width:100%;touch-action:none;border-radius:16px}
+.speech{position:relative;background:#fff;border:4px solid var(--ink);border-radius:26px;padding:12px 26px;font-size:34px;box-shadow:0 6px 0 var(--ink);max-width:92%}
+.speech::after{display:none}
+.hammer{font-size:80px;line-height:1;display:inline-block;transform-origin:80% 80%}
+.hammer.bang{animation:bang .35s ease-in}
+@keyframes bang{0%{transform:rotate(-40deg)}60%{transform:rotate(18deg)}100%{transform:rotate(0)}}
+.acc{font-size:110px;line-height:1;color:var(--peachD)}
+.acc small{font-size:50px}
+.stand{background:var(--mint);border-radius:28px;padding:26px;font-size:40px;text-align:center;box-shadow:0 8px 0 var(--mintD)}
+.sit{background:var(--line);border-radius:28px;padding:26px;font-size:32px;text-align:center}
+.svgbox svg{width:100%;height:auto;display:block}
+.legend{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:6px}
+.sw{display:inline-block;width:22px;height:8px;border-radius:4px;vertical-align:middle;margin-right:4px}
+.edit-row{display:grid;grid-template-columns:64px 1fr auto 44px;gap:6px;align-items:center;margin-bottom:6px}
+.edit-row.one{grid-template-columns:1fr}
+.edit-row label{display:flex;flex-direction:column;gap:2px;font-size:15px;color:var(--sub)}
+.edit-row .sup{flex-direction:row;align-items:center;gap:6px;white-space:nowrap}
+.edit-row .sup input{width:70px}
+.iedit{border-bottom:2px dashed var(--line);padding:8px 0}
+.edit-row input,.edit-row select{font-family:inherit;font-size:18px;padding:8px 10px;border-radius:12px;border:2px solid var(--line);color:var(--ink);width:100%}
+@media (max-width:700px){.edit-row{grid-template-columns:52px 1fr auto 40px}}
+.stat-big{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+
+/* ===== v3: 준비 화면·카운트다운 ===== */
+.edit-row{grid-template-columns:30px 64px 1fr auto!important}
+.edit-row.one{grid-template-columns:1fr!important}
+.iedit{border-bottom:2px dashed var(--line);padding:10px 0}
+.cd{font-size:150px;line-height:1;color:var(--peachD);background:#fff;border:8px solid var(--peachD);border-radius:50%;width:230px;height:230px;display:flex;align-items:center;justify-content:center;box-shadow:0 10px 0 var(--peachD)}
+.cd.hurry{color:var(--redD);border-color:var(--redD);box-shadow:0 10px 0 var(--redD);animation:beat .5s infinite}
+.cdS{color:var(--peachD);font-weight:normal}
+/* ===== 🌈 병맛 안내 화면: 무지개가 화면 가득 빙글빙글 ===== */
+.ann{animation:annIn .45s cubic-bezier(.2,1.7,.4,1),hueSpin 2.4s linear infinite!important}
+.ann::before{animation:spinbg 2.6s linear infinite!important}
+.ann::after{background:radial-gradient(circle,rgba(255,255,255,.6) 0 16%,rgba(255,255,255,0) 42%)!important}
+.ann .emo{animation:spinEmo 1.1s linear infinite!important}
+.ann .rb{animation:rainbow .9s linear infinite,wobble .28s ease-in-out infinite alternate!important}
+.ann .sub{animation:wobble .4s ease-in-out infinite alternate}
+.ann .fl{animation:floaty 1.4s ease-in-out infinite alternate,spinEmo 2s linear infinite!important}
+@keyframes hueSpin{to{filter:hue-rotate(360deg)}}
+@keyframes spinEmo{to{transform:rotate(360deg)}}
+
+/* ===== 곡선 탐정 전용 ===== */
+.toast{pointer-events:none}
+.case{background:#fff;border:4px solid var(--ink);border-radius:30px;padding:22px 26px;box-shadow:0 8px 0 var(--ink);text-align:center;max-width:820px;width:100%}
+.case .ce{font-size:84px;line-height:1}
+.case .cm{display:inline-block;background:var(--lemon);border-radius:999px;padding:4px 18px;font-size:22px;margin:6px 0}
+.case .cp{font-size:24px;margin:4px 0 8px;color:var(--peachD)}
+.case .ct{font-size:32px;line-height:1.45}
+.case.s .ct{font-size:24px} .case.s .ce{font-size:56px}
+.stepbar{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin:8px 0}
+.stepbar span{background:#fff;border:2px solid var(--line);border-radius:999px;padding:4px 12px;font-size:15px;color:var(--sub)}
+.stepbar span.on{background:var(--lemon);border-color:var(--lemonD);color:var(--ink)}
+.stepbar span.ok{background:var(--mint);border-color:var(--mintD);color:var(--ink)}
+.q{font-size:30px;line-height:1.4;text-align:center}
+.choices{display:grid;grid-template-columns:1fr 1fr;gap:14px;width:100%;max-width:760px}
+.choice{background:#fff;border:4px solid var(--line);border-radius:24px;padding:22px 12px;font-size:26px;box-shadow:0 6px 0 var(--line);line-height:1.35}
+.choice:active{transform:translateY(4px);box-shadow:none}
+.choice.right{background:var(--mint);border-color:var(--mintD);box-shadow:0 6px 0 var(--mintD)}
+.choice.wrong{background:var(--red);border-color:var(--redD);box-shadow:0 6px 0 var(--redD);animation:shake .4s}
+@keyframes shake{20%,60%{transform:translateX(-8px)}40%,80%{transform:translateX(8px)}}
+.hint{background:var(--lemon);border:3px dashed var(--lemonD);border-radius:20px;padding:14px 18px;font-size:22px;line-height:1.5;max-width:760px}
+.good{background:var(--mint);border-radius:20px;padding:14px 18px;font-size:24px;line-height:1.5;max-width:760px;text-align:center}
+.graph{background:#fff;border:3px solid var(--line);border-radius:22px;padding:6px;width:100%;max-width:640px;touch-action:none}
+.graph svg{display:block;width:100%;height:auto;touch-action:none;user-select:none}
+.dist{width:100%;max-width:820px}
+.drow{display:grid;grid-template-columns:minmax(180px,38%) 1fr 70px;gap:10px;align-items:center;margin:8px 0;font-size:22px}
+.dbar{height:34px;background:var(--line);border-radius:999px;overflow:hidden}
+.dbar i{display:block;height:100%;background:var(--skyD);border-radius:999px;transition:width .4s}
+.drow.right .dbar i{background:var(--mintD)} .drow.right{color:#2a8a5f}
+.chain{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;align-items:center;font-size:21px}
+.chain b{background:#fff;border:2px solid var(--line);border-radius:14px;padding:6px 12px;font-weight:normal}
+.heat{border-collapse:separate;border-spacing:4px;width:100%;font-size:17px}
+.heat th{background:var(--lemon);border-radius:10px;padding:6px;font-weight:normal}
+.heat td{border-radius:10px;padding:6px;text-align:center;background:#fff;border:2px solid var(--line);color:var(--ink)}
+.prog{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px}
+.prog .pp{background:#fff;border:2px solid var(--line);border-radius:16px;padding:8px 10px;font-size:18px}
+.prog .pp .bar{height:10px;margin-top:6px}
+.edit-case{display:grid;grid-template-columns:30px 56px 110px 120px 1fr;gap:6px;align-items:center;margin-bottom:4px}
+.edit-case input,.edit-case select,.edit-sel select{font-family:inherit;font-size:17px;padding:7px 9px;border-radius:12px;border:2px solid var(--line);color:var(--ink);width:100%;background:#fff}
+.edit-sel{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:0 0 4px 36px;font-size:16px;color:var(--sub)}
+.edit-sel select{width:auto}
+.cbox{border-bottom:2px dashed var(--line);padding:8px 0}
+.modeTg .btn.on{outline:3px solid var(--mintD)}
+@media (max-width:700px){.choices{grid-template-columns:1fr}.edit-case{grid-template-columns:26px 46px 1fr 1fr}.edit-case input[data-f=text]{grid-column:1/-1}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getDatabase, ref, set, get, update, onValue, onDisconnect } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+/* 「시장에 가면」·「떡볶이 시장」·「경매소」와 같은 Firebase 프로젝트 (데이터는 rooms/curve_코드 에 저장) */
+const firebaseConfig = {
+  apiKey: "AIzaSyDiehLZ1aKv8E3N_pD4bNmw0zgMexau99U",
+  authDomain: "marketgo-80ab5.firebaseapp.com",
+  databaseURL: "https://marketgo-80ab5-default-rtdb.firebaseio.com",
+  projectId: "marketgo-80ab5",
+  storageBucket: "marketgo-80ab5.firebasestorage.app",
+  messagingSenderId: "666715038541",
+  appId: "1:666715038541:web:b0f84a9703aa70aeca4d04"
+};
+const db = getDatabase(initializeApp(firebaseConfig));
+let offset = 0;
+onValue(ref(db, '.info/serverTimeOffset'), s => { offset = s.val() || 0; });
+
+/* ========== 기본 사례 (준비 화면에서 바꿀 수 있어요) ==========
+   type: shift(곡선 자체의 이동) / along(곡선 위의 이동)
+   curve: D(수요) / S(공급)
+   dir: shift면 +증가(오른쪽) -감소(왼쪽) / along이면 +가격 오름 -가격 내림 */
+const DEFAULT_CASES = [
+  { emoji: '🍓', market: '과일모찌', price: '1개 6,000원', text: '유명 아이돌이 SNS에 과일모찌 먹방을 올렸어요!', type: 'shift', curve: 'D', dir: '+' },
+  { emoji: '🍓', market: '과일모찌', price: '1개 6,000원', text: '과일모찌 가게가 가격을 6,000원에서 8,000원으로 올렸어요.', type: 'along', curve: 'D', dir: '+' },
+  { emoji: '🍓', market: '과일모찌', price: '1개 6,000원', text: '과일모찌 재료인 찹쌀 가격이 2배로 올랐어요!', type: 'shift', curve: 'S', dir: '-' },
+  { emoji: '🍕', market: '피자설기', price: '1조각 4,500원', text: '피자설기가 유튜브 쇼츠에서 대유행 중이에요!', type: 'shift', curve: 'D', dir: '+' },
+  { emoji: '🍕', market: '피자설기', price: '1조각 4,500원', text: "'피자설기 너무 달아서 건강에 안 좋다'는 뉴스가 나왔어요.", type: 'shift', curve: 'D', dir: '-' },
+  { emoji: '🍓', market: '딸기', price: '1팩 10,000원', text: '날씨가 좋아서 딸기가 대풍년이에요!', type: 'shift', curve: 'S', dir: '+' },
+  { emoji: '🐟', market: '붕어빵', price: '3개 2,000원', text: '날씨가 갑자기 추워졌어요!', type: 'shift', curve: 'D', dir: '+' },
+  { emoji: '🐟', market: '붕어빵', price: '3개 2,000원', text: '붕어빵을 2배 빨리 굽는 기계가 나왔어요!', type: 'shift', curve: 'S', dir: '+' },
+  { emoji: '🥬', market: '배추', price: '1포기 5,000원', text: '배추 가격이 5,000원에서 8,000원으로 올랐어요! 농부들은?', type: 'along', curve: 'S', dir: '+' },
+  { emoji: '🥬', market: '배추', price: '1포기 5,000원', text: '태풍 때문에 배추밭이 망가졌어요.', type: 'shift', curve: 'S', dir: '-' },
+];
+
+const P = new URLSearchParams(location.search);
+const isTeacher = P.get('t') === '1';
+let code = P.get('room') || '';
+const app = document.getElementById('app');
+const el = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const A = (c = code) => ref(db, 'rooms/curve_' + c);
+const AP = p => ref(db, `rooms/curve_${code}/${p}`);
+let toastT;
+const toast = msg => { document.querySelectorAll('.toast').forEach(t => t.remove()); const t = document.createElement('div'); t.className = 'toast pop'; t.textContent = msg; document.body.appendChild(t); clearTimeout(toastT); toastT = setTimeout(() => t.remove(), 2400); };
+
+/* ========== 🌈 병맛 안내 화면 ========== */
+let annT;
+function announce(big, sub = '', emo = '🌈', ms = 3000) {
+  document.querySelectorAll('.ann').forEach(a => a.remove());
+  const a = document.createElement('div');
+  a.className = 'ann';
+  const floaters = ['🕵️','🔍','✨','⭐','📈','💖','📉','🌟','🧾','🫧','✨','🔎'];
+  a.innerHTML = floaters.map((f, i) => `<span class="fl" style="left:${(i * 83) % 92}%;top:${(i * 47) % 85}%;animation-delay:${(i % 5) * .3}s">${f}</span>`).join('')
+    + `<div class="emo">${emo}</div><span class="rb">${big}</span>${sub ? `<div class="sub">${sub}</div>` : ''}<div class="tap">화면을 누르면 닫혀요</div>`;
+  a.onclick = () => a.remove();
+  document.body.appendChild(a);
+  clearTimeout(annT); annT = setTimeout(() => a.remove(), ms);
+}
+const annSeen = new Set(); let firstPass = true;
+function maybeAnnounce(key, fn) { if (annSeen.has(key)) return; annSeen.add(key); if (!firstPass) fn(); }
+
+/* ========== 사례 → 단계·정답·힌트 ========== */
+const casesOf = () => ((room && room.cases) || DEFAULT_CASES).map(c => ({ ...c, type: c.type === 'along' ? 'along' : 'shift', curve: c.curve === 'S' ? 'S' : 'D', dir: c.dir === '-' ? '-' : '+' }));
+const stepsOf = c => c.type === 'shift' ? ['price', 'move', 'who', 'drag', 'final'] : ['price', 'move', 'drag', 'final'];
+const STEP_NAME = { price: '가격이 변했나요?', move: '어떻게 움직여?', who: '누구 사정?', drag: '그래프 움직이기', final: '최종 결과' };
+const curveName = k => k === 'D' ? '수요' : '공급';
+const priceAfter = c => (c.curve === 'D') === (c.dir === '+') ? '+' : '-';                       // 수요↑·공급↓ → 가격↑
+const qtyAfter = c => c.curve === 'D' ? (c.dir === '+' ? '-' : '+') : c.dir;                         // 가격↑ → 수요량↓, 공급량↑
+function answerOf(c, step) {
+  if (step === 'price') return c.type === 'along' ? 'Y' : 'N';
+  if (step === 'move') return c.type;
+  if (step === 'who') return c.curve;
+  if (step === 'drag') return c.dir;
+  if (step === 'final') return c.type === 'shift' ? priceAfter(c) : qtyAfter(c);
+}
+function optionsOf(c, step) {
+  if (step === 'price') return [['Y', '💰 네! 가격이 변했어요'], ['N', '🙅 아니요! 가격은 그대로예요']];
+  if (step === 'move') return [['along', '🛤️ 곡선 위의 이동<br><small>(곡선은 그대로, 점만 움직여요)</small>'], ['shift', '🚚 곡선 자체의 이동<br><small>(곡선이 통째로 움직여요)</small>']];
+  if (step === 'who') return [['D', '🛒 사는 사람<br><small>(수요 곡선)</small>'], ['S', '🏭 파는 사람<br><small>(공급 곡선)</small>']];
+  if (step === 'drag') return c.type === 'shift' ? [['+', '➡️ 오른쪽 (증가)'], ['-', '⬅️ 왼쪽 (감소)']] : [['+', '⬆️ 위로 (가격 오름)'], ['-', '⬇️ 아래로 (가격 내림)']];
+  if (c.type === 'shift') return [['+', `📈 ${esc(c.market)} 가격이 오른다`], ['-', `📉 ${esc(c.market)} 가격이 내린다`]];
+  const w = c.curve === 'D' ? '사려는 양(수요량)' : '팔려는 양(공급량)';
+  return [['+', `📈 ${w}이 늘어난다`], ['-', `📉 ${w}이 줄어든다`]];
+}
+function questionOf(c, step) {
+  if (step === 'price') return `<b>${esc(c.market)} 가격</b>이 변했나요?`;
+  if (step === 'move') return '그럼 그래프에서는 어떻게 움직일까요?';
+  if (step === 'who') return '누구의 사정이 바뀌었나요?';
+  if (step === 'drag') return c.type === 'shift' ? `<b>${curveName(c.curve)} 곡선</b>을 손가락으로 끌어서 옮겨 보세요! 👆` : `<b>${curveName(c.curve)} 곡선 위의 점</b>을 끌어 보세요! 👆`;
+  if (c.type === 'shift') return `최종적으로 <b>${esc(c.market)} 가격</b>은 어떻게 될까요?`;
+  return c.curve === 'D' ? '그럼 <b>사려는 양(수요량)</b>은?' : '그럼 <b>팔려는 양(공급량)</b>은?';
+}
+function hintOf(c, step) {
+  if (step === 'price') return c.type === 'shift'
+    ? `🔍 사례를 다시 읽어 봐요. <b>${esc(c.market)} 가격</b>이 바뀌었다는 말이 있나요? 이건 가격 말고 <b>다른 이유</b>예요!`
+    : `🔍 사례를 다시 읽어 봐요. <b>${esc(c.market)} 가격</b>이 바뀌었다고 나와 있어요!`;
+  if (step === 'move') return '🔍 <b>그 상품의 가격</b>이 변했으면 → 곡선은 그대로, 점만 곡선 위에서 움직여요.<br>가격 말고 <b>다른 게</b> 변했으면 → 곡선이 통째로 움직여요!';
+  if (step === 'who') return '🔍 사는 사람(소비자)의 <b>마음·사정</b>이 바뀌었으면 → 수요 곡선<br>파는 사람(생산자)의 <b>비용·기술·날씨</b> 같은 사정이 바뀌었으면 → 공급 곡선!';
+  if (step === 'drag') return c.type === 'shift'
+    ? `🔍 같은 가격에서 ${c.curve === 'D' ? '사려는' : '팔려는'} 양이 <b>늘었으면 오른쪽 ➡️</b>, <b>줄었으면 왼쪽 ⬅️</b>!`
+    : '🔍 가격이 <b>올랐으면 점을 위로 ⬆️</b>, <b>내렸으면 아래로 ⬇️</b>!';
+  if (c.type === 'shift') return '🔍 그래프에서 두 곡선이 <b>새로 만나는 점 ⭐</b>의 높이를 봐요. 원래 점보다 위예요, 아래예요?';
+  return '🔍 점이 옮겨 간 곳을 봐요. <b>오른쪽</b>으로 갔으면 늘어나고, <b>왼쪽</b>으로 갔으면 줄어요!';
+}
+function chainOf(c) {
+  if (c.type === 'shift') {
+    const up = c.dir === '+', pu = priceAfter(c) === '+';
+    return [`${esc(c.emoji)} ${esc(c.text)}`, `${c.curve === 'D' ? '🛒 사는 사람' : '🏭 파는 사람'} 사정 변화`, `${curveName(c.curve)} ${up ? '증가' : '감소'}`, `${curveName(c.curve)} 곡선 ${up ? '오른쪽 ➡️' : '왼쪽 ⬅️'} 이동`, `가격 ${pu ? '상승 📈' : '하락 📉'}`];
+  }
+  const up = c.dir === '+', qu = qtyAfter(c) === '+';
+  return [`${esc(c.emoji)} ${esc(c.market)} 가격 ${up ? '상승' : '하락'}`, `${c.curve === 'D' ? '수요량' : '공급량'} ${qu ? '증가' : '감소'}`, `${curveName(c.curve)} 곡선 위에서 점만 이동 (곡선은 그대로!)`];
+}
+
+/* ========== 그래프 (SVG 400×320, 데이터 0~100) ========== */
+const GW = 400, GH = 320, GL = 46, GR = 16, GT = 16, GB = 40, pw = GW - GL - GR, ph = GH - GT - GB;
+const X = q => GL + q / 100 * pw, Y = p => GT + (1 - p / 100) * ph;
+const dLine = s => `M${X(15)},${Y(85 + s)} L${X(85)},${Y(15 + s)}`;     // 수요: P = 100 - Q + s
+const sLine = s => `M${X(15)},${Y(15 - s)} L${X(85)},${Y(85 - s)}`;     // 공급: P = Q - s
+const eqOf = (sD, sS) => { const q = (100 + sD + sS) / 2; return [q, 100 - q + sD]; };
+// opt: { c, mode:'base'|'shift'|'along', off, pt, hit, done }
+function graphSVG(o) {
+  const c = o.c, off = o.off || 0;
+  let g = `<defs><clipPath id="cl"><rect x="${GL}" y="${GT}" width="${pw}" height="${ph}"/></clipPath><marker id="ar" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="16" refX="8" refY="8" orient="auto"><path d="M0,0 L16,8 L0,16 z" fill="#E8803E"/></marker></defs>
+    <rect x="${GL}" y="${GT}" width="${pw}" height="${ph}" fill="#FFFDF9" stroke="#F2E6EC" stroke-width="2" rx="6"/>
+    <line x1="${GL}" y1="${GT + ph}" x2="${GL + pw}" y2="${GT + ph}" stroke="#A3919C" stroke-width="2"/><line x1="${GL}" y1="${GT}" x2="${GL}" y2="${GT + ph}" stroke="#A3919C" stroke-width="2"/>
+    <text x="${GL - 8}" y="${GT + 12}" text-anchor="end" font-size="14" fill="#A3919C">가격</text><text x="${GL + pw}" y="${GH - 8}" text-anchor="end" font-size="14" fill="#A3919C">수량</text>`;
+  const moveD = o.mode === 'shift' && c.curve === 'D', moveS = o.mode === 'shift' && c.curve === 'S';
+  const sD = moveD ? off : 0, sS = moveS ? off : 0;
+  const showBoth = o.mode !== 'along';
+  // 원래 곡선 (움직이는 곡선은 흐리게 남겨 둠)
+  if (moveD) g += `<path d="${dLine(0)}" stroke="#93C4EE" stroke-width="3" stroke-dasharray="7 6" fill="none" clip-path="url(#cl)"/>`;
+  if (moveS) g += `<path d="${sLine(0)}" stroke="#F5B48C" stroke-width="3" stroke-dasharray="7 6" fill="none" clip-path="url(#cl)"/>`;
+  if (showBoth || c.curve === 'D') g += `<path id="dPath" d="${dLine(sD)}" stroke="#3B8FD9" stroke-width="5" fill="none" clip-path="url(#cl)"/><text x="${Math.min(GW - 52, X(87) + (moveD ? off / 100 * pw : 0))}" y="${Y(15 + sD) + 4}" font-size="18" fill="#3B8FD9">수요${moveD && off ? "'" : ''}</text>`;
+  if (showBoth || c.curve === 'S') g += `<path id="sPath" d="${sLine(sS)}" stroke="#E8803E" stroke-width="5" fill="none" clip-path="url(#cl)"/><text x="${Math.min(GW - 52, X(87) + (moveS ? off / 100 * pw : 0))}" y="${Y(85 - sS) + 4}" font-size="18" fill="#E8803E">공급${moveS && off ? "'" : ''}</text>`;
+  if (o.mode === 'shift') {
+    const [q0, p0] = eqOf(0, 0);
+    g += `<circle cx="${X(q0)}" cy="${Y(p0)}" r="7" fill="#fff" stroke="#A3919C" stroke-width="3"/>`;
+    if (o.done && off) {
+      const [q1, p1] = eqOf(sD, sS);
+      g += `<line x1="${GL}" x2="${X(q1)}" y1="${Y(p1)}" y2="${Y(p1)}" stroke="#2FA67A" stroke-width="2" stroke-dasharray="5 5"/><line x1="${GL}" x2="${X(q0)}" y1="${Y(p0)}" y2="${Y(p0)}" stroke="#A3919C" stroke-width="2" stroke-dasharray="5 5"/>
+        <text x="${X(q1) + 10}" y="${Y(p1) - 10}" font-size="26">⭐</text><circle cx="${X(q1)}" cy="${Y(p1)}" r="8" fill="#2FA67A"/>`;
+      if (o.showPrice) g += `<line x1="${GL - 22}" x2="${GL - 22}" y1="${Y(p0)}" y2="${Y(p1) + (p1 > p0 ? 8 : -8)}" stroke="#E8803E" stroke-width="5" marker-end="url(#ar)"/>`;
+    }
+    if (o.hit) g += `<path id="hit" d="${c.curve === 'D' ? dLine(sD) : sLine(sS)}" stroke="transparent" stroke-width="44" fill="none" style="cursor:grab"/>`;
+    if (o.hit && !off) g += `<text x="${GL + pw / 2}" y="${GT + 24}" text-anchor="middle" font-size="17" fill="#B8A7EE">👆 ${curveName(c.curve)} 곡선을 잡고 옆으로 끌어요</text>`;
+  }
+  if (o.mode === 'along') {
+    const q0 = 50, pt = o.pt ?? 50;
+    const q = c.curve === 'D' ? 100 - pt : pt;
+    g += `<circle cx="${X(q0)}" cy="${Y(50)}" r="7" fill="#fff" stroke="#A3919C" stroke-width="3"/>`;
+    if (pt !== 50) g += `<line x1="${X(q0)}" y1="${Y(50)}" x2="${X(q)}" y2="${Y(pt)}" stroke="#2FA67A" stroke-width="3" stroke-dasharray="5 5"/>`;
+    if (o.done && pt !== 50) g += `<line x1="${X(q)}" x2="${X(q)}" y1="${Y(pt)}" y2="${GT + ph}" stroke="#2FA67A" stroke-width="2" stroke-dasharray="5 5"/><line x1="${X(q0)}" x2="${X(q0)}" y1="${Y(50)}" y2="${GT + ph}" stroke="#A3919C" stroke-width="2" stroke-dasharray="5 5"/>${o.showPrice ? `<line x1="${X(q0)}" x2="${X(q) + (q > q0 ? -8 : 8)}" y1="${GT + ph + 14}" y2="${GT + ph + 14}" stroke="#E8803E" stroke-width="5" marker-end="url(#ar)"/>` : ''}`;
+    g += `<circle id="pt" cx="${X(q)}" cy="${Y(pt)}" r="${o.hit ? 16 : 10}" fill="#2FA67A" stroke="#fff" stroke-width="4" style="cursor:grab"/>`;
+    if (o.hit && pt === 50) g += `<text x="${GL + pw / 2}" y="${GT + 24}" text-anchor="middle" font-size="17" fill="#B8A7EE">👆 초록 점을 잡고 곡선을 따라 끌어요</text>`;
+  }
+  return `<svg viewBox="0 0 ${GW} ${GH}" font-family="Jua">${g}</svg>`;
+}
+// 칠판용: 정답대로 움직인 그래프
+function solvedGraph(c, showPrice) {
+  return c.type === 'shift' ? graphSVG({ c, mode: 'shift', off: c.dir === '+' ? 20 : -20, done: true, showPrice })
+    : graphSVG({ c, mode: 'along', pt: c.dir === '+' ? 70 : 30, done: true, showPrice });
+}
+
+/* ========== 입구 ========== */
+let room = null, pid = null, render = null;
+function start() {
+  if (isTeacher && !code) return teacherHome();
+  if (!isTeacher) {
+    if (!code) code = localStorage.getItem('curve_last_room') || '';
+    pid = code ? localStorage.getItem('curve_pid_' + code) : null;
+    if (!code || !pid) return studentForm(code);
+  }
+  render = isTeacher ? renderTeacher : renderStudent;
+  if (isTeacher) localStorage.setItem('curve_teacher_room', code);
+  else {
+    const onl = AP(`players/${pid}/online`);
+    onValue(ref(db, '.info/connected'), s => { if (s.val()) { onDisconnect(onl).set(false); set(onl, true); } });
+  }
+  onValue(A(), s => {
+    room = s.val();
+    if (!room) { app.innerHTML = `<div class="wrap stage"><div class="bigEmoji">😢</div><p class="rule">방을 찾을 수 없어요</p></div>`; return; }
+    render(); firstPass = false;
+  }, e => { console.error(e); toast('데이터를 못 불러왔어요 😢'); });
+}
+function teacherHome() {
+  const saved = localStorage.getItem('curve_teacher_room');
+  app.innerHTML = `<div class="wrap"><div class="stage" style="min-height:80vh">
+    <div class="bigEmoji bounce">🕵️</div>
+    <div class="title">곡선 <span>탐정</span></div>
+    <p class="muted" style="font-size:22px">곡선 위의 이동일까? 곡선 자체의 이동일까? 사건을 풀어 봐요</p>
+    <button class="btn big mint" id="newRoom">새 수사 준비하기 ✨</button>
+    ${saved ? `<button class="btn sky" id="resume">이어서 하기 (방 ${esc(saved)})</button>` : ''}
+  </div></div>`;
+  el('newRoom').onclick = newRoom;
+  if (el('resume')) el('resume').onclick = () => location.href = `?t=1&room=${saved}`;
+}
+async function newRoom() {
+  try {
+    let c;
+    for (let i = 0; i < 20; i++) { c = String(Math.floor(1000 + Math.random() * 9000)); if (!(await get(A(c))).exists()) break; }
+    let cases = DEFAULT_CASES;
+    try { const last = JSON.parse(localStorage.getItem('curve_last_cases') || 'null'); if (Array.isArray(last) && last.length) cases = last; } catch (e) {}
+    await set(A(c), { createdAt: Date.now(), cases, state: { phase: 'setup', mode: 'together', ci: 0, step: 0, reveal: false, soloFrom: 0, showNames: true } });
+    localStorage.setItem('curve_teacher_room', c);
+    location.href = `?t=1&room=${c}`;
+  } catch (e) { console.error(e); toast('방을 못 열었어요 😢 인터넷을 확인해 주세요'); }
+}
+function studentForm(prefill) {
+  app.innerHTML = `<div class="s-wrap"><div class="stage" style="min-height:80vh">
+    <div class="bigEmoji bounce">🕵️</div>
+    <div class="title">곡선 <span>탐정</span></div>
+    <div class="card" style="width:min(460px,100%);display:grid;gap:4px">
+      <input class="field" id="jCode" inputmode="numeric" maxlength="4" placeholder="입장 코드 4자리" value="${esc(prefill)}">
+      <input class="field" id="jName" maxlength="8" placeholder="내 이름" value="${esc(localStorage.getItem('curve_name') || '')}">
+      <button class="btn big mint" id="join">입장하기 🚪</button>
+    </div>
+  </div></div>`;
+  el('join').onclick = () => join(el('jCode').value.trim(), el('jName').value.trim());
+}
+async function join(c, name) {
+  if (!/^\d{4}$/.test(c)) return toast('입장 코드 4자리를 써 주세요');
+  if (!name) return toast('이름을 써 주세요');
+  let snap;
+  try { snap = await get(A(c)); } catch (e) { return toast('접속을 못 했어요 😢 인터넷을 확인해 주세요'); }
+  if (!snap.exists()) return toast('그런 방이 없어요 😢 코드를 확인해 주세요');
+  let id = localStorage.getItem('curve_pid_' + c);
+  if (!id) {
+    const ps = snap.val().players || {};
+    const hit = Object.entries(ps).find(([, p]) => p.name === name && p.online !== true);   // 다른 기기로 다시 들어와도 이어서
+    id = hit ? hit[0] : Math.random().toString(36).slice(2, 10);
+    localStorage.setItem('curve_pid_' + c, id);
+  }
+  await update(ref(db, `rooms/curve_${c}/players/${id}`), { name, joinedAt: Date.now() });
+  localStorage.setItem('curve_name', name); localStorage.setItem('curve_last_room', c);
+  location.href = `?room=${c}`;
+}
+
+/* ========== 기록 ========== */
+// ans[학생][사례][단계] = { first: 처음 고른 답, ok: 처음에 맞혔나, done: 결국 맞혔나 }
+const ansOf = id => ((room.ans || {})[id]) || {};
+const stepRec = (id, ci, st) => ((ansOf(id)[ci] || {})[st]) || null;
+const caseDone = (id, ci, c) => stepsOf(c).every(st => (stepRec(id, ci, st) || {}).done);
+function scoreOf(id) {
+  const cs = casesOf(); let ok = 0, tot = 0;
+  cs.forEach((c, ci) => stepsOf(c).forEach(st => { const r = stepRec(id, ci, st); if (r) { tot++; if (r.ok) ok++; } }));
+  return { ok, tot };
+}
+
+/* =========================================================
+   👩‍🏫 선생님 화면
+   ========================================================= */
+let editT = null;
+const nameOf = id => ((room.players || {})[id] || {}).name || '?';
+const onlineIds = () => Object.entries(room.players || {}).filter(([, p]) => p.online === true).map(([id]) => id);
+const playerIds = () => Object.keys(room.players || {});
+
+function topbar(st) {
+  const play = st.phase === 'play';
+  return `<div class="topbar"><div class="logo">🕵️ 곡선 탐정</div>
+    <span class="pill">방 코드 <b style="color:var(--peachD)">${esc(code)}</b></span>
+    ${st.phase !== 'setup' ? `<span class="pill">🙋 ${onlineIds().length}명 접속</span>` : ''}
+    ${play ? `<span class="modeTg"><button class="btn sm mint ${st.mode === 'together' ? 'on' : ''}" id="mTog">👥 같이 하기</button><button class="btn sm sky ${st.mode === 'solo' ? 'on' : ''}" id="mSolo">🏃 각자 하기</button></span>` : ''}
+    <button class="btn sm lav" id="names">${st.showNames ? '👤 이름 ON' : '🙈 이름 OFF'}</button>
+    ${play ? '<button class="btn sm lemon" id="toEnd">🏁 수사 끝</button>' : ''}
+    <button class="btn sm" id="home">처음 화면</button></div>`;
+}
+const stepBar = (c, cur, doneFn) => `<div class="stepbar"><span class="${cur === 0 ? 'on' : 'ok'}">📰 사례</span>${stepsOf(c).map((s, k) => `<span class="${cur === k + 1 ? 'on' : (doneFn ? doneFn(s) : cur > k + 1) ? 'ok' : ''}">${k + 1}. ${STEP_NAME[s]}</span>`).join('')}</div>`;
+
+function renderTeacher() {
+  const st = room.state || {}, cs = casesOf();
+  if (st.phase === 'setup' && document.activeElement && document.activeElement.closest && document.activeElement.closest('.cbox')) return;
+  let body = '';
+  if (st.phase === 'setup') {
+    body = `<div class="card"><h3>⚙️ 사례 준비 <span class="muted" style="font-size:16px">학생들이 들어오기 전에 설정해요 · 정답이 보이니 칠판에 띄우지 마세요 🤫</span></h3>
+      ${cs.map((c, k) => `<div class="cbox">
+        <div class="edit-case"><b style="font-size:20px">${k + 1}</b><input data-k="${k}" data-f="emoji" value="${esc(c.emoji)}" maxlength="4"><input data-k="${k}" data-f="market" value="${esc(c.market)}" maxlength="12" placeholder="상품"><input data-k="${k}" data-f="price" value="${esc(c.price || '')}" maxlength="14" placeholder="처음 가격"><input data-k="${k}" data-f="text" value="${esc(c.text)}" maxlength="60" placeholder="사례"></div>
+        <div class="edit-sel">정답:
+          <select data-k="${k}" data-f="type"><option value="shift" ${c.type === 'shift' ? 'selected' : ''}>🚚 곡선 자체의 이동</option><option value="along" ${c.type === 'along' ? 'selected' : ''}>🛤️ 곡선 위의 이동</option></select>
+          <select data-k="${k}" data-f="curve"><option value="D" ${c.curve === 'D' ? 'selected' : ''}>🛒 수요</option><option value="S" ${c.curve === 'S' ? 'selected' : ''}>🏭 공급</option></select>
+          <select data-k="${k}" data-f="dir">${c.type === 'shift' ? `<option value="+" ${c.dir === '+' ? 'selected' : ''}>➡️ 증가</option><option value="-" ${c.dir === '-' ? 'selected' : ''}>⬅️ 감소</option>` : `<option value="+" ${c.dir === '+' ? 'selected' : ''}>⬆️ 가격 오름</option><option value="-" ${c.dir === '-' ? 'selected' : ''}>⬇️ 가격 내림</option>`}</select>
+          <span>→ ${chainOf(c).slice(-1)[0]}</span>
+          <button class="btn sm sky" data-up="${k}" style="margin:0;padding:4px 10px" ${k ? '' : 'disabled'}>▲</button><button class="btn sm" data-del="${k}" style="margin:0;padding:4px 10px">✕</button></div>
+      </div>`).join('')}
+      ${cs.length < 20 ? '<button class="btn sm lemon" id="addCase">➕ 사례 추가</button>' : ''}
+      <button class="btn sm" id="resetCases">↩️ 기본 사례로</button>
+    </div>
+    <div class="center"><button class="btn big mint" id="ready">✅ 준비 끝! 학생 입장 받기</button></div>`;
+  }
+  else if (st.phase === 'lobby') {
+    const url = location.origin + location.pathname + '?room=' + code, ps = Object.values(room.players || {});
+    body = `<div class="lobby">
+      <div class="card center"><h3>태블릿으로 입장!</h3><div class="muted">입장 코드</div><div class="bigcode">${esc(code)}</div><div id="qr"></div>
+        <div class="muted" style="font-size:13px;word-break:break-all">${esc(url)}</div></div>
+      <div class="card"><h3>🙋 입장한 탐정 ${ps.length}명</h3><div class="chips">${ps.map(p => `<span class="chip soft" style="${p.online === true ? '' : 'opacity:.4'}">${esc(p.name)}</span>`).join('') || '<span class="muted">아직 아무도 없어요</span>'}</div>
+        <div class="hl lav" style="margin-top:16px">🕵️ 사건마다 이렇게 풀어요<br><span style="font-size:19px">① 가격이 변했나요? → ② 곡선 위의 이동? 곡선 자체의 이동? → ③ 누구 사정? → ④ 그래프 움직이기 → ⑤ 최종 가격은?</span></div></div>
+    </div>
+    <div class="center"><button class="btn big mint" id="go" ${ps.length ? '' : 'disabled'}>👥 같이 첫 사건 풀기</button> <button class="btn big sky" id="goSolo" ${ps.length ? '' : 'disabled'}>🏃 처음부터 각자 풀기</button> <button class="btn sm" id="toSetup">⚙️ 설정 고치기</button></div>`;
+  }
+  else if (st.phase === 'play' && st.mode === 'together') {
+    const ci = st.ci || 0, c = cs[ci], steps = stepsOf(c), k = st.step || 0, stp = steps[k - 1];
+    if (!c) body = '<div class="stage"><div class="rule">사례가 없어요</div></div>';
+    else if (k === 0) {
+      maybeAnnounce('case' + ci, () => announce('🚨 사건 발생!!', `${ci + 1}번째 사건`, '🕵️', 2600));
+      body = `<div class="stage" style="gap:16px">
+        <span class="roundBadge">🕵️ 사건 ${ci + 1} / ${cs.length}</span>
+        <div class="case"><div class="ce">${esc(c.emoji)}</div><div class="cm">${esc(c.market)} 시장</div>${c.price ? `<div class="cp">💰 지금 가격: <b>${esc(c.price)}</b></div>` : ''}<div class="ct">${esc(c.text)}</div></div>
+        ${stepBar(c, 0)}
+        <div class="graph" style="max-width:520px">${graphSVG({ c, mode: 'base' })}</div>
+        <button class="btn big mint" id="nextStep">▶ 수사 시작!</button></div>`;
+    } else {
+      const ids = playerIds(), opts = optionsOf(c, stp), right = answerOf(c, stp);
+      const counts = {}; opts.forEach(([v]) => counts[v] = 0);
+      let answered = 0; ids.forEach(id => { const r = stepRec(id, ci, stp); if (r) { answered++; counts[r.first] = (counts[r.first] || 0) + 1; } });
+      const done = ids.filter(id => (stepRec(id, ci, stp) || {}).done).length;
+      const max = Math.max(1, answered), last = k === steps.length;
+      const pastDrag = steps.indexOf('drag') < k - 1 || (stp === 'drag' && st.reveal);
+      body = `<div style="display:grid;grid-template-columns:1.15fr .85fr;gap:16px;align-items:start">
+        <div class="stage" style="min-height:auto;gap:12px">
+          <div class="case s"><div class="ce">${esc(c.emoji)}</div><div class="cm">${esc(c.market)} 시장 · 사건 ${ci + 1}</div>${c.price ? `<div class="cp">💰 지금 가격: <b>${esc(c.price)}</b></div>` : ''}<div class="ct">${esc(c.text)}</div></div>
+          ${stepBar(c, k)}
+          <div class="q">${k}. ${questionOf(c, stp)}</div>
+          <div class="dist">${opts.map(([v, lab]) => `<div class="drow ${st.reveal && v === right ? 'right' : ''}"><span>${st.reveal && v === right ? '✅ ' : ''}${lab.replace(/<br>.*$/, '')}</span><div class="dbar"><i style="width:${st.reveal ? counts[v] / max * 100 : 0}%"></i></div><b>${st.reveal ? counts[v] + '명' : '?'}</b></div>`).join('')}</div>
+          <div class="rule muted" style="font-size:20px">✍️ 답한 탐정 ${answered} / ${ids.length}명 · 맞힌 탐정 ${done}명</div>
+          ${st.reveal ? `<div class="hint">${hintOf(c, stp).replace('🔍 ', '💡 ')}</div>` : ''}
+          ${st.reveal && last ? `<div class="good"><div class="chain">${chainOf(c).map(x => `<b>${x}</b>`).join(' → ')}</div></div>` : ''}
+          <div>${!st.reveal ? '<button class="btn big lemon" id="reveal">✅ 정답 공개</button>' : last ? (ci + 1 < cs.length ? '<button class="btn big mint" id="nextCase">🚨 다음 사건</button>' : '<button class="btn big mint" id="toEnd2">🏁 수사 끝! 결과 보기</button>') : '<button class="btn big mint" id="nextStep">▶ 다음 단계</button>'}
+            ${ci + 1 < cs.length ? `<button class="btn sky" id="toSolo">🏃 다음 사건부터 각자 풀기</button>` : ''}</div>
+        </div>
+        <div class="graph">${pastDrag ? solvedGraph(c, last && st.reveal) : graphSVG({ c, mode: 'base' })}</div>
+      </div>`;
+    }
+  }
+  else if (st.phase === 'play' && st.mode === 'solo') {
+    const ids = playerIds(), from = st.soloFrom || 0, total = cs.length - from;
+    const rows = ids.map(id => { const n = cs.filter((c, ci) => ci >= from && caseDone(id, ci, c)).length; return { id, n }; }).sort((a, b) => nameOf(a.id).localeCompare(nameOf(b.id)));
+    const allDone = rows.filter(r => r.n >= total).length;
+    body = `<div class="center" style="margin-bottom:10px"><span class="roundBadge">🏃 각자 수사 중 · 사건 ${from + 1}~${cs.length}</span></div>
+      <div class="card"><h3>🕵️ 탐정들 진행 상황 <span class="muted" style="font-size:16px">다 푼 탐정 ${allDone} / ${ids.length}명</span></h3>
+        <div class="prog">${rows.map(r => `<div class="pp">${st.showNames ? esc(nameOf(r.id)) : '🕵️'} ${r.n >= total ? '🎉' : ''}<div class="bar"><i style="width:${total ? r.n / total * 100 : 0}%"></i></div><span class="muted" style="font-size:14px">${r.n} / ${total}</span></div>`).join('')}</div></div>
+      ${heatTable(cs, from)}`;
+  }
+  else if (st.phase === 'end') {
+    maybeAnnounce('end', () => announce('🎉 수사 끝!!', '다들 명탐정이었어요 🕵️', '🏆', 3000));
+    body = `<div class="center" style="margin-bottom:10px"><span class="roundBadge">🏁 수사 결과</span></div>
+      ${heatTable(cs, 0)}
+      <div class="card"><h3>🧐 정리해 볼까요?</h3>
+        <div class="hl sky" style="font-size:22px">🛤️ <b>그 상품의 가격</b>이 변하면 → 곡선은 그대로, <b>곡선 위에서</b> 점만 이동 (수요량·공급량의 변화)</div>
+        <div class="hl peach" style="font-size:22px">🚚 <b>가격 말고 다른 것</b>이 변하면 → <b>곡선 자체가</b> 이동 (수요·공급의 변화)</div>
+        <div class="hl lemon" style="font-size:22px">➡️ 증가는 오른쪽, ⬅️ 감소는 왼쪽! 수요↑·공급↓ → 가격 📈 / 수요↓·공급↑ → 가격 📉</div></div>`;
+  }
+  if (!body) body = `<div class="stage"><div class="rule">잠깐만요… 🔄</div></div>`;
+  app.innerHTML = `<div class="wrap">${topbar(st)}${body}</div>`;
+  if (st.phase === 'lobby' && window.QRCode) new QRCode(el('qr'), { text: location.origin + location.pathname + '?room=' + code, width: 200, height: 200, colorDark: '#5B4B57', colorLight: '#ffffff' });
+  wireTeacher(st, cs);
+}
+// 사례 × 단계별 "처음에 맞힌 비율" — 어디서 많이 헷갈렸는지 한눈에
+function heatTable(cs, from) {
+  const ids = playerIds(), all = ['price', 'move', 'who', 'drag', 'final'];
+  const cell = (ci, s, c) => {
+    if (!stepsOf(c).includes(s)) return '<td style="background:var(--line);border-color:var(--line)">-</td>';
+    const rs = ids.map(id => stepRec(id, ci, s)).filter(Boolean);
+    if (!rs.length) return '<td class="muted">·</td>';
+    const r = rs.filter(x => x.ok).length / rs.length, bg = r >= .8 ? 'var(--mint)' : r >= .5 ? 'var(--lemon)' : 'var(--red)';
+    return `<td style="background:${bg}">${Math.round(r * 100)}%</td>`;
+  };
+  return `<div class="card"><h3>📊 처음에 맞힌 비율 <span class="muted" style="font-size:16px">빨간 칸 = 많이 헷갈린 곳</span></h3>
+    <table class="heat"><tr><th>사건</th>${all.map(s => `<th>${STEP_NAME[s]}</th>`).join('')}</tr>
+    ${cs.map((c, ci) => ci < from ? '' : `<tr><th style="text-align:left">${ci + 1}. ${esc(c.emoji)} ${esc(c.text.slice(0, 18))}${c.text.length > 18 ? '…' : ''}</th>${all.map(s => cell(ci, s, c)).join('')}</tr>`).join('')}</table></div>`;
+}
+function wireTeacher(st, cs) {
+  const S = o => update(AP('state'), o);
+  el('names').onclick = () => S({ showNames: !st.showNames });
+  el('home').onclick = () => { if (confirm('처음 화면으로 갈까요? (방은 그대로 남아요)')) location.href = '?t=1'; };
+  if (el('mTog')) el('mTog').onclick = () => { if (st.mode !== 'together') S({ mode: 'together', step: 0, reveal: false }); };
+  if (el('mSolo')) el('mSolo').onclick = () => { if (st.mode !== 'solo') S({ mode: 'solo', soloFrom: st.ci || 0 }); };
+  if (el('toEnd')) el('toEnd').onclick = () => { if (confirm('수사를 끝내고 결과를 볼까요?')) S({ phase: 'end' }); };
+  if (st.phase === 'setup') {
+    const save = () => {
+      const next = casesOf().map(x => ({ ...x }));
+      document.querySelectorAll('.cbox [data-f]').forEach(f => { next[+f.dataset.k][f.dataset.f] = f.value; });
+      set(AP('cases'), next);
+      try { localStorage.setItem('curve_last_cases', JSON.stringify(next)); } catch (e) {}
+    };
+    document.querySelectorAll('.cbox input').forEach(inp => { inp.oninput = () => { clearTimeout(editT); editT = setTimeout(save, 800); }; inp.onblur = () => { clearTimeout(editT); save(); }; });
+    document.querySelectorAll('.cbox select').forEach(sel => sel.onchange = () => { sel.blur(); save(); });
+    document.querySelectorAll('[data-del]').forEach(b => b.onclick = () => { const n = casesOf().filter((_, k) => k !== +b.dataset.del); if (n.length) set(AP('cases'), n); });
+    document.querySelectorAll('[data-up]').forEach(b => b.onclick = () => { const n = casesOf(), k = +b.dataset.up; [n[k - 1], n[k]] = [n[k], n[k - 1]]; set(AP('cases'), n); });
+    if (el('addCase')) el('addCase').onclick = () => set(AP('cases'), [...casesOf(), { emoji: '🎁', market: '새 상품', price: '1개 1,000원', text: '사례를 적어 주세요', type: 'shift', curve: 'D', dir: '+' }]);
+    el('resetCases').onclick = () => { if (confirm('기본 사례로 되돌릴까요?')) set(AP('cases'), DEFAULT_CASES); };
+    el('ready').onclick = () => S({ phase: 'lobby' });
+  }
+  if (st.phase === 'lobby') {
+    el('toSetup').onclick = () => S({ phase: 'setup' });
+    el('go').onclick = () => S({ phase: 'play', mode: 'together', ci: 0, step: 0, reveal: false });
+    el('goSolo').onclick = () => S({ phase: 'play', mode: 'solo', ci: 0, soloFrom: 0 });
+  }
+  if (el('nextStep')) el('nextStep').onclick = () => S({ step: (st.step || 0) + 1, reveal: false });
+  if (el('reveal')) el('reveal').onclick = () => S({ reveal: true });
+  if (el('nextCase')) el('nextCase').onclick = () => S({ ci: (st.ci || 0) + 1, step: 0, reveal: false });
+  if (el('toSolo')) el('toSolo').onclick = () => S({ mode: 'solo', soloFrom: (st.ci || 0) + 1 });
+  if (el('toEnd2')) el('toEnd2').onclick = () => S({ phase: 'end' });
+}
+
+/* =========================================================
+   🧒 학생 화면
+   ========================================================= */
+let readSeen = {}, sKey = '', dragState = null, hold = null;   // hold: 각자 풀기에서 방금 맞힌 단계를 '다음' 누를 때까지 보여 줌
+function record(ci, stp, val, ok) {
+  const r = stepRec(pid, ci, stp);
+  if (ok && room.state.mode === 'solo') hold = { ci, stp };
+  const upd = r ? { done: r.done || ok } : { first: val, ok, done: ok };
+  return update(AP(`ans/${pid}/${ci}/${stp}`), upd);
+}
+function renderStudent() {
+  const st = room.state || {}, cs = casesOf(), me = (room.players || {})[pid];
+  if (!me) { localStorage.removeItem('curve_pid_' + code); return studentForm(code); }
+  const sc = scoreOf(pid);
+  const top = `<div class="s-top"><span class="me">🕵️ ${esc(me.name)}</span><span class="pill">⭐ ${sc.ok}점</span></div>`;
+  const wait = (emo, t, s) => { app.innerHTML = `<div class="s-wrap">${top}<div class="stage" style="min-height:70vh"><div class="bigEmoji bounce">${emo}</div><div class="title" style="font-size:38px">${t}</div><div class="rule">${s}</div></div></div>`; };
+  if (dragState) return;   // 끄는 중엔 다시 그리지 않음
+  if (st.phase === 'setup' || st.phase === 'lobby') { sKey = ''; return wait('🕵️', '입장 완료!', '칠판을 보세요 👀<br>곧 첫 사건이 터져요'); }
+  if (st.phase === 'end') { sKey = ''; return wait('🏆', '수사 끝!', `처음에 맞힌 단계 <b>${sc.ok}</b> / ${sc.tot}개<br>명탐정 수고했어요 🕵️`); }
+  // 지금 풀 사례·단계 고르기
+  let ci, k;
+  if (st.mode === 'together') {
+    ci = st.ci || 0; k = st.step || 0;
+  } else {
+    const from = st.soloFrom || 0;
+    ci = hold ? hold.ci : cs.findIndex((c, x) => x >= from && !caseDone(pid, x, c));
+    if (ci < 0) { sKey = ''; return wait('🎉', '사건 다 풀었어요!', `처음에 맞힌 단계 <b>${sc.ok}</b> / ${sc.tot}개<br>칠판을 보며 기다려요 👀`); }
+    const steps0 = stepsOf(cs[ci]);
+    k = hold ? steps0.indexOf(hold.stp) + 1 : readSeen[ci] ? steps0.findIndex(s => !(stepRec(pid, ci, s) || {}).done) + 1 : 0;
+  }
+  const c = cs[ci]; if (!c) return wait('🕵️', '잠깐만요', '칠판을 보세요');
+  const steps = stepsOf(c), stp = steps[k - 1], rec = stp ? stepRec(pid, ci, stp) : null;
+  const key = [st.mode, ci, k, rec ? `${rec.first}/${rec.done}` : '-', st.mode === 'together' ? st.reveal : ''].join('|');
+  if (key === sKey) return;
+  const prevKey = sKey; sKey = key;
+  const caseCard = `<div class="case s"><div class="ce">${esc(c.emoji)}</div><div class="cm">${esc(c.market)} 시장 · 사건 ${ci + 1}</div>${c.price ? `<div class="cp">💰 지금 가격: <b>${esc(c.price)}</b></div>` : ''}<div class="ct">${esc(c.text)}</div></div>`;
+  const bar = stepBar(c, k, s => (stepRec(pid, ci, s) || {}).done);
+  if (k === 0) {
+    app.innerHTML = `<div class="s-wrap">${top}<div class="stage" style="gap:14px"><span class="roundBadge">🚨 사건 ${ci + 1} 발생!</span>${caseCard.replace('case s', 'case')}${bar}
+      ${st.mode === 'solo' ? '<button class="btn big mint" id="startCase">🔍 수사 시작!</button>' : '<div class="rule muted">사례를 잘 읽어요 📖 곧 수사가 시작돼요</div>'}</div></div>`;
+    if (el('startCase')) el('startCase').onclick = () => { readSeen[ci] = true; sKey = ''; renderStudent(); };
+    return;
+  }
+  const justWrong = rec && !rec.done && prevKey.startsWith([st.mode, ci, k].join('|'));
+  const head = `<div class="s-wrap">${top}<div class="stage" style="gap:12px;min-height:auto">${caseCard}${bar}<div class="q">${k}. ${questionOf(c, stp)}</div>`;
+  const doneBox = rec && rec.done ? `<div class="good">${rec.ok ? '🎯 한 번에 맞혔어요! +1점' : '✅ 맞았어요!'}${k === steps.length ? `<div class="chain" style="margin-top:8px">${chainOf(c).map(x => `<b>${x}</b>`).join(' → ')}</div>` : ''}</div>
+      ${st.mode === 'together' ? '<div class="rule muted">칠판을 보며 기다려요 👀</div>' : `<button class="btn big mint" id="goOn">${k === steps.length ? (cs.findIndex((x, j) => j > ci && !caseDone(pid, j, x)) >= 0 ? '🚨 다음 사건 ▶' : '🎉 끝!') : '▶ 다음 단계'}</button>`}` : '';
+  const hintBox = rec && !rec.done ? `<div class="hint">${hintOf(c, stp)}<br><b>다시 골라 봐요!</b></div>` : '';
+  if (stp === 'drag') {
+    const solved = rec && rec.done;
+    app.innerHTML = `${head}<div class="graph" id="gwrap">${solved ? solvedGraph(c, false) : graphSVG({ c, mode: c.type, off: 0, pt: 50, hit: true })}</div>${hintBox}${doneBox}</div></div>`;
+    if (!solved) setupDrag(c, ci);
+  } else {
+    const opts = optionsOf(c, stp), right = answerOf(c, stp);
+    const showGraph = stp === 'final';
+    app.innerHTML = `${head}${showGraph ? `<div class="graph">${solvedGraph(c, rec && rec.done)}</div>` : ''}
+      <div class="choices">${opts.map(([v, lab]) => `<button class="choice ${rec && rec.done && v === right ? 'right' : ''}" data-v="${v}" ${rec && rec.done ? 'disabled' : ''}>${lab}</button>`).join('')}</div>${hintBox}${doneBox}</div></div>`;
+    document.querySelectorAll('.choice').forEach(b => b.onclick = () => {
+      const v = b.dataset.v, ok = v === right;
+      if (!ok) { b.classList.add('wrong'); }
+      record(ci, stp, v, ok);
+    });
+    if (justWrong) { const w = document.querySelector(`.choice[data-v="${rec.first}"]`); if (w && !rec.done) w.classList.add('wrong'); }
+  }
+  if (el('goOn')) el('goOn').onclick = () => { hold = null; sKey = ''; renderStudent(); };
+}
+
+/* 👆 그래프 끌기: 곡선 통째로(좌우) 또는 곡선 위의 점(위아래) */
+function setupDrag(c, ci) {
+  const wrap = el('gwrap'), svg = () => wrap.querySelector('svg');
+  const toSvg = e => { const r = svg().getBoundingClientRect(); return [(e.clientX - r.left) * GW / r.width, (e.clientY - r.top) * GH / r.height]; };
+  const redraw = v => { wrap.innerHTML = c.type === 'shift' ? graphSVG({ c, mode: 'shift', off: v, hit: true }) : graphSVG({ c, mode: 'along', pt: v, hit: true }); bind(); };
+  const finish = v => {
+    dragState = null;
+    const moved = c.type === 'shift' ? v : v - 50;
+    if (Math.abs(moved) < 6) { toast('조금 더 확실하게 끌어 봐요 👆'); redraw(c.type === 'shift' ? 0 : 50); return; }
+    const val = moved > 0 ? '+' : '-', ok = val === c.dir;
+    if (ok) { wrap.innerHTML = solvedGraph(c, false); }
+    else { toast(c.type === 'shift' ? '앗, 반대쪽이에요! 💡 힌트를 봐요' : '앗, 반대 방향이에요! 💡 힌트를 봐요'); redraw(c.type === 'shift' ? 0 : 50); }
+    record(ci, 'drag', val, ok);
+    sKey = ''; setTimeout(renderStudent, ok ? 600 : 50);
+  };
+  function bind() {
+    const h = svg().querySelector(c.type === 'shift' ? '#hit' : '#pt'); if (!h) return;
+    h.onpointerdown = e => {
+      e.preventDefault(); const [sx, sy] = toSvg(e); dragState = { sx, sy, v: c.type === 'shift' ? 0 : 50 };
+      const move = ev => {
+        if (!dragState) return; ev.preventDefault();
+        const [x, y] = toSvg(ev);
+        if (c.type === 'shift') dragState.v = Math.max(-25, Math.min(25, (x - dragState.sx) / pw * 100));
+        else dragState.v = Math.max(22, Math.min(78, (1 - (y - GT) / ph) * 100));
+        const s = svg(); s.outerHTML; wrap.innerHTML = c.type === 'shift' ? graphSVG({ c, mode: 'shift', off: dragState.v, hit: true }) : graphSVG({ c, mode: 'along', pt: dragState.v, hit: true });
+      };
+      const up = () => { window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up); window.removeEventListener('pointercancel', up); if (dragState) finish(dragState.v); };
+      window.addEventListener('pointermove', move, { passive: false }); window.addEventListener('pointerup', up); window.addEventListener('pointercancel', up);
+    };
+  }
+  bind();
+}
+
+start();
+</script>
+</body>
+</html>
