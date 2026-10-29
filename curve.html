@@ -203,6 +203,9 @@ canvas{display:block;width:100%;touch-action:none;border-radius:16px}
 .tiles{display:flex;align-items:stretch;gap:6px}
 .tile{flex:1;background:var(--cream,#FFF8F0);border:3px solid var(--line);border-radius:20px;padding:12px 6px;text-align:center}
 .tile .te{font-size:44px;line-height:1.1}.tile .tb{font-size:23px;margin-top:4px}.tile .ts{font-size:15px;color:var(--sub)}
+.s-wrap{max-width:1150px}
+.tile .tb{white-space:nowrap;font-size:21px}.sumCard{grid-template-columns:.8fr 1.2fr}
+.nb{display:inline-flex;width:24px;height:24px;border-radius:50%;color:#fff;font-size:16px;align-items:center;justify-content:center;margin-right:5px;vertical-align:2px}
 .tile.last{background:var(--mint);border-color:var(--mintD)}
 .tarr{align-self:center;font-size:26px;color:var(--sub)}
 .sumPlus{margin-top:12px;font-size:17px;color:var(--sub);background:var(--lemon);border-radius:14px;padding:8px 12px}
@@ -225,6 +228,7 @@ canvas{display:block;width:100%;touch-action:none;border-radius:16px}
 .choice{background:#fff;border:4px solid var(--line);border-radius:24px;padding:22px 12px;font-size:26px;box-shadow:0 6px 0 var(--line);line-height:1.35}
 .choice:active{transform:translateY(4px);box-shadow:none}
 .choice.right{background:var(--mint);border-color:var(--mintD);box-shadow:0 6px 0 var(--mintD)}
+.choice.picked{background:var(--sky);border-color:var(--skyD);box-shadow:0 6px 0 var(--skyD)}
 .choice.wrong{background:var(--red);border-color:var(--redD);box-shadow:0 6px 0 var(--redD);animation:shake .4s}
 @keyframes shake{20%,60%{transform:translateX(-8px)}40%,80%{transform:translateX(8px)}}
 .hint{background:var(--lemon);border:3px dashed var(--lemonD);border-radius:20px;padding:14px 18px;font-size:22px;line-height:1.5;max-width:760px}
@@ -280,29 +284,29 @@ onValue(ref(db, '.info/serverTimeOffset'), s => { offset = s.val() || 0; });
    dir: shift면 +증가(오른쪽) -감소(왼쪽) / along이면 +가격 오름 -가격 내림 */
 const PRESETS = {
   D: [
-    { emoji: '🍓', market: '과일모찌', price: '1개 6,000원', factor: '선호(취향)', text: '유명 아이돌이 SNS에 과일모찌 먹방을 올렸어요!', type: 'shift', curve: 'D', dir: '+' },
     { emoji: '🍓', market: '과일모찌', price: '1개 6,000원', factor: '가격', text: '과일모찌 가격이 6,000원에서 8,000원으로 올랐어요.', type: 'along', curve: 'D', dir: '+' },
+    { emoji: '🍗', market: '치킨', price: '1마리 20,000원', factor: '가격', text: '치킨 가격이 20,000원에서 15,000원으로 내렸어요.', type: 'along', curve: 'D', dir: '-' },
+    { emoji: '🍓', market: '과일모찌', price: '1개 6,000원', factor: '선호(취향)', text: '유명 아이돌이 SNS에 과일모찌 먹방을 올렸어요!', type: 'shift', curve: 'D', dir: '+' },
     { emoji: '🍗', market: '치킨', price: '1마리 20,000원', factor: '소득', text: '엄마 아빠 월급이 많이 올랐어요!', type: 'shift', curve: 'D', dir: '+' },
     { emoji: '🥤', market: '콜라', price: '1캔 2,000원', factor: '대체재 가격', text: '사이다 가격이 2배로 올랐어요!', type: 'shift', curve: 'D', dir: '+' },
     { emoji: '🍿', market: '팝콘', price: '1통 6,000원', factor: '보완재 가격', text: '영화관 관람료가 크게 올랐어요.', type: 'shift', curve: 'D', dir: '-' },
     { emoji: '🧻', market: '휴지', price: '1팩 10,000원', factor: '미래 가격 예상', text: '다음 달부터 휴지 값이 오른대요!', type: 'shift', curve: 'D', dir: '+' },
     { emoji: '🍼', market: '분유', price: '1통 30,000원', factor: '소비자 수', text: '태어나는 아기 수가 계속 줄고 있어요.', type: 'shift', curve: 'D', dir: '-' },
     { emoji: '🍕', market: '피자설기', price: '1조각 4,500원', factor: '선호(취향)', text: "'피자설기 너무 달아서 건강에 안 좋다'는 뉴스가 나왔어요.", type: 'shift', curve: 'D', dir: '-' },
-    { emoji: '🍗', market: '치킨', price: '1마리 20,000원', factor: '가격', text: '치킨 가격이 20,000원에서 15,000원으로 내렸어요.', type: 'along', curve: 'D', dir: '-' },
   ],
   S: [
+    { emoji: '🥬', market: '배추', price: '1포기 5,000원', factor: '가격', text: '배추 가격이 5,000원에서 8,000원으로 올랐어요! 농부들은?', type: 'along', curve: 'S', dir: '+' },
+    { emoji: '🐟', market: '붕어빵', price: '3개 2,000원', factor: '가격', text: '붕어빵 가격이 3개 2,000원에서 1,000원으로 내렸어요. 가게 주인은?', type: 'along', curve: 'S', dir: '-' },
     { emoji: '🍓', market: '과일모찌', price: '1개 6,000원', factor: '생산 요소(재료) 가격', text: '과일모찌 재료인 찹쌀 가격이 2배로 올랐어요!', type: 'shift', curve: 'S', dir: '-' },
     { emoji: '🐟', market: '붕어빵', price: '3개 2,000원', factor: '생산 기술', text: '붕어빵을 2배 빨리 굽는 기계가 나왔어요!', type: 'shift', curve: 'S', dir: '+' },
-    { emoji: '🥬', market: '배추', price: '1포기 5,000원', factor: '가격', text: '배추 가격이 5,000원에서 8,000원으로 올랐어요! 농부들은?', type: 'along', curve: 'S', dir: '+' },
     { emoji: '🍓', market: '딸기', price: '1팩 10,000원', factor: '자연 조건(날씨)', text: '날씨가 좋아서 딸기가 대풍년이에요!', type: 'shift', curve: 'S', dir: '+' },
     { emoji: '🍕', market: '피자설기', price: '1조각 4,500원', factor: '공급자 수', text: '학교 앞에 피자설기 가게가 5곳 새로 생겼어요!', type: 'shift', curve: 'S', dir: '+' },
     { emoji: '🥬', market: '배추', price: '1포기 5,000원', factor: '미래 가격 예상', text: '다음 달에 배추 값이 크게 오른대요! 농부들이 지금은 안 팔고 창고에 쌓아 둬요.', type: 'shift', curve: 'S', dir: '-' },
     { emoji: '🥬', market: '배추', price: '1포기 5,000원', factor: '자연 조건(날씨)', text: '태풍 때문에 배추밭이 망가졌어요.', type: 'shift', curve: 'S', dir: '-' },
-    { emoji: '🐟', market: '붕어빵', price: '3개 2,000원', factor: '가격', text: '붕어빵 가격이 3개 2,000원에서 1,000원으로 내렸어요. 가게 주인은?', type: 'along', curve: 'S', dir: '-' },
   ],
 };
 // 총정리: 수요·공급 섞기
-PRESETS.mix = [PRESETS.D[0], PRESETS.S[0], PRESETS.D[3], PRESETS.S[1], PRESETS.D[1], PRESETS.S[4], PRESETS.D[4], PRESETS.S[5], PRESETS.D[5], PRESETS.S[2], PRESETS.D[6], PRESETS.S[3]];
+PRESETS.mix = [PRESETS.D[0], PRESETS.S[0], PRESETS.D[2], PRESETS.S[2], PRESETS.D[4], PRESETS.S[3], PRESETS.D[1], PRESETS.S[5], PRESETS.D[5], PRESETS.S[6], PRESETS.D[6], PRESETS.S[4]];
 const SET_NAME = { D: '🛒 수요편', S: '🏭 공급편', mix: '🔀 총정리' };
 const DEFAULT_CASES = PRESETS.D;
 
@@ -332,6 +336,18 @@ function announce(big, sub = '', emo = '🌈', ms = 3000) {
 }
 const annSeen = new Set(); let firstPass = true;
 function maybeAnnounce(key, fn) { if (annSeen.has(key)) return; annSeen.add(key); if (!firstPass) fn(); }
+
+/* ========== 확인창 (confirm 대신) ========== */
+function ask(msg, yes = '네', no = '아니요') {
+  return new Promise(res => {
+    const d = document.createElement('div'); d.className = 'sumPop askPop';
+    d.innerHTML = `<div class="sumCard" style="display:block;width:min(520px,100%);text-align:center"><div style="font-size:26px;line-height:1.5;margin:6px 0 18px">${msg}</div><button class="btn big mint" data-y>${yes}</button> <button class="btn" data-n>${no}</button></div>`;
+    const done = v => { d.remove(); res(v); };
+    d.querySelector('[data-y]').onclick = () => done(true); d.querySelector('[data-n]').onclick = () => done(false);
+    d.onclick = e => { if (e.target === d) done(false); };
+    document.body.appendChild(d);
+  });
+}
 
 /* ========== 사례 → 단계·정답·힌트 ========== */
 const casesOf = () => ((room && room.cases) || DEFAULT_CASES).map(c => ({ ...c, type: c.type === 'along' ? 'along' : 'shift', curve: c.curve === 'S' ? 'S' : 'D', dir: c.dir === '-' ? '-' : '+' }));
@@ -393,26 +409,24 @@ function summaryHTML(c) {
   if (c.type === 'shift') {
     const pu = priceAfter(c) === '+', D = c.curve === 'D';
     tag = '<span class="sumTag shift">🚚 곡선 자체의 이동</span>'; why = '가격 말고 <b>다른 게</b> 변했어요 → 곡선이 통째로 움직여요';
-    t = [[D ? '🛒' : '🏭', `${curveName(c.curve)} ${up ? '증가' : '감소'}`, D ? (up ? '같은 가격에 더 사고 싶어요' : '같은 가격에 덜 사고 싶어요') : (up ? '같은 가격에 더 팔 수 있어요' : '같은 가격에 덜 팔게 돼요')],
-         [up ? '➡️' : '⬅️', `${curveName(c.curve)} 곡선`, up ? '오른쪽으로 이동' : '왼쪽으로 이동'],
-         [pu ? '📈' : '📉', `가격 ${pu ? '상승' : '하락'}`, '⭐ 새로 만나는 점']];
-    const other = D ? '공급량' : '수요량', oUp = D ? pu : !pu;
-    plus = `➕ 가격이 ${pu ? '오르니' : '내리니'} ${D ? '파는' : '사는'} 사람은 ${oUp ? '더' : '덜'} ${D ? '팔아요' : '사요'} → <b>${other} ${oUp ? '증가' : '감소'}</b> (${curveName(D ? 'S' : 'D')} 곡선 <b>위의</b> 이동)`;
+    t = [[D ? '🛒' : '🏭', `${curveName(c.curve)} ${up ? '증가' : '감소'}`, D ? (up ? '같은 가격에 더 사고 싶어요' : '같은 가격에 덜 사고 싶어요') : (up ? '같은 가격에 더 팔 수 있어요' : '같은 가격에 덜 팔게 돼요'), 0],
+         [up ? '➡️' : '⬅️', '곡선 이동', `${curveName(c.curve)} 곡선 ${up ? '오른쪽으로' : '왼쪽으로'}`, 1],
+         [pu ? '📈' : '📉', `가격 ${pu ? '상승' : '하락'}`, '⭐ 새로 만나는 점', 2]];
   } else {
     const qu = qtyAfter(c) === '+', D = c.curve === 'D';
     tag = '<span class="sumTag along">🛤️ 곡선 위의 이동</span>'; why = '<b>가격</b>이 변했어요 → 곡선은 그대로, 점만 움직여요';
-    t = [['💰', `가격 ${up ? '상승' : '하락'}`, c.price ? `${esc(c.price)}에서` : ''],
-         ['🛤️', '점만 이동', `${curveName(c.curve)} 곡선은 그대로`],
-         [qu ? '📈' : '📉', `${D ? '수요량' : '공급량'} ${qu ? '증가' : '감소'}`, D ? (qu ? '더 사요' : '덜 사요') : (qu ? '더 팔아요' : '덜 팔아요')]];
+    t = [['💰', `가격 ${up ? '상승' : '하락'}`, c.price ? `${esc(c.price)}에서` : '', 1],
+         ['🛤️', '점만 이동', `${curveName(c.curve)} 곡선은 그대로`, 0],
+         [qu ? '📈' : '📉', `${D ? '수요량' : '공급량'} ${qu ? '증가' : '감소'}`, D ? (qu ? '더 사요' : '덜 사요') : (qu ? '더 팔아요' : '덜 팔아요'), 2]];
   }
-  const tiles = t.map(([e, b, sm], i) => `<div class="tile ${i === 2 ? 'last' : ''}"><div class="te">${e}</div><div class="tb">${b}</div><div class="ts">${sm}</div></div>`).join('<div class="tarr">→</div>');
+  const tiles = t.map(([e, b, sm, n], i) => `<div class="tile ${i === 2 ? 'last' : ''}"><div class="te">${e}</div><div class="tb">${n ? `<span class="nb" style="background:${n === 1 ? C1 : C2}">${n}</span>` : ''}${b}</div><div class="ts">${sm}</div></div>`).join('<div class="tarr">→</div>');
   return `<div class="graph">${solvedGraph(c, true)}</div>
     <div><div style="font-size:20px;color:var(--sub)">${esc(c.emoji)} ${esc(c.text)}</div><div style="margin-top:8px">${tag}${c.factor && c.type === 'shift' ? ` <span class="sumTag" style="background:var(--lemon);font-size:20px">🔑 ${esc(c.factor)}</span>` : ''}</div><div class="sumWhy">${why}</div>
     <div class="tiles">${tiles}</div>${plus ? `<div class="sumPlus">${plus}</div>` : ''}</div>`;
 }
 let popKey = '';
 function showSummary(key, c, btns, wire) {
-  if (popKey === key && document.querySelector('.sumPop')) return;
+  if (popKey === key && document.querySelector('.sumPop:not(.peekPop):not(.askPop)')) return;
   closeSummary(); popKey = key;
   const d = document.createElement('div'); d.className = 'sumPop';
   d.innerHTML = `<div class="sumCard">${summaryHTML(c)}<div class="sumBtns">${btns}</div></div>`;
@@ -421,18 +435,20 @@ function showSummary(key, c, btns, wire) {
   wire && wire(d);
 }
 const popClosed = new Set();
-function closeSummary(byUser) { document.querySelectorAll('.sumPop').forEach(x => x.remove()); if (byUser && popKey) popClosed.add(popKey); popKey = ''; }
+function closeSummary(byUser) { document.querySelectorAll('.sumPop:not(.peekPop):not(.askPop)').forEach(x => x.remove()); if (byUser && popKey) popClosed.add(popKey); popKey = ''; }
 
 /* ========== 그래프 (SVG 400×320, 데이터 0~100) ========== */
-const GW = 400, GH = 320, GL = 46, GR = 16, GT = 16, GB = 40, pw = GW - GL - GR, ph = GH - GT - GB;
+const GW = 400, GH = 320, GL = 58, GR = 16, GT = 16, GB = 40, pw = GW - GL - GR, ph = GH - GT - GB;
 const X = q => GL + q / 100 * pw, Y = p => GT + (1 - p / 100) * ph;
 const dLine = s => `M${X(15)},${Y(85 + s)} L${X(85)},${Y(15 + s)}`;     // 수요: P = 100 - Q + s
 const sLine = s => `M${X(15)},${Y(15 - s)} L${X(85)},${Y(85 - s)}`;     // 공급: P = Q - s
+const C1 = '#8E6FD8', C2 = '#E8803E';   // ① 보라  ② 주황
+const badge = (x, y, n, col) => `<circle cx="${x}" cy="${y}" r="12" fill="${col}"/><text x="${x}" y="${y + 1}" font-size="16" fill="#fff" text-anchor="middle" dominant-baseline="central">${n}</text>`;
 const eqOf = (sD, sS) => { const q = (100 + sD + sS) / 2; return [q, 100 - q + sD]; };
 // opt: { c, mode:'base'|'shift'|'along', off, pt, hit, done }
 function graphSVG(o) {
   const c = o.c, off = o.off || 0;
-  let g = `<defs><clipPath id="cl"><rect x="${GL}" y="${GT}" width="${pw}" height="${ph}"/></clipPath><marker id="ar" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="16" refX="8" refY="8" orient="auto"><path d="M0,0 L16,8 L0,16 z" fill="#E8803E"/></marker></defs>
+  let g = `<defs><clipPath id="cl"><rect x="${GL}" y="${GT}" width="${pw}" height="${ph}"/></clipPath><marker id="ar" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="16" refX="8" refY="8" orient="auto"><path d="M0,0 L16,8 L0,16 z" fill="#E8803E"/></marker><marker id="ar2" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="16" refX="8" refY="8" orient="auto"><path d="M0,0 L16,8 L0,16 z" fill="#8E6FD8"/></marker></defs>
     <rect x="${GL}" y="${GT}" width="${pw}" height="${ph}" fill="#FFFDF9" stroke="#F2E6EC" stroke-width="2" rx="6"/>
     <line x1="${GL}" y1="${GT + ph}" x2="${GL + pw}" y2="${GT + ph}" stroke="#A3919C" stroke-width="2"/><line x1="${GL}" y1="${GT}" x2="${GL}" y2="${GT + ph}" stroke="#A3919C" stroke-width="2"/>
     <text x="${GL - 8}" y="${GT + 12}" text-anchor="end" font-size="14" fill="#A3919C">가격</text><text x="${GL + pw}" y="${GH - 8}" text-anchor="end" font-size="14" fill="#A3919C">수량</text>`;
@@ -452,7 +468,11 @@ function graphSVG(o) {
       g += `<line x1="${GL}" x2="${X(q1)}" y1="${Y(p1)}" y2="${Y(p1)}" stroke="#2FA67A" stroke-width="2" stroke-dasharray="5 5"/><line x1="${GL}" x2="${X(q0)}" y1="${Y(p0)}" y2="${Y(p0)}" stroke="#A3919C" stroke-width="2" stroke-dasharray="5 5"/>
         <text x="${X(q1)}" y="${Y(p1)}" font-size="30" text-anchor="middle" dominant-baseline="central">⭐</text>
         <text x="${GL + 5}" y="${Y(p1) + (p1 > p0 ? -6 : 16)}" font-size="14" fill="#2FA67A">새 가격</text><text x="${GL + 5}" y="${Y(p0) + (p1 > p0 ? 16 : -6)}" font-size="14" fill="#A3919C">원래 가격</text>`;
-      if (o.showPrice) g += `<line x1="${GL - 22}" x2="${GL - 22}" y1="${Y(p0)}" y2="${Y(p1) + (p1 > p0 ? 8 : -8)}" stroke="#E8803E" stroke-width="5" marker-end="url(#ar)"/>`;
+      if (o.showPrice) {
+        const D = c.curve === 'D', lp = D ? 62 : 38, qa = D ? 100 - lp : lp, qb = qa + off;   // ① 곡선이 옮겨 간 거리
+        g += `<line x1="${X(qa)}" x2="${X(qb) + (off > 0 ? -9 : 9)}" y1="${Y(lp)}" y2="${Y(lp)}" stroke="${C1}" stroke-width="5" marker-end="url(#ar2)"/>${badge((X(qa) + X(qb)) / 2, Y(lp) - 17, 1, C1)}
+          <line x1="${GL - 20}" x2="${GL - 20}" y1="${Y(p0)}" y2="${Y(p1) + (p1 > p0 ? 8 : -8)}" stroke="${C2}" stroke-width="5" marker-end="url(#ar)"/>${badge(GL - 44, (Y(p0) + Y(p1)) / 2, 2, C2)}`;
+      }
     }
     if (o.hit) g += `<path id="hit" d="${c.curve === 'D' ? dLine(sD) : sLine(sS)}" stroke="transparent" stroke-width="44" fill="none" style="cursor:grab"/>`;
     if (o.hit && !off) g += `<text x="${GL + pw / 2}" y="${GT + 24}" text-anchor="middle" font-size="17" fill="#B8A7EE">👆 ${curveName(c.curve)} 곡선을 잡고 옆으로 끌어요</text>`;
@@ -462,7 +482,12 @@ function graphSVG(o) {
     const q = c.curve === 'D' ? 100 - pt : pt;
     g += `<circle cx="${X(q0)}" cy="${Y(50)}" r="7" fill="#fff" stroke="#A3919C" stroke-width="3"/>`;
     if (pt !== 50) g += `<line x1="${X(q0)}" y1="${Y(50)}" x2="${X(q)}" y2="${Y(pt)}" stroke="#2FA67A" stroke-width="3" stroke-dasharray="5 5"/>`;
-    if (o.done && pt !== 50) g += `<line x1="${X(q)}" x2="${X(q)}" y1="${Y(pt)}" y2="${GT + ph}" stroke="#2FA67A" stroke-width="2" stroke-dasharray="5 5"/><line x1="${X(q0)}" x2="${X(q0)}" y1="${Y(50)}" y2="${GT + ph}" stroke="#A3919C" stroke-width="2" stroke-dasharray="5 5"/>${o.showPrice ? `<line x1="${X(q0)}" x2="${X(q) + (q > q0 ? -8 : 8)}" y1="${GT + ph + 14}" y2="${GT + ph + 14}" stroke="#E8803E" stroke-width="5" marker-end="url(#ar)"/>` : ''}`;
+    if (o.done && pt !== 50) {
+      g += `<line x1="${X(q)}" x2="${X(q)}" y1="${Y(pt)}" y2="${GT + ph}" stroke="#2FA67A" stroke-width="2" stroke-dasharray="5 5"/><line x1="${X(q0)}" x2="${X(q0)}" y1="${Y(50)}" y2="${GT + ph}" stroke="#A3919C" stroke-width="2" stroke-dasharray="5 5"/>
+        <line x1="${GL}" x2="${X(q)}" y1="${Y(pt)}" y2="${Y(pt)}" stroke="#2FA67A" stroke-width="2" stroke-dasharray="5 5"/><line x1="${GL}" x2="${X(q0)}" y1="${Y(50)}" y2="${Y(50)}" stroke="#A3919C" stroke-width="2" stroke-dasharray="5 5"/>`;
+      if (o.showPrice) g += `<line x1="${GL - 20}" x2="${GL - 20}" y1="${Y(50)}" y2="${Y(pt) + (pt > 50 ? 8 : -8)}" stroke="${C1}" stroke-width="5" marker-end="url(#ar2)"/>${badge(GL - 44, (Y(50) + Y(pt)) / 2, 1, C1)}
+        <line x1="${X(q0)}" x2="${X(q) + (q > q0 ? -8 : 8)}" y1="${GT + ph + 16}" y2="${GT + ph + 16}" stroke="${C2}" stroke-width="5" marker-end="url(#ar)"/>${badge(X(q0) + (q > q0 ? -18 : 18), GT + ph + 16, 2, C2)}`;
+    }
     g += `<circle id="pt" cx="${X(q)}" cy="${Y(pt)}" r="${o.hit ? 16 : 10}" fill="#2FA67A" stroke="#fff" stroke-width="4" style="cursor:grab"/>`;
     if (o.hit && pt === 50) g += `<text x="${GL + pw / 2}" y="${GT + 24}" text-anchor="middle" font-size="17" fill="#B8A7EE">👆 초록 점을 잡고 곡선을 따라 끌어요</text>`;
   }
@@ -551,9 +576,9 @@ async function join(c, name) {
 const ansOf = id => ((room.ans || {})[id]) || {};
 const stepRec = (id, ci, st) => ((ansOf(id)[ci] || {})[st]) || null;
 const caseDone = (id, ci, c) => stepsOf(c).every(st => (stepRec(id, ci, st) || {}).done);
-function scoreOf(id) {
+function scoreOf(id, skip) {
   const cs = casesOf(); let ok = 0, tot = 0;
-  cs.forEach((c, ci) => stepsOf(c).forEach(st => { const r = stepRec(id, ci, st); if (r) { tot++; if (r.ok) ok++; } }));
+  cs.forEach((c, ci) => stepsOf(c).forEach(st => { if (skip && skip[0] === ci && skip[1] === st) return; const r = stepRec(id, ci, st); if (r) { tot++; if (r.ok) ok++; } }));
   return { ok, tot };
 }
 
@@ -572,6 +597,7 @@ function topbar(st) {
     <span class="pill">${SET_NAME[room.set || 'D']}</span>
     ${st.phase !== 'setup' ? `<span class="pill">🙋 ${onlineIds().length}명 접속</span>` : ''}
     ${play ? `<span class="modeTg"><button class="btn sm mint ${st.mode === 'together' ? 'on' : ''}" id="mTog">👥 같이 하기</button><button class="btn sm sky ${st.mode === 'solo' ? 'on' : ''}" id="mSolo">🏃 각자 하기</button></span>` : ''}
+    ${play && st.mode === 'together' ? `<button class="btn sm ${st.auto ? 'mint on' : ''}" id="auto">⏩ 자동 진행 ${st.auto ? 'ON' : 'OFF'}</button>` : ''}
     <button class="btn sm lav" id="names">${st.showNames ? '👤 이름 ON' : '🙈 이름 OFF'}</button>
     ${play ? '<button class="btn sm lemon" id="toEnd">🏁 끝내기</button>' : ''}
     <button class="btn sm" id="home">처음 화면</button></div>`;
@@ -621,9 +647,8 @@ function renderTeacher() {
       body = `<div class="stage" style="gap:16px">
         <span class="roundBadge">📈 사례 ${ci + 1} / ${cs.length}</span>
         <div class="case"><div class="ce">${esc(c.emoji)}</div><div class="cm">${esc(c.market)} 시장</div>${c.price ? `<div class="cp">💰 지금 가격: <b>${esc(c.price)}</b></div>` : ''}<div class="ct">${esc(c.text)}</div></div>
-        ${stepBar(c, 0)}
         <div class="graph" style="max-width:520px">${graphSVG({ c, mode: 'base' })}</div>
-        <button class="btn big mint" id="nextStep">▶ 예측 시작!</button></div>`;
+        <button class="btn big mint" id="nextStep">▶ 예측 시작! <span class="autoCd"></span></button></div>`;
     } else {
       const ids = playerIds(), opts = optionsOf(c, stp), right = answerOf(c, stp);
       const counts = {}; opts.forEach(([v]) => counts[v] = 0);
@@ -634,11 +659,10 @@ function renderTeacher() {
       body = `<div class="play2">
         <div class="side">
           ${caseRow(c, ci)}
-          ${stepBar(c, k)}
-          <div class="q">${k}. ${questionOf(c, stp)}</div>
+          <div class="q"><span class="muted" style="font-size:.75em">${k}/${steps.length}</span> ${questionOf(c, stp)}</div>
           <div class="dist">${opts.map(([v, lab]) => `<div class="drow ${st.reveal && v === right ? 'right' : ''}"><span>${st.reveal && v === right ? '✅ ' : ''}${lab.replace(/<br>.*$/, '')}</span><div class="dbar"><i style="width:${st.reveal ? counts[v] / max * 100 : 0}%"></i></div><b>${st.reveal ? counts[v] + '명' : '?'}</b></div>`).join('')}</div>
-          <div class="muted" style="font-size:19px">✍️ 답한 학생 ${answered} / ${ids.length}명 · 맞힌 학생 ${done}명</div>
-          <div>${!st.reveal ? '<button class="btn big lemon" id="reveal">✅ 정답 공개</button>' : last ? (ci + 1 < cs.length ? '<button class="btn big mint" id="nextCase">🚨 다음 사례</button>' : '<button class="btn big mint" id="toEnd2">🏁 끝! 결과 보기</button>') : '<button class="btn big mint" id="nextStep">▶ 다음 단계</button>'}
+          <div class="muted" style="font-size:19px">✍️ 답한 학생 ${answered} / ${ids.length}명${st.reveal ? ` · 맞힌 학생 ${ids.filter(id => (stepRec(id, ci, stp) || {}).ok).length}명` : ''}</div>
+          <div>${!st.reveal ? '<button class="btn big lemon" id="reveal">✅ 정답 공개 <span class="autoCd"></span></button>' : last ? (ci + 1 < cs.length ? '<button class="btn big mint" id="nextCase">🚨 다음 사례 <span class="autoCd"></span></button>' : '<button class="btn big mint" id="toEnd2">🏁 끝! 결과 보기</button>') : '<button class="btn big mint" id="nextStep">▶ 다음 단계 <span class="autoCd"></span></button>'}
             ${ci + 1 < cs.length ? `<button class="btn sky" id="toSolo">🏃 다음 사례부터 각자 풀기</button>` : ''}</div>
         </div>
         <div class="side"><div class="graph">${pastDrag ? solvedGraph(c, last && st.reveal) : graphSVG({ c, mode: 'base' })}</div>
@@ -654,7 +678,8 @@ function renderTeacher() {
     const allDone = rows.filter(r => r.n >= total).length;
     body = `<div class="center" style="margin-bottom:10px"><span class="roundBadge">🏃 각자 푸는 중 · 사례 ${from + 1}~${cs.length}</span></div>
       <div class="card"><h3>📈 진행 상황 <span class="muted" style="font-size:16px">다 푼 학생 ${allDone} / ${ids.length}명</span></h3>
-        <div class="prog">${rows.map(r => `<div class="pp">${st.showNames ? esc(nameOf(r.id)) : '📈'} ${r.n >= total ? '🎉' : ''}<div class="bar"><i style="width:${total ? r.n / total * 100 : 0}%"></i></div><span class="muted" style="font-size:14px">${r.n} / ${total}</span></div>`).join('')}</div></div>
+        <div class="muted" style="font-size:15px;margin-bottom:6px">👆 이름을 누르면 그 학생이 지금 푸는 화면을 볼 수 있어요</div>
+        <div class="prog">${rows.map(r => `<div class="pp" data-peek="${r.id}" style="cursor:pointer">${st.showNames ? esc(nameOf(r.id)) : '📈'} ${r.n >= total ? '🎉' : ''}<div class="bar"><i style="width:${total ? r.n / total * 100 : 0}%"></i></div><span class="muted" style="font-size:14px">${r.n} / ${total}</span></div>`).join('')}</div></div>
       ${heatTable(cs, from)}`;
   }
   else if (st.phase === 'end') {
@@ -673,7 +698,7 @@ function renderTeacher() {
   // 마지막 단계 정답 공개 → 정리 팝업
   if (tSumm && !popClosed.has(tSumm.key)) {
     const more = tSumm.ci + 1 < tSumm.n;
-    showSummary(tSumm.key, tSumm.c, `<button class="btn big mint" id="popNext">${more ? '🚨 다음 사례' : '🏁 끝! 결과 보기'}</button> <button class="btn" id="popClose">닫기</button>`, d => {
+    showSummary(tSumm.key, tSumm.c, `<button class="btn big mint" id="popNext">${more ? '🚨 다음 사례 <span class="autoCd"></span>' : '🏁 끝! 결과 보기'}</button> <button class="btn" id="popClose">닫기</button>`, d => {
       d.querySelector('#popClose').onclick = () => closeSummary(true);
       d.querySelector('#popNext').onclick = () => { closeSummary(); update(AP('state'), more ? { ci: tSumm.ci + 1, step: 0, reveal: false } : { phase: 'end' }); };
     });
@@ -697,10 +722,13 @@ function heatTable(cs, from) {
 function wireTeacher(st, cs) {
   const S = o => update(AP('state'), o);
   el('names').onclick = () => S({ showNames: !st.showNames });
-  el('home').onclick = () => { if (confirm('처음 화면으로 갈까요? (방은 그대로 남아요)')) location.href = '?t=1'; };
+  if (el('auto')) el('auto').onclick = () => S({ auto: !st.auto });
+  document.querySelectorAll('[data-peek]').forEach(x => x.onclick = () => { peekId = x.dataset.peek; showPeek(); });
+  showPeek();   // 열려 있으면 실시간으로 다시 그림
+  el('home').onclick = async () => { if (await ask('처음 화면으로 갈까요?<br><small>(방은 그대로 남아요)</small>')) location.href = '?t=1'; };
   if (el('mTog')) el('mTog').onclick = () => { if (st.mode !== 'together') S({ mode: 'together', step: 0, reveal: false }); };
   if (el('mSolo')) el('mSolo').onclick = () => { if (st.mode !== 'solo') S({ mode: 'solo', soloFrom: st.ci || 0 }); };
-  if (el('toEnd')) el('toEnd').onclick = () => { if (confirm('활동을 끝내고 결과를 볼까요?')) S({ phase: 'end' }); };
+  if (el('toEnd')) el('toEnd').onclick = async () => { if (await ask('활동을 끝내고 결과를 볼까요?<br><small>(학생들 화면도 결과로 넘어가요)</small>', '🏁 끝내기')) S({ phase: 'end' }); };
   if (st.phase === 'setup') {
     const save = () => {
       const next = casesOf().map(x => ({ ...x }));
@@ -712,7 +740,7 @@ function wireTeacher(st, cs) {
     document.querySelectorAll('[data-del]').forEach(b => b.onclick = () => { const n = casesOf().filter((_, k) => k !== +b.dataset.del); if (n.length) set(AP('cases'), n); });
     document.querySelectorAll('[data-up]').forEach(b => b.onclick = () => { const n = casesOf(), k = +b.dataset.up; [n[k - 1], n[k]] = [n[k], n[k - 1]]; set(AP('cases'), n); });
     if (el('addCase')) el('addCase').onclick = () => set(AP('cases'), [...casesOf(), { emoji: '🎁', market: '새 상품', price: '1개 1,000원', factor: '', text: '사례를 적어 주세요', type: 'shift', curve: 'D', dir: '+' }]);
-    document.querySelectorAll('[data-set]').forEach(b => b.onclick = () => { const k = b.dataset.set; if (room.set === k || confirm(`${SET_NAME[k]} 기본 사례로 바꿀까요? (고친 내용은 사라져요)`)) update(A(), { set: k, cases: PRESETS[k] }); });
+    document.querySelectorAll('[data-set]').forEach(b => b.onclick = () => { const k = b.dataset.set; if (room.set === k) return; ask(`${SET_NAME[k]} 기본 사례로 바꿀까요?<br><small>(고친 내용은 사라져요)</small>`).then(y => y && update(A(), { set: k, cases: PRESETS[k] })); });
     el('ready').onclick = () => S({ phase: 'lobby' });
   }
   if (st.phase === 'lobby') {
@@ -727,12 +755,68 @@ function wireTeacher(st, cs) {
   if (el('toEnd2')) el('toEnd2').onclick = () => S({ phase: 'end' });
 }
 
+/* 👀 학생 화면 엿보기 (각자 하기) */
+let peekId = null;
+function peekHTML(id) {
+  const st = room.state || {}, cs = casesOf(), from = st.soloFrom || 0;
+  const ci = cs.findIndex((c, x) => x >= from && !caseDone(id, x, c));
+  const chips = cs.map((c, x) => x < from ? '' : `<span class="chip ${caseDone(id, x, c) ? 'soft' : ''}" style="${x === ci ? 'outline:3px solid var(--lemonD)' : ''}">${x + 1} ${esc(c.emoji)}${caseDone(id, x, c) ? ' ✅' : ''}</span>`).join('');
+  let body;
+  if (ci < 0) body = '<div class="good" style="font-size:26px">🎉 사례를 다 풀었어요!</div>';
+  else {
+    const c = cs[ci], steps = stepsOf(c), cur = steps.findIndex(x => !(stepRec(id, ci, x) || {}).done);
+    const lab = (x, v) => { if (x === 'drag') return c.type === 'shift' ? (v === '+' ? '➡️ 오른쪽으로 끌었어요' : '⬅️ 왼쪽으로 끌었어요') : (v === '+' ? '⬆️ 위로 끌었어요' : '⬇️ 아래로 끌었어요'); const o = optionsOf(c, x).find(([k]) => k === v); return o ? o[1].replace(/<br>.*$/, '') : v; };
+    body = caseRow(c, ci) + `<div style="display:grid;gap:8px;margin-top:12px;text-align:left">${steps.map((x, i) => {
+      const r = stepRec(id, ci, x);
+      const mark = r ? (r.ok ? '🎯 한 번에 맞힘' : r.done ? '🔁 틀렸다가 고쳐서 맞힘' : '❌ 틀려서 힌트 보는 중') : i === cur ? '✍️ 푸는 중…' : '·';
+      return `<div class="hl ${r ? (r.ok ? 'mint' : r.done ? 'lemon' : 'peach') : i === cur ? 'sky' : ''}" style="margin:0;font-size:19px;${i === cur && !r ? 'outline:3px solid var(--skyD)' : ''}"><b>${i + 1}. ${questionOf(c, x).replace(/<[^>]+>/g, '')}</b><br>${r ? `처음 고른 답: ${lab(x, r.first)} · ` : ''}${mark}</div>`;
+    }).join('')}</div>`;
+  }
+  return `<div style="font-size:28px;margin-bottom:8px">👀 ${esc(nameOf(id))} <span class="muted" style="font-size:18px">지금 푸는 화면 · ${room.players[id] && room.players[id].online === true ? '🟢 접속 중' : '⚪ 접속 끊김'}</span></div>
+    <div class="chips" style="margin-bottom:10px">${chips}</div>${body}
+    <div style="text-align:center;margin-top:14px"><button class="btn big" data-close>닫기</button></div>`;
+}
+function showPeek() {
+  let d = document.querySelector('.peekPop');
+  if (!peekId || !room.players || !room.players[peekId] || (room.state || {}).mode !== 'solo' || (room.state || {}).phase !== 'play') { if (d) d.remove(); peekId = null; return; }
+  if (!d) { d = document.createElement('div'); d.className = 'sumPop peekPop'; d.onclick = e => { if (e.target === d || e.target.closest('[data-close]')) { peekId = null; d.remove(); } }; document.body.appendChild(d); }
+  d.innerHTML = `<div class="sumCard" style="display:block;width:min(760px,100%)">${peekHTML(peekId)}</div>`;
+}
+
+/* ⏩ 자동 진행 (같이 하기): 사례 읽기 8초 → 다 내면 2초 뒤 정답 공개 → 6초 뒤 다음 단계 → 마지막은 정리 12초 뒤 다음 사례 */
+const AUTO = { read: 8000, afterAll: 2000, next: 6000, sum: 12000 };
+let autoKey = '', autoAt = 0;
+function autoTick() {
+  if (!isTeacher || !room) return;
+  const st = room.state || {}, cs = casesOf();
+  const cds = document.querySelectorAll('.autoCd');
+  const off = () => { autoKey = ''; cds.forEach(x => x.textContent = ''); };
+  if (!st.auto || st.phase !== 'play' || st.mode !== 'together') return off();
+  const ci = st.ci || 0, c = cs[ci]; if (!c) return off();
+  const steps = stepsOf(c), k = st.step || 0, stp = steps[k - 1], last = k === steps.length;
+  let key, wait, act;
+  if (k === 0) { key = `${ci}|0`; wait = AUTO.read; act = { step: 1, reveal: false }; }
+  else if (!st.reveal) {
+    const on = onlineIds(), all = on.length > 0 && on.every(id => stepRec(id, ci, stp));
+    if (!all) { off(); return; }
+    key = `${ci}|${k}|all`; wait = AUTO.afterAll; act = { reveal: true };
+  } else if (!last) { key = `${ci}|${k}|r`; wait = AUTO.next; act = { step: k + 1, reveal: false }; }
+  else if (ci + 1 < cs.length) { key = `${ci}|${k}|r`; wait = AUTO.sum; act = { ci: ci + 1, step: 0, reveal: false }; }
+  else return off();
+  if (key !== autoKey) { autoKey = key; autoAt = Date.now() + wait; }
+  const left = Math.ceil((autoAt - Date.now()) / 1000);
+  cds.forEach(x => x.textContent = left > 0 ? `(${left})` : '');
+  if (Date.now() >= autoAt) { autoKey = 'sent'; if (act.ci !== undefined) closeSummary(); update(AP('state'), act); }
+}
+if (isTeacher) setInterval(autoTick, 300);
+
 /* =========================================================
    🧒 학생 화면
    ========================================================= */
 let readSeen = {}, sKey = '', dragState = null, hold = null;   // hold: 각자 풀기에서 방금 맞힌 단계를 '다음' 누를 때까지 보여 줌
 function record(ci, stp, val, ok) {
   const r = stepRec(pid, ci, stp);
+  if (room.state.mode === 'together') return r ? null : update(AP(`ans/${pid}/${ci}/${stp}`), { first: val, ok, done: true });   // 같이 하기: 한 번만 내고, 정답은 공개 때
   if (ok && room.state.mode === 'solo') hold = { ci, stp };
   const upd = r ? { done: r.done || ok } : { first: val, ok, done: ok };
   return update(AP(`ans/${pid}/${ci}/${stp}`), upd);
@@ -740,7 +824,8 @@ function record(ci, stp, val, ok) {
 function renderStudent() {
   const st = room.state || {}, cs = casesOf(), me = (room.players || {})[pid];
   if (!me) { localStorage.removeItem('curve_pid_' + code); return studentForm(code); }
-  const sc = scoreOf(pid);
+  const tg = st.mode === 'together' && st.phase === 'play' && !st.reveal && (st.step || 0) > 0;
+  const sc = tg ? scoreOf(pid, [st.ci || 0, stepsOf(cs[st.ci || 0] || {})[(st.step || 0) - 1]]) : scoreOf(pid);   // 공개 전엔 점수로 정답이 새지 않게
   const top = `<div class="s-top"><span class="me">🙂 ${esc(me.name)}</span><span class="pill">⭐ ${sc.ok}점</span></div>`;
   const wait = (emo, t, s) => { app.innerHTML = `<div class="s-wrap">${top}<div class="stage" style="min-height:70vh"><div class="bigEmoji bounce">${emo}</div><div class="title" style="font-size:38px">${t}</div><div class="rule">${s}</div></div></div>`; };
   if (dragState) return;   // 끄는 중엔 다시 그리지 않음
@@ -763,8 +848,8 @@ function renderStudent() {
   if (key === sKey) return;
   const prevKey = sKey; sKey = key;
   const caseCard = caseRow(c, ci);
-  if (!(st.mode === 'together' && k === steps.length && rec && rec.done) && !(hold && k === steps.length)) closeSummary();
-  const bar = stepBar(c, k, s => (stepRec(pid, ci, s) || {}).done);
+  if (!(st.mode === 'together' && k === steps.length && st.reveal) && !(hold && k === steps.length)) closeSummary();
+  const bar = '';   // 단계 표시줄은 뺌
   if (k === 0) {
     maybeAnnounce(`case${st.mode}${ci}`, () => announce('🚨 사건 발생!!', `${ci + 1}번째 사례`, '📈', 2600));
     app.innerHTML = `<div class="s-wrap">${top}<div class="stage" style="gap:14px"><span class="roundBadge">🚨 사례 ${ci + 1} 등장!</span><div class="case"><div class="ce">${esc(c.emoji)}</div><div class="cm">${esc(c.market)} 시장</div>${c.price ? `<div class="cp">💰 지금 가격: <b>${esc(c.price)}</b></div>` : ''}<div class="ct">${esc(c.text)}</div></div>${bar}
@@ -773,8 +858,9 @@ function renderStudent() {
     return;
   }
   const justWrong = rec && !rec.done && prevKey.startsWith([st.mode, ci, k].join('|'));
+  if (st.mode === 'together') return renderTogetherStep(c, ci, k, steps, stp, rec, st, top, caseCard, bar);
   const hasGraph = stp === 'drag' || stp === 'final';
-  const head = `<div class="s-wrap">${top}<div class="s-play ${hasGraph ? 'two' : ''}"><div class="col">${caseCard}${bar}<div class="q">${k}. ${questionOf(c, stp)}</div>`;
+  const head = `<div class="s-wrap">${top}<div class="s-play ${hasGraph ? 'two' : ''}"><div class="col">${caseCard}${bar}<div class="q"><span class="muted" style="font-size:.75em">${k}/${steps.length}</span> ${questionOf(c, stp)}</div>`;
   const doneBox = rec && rec.done ? `<div class="good">${rec.ok ? '🎯 한 번에 맞혔어요! +1점' : '✅ 맞았어요!'}</div>
       ${st.mode === 'together' ? '<div class="rule muted">칠판을 보며 기다려요 👀</div>' : `<button class="btn big mint" id="goOn">${k === steps.length ? (cs.findIndex((x, j) => j > ci && !caseDone(pid, j, x)) >= 0 ? '🚨 다음 사례 ▶' : '🎉 끝!') : '▶ 다음 단계'}</button>`}` : '';
   const hintBox = rec && !rec.done ? `<div class="hint">${hintOf(c, stp)}<br><b>다시 골라 봐요!</b></div>` : '';
@@ -807,6 +893,31 @@ function renderStudent() {
   }
 }
 
+// 👥 같이 하기 학생 화면: 내고 → 기다리고 → 정답 공개 때 맞았는지 확인
+function renderTogetherStep(c, ci, k, steps, stp, rec, st, top, caseCard, bar) {
+  const right = answerOf(c, stp), opts = stp === 'drag' ? null : optionsOf(c, stp);
+  const isGraph = stp === 'drag' || stp === 'final';
+  let res = '';
+  if (st.reveal) res = rec ? (rec.ok ? '<div class="good">🎯 맞혔어요! +1점</div>' : `<div class="hint">😅 아쉬워요! ${hintOf(c, stp).replace('🔍 ', '💡 ')}</div>`)
+    : `<div class="hint">${hintOf(c, stp).replace('🔍 ', '💡 ')}</div>`;
+  else if (rec) res = '<div class="good" style="background:var(--sky)">✅ 냈어요! 정답 공개를 기다려요 👀</div>';
+  let left = `${caseCard}${bar}<div class="q"><span class="muted" style="font-size:.75em">${k}/${steps.length}</span> ${questionOf(c, stp)}</div>`, graph = '';
+  if (stp === 'drag') {
+    if (st.reveal) graph = solvedGraph(c, false);
+    else if (rec) graph = c.type === 'shift' ? graphSVG({ c, mode: 'shift', off: rec.first === '+' ? 20 : -20 }) : graphSVG({ c, mode: 'along', pt: rec.first === '+' ? 70 : 30 });
+    else graph = graphSVG({ c, mode: c.type, off: 0, pt: 50, hit: true });
+    left += res;
+  } else {
+    left += `<div class="choices">${opts.map(([v, lab]) => `<button class="choice ${st.reveal && v === right ? 'right' : ''} ${rec && rec.first === v && !(st.reveal && v === right) ? (st.reveal ? 'wrong' : 'picked') : ''}" data-v="${v}" ${rec || st.reveal ? 'disabled' : ''}>${lab}</button>`).join('')}</div>${res}`;
+    if (stp === 'final') graph = solvedGraph(c, st.reveal);
+  }
+  app.innerHTML = `<div class="s-wrap">${top}<div class="s-play ${isGraph ? 'two' : ''}"><div class="col">${left}</div>${graph ? `<div class="col"><div class="graph" id="gwrap">${graph}</div></div>` : ''}</div></div>`;
+  document.querySelectorAll('.choice:not([disabled])').forEach(b => b.onclick = () => { b.classList.add('picked'); record(ci, stp, b.dataset.v, b.dataset.v === right); });
+  if (stp === 'drag' && !rec && !st.reveal) setupDrag(c, ci);
+  if (k === steps.length && st.reveal && !popClosed.has(`s${ci}`))
+    showSummary(`s${ci}`, c, '<button class="btn big mint" id="popOk">알겠어요! 👍</button>', d => { d.querySelector('#popOk').onclick = () => closeSummary(true); });
+}
+
 /* 👆 그래프 끌기: 곡선 통째로(좌우) 또는 곡선 위의 점(위아래) */
 function setupDrag(c, ci) {
   const wrap = el('gwrap'), svg = () => wrap.querySelector('svg');
@@ -817,6 +928,7 @@ function setupDrag(c, ci) {
     const moved = c.type === 'shift' ? v : v - 50;
     if (Math.abs(moved) < 6) { toast('조금 더 확실하게 끌어 봐요 👆'); redraw(c.type === 'shift' ? 0 : 50); return; }
     const val = moved > 0 ? '+' : '-', ok = val === c.dir;
+    if (room.state.mode === 'together') { record(ci, 'drag', val, ok); sKey = ''; return; }   // 같이 하기: 맞았는지는 공개 때
     if (ok) { wrap.innerHTML = solvedGraph(c, false); }
     else { toast(c.type === 'shift' ? '앗, 반대쪽이에요! 💡 힌트를 봐요' : '앗, 반대 방향이에요! 💡 힌트를 봐요'); redraw(c.type === 'shift' ? 0 : 50); }
     record(ci, 'drag', val, ok);
