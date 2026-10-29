@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>곡선 탐정 🕵️</title>
+<title>시장 예측하기 📈</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -180,7 +180,35 @@ canvas{display:block;width:100%;touch-action:none;border-radius:16px}
 @keyframes hueSpin{to{filter:hue-rotate(360deg)}}
 @keyframes spinEmo{to{transform:rotate(360deg)}}
 
-/* ===== 곡선 탐정 전용 ===== */
+/* ===== 시장 예측하기 전용 ===== */
+.case.row{display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:center;text-align:left;padding:12px 20px;max-width:none}
+.case.row .ce{font-size:58px}.case.row .cm{margin:0 8px 0 0;font-size:18px}.case.row .cp{display:inline;font-size:19px;margin:0}.case.row .ct{font-size:25px;margin-top:4px;line-height:1.35}
+.play2{display:grid;grid-template-columns:1.1fr .9fr;gap:18px;align-items:start}
+.play2 .graph svg{max-height:calc(100vh - 250px);width:auto;max-width:100%;margin:0 auto}
+.play2 .side{display:flex;flex-direction:column;gap:10px;align-items:center}
+.play2 .q{font-size:27px}.play2 .drow{margin:5px 0}
+.play2 .hint{font-size:19px;padding:10px 14px}
+.s-play{display:flex;flex-direction:column;gap:10px;align-items:center}
+.s-play .graph svg{max-height:46vh;width:auto;max-width:100%;margin:0 auto}
+@media (min-width:900px){.s-play.two{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}.s-play.two .graph svg{max-height:calc(100vh - 120px)}}
+.s-play .col{display:flex;flex-direction:column;gap:10px;align-items:center;width:100%}
+.s-play .choice{padding:16px 10px;font-size:23px}.s-play .q{font-size:25px}.s-play .hint{font-size:19px;padding:10px 14px}.s-play .good{font-size:21px;padding:10px 14px}
+/* 정리 팝업 */
+.sumPop{position:fixed;inset:0;background:rgba(91,75,87,.45);display:flex;align-items:center;justify-content:center;z-index:80;padding:16px;animation:pop .3s}
+.sumCard{background:#fff;border:4px solid var(--ink);border-radius:30px;box-shadow:0 10px 0 var(--ink);padding:22px 26px;width:min(980px,100%);max-height:96vh;overflow:auto;display:grid;grid-template-columns:.9fr 1.1fr;gap:20px;align-items:center}
+.sumCard .graph{border:none;padding:0}
+.sumTag{display:inline-block;border-radius:999px;padding:6px 18px;font-size:24px}
+.sumTag.shift{background:var(--peach)}.sumTag.along{background:var(--sky)}
+.sumWhy{font-size:19px;color:var(--sub);margin:6px 0 14px}
+.tiles{display:flex;align-items:stretch;gap:6px}
+.tile{flex:1;background:var(--cream,#FFF8F0);border:3px solid var(--line);border-radius:20px;padding:12px 6px;text-align:center}
+.tile .te{font-size:44px;line-height:1.1}.tile .tb{font-size:23px;margin-top:4px}.tile .ts{font-size:15px;color:var(--sub)}
+.tile.last{background:var(--mint);border-color:var(--mintD)}
+.tarr{align-self:center;font-size:26px;color:var(--sub)}
+.sumPlus{margin-top:12px;font-size:17px;color:var(--sub);background:var(--lemon);border-radius:14px;padding:8px 12px}
+.sumBtns{grid-column:1/-1;text-align:center}
+@media (max-width:760px){.sumCard{grid-template-columns:1fr}.tile .te{font-size:34px}.tile .tb{font-size:19px}}
+
 .toast{pointer-events:none}
 .case{background:#fff;border:4px solid var(--ink);border-radius:30px;padding:22px 26px;box-shadow:0 8px 0 var(--ink);text-align:center;max-width:820px;width:100%}
 .case .ce{font-size:84px;line-height:1}
@@ -250,18 +278,33 @@ onValue(ref(db, '.info/serverTimeOffset'), s => { offset = s.val() || 0; });
    type: shift(곡선 자체의 이동) / along(곡선 위의 이동)
    curve: D(수요) / S(공급)
    dir: shift면 +증가(오른쪽) -감소(왼쪽) / along이면 +가격 오름 -가격 내림 */
-const DEFAULT_CASES = [
-  { emoji: '🍓', market: '과일모찌', price: '1개 6,000원', text: '유명 아이돌이 SNS에 과일모찌 먹방을 올렸어요!', type: 'shift', curve: 'D', dir: '+' },
-  { emoji: '🍓', market: '과일모찌', price: '1개 6,000원', text: '과일모찌 가게가 가격을 6,000원에서 8,000원으로 올렸어요.', type: 'along', curve: 'D', dir: '+' },
-  { emoji: '🍓', market: '과일모찌', price: '1개 6,000원', text: '과일모찌 재료인 찹쌀 가격이 2배로 올랐어요!', type: 'shift', curve: 'S', dir: '-' },
-  { emoji: '🍕', market: '피자설기', price: '1조각 4,500원', text: '피자설기가 유튜브 쇼츠에서 대유행 중이에요!', type: 'shift', curve: 'D', dir: '+' },
-  { emoji: '🍕', market: '피자설기', price: '1조각 4,500원', text: "'피자설기 너무 달아서 건강에 안 좋다'는 뉴스가 나왔어요.", type: 'shift', curve: 'D', dir: '-' },
-  { emoji: '🍓', market: '딸기', price: '1팩 10,000원', text: '날씨가 좋아서 딸기가 대풍년이에요!', type: 'shift', curve: 'S', dir: '+' },
-  { emoji: '🐟', market: '붕어빵', price: '3개 2,000원', text: '날씨가 갑자기 추워졌어요!', type: 'shift', curve: 'D', dir: '+' },
-  { emoji: '🐟', market: '붕어빵', price: '3개 2,000원', text: '붕어빵을 2배 빨리 굽는 기계가 나왔어요!', type: 'shift', curve: 'S', dir: '+' },
-  { emoji: '🥬', market: '배추', price: '1포기 5,000원', text: '배추 가격이 5,000원에서 8,000원으로 올랐어요! 농부들은?', type: 'along', curve: 'S', dir: '+' },
-  { emoji: '🥬', market: '배추', price: '1포기 5,000원', text: '태풍 때문에 배추밭이 망가졌어요.', type: 'shift', curve: 'S', dir: '-' },
-];
+const PRESETS = {
+  D: [
+    { emoji: '🍓', market: '과일모찌', price: '1개 6,000원', factor: '선호(취향)', text: '유명 아이돌이 SNS에 과일모찌 먹방을 올렸어요!', type: 'shift', curve: 'D', dir: '+' },
+    { emoji: '🍓', market: '과일모찌', price: '1개 6,000원', factor: '가격', text: '과일모찌 가격이 6,000원에서 8,000원으로 올랐어요.', type: 'along', curve: 'D', dir: '+' },
+    { emoji: '🍗', market: '치킨', price: '1마리 20,000원', factor: '소득', text: '엄마 아빠 월급이 많이 올랐어요!', type: 'shift', curve: 'D', dir: '+' },
+    { emoji: '🥤', market: '콜라', price: '1캔 2,000원', factor: '대체재 가격', text: '사이다 가격이 2배로 올랐어요!', type: 'shift', curve: 'D', dir: '+' },
+    { emoji: '🍿', market: '팝콘', price: '1통 6,000원', factor: '보완재 가격', text: '영화관 관람료가 크게 올랐어요.', type: 'shift', curve: 'D', dir: '-' },
+    { emoji: '🧻', market: '휴지', price: '1팩 10,000원', factor: '미래 가격 예상', text: '다음 달부터 휴지 값이 오른대요!', type: 'shift', curve: 'D', dir: '+' },
+    { emoji: '🍼', market: '분유', price: '1통 30,000원', factor: '소비자 수', text: '태어나는 아기 수가 계속 줄고 있어요.', type: 'shift', curve: 'D', dir: '-' },
+    { emoji: '🍕', market: '피자설기', price: '1조각 4,500원', factor: '선호(취향)', text: "'피자설기 너무 달아서 건강에 안 좋다'는 뉴스가 나왔어요.", type: 'shift', curve: 'D', dir: '-' },
+    { emoji: '🍗', market: '치킨', price: '1마리 20,000원', factor: '가격', text: '치킨 가격이 20,000원에서 15,000원으로 내렸어요.', type: 'along', curve: 'D', dir: '-' },
+  ],
+  S: [
+    { emoji: '🍓', market: '과일모찌', price: '1개 6,000원', factor: '생산 요소(재료) 가격', text: '과일모찌 재료인 찹쌀 가격이 2배로 올랐어요!', type: 'shift', curve: 'S', dir: '-' },
+    { emoji: '🐟', market: '붕어빵', price: '3개 2,000원', factor: '생산 기술', text: '붕어빵을 2배 빨리 굽는 기계가 나왔어요!', type: 'shift', curve: 'S', dir: '+' },
+    { emoji: '🥬', market: '배추', price: '1포기 5,000원', factor: '가격', text: '배추 가격이 5,000원에서 8,000원으로 올랐어요! 농부들은?', type: 'along', curve: 'S', dir: '+' },
+    { emoji: '🍓', market: '딸기', price: '1팩 10,000원', factor: '자연 조건(날씨)', text: '날씨가 좋아서 딸기가 대풍년이에요!', type: 'shift', curve: 'S', dir: '+' },
+    { emoji: '🍕', market: '피자설기', price: '1조각 4,500원', factor: '공급자 수', text: '학교 앞에 피자설기 가게가 5곳 새로 생겼어요!', type: 'shift', curve: 'S', dir: '+' },
+    { emoji: '🥬', market: '배추', price: '1포기 5,000원', factor: '미래 가격 예상', text: '다음 달에 배추 값이 크게 오른대요! 농부들이 지금은 안 팔고 창고에 쌓아 둬요.', type: 'shift', curve: 'S', dir: '-' },
+    { emoji: '🥬', market: '배추', price: '1포기 5,000원', factor: '자연 조건(날씨)', text: '태풍 때문에 배추밭이 망가졌어요.', type: 'shift', curve: 'S', dir: '-' },
+    { emoji: '🐟', market: '붕어빵', price: '3개 2,000원', factor: '가격', text: '붕어빵 가격이 3개 2,000원에서 1,000원으로 내렸어요. 가게 주인은?', type: 'along', curve: 'S', dir: '-' },
+  ],
+};
+// 총정리: 수요·공급 섞기
+PRESETS.mix = [PRESETS.D[0], PRESETS.S[0], PRESETS.D[3], PRESETS.S[1], PRESETS.D[1], PRESETS.S[4], PRESETS.D[4], PRESETS.S[5], PRESETS.D[5], PRESETS.S[2], PRESETS.D[6], PRESETS.S[3]];
+const SET_NAME = { D: '🛒 수요편', S: '🏭 공급편', mix: '🔀 총정리' };
+const DEFAULT_CASES = PRESETS.D;
 
 const P = new URLSearchParams(location.search);
 const isTeacher = P.get('t') === '1';
@@ -280,7 +323,7 @@ function announce(big, sub = '', emo = '🌈', ms = 3000) {
   document.querySelectorAll('.ann').forEach(a => a.remove());
   const a = document.createElement('div');
   a.className = 'ann';
-  const floaters = ['🕵️','🔍','✨','⭐','📈','💖','📉','🌟','🧾','🫧','✨','🔎'];
+  const floaters = ['📈','🔍','✨','⭐','📈','💖','📉','🌟','🧾','🫧','✨','🔎'];
   a.innerHTML = floaters.map((f, i) => `<span class="fl" style="left:${(i * 83) % 92}%;top:${(i * 47) % 85}%;animation-delay:${(i % 5) * .3}s">${f}</span>`).join('')
     + `<div class="emo">${emo}</div><span class="rb">${big}</span>${sub ? `<div class="sub">${sub}</div>` : ''}<div class="tap">화면을 누르면 닫혀요</div>`;
   a.onclick = () => a.remove();
@@ -292,7 +335,8 @@ function maybeAnnounce(key, fn) { if (annSeen.has(key)) return; annSeen.add(key)
 
 /* ========== 사례 → 단계·정답·힌트 ========== */
 const casesOf = () => ((room && room.cases) || DEFAULT_CASES).map(c => ({ ...c, type: c.type === 'along' ? 'along' : 'shift', curve: c.curve === 'S' ? 'S' : 'D', dir: c.dir === '-' ? '-' : '+' }));
-const stepsOf = c => c.type === 'shift' ? ['price', 'move', 'who', 'drag', 'final'] : ['price', 'move', 'drag', 'final'];
+// 수요편·공급편은 답이 뻔해서 '누구 마음?' 단계를 빼고, 총정리에서만 물어요
+const stepsOf = c => c.type === 'shift' ? (room && room.set === 'mix' ? ['price', 'move', 'who', 'drag', 'final'] : ['price', 'move', 'drag', 'final']) : ['price', 'move', 'drag', 'final'];
 const STEP_NAME = { price: '가격이 변했나요?', move: '어떻게 움직여?', who: '누구 마음이 먼저?', drag: '그래프 움직이기', final: '최종 결과' };
 const curveName = k => k === 'D' ? '수요' : '공급';
 const priceAfter = c => (c.curve === 'D') === (c.dir === '+') ? '+' : '-';                       // 수요↑·공급↓ → 가격↑
@@ -341,6 +385,43 @@ function chainOf(c) {
   const up = c.dir === '+', qu = qtyAfter(c) === '+';
   return [`${esc(c.emoji)} ${esc(c.market)} 가격 ${up ? '상승' : '하락'}`, `${c.curve === 'D' ? '수요량' : '공급량'} ${qu ? '증가' : '감소'}`, `${curveName(c.curve)} 곡선 위에서 점만 이동 (곡선은 그대로!)`];
 }
+
+// 사례 정리 팝업: [원인] → [그래프] → [결과] 3칸
+function summaryHTML(c) {
+  const up = c.dir === '+';
+  let tag, why, t, plus = '';
+  if (c.type === 'shift') {
+    const pu = priceAfter(c) === '+', D = c.curve === 'D';
+    tag = '<span class="sumTag shift">🚚 곡선 자체의 이동</span>'; why = '가격 말고 <b>다른 게</b> 변했어요 → 곡선이 통째로 움직여요';
+    t = [[D ? '🛒' : '🏭', `${curveName(c.curve)} ${up ? '증가' : '감소'}`, D ? (up ? '같은 가격에 더 사고 싶어요' : '같은 가격에 덜 사고 싶어요') : (up ? '같은 가격에 더 팔 수 있어요' : '같은 가격에 덜 팔게 돼요')],
+         [up ? '➡️' : '⬅️', `${curveName(c.curve)} 곡선`, up ? '오른쪽으로 이동' : '왼쪽으로 이동'],
+         [pu ? '📈' : '📉', `가격 ${pu ? '상승' : '하락'}`, '⭐ 새로 만나는 점']];
+    const other = D ? '공급량' : '수요량', oUp = D ? pu : !pu;
+    plus = `➕ 가격이 ${pu ? '오르니' : '내리니'} ${D ? '파는' : '사는'} 사람은 ${oUp ? '더' : '덜'} ${D ? '팔아요' : '사요'} → <b>${other} ${oUp ? '증가' : '감소'}</b> (${curveName(D ? 'S' : 'D')} 곡선 <b>위의</b> 이동)`;
+  } else {
+    const qu = qtyAfter(c) === '+', D = c.curve === 'D';
+    tag = '<span class="sumTag along">🛤️ 곡선 위의 이동</span>'; why = '<b>가격</b>이 변했어요 → 곡선은 그대로, 점만 움직여요';
+    t = [['💰', `가격 ${up ? '상승' : '하락'}`, c.price ? `${esc(c.price)}에서` : ''],
+         ['🛤️', '점만 이동', `${curveName(c.curve)} 곡선은 그대로`],
+         [qu ? '📈' : '📉', `${D ? '수요량' : '공급량'} ${qu ? '증가' : '감소'}`, D ? (qu ? '더 사요' : '덜 사요') : (qu ? '더 팔아요' : '덜 팔아요')]];
+  }
+  const tiles = t.map(([e, b, sm], i) => `<div class="tile ${i === 2 ? 'last' : ''}"><div class="te">${e}</div><div class="tb">${b}</div><div class="ts">${sm}</div></div>`).join('<div class="tarr">→</div>');
+  return `<div class="graph">${solvedGraph(c, true)}</div>
+    <div><div style="font-size:20px;color:var(--sub)">${esc(c.emoji)} ${esc(c.text)}</div><div style="margin-top:8px">${tag}${c.factor && c.type === 'shift' ? ` <span class="sumTag" style="background:var(--lemon);font-size:20px">🔑 ${esc(c.factor)}</span>` : ''}</div><div class="sumWhy">${why}</div>
+    <div class="tiles">${tiles}</div>${plus ? `<div class="sumPlus">${plus}</div>` : ''}</div>`;
+}
+let popKey = '';
+function showSummary(key, c, btns, wire) {
+  if (popKey === key && document.querySelector('.sumPop')) return;
+  closeSummary(); popKey = key;
+  const d = document.createElement('div'); d.className = 'sumPop';
+  d.innerHTML = `<div class="sumCard">${summaryHTML(c)}<div class="sumBtns">${btns}</div></div>`;
+  d.onclick = e => { if (e.target === d) closeSummary(true); };
+  document.body.appendChild(d);
+  wire && wire(d);
+}
+const popClosed = new Set();
+function closeSummary(byUser) { document.querySelectorAll('.sumPop').forEach(x => x.remove()); if (byUser && popKey) popClosed.add(popKey); popKey = ''; }
 
 /* ========== 그래프 (SVG 400×320, 데이터 0~100) ========== */
 const GW = 400, GH = 320, GL = 46, GR = 16, GT = 16, GB = 40, pw = GW - GL - GR, ph = GH - GT - GB;
@@ -417,10 +498,10 @@ function start() {
 function teacherHome() {
   const saved = localStorage.getItem('curve_teacher_room');
   app.innerHTML = `<div class="wrap"><div class="stage" style="min-height:80vh">
-    <div class="bigEmoji bounce">🕵️</div>
-    <div class="title">곡선 <span>탐정</span></div>
-    <p class="muted" style="font-size:22px">곡선 위의 이동일까? 곡선 자체의 이동일까? 사건을 풀어 봐요</p>
-    <button class="btn big mint" id="newRoom">새 수사 준비하기 ✨</button>
+    <div class="bigEmoji bounce">📈</div>
+    <div class="title">시장 <span>예측하기</span></div>
+    <p class="muted" style="font-size:22px">곡선 위의 이동일까? 곡선 자체의 이동일까? 예측해 봐요</p>
+    <button class="btn big mint" id="newRoom">새 수업 준비하기 ✨</button>
     ${saved ? `<button class="btn sky" id="resume">이어서 하기 (방 ${esc(saved)})</button>` : ''}
   </div></div>`;
   el('newRoom').onclick = newRoom;
@@ -430,17 +511,15 @@ async function newRoom() {
   try {
     let c;
     for (let i = 0; i < 20; i++) { c = String(Math.floor(1000 + Math.random() * 9000)); if (!(await get(A(c))).exists()) break; }
-    let cases = DEFAULT_CASES;
-    try { const last = JSON.parse(localStorage.getItem('curve_last_cases') || 'null'); if (Array.isArray(last) && last.length) cases = last; } catch (e) {}
-    await set(A(c), { createdAt: Date.now(), cases, state: { phase: 'setup', mode: 'together', ci: 0, step: 0, reveal: false, soloFrom: 0, showNames: true } });
+    await set(A(c), { createdAt: Date.now(), set: 'D', cases: PRESETS.D, state: { phase: 'setup', mode: 'together', ci: 0, step: 0, reveal: false, soloFrom: 0, showNames: true } });
     localStorage.setItem('curve_teacher_room', c);
     location.href = `?t=1&room=${c}`;
   } catch (e) { console.error(e); toast('방을 못 열었어요 😢 인터넷을 확인해 주세요'); }
 }
 function studentForm(prefill) {
   app.innerHTML = `<div class="s-wrap"><div class="stage" style="min-height:80vh">
-    <div class="bigEmoji bounce">🕵️</div>
-    <div class="title">곡선 <span>탐정</span></div>
+    <div class="bigEmoji bounce">📈</div>
+    <div class="title">시장 <span>예측하기</span></div>
     <div class="card" style="width:min(460px,100%);display:grid;gap:4px">
       <input class="field" id="jCode" inputmode="numeric" maxlength="4" placeholder="입장 코드 4자리" value="${esc(prefill)}">
       <input class="field" id="jName" maxlength="8" placeholder="내 이름" value="${esc(localStorage.getItem('curve_name') || '')}">
@@ -488,25 +567,31 @@ const playerIds = () => Object.keys(room.players || {});
 
 function topbar(st) {
   const play = st.phase === 'play';
-  return `<div class="topbar"><div class="logo">🕵️ 곡선 탐정</div>
+  return `<div class="topbar"><div class="logo">📈 시장 예측하기</div>
     <span class="pill">방 코드 <b style="color:var(--peachD)">${esc(code)}</b></span>
+    <span class="pill">${SET_NAME[room.set || 'D']}</span>
     ${st.phase !== 'setup' ? `<span class="pill">🙋 ${onlineIds().length}명 접속</span>` : ''}
     ${play ? `<span class="modeTg"><button class="btn sm mint ${st.mode === 'together' ? 'on' : ''}" id="mTog">👥 같이 하기</button><button class="btn sm sky ${st.mode === 'solo' ? 'on' : ''}" id="mSolo">🏃 각자 하기</button></span>` : ''}
     <button class="btn sm lav" id="names">${st.showNames ? '👤 이름 ON' : '🙈 이름 OFF'}</button>
-    ${play ? '<button class="btn sm lemon" id="toEnd">🏁 수사 끝</button>' : ''}
+    ${play ? '<button class="btn sm lemon" id="toEnd">🏁 끝내기</button>' : ''}
     <button class="btn sm" id="home">처음 화면</button></div>`;
 }
+const caseRow = (c, ci) => `<div class="case row"><div class="ce">${esc(c.emoji)}</div><div><span class="cm">${esc(c.market)} · 사례 ${ci + 1}</span>${c.price ? `<span class="cp">💰 지금 <b>${esc(c.price)}</b></span>` : ''}<div class="ct">${esc(c.text)}</div></div></div>`;
+let tSumm = null;
 const stepBar = (c, cur, doneFn) => `<div class="stepbar"><span class="${cur === 0 ? 'on' : 'ok'}">📰 사례</span>${stepsOf(c).map((s, k) => `<span class="${cur === k + 1 ? 'on' : (doneFn ? doneFn(s) : cur > k + 1) ? 'ok' : ''}">${k + 1}. ${STEP_NAME[s]}</span>`).join('')}</div>`;
 
 function renderTeacher() {
   const st = room.state || {}, cs = casesOf();
+  tSumm = null;
   if (st.phase === 'setup' && document.activeElement && document.activeElement.closest && document.activeElement.closest('.cbox')) return;
   let body = '';
   if (st.phase === 'setup') {
     body = `<div class="card"><h3>⚙️ 사례 준비 <span class="muted" style="font-size:16px">학생들이 들어오기 전에 설정해요 · 정답이 보이니 칠판에 띄우지 마세요 🤫</span></h3>
+      <div style="margin-bottom:10px">${['D', 'S', 'mix'].map(k => `<button class="btn ${room.set === k || (!room.set && k === 'D') ? 'mint' : ''}" data-set="${k}">${SET_NAME[k]}</button>`).join(' ')}
+        <span class="muted" style="font-size:16px">버튼을 누르면 그 편의 기본 사례로 바뀌어요 ${room.set === 'mix' ? '· 총정리는 \'누구 마음이 먼저?\' 단계까지 해요' : ''}</span></div>
       ${cs.map((c, k) => `<div class="cbox">
-        <div class="edit-case"><b style="font-size:20px">${k + 1}</b><input data-k="${k}" data-f="emoji" value="${esc(c.emoji)}" maxlength="4"><input data-k="${k}" data-f="market" value="${esc(c.market)}" maxlength="12" placeholder="상품"><input data-k="${k}" data-f="price" value="${esc(c.price || '')}" maxlength="14" placeholder="처음 가격"><input data-k="${k}" data-f="text" value="${esc(c.text)}" maxlength="60" placeholder="사례"></div>
-        <div class="edit-sel">정답:
+        <div class="edit-case"><b style="font-size:20px">${k + 1}</b><input data-k="${k}" data-f="emoji" value="${esc(c.emoji)}" maxlength="4"><input data-k="${k}" data-f="market" value="${esc(c.market)}" maxlength="12" placeholder="상품"><input data-k="${k}" data-f="price" value="${esc(c.price || '')}" maxlength="14" placeholder="처음 가격"><input data-k="${k}" data-f="text" value="${esc(c.text)}" maxlength="70" placeholder="사례"></div>
+        <div class="edit-sel">요인 <input data-k="${k}" data-f="factor" value="${esc(c.factor || '')}" maxlength="14" style="width:130px"> 정답:
           <select data-k="${k}" data-f="type"><option value="shift" ${c.type === 'shift' ? 'selected' : ''}>🚚 곡선 자체의 이동</option><option value="along" ${c.type === 'along' ? 'selected' : ''}>🛤️ 곡선 위의 이동</option></select>
           <select data-k="${k}" data-f="curve"><option value="D" ${c.curve === 'D' ? 'selected' : ''}>🛒 수요</option><option value="S" ${c.curve === 'S' ? 'selected' : ''}>🏭 공급</option></select>
           <select data-k="${k}" data-f="dir">${c.type === 'shift' ? `<option value="+" ${c.dir === '+' ? 'selected' : ''}>➡️ 증가</option><option value="-" ${c.dir === '-' ? 'selected' : ''}>⬅️ 감소</option>` : `<option value="+" ${c.dir === '+' ? 'selected' : ''}>⬆️ 가격 오름</option><option value="-" ${c.dir === '-' ? 'selected' : ''}>⬇️ 가격 내림</option>`}</select>
@@ -514,7 +599,7 @@ function renderTeacher() {
           <button class="btn sm sky" data-up="${k}" style="margin:0;padding:4px 10px" ${k ? '' : 'disabled'}>▲</button><button class="btn sm" data-del="${k}" style="margin:0;padding:4px 10px">✕</button></div>
       </div>`).join('')}
       ${cs.length < 20 ? '<button class="btn sm lemon" id="addCase">➕ 사례 추가</button>' : ''}
-      <button class="btn sm" id="resetCases">↩️ 기본 사례로</button>
+
     </div>
     <div class="center"><button class="btn big mint" id="ready">✅ 준비 끝! 학생 입장 받기</button></div>`;
   }
@@ -523,22 +608,22 @@ function renderTeacher() {
     body = `<div class="lobby">
       <div class="card center"><h3>태블릿으로 입장!</h3><div class="muted">입장 코드</div><div class="bigcode">${esc(code)}</div><div id="qr"></div>
         <div class="muted" style="font-size:13px;word-break:break-all">${esc(url)}</div></div>
-      <div class="card"><h3>🙋 입장한 탐정 ${ps.length}명</h3><div class="chips">${ps.map(p => `<span class="chip soft" style="${p.online === true ? '' : 'opacity:.4'}">${esc(p.name)}</span>`).join('') || '<span class="muted">아직 아무도 없어요</span>'}</div>
-        <div class="hl lav" style="margin-top:16px">🕵️ 사건마다 이렇게 풀어요<br><span style="font-size:19px">① 가격이 변했나요? → ② 곡선 위의 이동? 곡선 자체의 이동? → ③ 누구 마음이 먼저? → ④ 그래프 움직이기 → ⑤ 최종 가격은?</span></div></div>
+      <div class="card"><h3>🙋 입장한 학생 ${ps.length}명</h3><div class="chips">${ps.map(p => `<span class="chip soft" style="${p.online === true ? '' : 'opacity:.4'}">${esc(p.name)}</span>`).join('') || '<span class="muted">아직 아무도 없어요</span>'}</div>
+        <div class="hl lav" style="margin-top:16px">📈 사례마다 이렇게 풀어요<br><span style="font-size:19px">${room.set === 'mix' ? '① 가격이 변했나요? → ② 곡선 위의 이동? 곡선 자체의 이동? → ③ 누구 마음이 먼저? → ④ 그래프 움직이기 → ⑤ 최종 결과는?' : '① 가격이 변했나요? → ② 곡선 위의 이동? 곡선 자체의 이동? → ③ 그래프 움직이기 → ④ 최종 결과는?'}</span></div></div>
     </div>
-    <div class="center"><button class="btn big mint" id="go" ${ps.length ? '' : 'disabled'}>👥 같이 첫 사건 풀기</button> <button class="btn big sky" id="goSolo" ${ps.length ? '' : 'disabled'}>🏃 처음부터 각자 풀기</button> <button class="btn sm" id="toSetup">⚙️ 설정 고치기</button></div>`;
+    <div class="center"><button class="btn big mint" id="go" ${ps.length ? '' : 'disabled'}>👥 같이 첫 사례 풀기</button> <button class="btn big sky" id="goSolo" ${ps.length ? '' : 'disabled'}>🏃 처음부터 각자 풀기</button> <button class="btn sm" id="toSetup">⚙️ 설정 고치기</button></div>`;
   }
   else if (st.phase === 'play' && st.mode === 'together') {
     const ci = st.ci || 0, c = cs[ci], steps = stepsOf(c), k = st.step || 0, stp = steps[k - 1];
     if (!c) body = '<div class="stage"><div class="rule">사례가 없어요</div></div>';
     else if (k === 0) {
-      maybeAnnounce('case' + ci, () => announce('🚨 사건 발생!!', `${ci + 1}번째 사건`, '🕵️', 2600));
+      maybeAnnounce('case' + ci, () => announce('🚨 사건 발생!!', `${ci + 1}번째 사례`, '📈', 2600));
       body = `<div class="stage" style="gap:16px">
-        <span class="roundBadge">🕵️ 사건 ${ci + 1} / ${cs.length}</span>
+        <span class="roundBadge">📈 사례 ${ci + 1} / ${cs.length}</span>
         <div class="case"><div class="ce">${esc(c.emoji)}</div><div class="cm">${esc(c.market)} 시장</div>${c.price ? `<div class="cp">💰 지금 가격: <b>${esc(c.price)}</b></div>` : ''}<div class="ct">${esc(c.text)}</div></div>
         ${stepBar(c, 0)}
         <div class="graph" style="max-width:520px">${graphSVG({ c, mode: 'base' })}</div>
-        <button class="btn big mint" id="nextStep">▶ 수사 시작!</button></div>`;
+        <button class="btn big mint" id="nextStep">▶ 예측 시작!</button></div>`;
     } else {
       const ids = playerIds(), opts = optionsOf(c, stp), right = answerOf(c, stp);
       const counts = {}; opts.forEach(([v]) => counts[v] = 0);
@@ -546,34 +631,35 @@ function renderTeacher() {
       const done = ids.filter(id => (stepRec(id, ci, stp) || {}).done).length;
       const max = Math.max(1, answered), last = k === steps.length;
       const pastDrag = steps.indexOf('drag') < k - 1 || (stp === 'drag' && st.reveal);
-      body = `<div style="display:grid;grid-template-columns:1.15fr .85fr;gap:16px;align-items:start">
-        <div class="stage" style="min-height:auto;gap:12px">
-          <div class="case s"><div class="ce">${esc(c.emoji)}</div><div class="cm">${esc(c.market)} 시장 · 사건 ${ci + 1}</div>${c.price ? `<div class="cp">💰 지금 가격: <b>${esc(c.price)}</b></div>` : ''}<div class="ct">${esc(c.text)}</div></div>
+      body = `<div class="play2">
+        <div class="side">
+          ${caseRow(c, ci)}
           ${stepBar(c, k)}
           <div class="q">${k}. ${questionOf(c, stp)}</div>
           <div class="dist">${opts.map(([v, lab]) => `<div class="drow ${st.reveal && v === right ? 'right' : ''}"><span>${st.reveal && v === right ? '✅ ' : ''}${lab.replace(/<br>.*$/, '')}</span><div class="dbar"><i style="width:${st.reveal ? counts[v] / max * 100 : 0}%"></i></div><b>${st.reveal ? counts[v] + '명' : '?'}</b></div>`).join('')}</div>
-          <div class="rule muted" style="font-size:20px">✍️ 답한 탐정 ${answered} / ${ids.length}명 · 맞힌 탐정 ${done}명</div>
-          ${st.reveal ? `<div class="hint">${hintOf(c, stp).replace('🔍 ', '💡 ')}</div>` : ''}
-          ${st.reveal && last ? `<div class="good"><div class="chain">${chainOf(c).map(x => `<b>${x}</b>`).join(' → ')}</div></div>` : ''}
-          <div>${!st.reveal ? '<button class="btn big lemon" id="reveal">✅ 정답 공개</button>' : last ? (ci + 1 < cs.length ? '<button class="btn big mint" id="nextCase">🚨 다음 사건</button>' : '<button class="btn big mint" id="toEnd2">🏁 수사 끝! 결과 보기</button>') : '<button class="btn big mint" id="nextStep">▶ 다음 단계</button>'}
-            ${ci + 1 < cs.length ? `<button class="btn sky" id="toSolo">🏃 다음 사건부터 각자 풀기</button>` : ''}</div>
+          <div class="muted" style="font-size:19px">✍️ 답한 학생 ${answered} / ${ids.length}명 · 맞힌 학생 ${done}명</div>
+          <div>${!st.reveal ? '<button class="btn big lemon" id="reveal">✅ 정답 공개</button>' : last ? (ci + 1 < cs.length ? '<button class="btn big mint" id="nextCase">🚨 다음 사례</button>' : '<button class="btn big mint" id="toEnd2">🏁 끝! 결과 보기</button>') : '<button class="btn big mint" id="nextStep">▶ 다음 단계</button>'}
+            ${ci + 1 < cs.length ? `<button class="btn sky" id="toSolo">🏃 다음 사례부터 각자 풀기</button>` : ''}</div>
         </div>
-        <div class="graph">${pastDrag ? solvedGraph(c, last && st.reveal) : graphSVG({ c, mode: 'base' })}</div>
+        <div class="side"><div class="graph">${pastDrag ? solvedGraph(c, last && st.reveal) : graphSVG({ c, mode: 'base' })}</div>
+          ${st.reveal ? `<div class="hint">${hintOf(c, stp).replace('🔍 ', '💡 ')}</div>` : ''}
+          ${st.reveal && last ? '<button class="btn lav" id="openSum">📋 정리 다시 보기</button>' : ''}</div>
       </div>`;
+      if (st.reveal && last) tSumm = { key: `t${ci}`, c, ci, n: cs.length };
     }
   }
   else if (st.phase === 'play' && st.mode === 'solo') {
     const ids = playerIds(), from = st.soloFrom || 0, total = cs.length - from;
     const rows = ids.map(id => { const n = cs.filter((c, ci) => ci >= from && caseDone(id, ci, c)).length; return { id, n }; }).sort((a, b) => nameOf(a.id).localeCompare(nameOf(b.id)));
     const allDone = rows.filter(r => r.n >= total).length;
-    body = `<div class="center" style="margin-bottom:10px"><span class="roundBadge">🏃 각자 수사 중 · 사건 ${from + 1}~${cs.length}</span></div>
-      <div class="card"><h3>🕵️ 탐정들 진행 상황 <span class="muted" style="font-size:16px">다 푼 탐정 ${allDone} / ${ids.length}명</span></h3>
-        <div class="prog">${rows.map(r => `<div class="pp">${st.showNames ? esc(nameOf(r.id)) : '🕵️'} ${r.n >= total ? '🎉' : ''}<div class="bar"><i style="width:${total ? r.n / total * 100 : 0}%"></i></div><span class="muted" style="font-size:14px">${r.n} / ${total}</span></div>`).join('')}</div></div>
+    body = `<div class="center" style="margin-bottom:10px"><span class="roundBadge">🏃 각자 푸는 중 · 사례 ${from + 1}~${cs.length}</span></div>
+      <div class="card"><h3>📈 진행 상황 <span class="muted" style="font-size:16px">다 푼 학생 ${allDone} / ${ids.length}명</span></h3>
+        <div class="prog">${rows.map(r => `<div class="pp">${st.showNames ? esc(nameOf(r.id)) : '📈'} ${r.n >= total ? '🎉' : ''}<div class="bar"><i style="width:${total ? r.n / total * 100 : 0}%"></i></div><span class="muted" style="font-size:14px">${r.n} / ${total}</span></div>`).join('')}</div></div>
       ${heatTable(cs, from)}`;
   }
   else if (st.phase === 'end') {
-    maybeAnnounce('end', () => announce('🎉 수사 끝!!', '다들 명탐정이었어요 🕵️', '🏆', 3000));
-    body = `<div class="center" style="margin-bottom:10px"><span class="roundBadge">🏁 수사 결과</span></div>
+    maybeAnnounce('end', () => announce('🎉 끝!!', '다들 잘했어요 👏', '🏆', 3000));
+    body = `<div class="center" style="margin-bottom:10px"><span class="roundBadge">🏁 결과</span></div>
       ${heatTable(cs, 0)}
       <div class="card"><h3>🧐 정리해 볼까요?</h3>
         <div class="hl sky" style="font-size:22px">🛤️ <b>그 상품의 가격</b>이 변하면 → 곡선은 그대로, <b>곡선 위에서</b> 점만 이동 (수요량·공급량의 변화)</div>
@@ -584,6 +670,15 @@ function renderTeacher() {
   app.innerHTML = `<div class="wrap">${topbar(st)}${body}</div>`;
   if (st.phase === 'lobby' && window.QRCode) new QRCode(el('qr'), { text: location.origin + location.pathname + '?room=' + code, width: 200, height: 200, colorDark: '#5B4B57', colorLight: '#ffffff' });
   wireTeacher(st, cs);
+  // 마지막 단계 정답 공개 → 정리 팝업
+  if (tSumm && !popClosed.has(tSumm.key)) {
+    const more = tSumm.ci + 1 < tSumm.n;
+    showSummary(tSumm.key, tSumm.c, `<button class="btn big mint" id="popNext">${more ? '🚨 다음 사례' : '🏁 끝! 결과 보기'}</button> <button class="btn" id="popClose">닫기</button>`, d => {
+      d.querySelector('#popClose').onclick = () => closeSummary(true);
+      d.querySelector('#popNext').onclick = () => { closeSummary(); update(AP('state'), more ? { ci: tSumm.ci + 1, step: 0, reveal: false } : { phase: 'end' }); };
+    });
+  } else if (!tSumm) closeSummary();
+  if (el('openSum')) el('openSum').onclick = () => { popClosed.delete(`t${st.ci || 0}`); renderTeacher(); };
 }
 // 사례 × 단계별 "처음에 맞힌 비율" — 어디서 많이 헷갈렸는지 한눈에
 function heatTable(cs, from) {
@@ -596,7 +691,7 @@ function heatTable(cs, from) {
     return `<td style="background:${bg}">${Math.round(r * 100)}%</td>`;
   };
   return `<div class="card"><h3>📊 처음에 맞힌 비율 <span class="muted" style="font-size:16px">빨간 칸 = 많이 헷갈린 곳</span></h3>
-    <table class="heat"><tr><th>사건</th>${all.map(s => `<th>${STEP_NAME[s]}</th>`).join('')}</tr>
+    <table class="heat"><tr><th>사례</th>${all.map(s => `<th>${STEP_NAME[s]}</th>`).join('')}</tr>
     ${cs.map((c, ci) => ci < from ? '' : `<tr><th style="text-align:left">${ci + 1}. ${esc(c.emoji)} ${esc(c.text.slice(0, 18))}${c.text.length > 18 ? '…' : ''}</th>${all.map(s => cell(ci, s, c)).join('')}</tr>`).join('')}</table></div>`;
 }
 function wireTeacher(st, cs) {
@@ -605,20 +700,19 @@ function wireTeacher(st, cs) {
   el('home').onclick = () => { if (confirm('처음 화면으로 갈까요? (방은 그대로 남아요)')) location.href = '?t=1'; };
   if (el('mTog')) el('mTog').onclick = () => { if (st.mode !== 'together') S({ mode: 'together', step: 0, reveal: false }); };
   if (el('mSolo')) el('mSolo').onclick = () => { if (st.mode !== 'solo') S({ mode: 'solo', soloFrom: st.ci || 0 }); };
-  if (el('toEnd')) el('toEnd').onclick = () => { if (confirm('수사를 끝내고 결과를 볼까요?')) S({ phase: 'end' }); };
+  if (el('toEnd')) el('toEnd').onclick = () => { if (confirm('활동을 끝내고 결과를 볼까요?')) S({ phase: 'end' }); };
   if (st.phase === 'setup') {
     const save = () => {
       const next = casesOf().map(x => ({ ...x }));
       document.querySelectorAll('.cbox [data-f]').forEach(f => { next[+f.dataset.k][f.dataset.f] = f.value; });
       set(AP('cases'), next);
-      try { localStorage.setItem('curve_last_cases', JSON.stringify(next)); } catch (e) {}
     };
     document.querySelectorAll('.cbox input').forEach(inp => { inp.oninput = () => { clearTimeout(editT); editT = setTimeout(save, 800); }; inp.onblur = () => { clearTimeout(editT); save(); }; });
     document.querySelectorAll('.cbox select').forEach(sel => sel.onchange = () => { sel.blur(); save(); });
     document.querySelectorAll('[data-del]').forEach(b => b.onclick = () => { const n = casesOf().filter((_, k) => k !== +b.dataset.del); if (n.length) set(AP('cases'), n); });
     document.querySelectorAll('[data-up]').forEach(b => b.onclick = () => { const n = casesOf(), k = +b.dataset.up; [n[k - 1], n[k]] = [n[k], n[k - 1]]; set(AP('cases'), n); });
-    if (el('addCase')) el('addCase').onclick = () => set(AP('cases'), [...casesOf(), { emoji: '🎁', market: '새 상품', price: '1개 1,000원', text: '사례를 적어 주세요', type: 'shift', curve: 'D', dir: '+' }]);
-    el('resetCases').onclick = () => { if (confirm('기본 사례로 되돌릴까요?')) set(AP('cases'), DEFAULT_CASES); };
+    if (el('addCase')) el('addCase').onclick = () => set(AP('cases'), [...casesOf(), { emoji: '🎁', market: '새 상품', price: '1개 1,000원', factor: '', text: '사례를 적어 주세요', type: 'shift', curve: 'D', dir: '+' }]);
+    document.querySelectorAll('[data-set]').forEach(b => b.onclick = () => { const k = b.dataset.set; if (room.set === k || confirm(`${SET_NAME[k]} 기본 사례로 바꿀까요? (고친 내용은 사라져요)`)) update(A(), { set: k, cases: PRESETS[k] }); });
     el('ready').onclick = () => S({ phase: 'lobby' });
   }
   if (st.phase === 'lobby') {
@@ -647,11 +741,11 @@ function renderStudent() {
   const st = room.state || {}, cs = casesOf(), me = (room.players || {})[pid];
   if (!me) { localStorage.removeItem('curve_pid_' + code); return studentForm(code); }
   const sc = scoreOf(pid);
-  const top = `<div class="s-top"><span class="me">🕵️ ${esc(me.name)}</span><span class="pill">⭐ ${sc.ok}점</span></div>`;
+  const top = `<div class="s-top"><span class="me">🙂 ${esc(me.name)}</span><span class="pill">⭐ ${sc.ok}점</span></div>`;
   const wait = (emo, t, s) => { app.innerHTML = `<div class="s-wrap">${top}<div class="stage" style="min-height:70vh"><div class="bigEmoji bounce">${emo}</div><div class="title" style="font-size:38px">${t}</div><div class="rule">${s}</div></div></div>`; };
   if (dragState) return;   // 끄는 중엔 다시 그리지 않음
-  if (st.phase === 'setup' || st.phase === 'lobby') { sKey = ''; return wait('🕵️', '입장 완료!', '칠판을 보세요 👀<br>곧 첫 사건이 터져요'); }
-  if (st.phase === 'end') { sKey = ''; return wait('🏆', '수사 끝!', `처음에 맞힌 단계 <b>${sc.ok}</b> / ${sc.tot}개<br>명탐정 수고했어요 🕵️`); }
+  if (st.phase === 'setup' || st.phase === 'lobby') { sKey = ''; return wait('📈', '입장 완료!', '칠판을 보세요 👀<br>곧 첫 사례가 나와요'); }
+  if (st.phase === 'end') { sKey = ''; return wait('🏆', '끝!', `처음에 맞힌 단계 <b>${sc.ok}</b> / ${sc.tot}개<br>수고했어요 👏`); }
   // 지금 풀 사례·단계 고르기
   let ci, k;
   if (st.mode === 'together') {
@@ -659,37 +753,41 @@ function renderStudent() {
   } else {
     const from = st.soloFrom || 0;
     ci = hold ? hold.ci : cs.findIndex((c, x) => x >= from && !caseDone(pid, x, c));
-    if (ci < 0) { sKey = ''; return wait('🎉', '사건 다 풀었어요!', `처음에 맞힌 단계 <b>${sc.ok}</b> / ${sc.tot}개<br>칠판을 보며 기다려요 👀`); }
+    if (ci < 0) { sKey = ''; return wait('🎉', '사례 다 풀었어요!', `처음에 맞힌 단계 <b>${sc.ok}</b> / ${sc.tot}개<br>칠판을 보며 기다려요 👀`); }
     const steps0 = stepsOf(cs[ci]);
     k = hold ? steps0.indexOf(hold.stp) + 1 : readSeen[ci] ? steps0.findIndex(s => !(stepRec(pid, ci, s) || {}).done) + 1 : 0;
   }
-  const c = cs[ci]; if (!c) return wait('🕵️', '잠깐만요', '칠판을 보세요');
+  const c = cs[ci]; if (!c) return wait('📈', '잠깐만요', '칠판을 보세요');
   const steps = stepsOf(c), stp = steps[k - 1], rec = stp ? stepRec(pid, ci, stp) : null;
   const key = [st.mode, ci, k, rec ? `${rec.first}/${rec.done}` : '-', st.mode === 'together' ? st.reveal : ''].join('|');
   if (key === sKey) return;
   const prevKey = sKey; sKey = key;
-  const caseCard = `<div class="case s"><div class="ce">${esc(c.emoji)}</div><div class="cm">${esc(c.market)} 시장 · 사건 ${ci + 1}</div>${c.price ? `<div class="cp">💰 지금 가격: <b>${esc(c.price)}</b></div>` : ''}<div class="ct">${esc(c.text)}</div></div>`;
+  const caseCard = caseRow(c, ci);
+  if (!(st.mode === 'together' && k === steps.length && rec && rec.done) && !(hold && k === steps.length)) closeSummary();
   const bar = stepBar(c, k, s => (stepRec(pid, ci, s) || {}).done);
   if (k === 0) {
-    app.innerHTML = `<div class="s-wrap">${top}<div class="stage" style="gap:14px"><span class="roundBadge">🚨 사건 ${ci + 1} 발생!</span>${caseCard.replace('case s', 'case')}${bar}
-      ${st.mode === 'solo' ? '<button class="btn big mint" id="startCase">🔍 수사 시작!</button>' : '<div class="rule muted">사례를 잘 읽어요 📖 곧 수사가 시작돼요</div>'}</div></div>`;
+    maybeAnnounce(`case${st.mode}${ci}`, () => announce('🚨 사건 발생!!', `${ci + 1}번째 사례`, '📈', 2600));
+    app.innerHTML = `<div class="s-wrap">${top}<div class="stage" style="gap:14px"><span class="roundBadge">🚨 사례 ${ci + 1} 등장!</span><div class="case"><div class="ce">${esc(c.emoji)}</div><div class="cm">${esc(c.market)} 시장</div>${c.price ? `<div class="cp">💰 지금 가격: <b>${esc(c.price)}</b></div>` : ''}<div class="ct">${esc(c.text)}</div></div>${bar}
+      ${st.mode === 'solo' ? '<button class="btn big mint" id="startCase">🔍 예측 시작!</button>' : '<div class="rule muted">사례를 잘 읽어요 📖 곧 시작돼요</div>'}</div></div>`;
     if (el('startCase')) el('startCase').onclick = () => { readSeen[ci] = true; sKey = ''; renderStudent(); };
     return;
   }
   const justWrong = rec && !rec.done && prevKey.startsWith([st.mode, ci, k].join('|'));
-  const head = `<div class="s-wrap">${top}<div class="stage" style="gap:12px;min-height:auto">${caseCard}${bar}<div class="q">${k}. ${questionOf(c, stp)}</div>`;
-  const doneBox = rec && rec.done ? `<div class="good">${rec.ok ? '🎯 한 번에 맞혔어요! +1점' : '✅ 맞았어요!'}${k === steps.length ? `<div class="chain" style="margin-top:8px">${chainOf(c).map(x => `<b>${x}</b>`).join(' → ')}</div>` : ''}</div>
-      ${st.mode === 'together' ? '<div class="rule muted">칠판을 보며 기다려요 👀</div>' : `<button class="btn big mint" id="goOn">${k === steps.length ? (cs.findIndex((x, j) => j > ci && !caseDone(pid, j, x)) >= 0 ? '🚨 다음 사건 ▶' : '🎉 끝!') : '▶ 다음 단계'}</button>`}` : '';
+  const hasGraph = stp === 'drag' || stp === 'final';
+  const head = `<div class="s-wrap">${top}<div class="s-play ${hasGraph ? 'two' : ''}"><div class="col">${caseCard}${bar}<div class="q">${k}. ${questionOf(c, stp)}</div>`;
+  const doneBox = rec && rec.done ? `<div class="good">${rec.ok ? '🎯 한 번에 맞혔어요! +1점' : '✅ 맞았어요!'}</div>
+      ${st.mode === 'together' ? '<div class="rule muted">칠판을 보며 기다려요 👀</div>' : `<button class="btn big mint" id="goOn">${k === steps.length ? (cs.findIndex((x, j) => j > ci && !caseDone(pid, j, x)) >= 0 ? '🚨 다음 사례 ▶' : '🎉 끝!') : '▶ 다음 단계'}</button>`}` : '';
   const hintBox = rec && !rec.done ? `<div class="hint">${hintOf(c, stp)}<br><b>다시 골라 봐요!</b></div>` : '';
   if (stp === 'drag') {
     const solved = rec && rec.done;
-    app.innerHTML = `${head}<div class="graph" id="gwrap">${solved ? solvedGraph(c, false) : graphSVG({ c, mode: c.type, off: 0, pt: 50, hit: true })}</div>${hintBox}${doneBox}</div></div>`;
+    app.innerHTML = `${head}${hintBox}${doneBox}</div><div class="col"><div class="graph" id="gwrap">${solved ? solvedGraph(c, false) : graphSVG({ c, mode: c.type, off: 0, pt: 50, hit: true })}</div></div></div></div>`;
     if (!solved) setupDrag(c, ci);
   } else {
     const opts = optionsOf(c, stp), right = answerOf(c, stp);
     const showGraph = stp === 'final';
-    app.innerHTML = `${head}${showGraph ? `<div class="graph">${solvedGraph(c, rec && rec.done)}</div>` : ''}
-      <div class="choices">${opts.map(([v, lab]) => `<button class="choice ${rec && rec.done && v === right ? 'right' : ''}" data-v="${v}" ${rec && rec.done ? 'disabled' : ''}>${lab}</button>`).join('')}</div>${hintBox}${doneBox}</div></div>`;
+    app.innerHTML = `${head}
+      <div class="choices">${opts.map(([v, lab]) => `<button class="choice ${rec && rec.done && v === right ? 'right' : ''}" data-v="${v}" ${rec && rec.done ? 'disabled' : ''}>${lab}</button>`).join('')}</div>${hintBox}${doneBox}</div>
+      ${showGraph ? `<div class="col"><div class="graph">${solvedGraph(c, rec && rec.done)}</div></div>` : ''}</div></div>`;
     document.querySelectorAll('.choice').forEach(b => b.onclick = () => {
       const v = b.dataset.v, ok = v === right;
       if (!ok) { b.classList.add('wrong'); }
@@ -697,7 +795,16 @@ function renderStudent() {
     });
     if (justWrong) { const w = document.querySelector(`.choice[data-v="${rec.first}"]`); if (w && !rec.done) w.classList.add('wrong'); }
   }
-  if (el('goOn')) el('goOn').onclick = () => { hold = null; sKey = ''; renderStudent(); };
+  if (el('goOn')) el('goOn').onclick = () => { hold = null; closeSummary(); sKey = ''; renderStudent(); };
+  // 마지막 단계 맞힘 → 정리 팝업
+  if (k === steps.length && rec && rec.done && !popClosed.has(`s${ci}`)) {
+    const solo = st.mode === 'solo', nextLab = el('goOn') ? el('goOn').textContent : '';
+    showSummary(`s${ci}`, c, solo ? `<button class="btn big mint" id="popGo">${nextLab}</button>` : '<button class="btn big mint" id="popOk">알겠어요! 👍</button>', d => {
+      const g = d.querySelector('#popGo'), o = d.querySelector('#popOk');
+      if (g) g.onclick = () => { popClosed.add(`s${ci}`); el('goOn').click(); };
+      if (o) o.onclick = () => closeSummary(true);
+    });
+  }
 }
 
 /* 👆 그래프 끌기: 곡선 통째로(좌우) 또는 곡선 위의 점(위아래) */
