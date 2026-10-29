@@ -369,7 +369,8 @@ function graphSVG(o) {
     if (o.done && off) {
       const [q1, p1] = eqOf(sD, sS);
       g += `<line x1="${GL}" x2="${X(q1)}" y1="${Y(p1)}" y2="${Y(p1)}" stroke="#2FA67A" stroke-width="2" stroke-dasharray="5 5"/><line x1="${GL}" x2="${X(q0)}" y1="${Y(p0)}" y2="${Y(p0)}" stroke="#A3919C" stroke-width="2" stroke-dasharray="5 5"/>
-        <text x="${X(q1) + 10}" y="${Y(p1) - 10}" font-size="26">⭐</text><circle cx="${X(q1)}" cy="${Y(p1)}" r="8" fill="#2FA67A"/>`;
+        <text x="${X(q1)}" y="${Y(p1)}" font-size="30" text-anchor="middle" dominant-baseline="central">⭐</text>
+        <text x="${GL + 5}" y="${Y(p1) + (p1 > p0 ? -6 : 16)}" font-size="14" fill="#2FA67A">새 가격</text><text x="${GL + 5}" y="${Y(p0) + (p1 > p0 ? 16 : -6)}" font-size="14" fill="#A3919C">원래 가격</text>`;
       if (o.showPrice) g += `<line x1="${GL - 22}" x2="${GL - 22}" y1="${Y(p0)}" y2="${Y(p1) + (p1 > p0 ? 8 : -8)}" stroke="#E8803E" stroke-width="5" marker-end="url(#ar)"/>`;
     }
     if (o.hit) g += `<path id="hit" d="${c.curve === 'D' ? dLine(sD) : sLine(sS)}" stroke="transparent" stroke-width="44" fill="none" style="cursor:grab"/>`;
