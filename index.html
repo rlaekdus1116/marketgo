@@ -174,6 +174,7 @@ const RESERVE = ['사과','계란','바나나','라면','떡볶이','붕어빵',
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getDatabase, ref, set, get, update, onValue, onDisconnect, runTransaction, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import { hubSeen, hubLog, hubFollow } from './hub.js';
 
 /* ---------------- 공통 ---------------- */
 const app = document.getElementById('app');
@@ -394,6 +395,7 @@ function T_init(){
   localStorage.setItem('market_teacher_room', code);
   onValue(ref(db, 'rooms/' + code), s => {
     room = s.val();
+    if (room) hubSeen('market', code);
     if (!room) { app.innerHTML = `<div class="wrap stage"><p style="font-size:24px">방을 찾을 수 없어요 😢</p><button class="btn" data-act="newRoom">새 게임 만들기</button></div>`; tKey = ''; return; }
     T_render();
   });
@@ -572,7 +574,11 @@ function T_update(){
     el('checkInfo').innerHTML = `🌟 이번 단계 완벽: <b>${perfect}명</b> / ${vals.length}명` + (more ? (rd.plan[si + 1].rev ? '' : ' · 다음엔 더 늘어나요!') : ' · 라운드 끝!');
   }
   else if (st.phase === 'result') el('resultBody').innerHTML = T_resultHTML();
-  else if (st.phase === 'end') el('endBody').innerHTML = T_endHTML();
+  else if (st.phase === 'end') {
+    el('endBody').innerHTML = T_endHTML();
+    const all = Object.values(room.players || {}).map(p => ({ name: p.name, total: p.total || 0 })).sort((a, b) => b.total - a.total);
+    hubLog('market', code, ['이름', '총점', '순위'], all.map((p, i) => [p.name, p.total, i + 1]));
+  }
 }
 
 function T_tick(){
@@ -862,6 +868,7 @@ async function S_join(c, name, auto){
   onValue(pref, s => { S.me = s.val(); const t = el('myTotal'); if (t && S.me) t.textContent = (S.me.total || 0) + '점'; });
   onValue(ref(db, `rooms/${c}/state`), s => { S.state = s.val(); S_render(); });
   if (!S.ticker) S.ticker = setInterval(S_tick, 200);
+  hubFollow('market', c);
 }
 
 const S_top = () => `<div class="s-top"><span class="me">🙂 ${esc(S.name)}</span><span class="pill">⭐ <span id="myTotal">${(S.me && S.me.total) || 0}점</span></span></div>`;

@@ -132,6 +132,7 @@ td.sum{background:var(--lav);border-color:var(--lav);color:var(--ink)}
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getDatabase, ref, set, get, update, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import { hubSeen, hubFollow } from './hub.js';   // 3단원 허브 연결
 
 /* 「시장에 가면」과 같은 Firebase 프로젝트 사용 (데이터는 rooms/trade_코드 에 저장 → 기존 보안 규칙 그대로 통과) */
 const firebaseConfig = {
@@ -233,6 +234,7 @@ function start() {
     pid = localStorage.getItem('trade_pid_' + code);
     if (!pid) return studentForm(code);
   }
+  if (isTeacher) hubSeen('trade', code); else hubFollow('trade', code);
   onValue(T(), s => {
     room = s.val();
     if (!room) { app.innerHTML = `<div class="wrap stage"><div class="bigEmoji">😢</div><p class="rule">방을 찾을 수 없어요</p></div>`; return; }

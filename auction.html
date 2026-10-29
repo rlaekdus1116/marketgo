@@ -187,6 +187,7 @@ canvas{display:block;width:100%;touch-action:none;border-radius:16px}
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getDatabase, ref, set, get, update, onValue, onDisconnect } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import { hubSeen, hubLog, hubFollow } from './hub.js';
 
 /* 「시장에 가면」·「떡볶이 시장」과 같은 Firebase 프로젝트 (데이터는 rooms/auction_코드 에 저장) */
 const firebaseConfig = {
@@ -380,8 +381,9 @@ function start() {
     if (!code || !pid) return studentForm(code);
   }
   render = isTeacher ? renderTeacher : renderStudent;
-  if (isTeacher) localStorage.setItem('auction_teacher_room', code);
+  if (isTeacher) { localStorage.setItem('auction_teacher_room', code); hubSeen('auction', code); }
   else {
+    hubFollow('auction', code);
     const onl = AP(`players/${pid}/online`);
     onValue(ref(db, '.info/connected'), s => { if (s.val()) { onDisconnect(onl).set(false); set(onl, true); } });
   }
@@ -606,6 +608,10 @@ function renderTeacher() {
       return `<div class="card svgbox"><h3>${esc(o.it.emoji)} ${esc(o.it.name)}${o.it.supply ? ` · 📦 ${o.it.supply}개` : ''}</h3><svg viewBox="0 0 ${W} ${H}" font-family="Jua">${g}<path d="${stairPath(ansOf(o.k), x, y, upto)}" fill="none" stroke="${COLORS[c]}" stroke-width="6" stroke-linejoin="round"/>${o.it.supply ? `<line x1="${x(Math.min(o.it.supply, NN))}" x2="${x(Math.min(o.it.supply, NN))}" y1="${MT}" y2="${H - MB}" stroke="#3B8FD9" stroke-width="4" stroke-dasharray="12 7"/>` : ''}</svg></div>`; }).join('');
     const accAll = {};
     done.forEach(o => Object.entries(((room.acc || {})[o.k]) || {}).forEach(([id, a]) => { if (a !== null) (accAll[id] = accAll[id] || []).push(a); }));
+    // 📊 기록: 이름 · 예측 정확도 평균 · 최고가 부르기 결과
+    const bidTxt = id => items.map((it2, k) => { const sb = ((room.sbids || {})[k] || {})[id]; if (!sb) return ''; const { winners } = bidWinners(k, it2.supply); const can = ((room.cancel || {})[k] || {})[id];
+      return `${it2.name} ${(+sb.v || 0).toLocaleString()}원${can ? ' (낙찰 취소·위약금 ' + fine(+sb.v || 0).toLocaleString() + '원)' : winners.some(w => w.pid === id) ? ' 낙찰' : ''}`; }).filter(Boolean).join(' / ');
+    hubLog('auction', code, ['이름', '예측 정확도 평균(%)', '최고가 부르기'], Object.keys(room.players || {}).map(id => [nameOf(id), accAll[id] ? Math.round(accAll[id].reduce((s, v) => s + v, 0) / accAll[id].length) : '', bidTxt(id)]));
     const kings = Object.entries(accAll).map(([id, a]) => [id, a.reduce((s, v) => s + v, 0) / a.length]).sort((a, b) => b[1] - a[1]).slice(0, 3);
     body = `<div class="center" style="margin-bottom:8px"><span class="roundBadge">🏁 상품별 수요 곡선</span></div>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(420px,1fr));gap:16px">${minis}</div>

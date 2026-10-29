@@ -264,6 +264,7 @@ canvas{display:block;width:100%;touch-action:none;border-radius:16px}
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getDatabase, ref, set, get, update, onValue, onDisconnect } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import { hubSeen, hubLog, hubFollow } from './hub.js';
 
 /* 「시장에 가면」·「떡볶이 시장」·「경매소」와 같은 Firebase 프로젝트 (데이터는 rooms/curve_코드 에 저장) */
 const firebaseConfig = {
@@ -512,8 +513,9 @@ function start() {
     if (!code || !pid) return studentForm(code);
   }
   render = isTeacher ? renderTeacher : renderStudent;
-  if (isTeacher) localStorage.setItem('curve_teacher_room', code);
+  if (isTeacher) { localStorage.setItem('curve_teacher_room', code); hubSeen('curve', code); }
   else {
+    hubFollow('curve', code);
     const onl = AP(`players/${pid}/online`);
     onValue(ref(db, '.info/connected'), s => { if (s.val()) { onDisconnect(onl).set(false); set(onl, true); } });
   }
@@ -644,7 +646,14 @@ function renderTeacher() {
     <div class="center">${room.set === 'mix' ? `<button class="btn big mint" id="goRace" ${ps.length ? '' : 'disabled'}>⚡ 총정리 스피드 시험 시작!</button> <span class="muted">한 문제 ${RACE_SEC()}초</span>` : ''}<button class="btn big mint" id="go" ${ps.length && room.set !== 'mix' ? '' : 'hidden'}>👥 같이 첫 사례 풀기</button> <button class="btn big sky" id="goSolo" ${ps.length && room.set !== 'mix' ? '' : 'hidden'}>🏃 처음부터 각자 풀기</button> <button class="btn sm" id="toSetup">⚙️ 설정 고치기</button></div>`;
   }
   else if (st.phase === 'play' && isRace()) body = teacherRace(st);
-  else if (st.phase === 'end' && isRace()) body = raceEnd(true);
+  else if (st.phase === 'end' && isRace()) {
+    body = raceEnd(true);
+    const tp = raceTop(), rs = raceCases(), qs = st.qStarts || {};
+    hubLog('curve', code, ['이름', '총정리 점수', '순위', '맞힌 문항'], tp.map((r, i) => {
+      let ok = 0, tot = 0; rs.forEach((c, ci) => { if (!qs[ci]) return; const a = raceAns(c), x = raceRec(r.id, ci) || {}; tot += 2; ok += (x.w === a.w) + (x.p === a.p); });
+      return [nameOf(r.id), r.v, i + 1, `${ok}/${tot}`];
+    }), '총정리');
+  }
   else if (st.phase === 'play' && st.mode === 'together') {
     const ci = st.ci || 0, c = cs[ci], steps = stepsOf(c), k = st.step || 0, stp = steps[k - 1];
     if (!c) body = '<div class="stage"><div class="rule">사례가 없어요</div></div>';
@@ -689,6 +698,7 @@ function renderTeacher() {
       ${heatTable(cs, from)}`;
   }
   else if (st.phase === 'end') {
+    hubLog('curve', code, ['이름', '편', '처음에 맞힌 단계', '푼 단계', '첫 시도 정답률(%)'], playerIds().map(id => { const sc = scoreOf(id); return [nameOf(id), SET_NAME[room.set || 'D'].replace(/^\S+ /, ''), sc.ok, sc.tot, sc.tot ? Math.round(sc.ok / sc.tot * 100) : '']; }), SET_NAME[room.set || 'D']);
     maybeAnnounce('end', () => announce('🎉 끝!!', '다들 잘했어요 👏', '🏆', 3000));
     body = `<div class="center" style="margin-bottom:10px"><span class="roundBadge">🏁 결과</span></div>
       ${heatTable(cs, 0)}
