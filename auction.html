@@ -20,7 +20,9 @@ html,body{margin:0;min-height:100%}
 body{font-family:'Jua',sans-serif;color:var(--ink);background:var(--bg);
   background-image:radial-gradient(#F6E3EA 1.4px,transparent 1.4px);background-size:22px 22px}
 button{font-family:inherit;color:inherit;cursor:pointer;border:none}
-.wrap{max-width:1100px;margin:0 auto;padding:18px 16px 40px}
+.wrap{max-width:1440px;margin:0 auto;padding:18px 28px 24px}
+.wrap>.stage{min-height:calc(100vh - 110px)}.s-wrap>.stage{min-height:calc(100vh - 80px)}
+.stage::before{content:'';flex:1 1 0}.stage::after{content:'';flex:1.618 1 0}
 .s-wrap{max-width:760px;margin:0 auto;padding:14px 14px 40px}
 .muted{color:var(--sub)} .center{text-align:center}
 .card{background:var(--card);border:2px solid var(--line);border-radius:26px;padding:18px 20px;box-shadow:0 6px 0 var(--line);margin-bottom:16px}
@@ -50,7 +52,7 @@ h3{margin:0 0 12px;font-size:22px;font-weight:normal}
 #qr{display:flex;justify-content:center;margin:14px 0}
 #qr img,#qr canvas{border:10px solid #fff;border-radius:14px}
 .stage{min-height:40vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:14px}
-.bigEmoji{font-size:110px;line-height:1}
+.bigEmoji{font-size:110px;line-height:1.25;padding-top:6px}
 .rule{font-size:26px;line-height:1.5}
 .roundBadge{display:inline-block;background:var(--lemon);border-radius:999px;padding:8px 22px;font-size:24px;box-shadow:0 4px 0 var(--lemonD)}
 .timer{font-size:110px;line-height:1;color:var(--peachD)}
@@ -126,8 +128,8 @@ td.sum{background:var(--lav);border-color:var(--lav);color:var(--ink)}
 @media (prefers-reduced-motion:reduce){.ann,.ann *,.ann::before{animation:none!important}}
 
 /* ===== 경매소 전용 ===== */
-.item-hero{display:flex;flex-direction:column;align-items:center;gap:6px}
-.item-hero .ie{font-size:120px;line-height:1;animation:hop .7s ease-in-out infinite alternate}
+.item-hero{display:flex;flex-direction:column;align-items:center;gap:6px;margin-top:26px}
+.item-hero .ie{font-size:120px;line-height:1.25;padding-top:8px;animation:hop .7s ease-in-out infinite alternate}
 .item-hero .in{font-size:40px}
 .item-hero .ip{font-size:22px;background:var(--lemon);border-radius:999px;padding:6px 20px}
 .price-big{font-size:96px;color:var(--peachD);line-height:1}
@@ -146,6 +148,9 @@ canvas{display:block;width:100%;touch-action:none;border-radius:16px}
 .pop2{position:fixed;inset:0;background:rgba(91,75,87,.45);display:flex;align-items:center;justify-content:center;z-index:90;padding:16px}
 .good{background:var(--mint);border-radius:18px;padding:12px 16px;font-size:22px;line-height:1.5;text-align:center;width:100%}.hint{background:var(--lemon);border:3px dashed var(--lemonD);border-radius:18px;padding:12px 16px;font-size:21px;line-height:1.5;width:100%}
 .finGraphs svg text{font-size:24px}
+.bigAns{background:var(--mint);border:4px solid #2FA67A;border-radius:24px;padding:14px 22px;font-size:32px;line-height:1.4;color:#1F7A57;box-shadow:0 6px 0 #2FA67A}
+.frow.dim{opacity:.38}
+.fcounts{display:flex;gap:10px;flex-wrap:wrap}.fcnt2{background:#fff;border:3px solid var(--line);border-radius:16px;padding:8px 16px;font-size:24px;opacity:.5}.fcnt2.ok{opacity:1;border-color:#2FA67A;background:var(--mint)}
 .finNav{display:flex;gap:8px;justify-content:center;align-items:center;margin:2px 0 14px}
 .fdot{width:14px;height:14px;border-radius:50%;background:var(--line);padding:0;transition:transform .15s}.fdot.past{background:var(--mintD)}.fdot.on{background:var(--peachD);transform:scale(1.5)}
 .fnow{margin-left:12px;font-size:20px;color:var(--sub)}
@@ -171,7 +176,7 @@ canvas{display:block;width:100%;touch-action:none;border-radius:16px}
 .choice2{background:#fff;border:3px solid var(--line);border-radius:18px;padding:14px;font-size:21px;box-shadow:0 4px 0 var(--line);text-align:left}
 .choice2.picked{background:var(--sky);border-color:var(--skyD)}.choice2.right{background:var(--mint);border-color:var(--mintD)}.choice2.wrong{background:var(--red);border-color:var(--redD)}
 @media (max-width:900px){.finGrid{grid-template-columns:1fr}}
-.hammer{font-size:80px;line-height:1;display:inline-block;transform-origin:80% 80%}
+.hammer{font-size:80px;line-height:1.25;display:inline-block;transform-origin:80% 80%}
 .hammer.bang{animation:bang .35s ease-in}
 @keyframes bang{0%{transform:rotate(-40deg)}60%{transform:rotate(18deg)}100%{transform:rotate(0)}}
 .acc{font-size:110px;line-height:1;color:var(--peachD)}
@@ -426,7 +431,7 @@ function start() {
 
 function teacherHome() {
   const saved = localStorage.getItem('auction_teacher_room');
-  app.innerHTML = `<div class="wrap"><div class="stage" style="min-height:80vh">
+  app.innerHTML = `<div class="wrap"><div class="stage">
     <div class="hammer bounce">🔨</div>
     <div class="title">다연샘 <span>경매소</span></div>
     <p class="muted" style="font-size:22px">이 가격에도 살래? 우리 반 수요 곡선을 만들어 봐요</p>
@@ -450,7 +455,7 @@ async function newRoom() {
 }
 
 function studentForm(prefill) {
-  app.innerHTML = `<div class="s-wrap"><div class="stage" style="min-height:80vh">
+  app.innerHTML = `<div class="s-wrap"><div class="stage">
     <div class="hammer bounce">🔨</div>
     <div class="title">다연샘 <span>경매소</span></div>
     <div class="card" style="width:min(460px,100%);display:grid;gap:4px">
@@ -534,7 +539,7 @@ function renderTeacher() {
   }
   else if (st.phase === 'item') {
     maybeAnnounce('item' + i, () => { Snd.roll(); announce('두구두구두구…', `${i + 1}번째 경매 상품은?!`, '🥁', 2200); setTimeout(() => announce(`${it.emoji} ${esc(it.name)}`, S ? `📦 단 ${S}개!` : '', it.emoji, 3200), 2300); });
-    body = `<div class="stage" style="min-height:60vh">
+    body = `<div class="stage">
       <span class="roundBadge">${i + 1}번째 경매 상품</span>
       <div class="item-hero"><div class="ie">${esc(it.emoji)}</div><div class="in">${esc(it.name)}</div>${it.pitch ? `<div class="ip">${esc(it.pitch)}</div>` : ''}</div>
       ${S ? `<span class="hot" style="font-size:30px">📦 단 ${S}개만 판매!</span>` : ''}
@@ -544,11 +549,11 @@ function renderTeacher() {
   }
   else if (st.phase === 'predict') {
     const done = Object.keys(preds).length;
-    maybeAnnounce('pred' + i, () => announce('🔮 예언 타임!!', '가격마다 몇 명이 살지 점을 콕콕!', '🔮', 3000));
+    maybeAnnounce('pred' + i, () => announce('🔮 예언 타임!!', '가격마다 몇 명이 살지 점을 찍어보세요', '🔮', 3000));
     body = `<div class="stage">
       <span class="roundBadge">🔮 예언 타임 · ${esc(it.emoji)} ${esc(it.name)}</span>
       <div class="bigEmoji bounce">🔮</div>
-      <div class="speech">가격을 올리면, 가격마다 <b>몇 명이</b> 끝까지 사겠다고 할까?<br>태블릿에 가격마다 점을 콕콕 찍어요!</div>
+      <div class="speech">가격을 올리면, 가격마다 <b>몇 명이</b> 끝까지 사겠다고 할까?<br>태블릿에 가격마다 점을 찍어보세요!</div>
       <div class="rule">예언 제출 <b style="color:var(--peachD)">${done}</b> / ${N}명</div>
       <button class="btn big peach" id="toAuction">🔨 경매 시작!</button>
     </div>`;
@@ -559,7 +564,7 @@ function renderTeacher() {
       body = `<div class="stage"><span class="roundBadge">${esc(it.emoji)} ${esc(it.name)}${S ? ` · 📦 ${S}개` : ''}</span><div class="hammer bounce">🔨</div>
         <div class="speech">첫 가격부터 부를게요!</div><button class="btn big mint" id="call">▶ 첫 가격 부르기</button></div>`;
     } else if (st.sub === 'ask') {
-      body = `<div class="stage" style="min-height:70vh;gap:10px">
+      body = `<div class="stage" style="gap:10px">
         <span class="roundBadge">${esc(it.emoji)} ${esc(it.name)}${S ? ` · 📦 ${S}개` : ''}</span>
         <div class="price-big" style="font-size:120px">${kw(p)}</div>
         <div class="speech" style="font-size:40px">이 가격에도 살래? <b>${sec}초 안에</b> 골라요!</div>
@@ -650,7 +655,7 @@ function renderTeacher() {
     const kings = Object.entries(accAll).map(([id, a]) => [id, a.reduce((s, v) => s + v, 0) / a.length]).sort((a, b) => b[1] - a[1]).slice(0, 3);
     body = teacherFinal(st, items, done, minis, kings);
   }
-  if (!body) body = `<div class="stage" style="min-height:60vh"><div class="bigEmoji">🔄</div><div class="rule">이 방은 예전 버전 경매소라 열 수 없어요 😢</div>
+  if (!body) body = `<div class="stage"><div class="bigEmoji">🔄</div><div class="rule">이 방은 예전 버전 경매소라 열 수 없어요 😢</div>
     <button class="btn big mint" id="fresh">✨ 새 경매소 준비하기</button></div>`;
   app.innerHTML = `<div class="wrap ${st.phase === 'final' ? 'wide' : ''}">${topbar(st)}${body}</div>`;
   if (el('fresh')) { el('fresh').onclick = () => { localStorage.removeItem('auction_teacher_room'); newRoom(); }; return; }
@@ -710,7 +715,7 @@ function wireTeacher(st, items, i, it) {
     if (el('finPrev')) el('finPrev').onclick = () => S({ fin: Math.max(0, f - 1), frev: false });
     if (el('finNext')) el('finNext').onclick = () => S({ fin: Math.min(FIN.length - 1, f + 1), frev: false });
     if (el('finRev')) el('finRev').onclick = () => S({ frev: true });
-    if (el('cvNext')) el('cvNext').onclick = () => S({ cv: Math.min(3, (st.cv || 0) + 1) });
+    if (el('cvNext')) el('cvNext').onclick = () => S({ cv: Math.min(3, Math.max(1, st.cv || 0) + 1) });
     document.querySelectorAll('[data-fin]').forEach(b => b.onclick = () => S({ fin: +b.dataset.fin, frev: false }));
     document.querySelectorAll('[data-dpeek]').forEach(b => b.onclick = () => { dPeek = b.dataset.dpeek; showDrawPeek(); });
     if (FIN[Math.min(f, FIN.length - 1)].kind === 'draw' && el('cv')) setupDots(DRAW.prices, DRAW.N, tDots, 'draw', { ans: DRAW.qty, wrong: [], teacher: true, show: !!st.frev, onChange: pts => { tDots = pts; } });
@@ -762,11 +767,11 @@ function renderStudent() {
   const sig = [st.phase, i, st.li, st.sub, my ? `${my.last}/${my.quit}` : '-', !!pred, myBid ? myBid.v : '-', bsig, fsig].join('|');
   if (sig === renderStudent.sig) return;
   renderStudent.sig = sig;
-  const wait = (emo, t, s) => { app.innerHTML = `<div class="s-wrap">${top}<div class="stage" style="min-height:70vh"><div class="bigEmoji bounce">${emo}</div><div class="title" style="font-size:38px">${t}</div><div class="rule">${s}</div></div></div>`; };
+  const wait = (emo, t, s) => { app.innerHTML = `<div class="s-wrap">${top}<div class="stage"><div class="bigEmoji bounce">${emo}</div><div class="title" style="font-size:38px">${t}</div><div class="rule">${s}</div></div></div>`; };
 
   if (st.phase === 'setup' || st.phase === 'lobby') return wait('🎁', '입장 완료!', '칠판을 보세요 👀<br>곧 경매 상품이 공개돼요');
   if (st.phase === 'item') {
-    app.innerHTML = `<div class="s-wrap">${top}<div class="stage" style="min-height:70vh"><span class="roundBadge">${i + 1}번째 경매 상품</span>
+    app.innerHTML = `<div class="s-wrap">${top}<div class="stage"><span class="roundBadge">${i + 1}번째 경매 상품</span>
       <div class="item-hero"><div class="ie">${esc(it.emoji)}</div><div class="in" style="font-size:30px">${esc(it.name)}</div></div>
       ${S ? `<span class="hot" style="font-size:24px">📦 단 ${S}개!</span>` : ''}<div class="rule">칠판을 보세요 👀</div></div></div>`;
     return;
@@ -775,7 +780,7 @@ function renderStudent() {
     const N = nOf(i);
     app.innerHTML = `<div class="s-wrap">${top}
       <div class="center"><span class="roundBadge" style="font-size:18px">🔮 예언 타임 · ${esc(it.emoji)} ${esc(it.name)}</span>${S ? ` <span class="hot" style="font-size:18px">📦 ${S}개만 판매</span>` : ''}</div>
-      <div class="rule center" style="font-size:22px;margin:10px 0">가격을 올리면, 가격마다 <b>우리 반 ${N}명 중 몇 명</b>이 끝까지 살까?<br><b>가격 줄마다 점을 콕!</b> 찍어요 (끌어서 옮길 수 있어요)</div>
+      <div class="rule center" style="font-size:22px;margin:10px 0">가격을 올리면, 가격마다 <b>우리 반 ${N}명 중 몇 명</b>이 끝까지 살까?<br><b>가격마다 점을 찍어보세요</b> (끌어서 옮길 수 있어요)</div>
       <div class="cv-wrap"><canvas id="cv"></canvas></div>
       <div class="center" style="margin-top:10px">${pred ? '<div class="doneBox" style="font-size:24px">🔮 예언 제출 완료! 고쳐서 다시 내도 돼요</div>' : ''}
         <span class="pill" id="cnt"></span> <button class="btn sky" id="clr">🧽 다 지우기</button><button class="btn big mint" id="sendPred">🔮 예언 제출!</button></div></div>`;
@@ -887,7 +892,7 @@ function studentTick() {
 const CHECK = [
   { q: ex => `${ex.name}가 <b>${kw(ex.p)}</b>일 때 우리 반 <b>${ex.n}명</b>이 사겠다고 했어요.<br>이 '${ex.n}개'는?`, o: [['수요', '🛒 수요'], ['수요자', '🙋 수요자'], ['수요량', '🔢 수요량']], a: '수요량', why: '어떤 가격에서 사려고 하는 <b>양</b> → 수요량!' },
   { q: () => `경매에서 "살래요!"를 누른<br><b>우리 반 친구들</b>은?`, o: [['수요', '🛒 수요'], ['수요자', '🙋 수요자'], ['수요량', '🔢 수요량']], a: '수요자', why: '상품을 사려고 하는 <b>사람</b> → 수요자!' },
-  { q: () => `돈은 한 푼도 없는데 시험지가 <b>갖고 싶기만</b> 해요.<br>이것도 '수요'일까요?`, o: [['Y', '⭕ 네, 수요예요'], ['N', '❌ 아니요']], a: 'N', why: '수요는 <b>돈을 낼 능력</b>이 있는, 사려는 욕구예요. 갖고 싶기만 한 건 수요가 아니에요!' },
+  { q: () => `"에너지바가 1천원이면 살래!" 하는<br><b>이 마음</b>은?`, o: [['수요', '🛒 수요'], ['수요자', '🙋 수요자'], ['수요량', '🔢 수요량']], a: '수요', why: '상품을 사려고 하는 <b>욕구(마음)</b> → 수요!' },
 ];
 const Q1 = { q: '어느 상품이든 <b>가격이 올라갈수록</b><br>사겠다는 사람 수는 어떻게 변했나요?', o: [['down', '📉 줄어들었다'], ['up', '📈 늘어났다'], ['same', '➖ 그대로였다']], a: 'down',
   after: '<div class="hl lav">📉 가격이 올라갈수록 사겠다는 사람(수요량)이 <b>줄어들었어요!</b><br><span class="muted">곡선이 오른쪽 아래로 내려가죠? ↘️</span></div>' };
@@ -895,7 +900,7 @@ const Q2A = { q: '사려는 사람이 파는 개수보다 <b>많을 때</b>는?'
   after: '<div class="hl red">사려는 양 &gt; 파는 양 → 빈손이 생기고 가격이 올라가요<br>→ 이걸 <b>초과 수요</b>라고 해요</div>' };
 const Q2B = { q: '사려는 사람이 파는 개수보다 <b>적을 때</b>는?', o: [['left', '📦 물건이 남았다'], ['short', '😭 빈손인 사람이 생겼다'], ['up', '⬆️ 가격이 올라갔다']], a: 'left',
   after: '<div class="hl sky">사려는 양 &lt; 파는 양 → 물건이 남아요 (가격을 내려야 팔려요)<br>→ 이걸 <b>초과 공급</b>이라고 해요</div>' };
-const LAW1 = { q: '수요 곡선을 보고 답해요!<br><b>가격</b>과 <b>수요량</b>은 어떤 관계인가요?', o: [['opp', '↘️ 가격이 오르면 수요량은 줄고,<br>가격이 내리면 수요량은 늘어난다'], ['same', '↗️ 가격이 오르면 수요량도 늘어난다'], ['none', '➖ 가격과 수요량은 상관없다']], a: 'opp',
+const LAW1 = { q: '수요 곡선을 보고 답해요!<br><b>가격</b>과 <b>수요량</b>은 어떤 관계인가요?', o: [['opp', '↘️ 가격이 오르면 수요량은 줄어든다'], ['same', '↗️ 가격이 오르면 수요량도 늘어난다'], ['none', '➖ 가격과 수요량은 상관없다']], a: 'opp',
   after: '<div class="hl lav">가격 ⬆️ → 수요량 ⬇️ &nbsp;·&nbsp; 가격 ⬇️ → 수요량 ⬆️<br>가격과 수요량은 <b>반대 방향</b>으로 움직여요!</div>' };
 const LAW2 = { q: '가격이 오르면 수요량이 줄고, 가격이 내리면 수요량이 늘어나는 것.<br>이걸 무엇이라고 할까요?', o: [['law', '📜 수요 법칙'], ['sup', '🏭 공급 법칙'], ['dq', '🔢 수요량 법칙']], a: 'law',
   after: '<div class="hl lemon" style="font-size:1.1em">📜 <b>수요 법칙</b><br>가격이 오르면 수요량은 감소하고, 가격이 내리면 수요량은 증가한다<br><span class="muted">→ 그래서 수요 곡선은 <b>오른쪽 아래로 내려가는</b> 모양 ↘️</span></div>' };
@@ -925,13 +930,18 @@ function q3Data() {   // 한 명이라도 산다고 한 가장 높은 가격
   const best = Math.max(0, ...top.map(o => o.max));
   return { top, win: top.filter(o => o.max === best && best > 0).map(o => o.j) };
 }
+const ansLab = (opts, right) => { const o = opts.find(([v]) => String(v) === String(right)); return o ? o[1] : ''; };
+const bigAns = (opts, right) => `<div class="bigAns pop">✅ 정답 &nbsp;${ansLab(opts, right)}</div>`;
 const barRows = (opts, vals, right, rev) => {
   const mx = Math.max(1, vals.length);
+  if (rev && opts.some(([, lab]) => lab.length > 26))   // 긴 보기는 공개 때 짧게: 아이콘 + 명수
+    return `<div class="fcounts">${opts.map(([v, lab]) => { const n = vals.filter(x => String(x) === String(v)).length, ok = String(v) === String(right);
+      return `<span class="fcnt2 ${ok ? 'ok' : ''}">${ok ? '✅' : ''}${lab.replace(/<br>.*$/, '').split(' ')[0]} <b>${n}명</b></span>`; }).join('')}</div>`;
   return opts.map(([v, lab]) => { const n = vals.filter(x => String(x) === String(v)).length, ok = rev && String(v) === String(right);
-    return `<div class="frow ${ok ? 'ok' : ''}"><span>${ok ? '✅ ' : ''}${lab}</span><div class="fbar"><i style="width:${rev ? n / mx * 100 : 0}%"></i></div><b>${rev ? n + '명' : '?'}</b></div>`; }).join('');
+    return `<div class="frow ${ok ? 'ok' : rev ? 'dim' : ''}"><span>${ok ? '✅ ' : ''}${lab}</span><div class="fbar"><i style="width:${rev ? n / mx * 100 : 0}%"></i></div><b>${rev ? n + '명' : '?'}</b></div>`; }).join('');
 };
 const CONCEPT = ex => [
-  ['🛒', '수요', '어떤 상품을 <b>사려고 하는 욕구</b>', '단, <b>돈을 낼 능력</b>이 있어야 해요! (갖고 싶기만 하면 ❌)'],
+  ['🛒', '수요', '어떤 상품을 <b>사려고 하는 욕구</b>', '= "이 가격이면 살래!" 하는 마음'],
   ['🙋', '수요자', '상품을 <b>사려고 하는 사람</b>', '= 오늘 "살래요!"를 누른 우리 반 친구들'],
   ['🔢', '수요량', '<b>어떤 가격에서</b> 사려고 하는 상품의 <b>양</b>', `${esc(ex.emoji)} ${kw(ex.p)}일 때 ${ex.n}명 → 수요량 <b>${ex.n}개</b> · ${kw(ex.p2)}일 때 ${ex.n2}명 → 수요량 <b>${ex.n2}개</b><br>가격이 바뀌면 수요량도 바뀌어요!`],
 ];
@@ -945,7 +955,7 @@ function teacherFinal(st, items, done, minis, kings) {
   if (S.kind === 'graphs') pop = `<div class="fqq big">🏁 우리 반이 만든 수요 곡선</div><div class="fqq">두 상품의 곡선을 같이 살펴봐요 🧐<br><span class="muted">가격(세로)이 올라갈수록 사람 수(가로)는?</span></div>
     ${kings.length ? `<div class="hl lemon">👑 오늘의 예언왕<br>${kings.map(([id, a], k) => `${['🥇', '🥈', '🥉'][k]} ${esc(nameOf(id))} <b>${a.toFixed(1)}%</b>`).join(' &nbsp; ')}</div>` : ''}`;
   if (S.kind === 'concept') {
-    const cv = st.cv || 0;
+    const cv = Math.max(1, st.cv || 0);
     pop = `${CONCEPT(ex).slice(0, cv).map(([e, t, d, x]) => `<div class="ccard pop"><div class="ce2">${e}</div><div><div class="ct2">${t}</div><div class="cd2">${d}</div><div class="cx2">${x}</div></div></div>`).join('')}
       ${cv < 3 ? `<div class="center" style="margin-top:auto"><button class="btn big lav" id="cvNext">${['🛒 수요', '🙋 수요자', '🔢 수요량'][cv]} 보여 주기</button></div>` : ''}`;
   }
@@ -953,12 +963,12 @@ function teacherFinal(st, items, done, minis, kings) {
     const c = CHECK[S.n], A = fqOf('check'), vals = ids.map(id => ((A[id] || {})[S.n] || {}).first).filter(v => v !== undefined);
     const doneN = ids.filter(id => ((A[id] || {})[S.n] || {}).done).length;
     cnt = `답한 학생 ${vals.length} / ${ids.length} · 맞힌 학생 ${doneN}`;
-    pop = `<div class="ftag">✅ 확인 질문 ${S.n + 1} / ${CHECK.length}</div><div class="fqq big">${c.q(ex)}</div>${barRows(c.o, vals, c.a, rev)}${rev ? `<div class="fwhy">💡 ${c.why}</div>` : ''}`;
+    pop = `<div class="ftag">✅ 확인 질문 ${S.n + 1} / ${CHECK.length}</div><div class="fqq big">${c.q(ex)}</div>${rev ? bigAns(c.o, c.a) : ''}${barRows(c.o, vals, c.a, rev)}${rev ? `<div class="fwhy">💡 ${c.why}</div>` : ''}`;
   }
   if (S.kind === 'ask') {
     const A = fqOf(S.store), vals = ids.map(id => (A[id] || {})[S.key]).filter(v => v !== undefined);
     cnt = `답한 학생 ${vals.length} / ${ids.length}`;
-    pop = `<div class="ftag">${S.title}</div><div class="fqq big">${S.Q.q}</div>${barRows(S.Q.o, vals, S.Q.a, rev)}${rev ? S.Q.after : ''}`;
+    pop = `<div class="ftag">${S.title}</div><div class="fqq big">${S.Q.q}</div>${rev ? bigAns(S.Q.o, S.Q.a) : ''}${barRows(S.Q.o, vals, S.Q.a, rev)}${rev ? S.Q.after : ''}`;
     if (S.left === 'draw') left = `<div class="card finOne"><div class="fqq">${DRAW.emoji} ${DRAW.name} 수요 곡선</div>${drawTable()}<div class="svgfit">${drawAnswerSVG()}</div></div>`;
   }
   if (S.kind === 'q3') {
@@ -1036,7 +1046,7 @@ function studentFinal(st, top) {
     return `<button class="choice2 ${cls}" ${attr}="${v}" ${lock ? 'disabled' : ''}>${lab}</button>`; }).join('')}</div>`;
   if (S.kind === 'graphs') return shell(`<div class="bigEmoji bounce">🧐</div><div class="title" style="font-size:36px">칠판의 곡선을 봐요</div><div class="rule">가격이 올라갈수록 사겠다는 사람 수는?</div>`);
   if (S.kind === 'concept') {
-    const cv = st.cv || 0;
+    const cv = Math.max(1, st.cv || 0);
     return shell(`<div class="title" style="font-size:34px">📖 수요 개념</div>${CONCEPT(ex).slice(0, cv).map(([e, t, d]) => `<div class="ccard"><div class="ce2">${e}</div><div><div class="ct2">${t}</div><div class="cd2">${d}</div></div></div>`).join('') || '<div class="rule">칠판을 보며 들어요 👂</div>'}`);
   }
   // 고르기 → 📮 제출하기 (정답 공개 전까지 몇 번이든 바꿔서 다시 낼 수 있어요)
@@ -1056,7 +1066,7 @@ function studentFinal(st, top) {
   else if (S.kind === 'ask') {   // 질문: 제출 → 공개 전까지 수정 가능 → 정답 공개 때 확인
     const saved = my(S.store)[S.key], key = S.k, sel = selOf(key, saved), changed = fSel[key] !== undefined && fSel[key] !== saved;
     shell(`<div class="ftag">${S.title}</div><div class="card fqS"><div class="fqq big">${S.Q.q}</div>${optBtns(S.Q.o, key, rev ? saved : sel, saved, rev, S.Q.a, rev)}</div>
-      ${rev ? (saved === S.Q.a ? '<div class="good">🎯 맞혔어요!</div>' : '<div class="hint">😅 아쉬워요! 칠판의 정답을 확인해요</div>') + S.Q.after
+      ${rev ? bigAns(S.Q.o, S.Q.a) + (saved === S.Q.a ? '<div class="good">🎯 맞혔어요!</div>' : '<div class="hint">😅 아쉬워요! 정답을 확인해요</div>') + S.Q.after
         : `${saved !== undefined && !changed ? '<div class="good" style="background:var(--sky)">✅ 냈어요! 바꾸고 싶으면 다시 골라 제출해요</div>' : ''}<button class="btn big mint" id="fSubmit" ${sel === undefined || !changed && saved !== undefined ? 'disabled' : ''}>📮 ${saved !== undefined ? '수정해서 제출' : '제출하기'}</button>`}`);
     if (el('fSubmit')) el('fSubmit').onclick = () => { const v = fSel[key]; if (v === undefined) return; delete fSel[key]; update(AP(`fq/${S.store}/${pid}`), { [S.key]: v, at: Date.now() }); };
   }
@@ -1078,7 +1088,7 @@ function studentFinal(st, top) {
     const A = my('draw');
     if (A.ok) return shell(`<div class="bigEmoji bounce">🎉</div><div class="title" style="font-size:34px">수요 곡선 완성!</div><div class="rule">칠판을 보며 기다려요 👀</div><div class="svgbox card">${drawAnswerSVG()}</div>`);
     shell(`<div class="title" style="font-size:30px">✏️ ${DRAW.emoji} ${DRAW.name} 수요 곡선 그리기</div>${drawTable()}
-      <div class="card" style="width:100%"><div class="muted" style="font-size:17px">가격 줄마다 수요량 자리에 점을 콕! (끌어서 옮길 수 있어요)</div><canvas id="cv" style="width:100%;touch-action:none;display:block"></canvas>
+      <div class="card" style="width:100%"><div class="muted" style="font-size:17px">가격마다 수요량 자리에 점을 찍어보세요 (끌어서 옮길 수 있어요)</div><canvas id="cv" style="width:100%;touch-action:none;display:block"></canvas>
       <div class="center"><span class="pill" id="cnt"></span> <button class="btn sm" id="clr">🧽 지우기</button> <button class="btn big mint" id="sendPred">✅ 다 그렸어요!</button></div></div>
       ${A.tries ? '<div class="hint">🤔 틀린 점이 있어요! 빨간 줄을 표에서 다시 확인해요</div>' : ''}`);
     let lt = null;
@@ -1117,7 +1127,7 @@ function setupDots(prices, N, initPts, i, chk) {
     if (ks.length > 1) { ctx.strokeStyle = '#3B8FD9'; ctx.lineWidth = 4; ctx.lineJoin = 'round'; ctx.beginPath(); ks.forEach((lv, k) => k ? ctx.lineTo(X(dots[lv]), Y(lv)) : ctx.moveTo(X(dots[lv]), Y(lv))); ctx.lineWidth = 4 * fs; ctx.stroke(); }
     ks.forEach(lv => { ctx.fillStyle = '#3B8FD9'; ctx.beginPath(); ctx.arc(X(dots[lv]), Y(lv), 11 * fs, 0, 7); ctx.fill(); ctx.fillStyle = '#fff'; ctx.font = `${Math.round(13 * fs)}px Jua`; ctx.fillText(dots[lv], X(dots[lv]), Y(lv) + 5 * fs); });
     if (chk && chk.onChange) chk.onChange(Object.keys(dots).map(Number).map(lv => [dots[lv], lv]));
-    if (!ks.length && !(chk && chk.show)) { ctx.fillStyle = '#D9C9D2'; ctx.font = `${Math.round(20 * fs)}px Jua`; ctx.fillText('👆 가격 줄마다 점을 콕!', L + pw / 2, Tp + ph / 2); }
+    if (!ks.length && !(chk && chk.show)) { ctx.fillStyle = '#D9C9D2'; ctx.font = `${Math.round(20 * fs)}px Jua`; ctx.fillText('점을 찍어보세요', L + pw / 2, Tp + ph / 2); }
     updCnt();
   }
   const hit = e => { const r = cv.getBoundingClientRect(), px = e.clientX - r.left, py = e.clientY - r.top;
