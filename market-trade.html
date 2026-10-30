@@ -55,6 +55,11 @@ h3{margin:0 0 12px;font-size:22px;font-weight:normal}
 .roundBadge{display:inline-block;background:var(--lemon);border-radius:999px;padding:8px 22px;font-size:24px;box-shadow:0 4px 0 var(--lemonD)}
 .timer{font-size:110px;line-height:1;color:var(--peachD)}
 .timer.s{font-size:56px}
+.bigT{position:fixed;inset:0;z-index:90;background:rgba(255,249,244,.97);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;cursor:pointer}
+.bigTnum{font-size:min(38vw,62vh);line-height:1;color:var(--peachD);font-variant-numeric:tabular-nums}
+.bigT.hurry .bigTnum{color:var(--redD);animation:beat .5s infinite}
+.bigTbar{width:80vw;height:34px;background:var(--line);border-radius:999px;overflow:hidden}.bigTbar i{display:block;height:100%;background:var(--mintD);transition:width .3s linear}
+.bigT.hurry .bigTbar i{background:var(--redD)}.bigTsub{font-size:20px;color:var(--sub)}
 .timer.hurry{color:var(--redD);animation:beat .5s infinite}
 @keyframes beat{50%{transform:scale(1.08)}}
 .bar{height:22px;background:var(--line);border-radius:999px;overflow:hidden;width:100%}
@@ -298,6 +303,33 @@ async function join(c, name) {
   location.href = `?room=${c}`;
 }
 
+/* ========== 🔊 소리: 마지막 10초 째깍 · 끝나면 사이렌 (선생님 화면) ========== */
+const Snd = {
+  ctx: null,
+  ensure() { try { if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)(); if (this.ctx.state === 'suspended') this.ctx.resume(); } catch (e) {} },
+  tone(f, t0 = 0, d = .15, v = .3, type = 'square') {
+    if (!this.ctx) return; const c = this.ctx, t = c.currentTime + t0, o = c.createOscillator(), g = c.createGain();
+    o.type = type; o.frequency.value = f; g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(v, t + .01); g.gain.exponentialRampToValueAtTime(.0001, t + d);
+    o.connect(g).connect(c.destination); o.start(t); o.stop(t + d + .05);
+  },
+  tick(n) { this.tone(n <= 3 ? 1175 : 880, 0, n <= 3 ? .22 : .12, .3); },
+  siren(sec = 4) {   // 🚨 위이잉~ 위이잉~
+    if (!this.ctx) return; const c = this.ctx, t = c.currentTime, o = c.createOscillator(), g = c.createGain();
+    o.type = 'sawtooth'; g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(.28, t + .05);
+    for (let k = 0; k < sec * 2; k++) { o.frequency.setValueAtTime(650, t + k * .5); o.frequency.linearRampToValueAtTime(1350, t + k * .5 + .25); o.frequency.linearRampToValueAtTime(650, t + k * .5 + .5); }
+    g.gain.setValueAtTime(.28, t + sec - .1); g.gain.exponentialRampToValueAtTime(.0001, t + sec);
+    o.connect(g).connect(c.destination); o.start(t); o.stop(t + sec + .05);
+  },
+};
+if (isTeacher) document.addEventListener('pointerdown', () => Snd.ensure());
+let bigTimer = false, lastTickSec = null, sirenDone = '';
+function bigTimerEl() {
+  let d = document.querySelector('.bigT');
+  if (!bigTimer) { if (d) d.remove(); return null; }
+  if (!d) { d = document.createElement('div'); d.className = 'bigT'; d.innerHTML = '<div class="bigTnum" id="bigTnum"></div><div class="bigTbar"><i id="bigTbar"></i></div><div class="bigTsub">화면을 누르면 작아져요</div>'; d.onclick = () => { bigTimer = false; d.remove(); }; document.body.appendChild(d); }
+  return d;
+}
+
 /* ========== 타이머 (0.3초마다) ========== */
 function tick() {
   if (!room) return;
@@ -316,6 +348,18 @@ function tick() {
   if (!isTeacher && left === 0) { const b = el('submit'); if (b) b.disabled = true; }
   if (isTeacher && left !== null && left <= 10 && left > 0) {
     maybeAnnounce(`ten-${st.round}`, () => announce('10초 남았다!!', '얼른얼른 기록해~~ 🏃', '⏰', 2200));
+  }
+  if (isTeacher) {
+    // ⛶ 큰 타이머 (마지막 10초에는 저절로 크게 + 째깍)
+    if (st.phase === 'trading' && left !== null && left <= 10 && left > 0 && !bigTimer && lastTickSec !== null && lastTickSec > 10) bigTimer = true;
+    const d = st.phase === 'trading' && left !== null ? bigTimerEl() : (bigTimer = false, bigTimerEl());
+    if (d) { const n = el('bigTnum'), b = el('bigTbar'); n.textContent = left > 10 ? fmt(left) : left > 0 ? left : '그만!'; d.classList.toggle('hurry', left <= 10); b.style.width = Math.min(100, left / dur * 100) + '%'; }
+    if (st.phase === 'trading' && left !== null && left !== lastTickSec && left > 0 && left <= 10) Snd.tick(left);
+    if (st.phase === 'trading' && left === 0 && sirenDone !== String(st.round)) {
+      sirenDone = String(st.round); Snd.siren(4);
+      announce('🚨 그만!! 자리에 앉아요!!', '🪑 모두 제자리로~ 거래 끝!', '🚨', 4000);
+    }
+    lastTickSec = left;
   }
   // 시간이 끝나면 선생님 화면이 자동으로 회차 마감
   if (isTeacher && left === 0 && !closing) {
@@ -387,7 +431,7 @@ function renderTeacher() {
         <div class="timer" id="timer"></div>
         <div class="bar" id="tbar"><i></i></div>
         <div class="rule">기록 <b>${Object.keys(subs).length}</b> / ${Object.keys(cardsOf(st.round)).length}명 · 🤝 성사 <b>${pairsOf(st.round).length}</b>건</div>
-        <div><button class="btn lemon" id="plus">+1분</button><button class="btn" id="close">⏹ 바로 마감</button></div>
+        <div><button class="btn mint" id="bigT">⛶ 타이머 크게</button><button class="btn lemon" id="plus">+1분</button><button class="btn" id="close">⏹ 바로 마감</button></div>
       </div>
       ${unmatched.length ? `<div class="card"><h3>🤔 짝이 안 맞는 기록 ${unmatched.length}건</h3>${showNames
         ? `<p class="muted">상대가 아직 안 적었거나, 서로 다르게 적었어요</p><div class="chips">${unmatched.map(id => `<span class="chip soft">${nm(id)} <button class="btn sm" data-reset="${id}">기록 지우기</button></span>`).join('')}</div>`
@@ -803,7 +847,7 @@ async function submit(partner, price) {
 }
 
 /* ========== 실행 ========== */
-function render() { if (isTeacher) renderTeacher(); else renderStudent(); tick(); firstPass = false; }
+function render() { if (isTeacher) renderTeacher(); else renderStudent(); if (el('bigT')) el('bigT').onclick = () => { Snd.ensure(); bigTimer = true; tick(); }; tick(); firstPass = false; }
 start();
 </script>
 </body>
