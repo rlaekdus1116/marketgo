@@ -144,22 +144,28 @@ canvas{display:block;width:100%;touch-action:none;border-radius:16px}
 .speech::after{display:none}
 .wrap.wide{max-width:none;padding:8px 18px 8px}.wrap.wide .topbar{margin-bottom:6px}
 .pop2{position:fixed;inset:0;background:rgba(91,75,87,.45);display:flex;align-items:center;justify-content:center;z-index:90;padding:16px}
-.finNav{display:flex;flex-wrap:wrap;gap:4px;justify-content:center;margin-bottom:8px}.finNav .btn{padding:6px 12px;font-size:16px;margin:2px}
-.finGrid{display:grid;grid-template-columns:1fr 1fr;gap:16px;height:calc(100vh - 150px);min-height:480px}.finGrid.draw{grid-template-columns:1.6fr 1fr}
-.finGraphs{display:grid;grid-template-rows:1fr 1fr;gap:12px;min-height:0}.finGraphs .card,.finOne{margin:0;padding:10px 16px;display:flex;flex-direction:column;min-height:0;overflow:hidden}.finGraphs h3{margin:0 0 4px}.finGraphs svg{flex:1;min-height:0;width:100%;height:100%}
-.finOne{gap:8px}.svgfit{flex:1;min-height:0;display:flex}.svgfit svg{width:100%;height:100%}.cvwrap{flex:1;min-height:0}
+.good{background:var(--mint);border-radius:18px;padding:12px 16px;font-size:22px;line-height:1.5;text-align:center;width:100%}.hint{background:var(--lemon);border:3px dashed var(--lemonD);border-radius:18px;padding:12px 16px;font-size:21px;line-height:1.5;width:100%}
+.finGraphs svg text{font-size:24px}
+.finNav{display:flex;gap:8px;justify-content:center;align-items:center;margin:2px 0 14px}
+.fdot{width:14px;height:14px;border-radius:50%;background:var(--line);padding:0;transition:transform .15s}.fdot.past{background:var(--mintD)}.fdot.on{background:var(--peachD);transform:scale(1.5)}
+.fnow{margin-left:12px;font-size:20px;color:var(--sub)}
+.finGrid{display:grid;grid-template-columns:1.618fr 1fr;gap:28px;height:calc(100vh - 128px);min-height:480px;max-width:1800px;margin:0 auto}
+.wrap.wide{padding:10px 32px 14px}
+.finGraphs{display:grid;grid-template-rows:1fr 1fr;gap:20px;min-height:0}.finGraphs .card,.finOne{margin:0;padding:16px 24px;display:flex;flex-direction:column;min-height:0;overflow:hidden}.finGraphs h3{margin:0 0 4px}.finGraphs svg{flex:1;min-height:0;width:100%;height:100%}
+.finOne{gap:8px}.svgfit{flex:1;min-height:0;display:flex}.svgfit svg{width:100%;height:100%}.cvwrap{flex:1;min-height:0;position:relative}
 .finBtns{padding-top:10px}
-.finPop{border:4px solid var(--ink);box-shadow:0 8px 0 var(--ink);margin:0;display:flex;flex-direction:column;min-height:0;overflow:hidden;padding:16px 20px}.fbody{flex:1;min-height:0;overflow:auto;display:flex;flex-direction:column;gap:8px}.fbody .hl{margin:0;font-size:22px}
+.finPop{border:4px solid var(--ink);box-shadow:0 8px 0 var(--ink);margin:0;display:flex;flex-direction:column;min-height:0;overflow:hidden;padding:28px 32px}.fbody{flex:1;min-height:0;overflow:auto;display:flex;flex-direction:column;gap:14px}.fbody .hl{margin:0;font-size:24px;line-height:1.5}
+.bigchips .chip{font-size:22px;padding:10px 16px}
 .fcnt{font-size:18px;color:var(--sub);text-align:right}.ftag{display:inline-block;align-self:flex-start;background:var(--lemon);border-radius:999px;padding:4px 16px;font-size:20px}
 .ccard{display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:center;background:var(--lav);border-radius:20px;padding:12px 16px;margin:8px 0;text-align:left;width:100%}
 .ce2{font-size:40px}.ct2{font-size:27px}.cd2{font-size:21px;line-height:1.4}.cx2{font-size:17px;color:var(--sub);margin-top:4px;line-height:1.5}
-.fq{margin:8px 0 12px}.fqq{font-size:22px;line-height:1.45;margin-bottom:4px}.fqq.big{font-size:30px}
-.frow{display:grid;grid-template-columns:minmax(150px,46%) 1fr 60px;gap:10px;align-items:center;margin:4px 0;font-size:23px}
-.fbar{height:30px;background:var(--line);border-radius:999px;overflow:hidden}.fbar i{display:block;height:100%;background:var(--skyD);transition:width .4s}
+.fq{margin:8px 0 12px}.fqq{font-size:24px;line-height:1.5;margin-bottom:4px}.fqq.big{font-size:34px;line-height:1.45}
+.frow{display:grid;grid-template-columns:minmax(150px,46%) 1fr 64px;gap:12px;align-items:center;margin:6px 0;font-size:26px}
+.fbar{height:34px;background:var(--line);border-radius:999px;overflow:hidden}.fbar i{display:block;height:100%;background:var(--skyD);transition:width .4s}
 .frow.ok{color:#2a8a5f}.frow.ok .fbar i{background:var(--mintD)}
 .fwhy{font-size:17px;background:var(--mint);border-radius:12px;padding:6px 10px}
 .whys{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}.why{background:#fff;border:2px solid var(--line);border-radius:14px;padding:6px 10px;font-size:17px}
-.dtab{font-size:20px}.dtab th{background:var(--lemon)}.dtab td{color:var(--ink)}
+.dtab{font-size:24px}.dtab th{background:var(--lemon)}.dtab td{color:var(--ink)}
 .fqS{width:100%;text-align:left;margin:0}
 .fchoices{display:grid;gap:8px}
 .choice2{background:#fff;border:3px solid var(--line);border-radius:18px;padding:14px;font-size:21px;box-shadow:0 4px 0 var(--line);text-align:left}
@@ -968,15 +974,12 @@ function teacherFinal(st, items, done, minis, kings) {
   if (isDraw) {
     const A = fqOf('draw'), ok = ids.filter(id => (A[id] || {}).ok);
     cnt = `완성 ${ok.length} / ${ids.length}명`;
-    left = `<div class="card finOne"><div class="fqq">✏️ ${DRAW.emoji} ${DRAW.name} 수요표를 보고 점을 찍어 <b>수요 곡선</b>을 그려요!</div>${drawTable()}
-      <div class="cvwrap"><canvas id="cv" style="width:100%;height:100%;touch-action:none;display:block"></canvas></div>
-      <div class="center"><span class="pill" id="cnt"></span> <button class="btn sm" id="clr">🧽 지우기</button></div></div>`;
-    pop = `<div class="ftag">✏️ 곡선 그리기</div><div class="fqq">👆 이름을 누르면 그 학생이 그리는 그래프를 볼 수 있어요</div>
-      <div class="chips" id="drawChips">${drawChips()}</div>
-      ${rev ? '<div class="hl mint">초록 점선이 정답 수요 곡선이에요 ↘️</div>' : ''}`;
+    left = `<div class="card finOne"><div class="fqq big">✏️ ${DRAW.emoji} ${DRAW.name} 수요 곡선 그리기</div>${drawTable()}
+      <div class="cvwrap"><canvas id="cv" style="position:absolute;inset:0;touch-action:none;display:block"></canvas><button class="btn sm" id="clr" style="position:absolute;right:6px;top:4px">🧽 지우기</button></div></div>`;
+    pop = `<div class="ftag">✏️ 곡선 그리기</div><div class="chips bigchips" id="drawChips">${drawChips()}</div>`;
   }
   const needRev = ['check', 'ask', 'q3', 'draw'].includes(S.kind);
-  return `<div class="finNav">${FIN.map((x, k) => `<button class="btn sm ${k === f ? 'mint' : ''}" data-fin="${k}">${x.name}</button>`).join('')}</div>
+  return `<div class="finNav">${FIN.map((x, k) => `<button class="fdot ${k === f ? 'on' : k < f ? 'past' : ''}" data-fin="${k}" title="${esc(x.name)}"></button>`).join('')}<span class="fnow">${S.name}</span></div>
     <div class="finGrid ${isDraw ? 'draw' : ''}">${left}
       <div class="card finPop pop">${cnt ? `<div class="fcnt">✍️ ${cnt}</div>` : ''}<div class="fbody">${pop}</div>
         <div class="center finBtns">${f > 0 ? '<button class="btn" id="finPrev">◀ 이전</button>' : ''}${needRev && !rev ? `<button class="btn lemon" id="finRev">✅ ${isDraw ? '정답 곡선 보기' : '정답 공개'}</button>` : ''}${f + 1 < FIN.length ? `<button class="btn mint" id="finNext">다음 ▶ ${FIN[f + 1].name}</button>` : ''}</div></div></div>`;
@@ -1022,9 +1025,11 @@ function drawSVG(pts, answer) {
 }
 
 /* 🧒 학생 마무리 화면 — 칠판과 같은 질문을 한 개씩 */
+let fSel = {}, fWhy = null, fStep = -1;
 function studentFinal(st, top) {
   const f = Math.min(st.fin || 0, FIN.length - 1), S = FIN[f], rev = !!st.frev, ex = finExample();
   const my = k => fqOf(k)[pid] || {};
+  if (fStep !== f) { fStep = f; fSel = {}; fWhy = null; }
   const shell = inner => { app.innerHTML = `<div class="s-wrap">${top}<div class="stage" style="gap:14px;min-height:auto;padding-top:10px">${inner}</div></div>`; };
   const btns = (opts, mine, right, lock, attr) => `<div class="fchoices">${opts.map(([v, lab]) => {
     const cls = rev && String(v) === String(right) ? 'right' : String(mine) === String(v) ? (rev ? 'wrong' : 'picked') : '';
@@ -1034,28 +1039,41 @@ function studentFinal(st, top) {
     const cv = st.cv || 0;
     return shell(`<div class="title" style="font-size:34px">📖 수요 개념</div>${CONCEPT(ex).slice(0, cv).map(([e, t, d]) => `<div class="ccard"><div class="ce2">${e}</div><div><div class="ct2">${t}</div><div class="cd2">${d}</div></div></div>`).join('') || '<div class="rule">칠판을 보며 들어요 👂</div>'}`);
   }
-  if (S.kind === 'check') {   // 확인 질문: 바로 채점, 틀리면 다시
-    const c = CHECK[S.n], r = (my('check'))[S.n] || {};
-    shell(`<div class="ftag">✅ 확인 질문 ${S.n + 1} / ${CHECK.length}</div><div class="card fqS"><div class="fqq big">${c.q(ex)}</div><div class="fchoices">${c.o.map(([v, lab]) => `<button class="choice2 ${r.done && v === c.a ? 'right' : !r.done && r.last === v ? 'wrong' : ''}" data-v="${v}" ${r.done ? 'disabled' : ''}>${lab}</button>`).join('')}</div></div>
-      ${r.done ? `<div class="good">${r.ok ? '🎯 한 번에 맞혔어요!' : '✅ 맞았어요!'}<br><span style="font-size:18px">${c.why}</span></div>` : r.last ? '<div class="hint">🤔 다시 생각해 봐요! 개념 설명을 떠올려요</div>' : ''}`);
-    document.querySelectorAll('[data-v]').forEach(b => b.onclick = () => { const v = b.dataset.v, ok = v === c.a; update(AP(`fq/check/${pid}/${S.n}`), r.first ? { last: v, done: ok } : { first: v, last: v, ok, done: ok }); });
-    return;
+  // 고르기 → 📮 제출하기 (정답 공개 전까지 몇 번이든 바꿔서 다시 낼 수 있어요)
+  const pick = (key, v) => { fSel[key] = v; renderStudent.sig = ''; renderStudent(); };
+  const selOf = (key, saved) => fSel[key] !== undefined ? fSel[key] : saved;
+  const optBtns = (opts, key, sel, saved, lock, right, show) => `<div class="fchoices">${opts.map(([v, lab]) => {
+    const V = String(v), cls = show && V === String(right) ? 'right' : V === String(sel) ? (show ? 'wrong' : 'picked') : '';
+    return `<button class="choice2 ${cls}" data-pick="${key}" data-v="${esc(V)}" ${lock ? 'disabled' : ''}>${V === String(saved) && !show ? '📮 ' : ''}${lab}</button>`; }).join('')}</div>`;
+  if (S.kind === 'check') {   // 확인 질문: 제출하면 바로 채점, 틀리면 다시
+    const c = CHECK[S.n], r = (my('check'))[S.n] || {}, key = 'c' + S.n, sel = selOf(key, r.done ? c.a : undefined);
+    shell(`<div class="ftag">✅ 확인 질문 ${S.n + 1} / ${CHECK.length}</div><div class="card fqS"><div class="fqq big">${c.q(ex)}</div>${optBtns(c.o, key, sel, undefined, r.done, c.a, r.done)}</div>
+      ${r.done ? `<div class="good">${r.ok ? '🎯 한 번에 맞혔어요!' : '✅ 맞았어요!'}<br><span style="font-size:18px">${c.why}</span></div>`
+        : `${r.last && fSel[key] === undefined ? '<div class="hint">🤔 아쉬워요! 다시 골라서 제출해요</div>' : ''}<button class="btn big mint" id="fSubmit" ${sel === undefined ? 'disabled' : ''}>📮 제출하기</button>`}`);
+    if (el('fSubmit')) el('fSubmit').onclick = () => { const v = fSel[key]; if (v === undefined) return; const ok = v === c.a; delete fSel[key];
+      update(AP(`fq/check/${pid}/${S.n}`), r.first ? { last: v, done: ok } : { first: v, last: v, ok, done: ok }); };
   }
-  if (S.kind === 'ask') {   // 질문: 한 번 내고 정답 공개 때 확인
-    const mine = my(S.store)[S.key];
-    shell(`<div class="ftag">${S.title}</div><div class="card fqS"><div class="fqq big">${S.Q.q}</div>${btns(S.Q.o, mine, S.Q.a, rev || mine !== undefined, 'data-v')}</div>
-      ${rev ? (mine === S.Q.a ? '<div class="good">🎯 맞혔어요!</div>' : '<div class="hint">😅 아쉬워요! 칠판의 정답을 확인해요</div>') + S.Q.after : mine !== undefined ? '<div class="good" style="background:var(--sky)">✅ 냈어요! 정답 공개를 기다려요 👀</div>' : ''}`);
-    document.querySelectorAll('[data-v]:not([disabled])').forEach(b => b.onclick = () => update(AP(`fq/${S.store}/${pid}`), { [S.key]: b.dataset.v, at: Date.now() }));
-    return;
+  else if (S.kind === 'ask') {   // 질문: 제출 → 공개 전까지 수정 가능 → 정답 공개 때 확인
+    const saved = my(S.store)[S.key], key = S.k, sel = selOf(key, saved), changed = fSel[key] !== undefined && fSel[key] !== saved;
+    shell(`<div class="ftag">${S.title}</div><div class="card fqS"><div class="fqq big">${S.Q.q}</div>${optBtns(S.Q.o, key, rev ? saved : sel, saved, rev, S.Q.a, rev)}</div>
+      ${rev ? (saved === S.Q.a ? '<div class="good">🎯 맞혔어요!</div>' : '<div class="hint">😅 아쉬워요! 칠판의 정답을 확인해요</div>') + S.Q.after
+        : `${saved !== undefined && !changed ? '<div class="good" style="background:var(--sky)">✅ 냈어요! 바꾸고 싶으면 다시 골라 제출해요</div>' : ''}<button class="btn big mint" id="fSubmit" ${sel === undefined || !changed && saved !== undefined ? 'disabled' : ''}>📮 ${saved !== undefined ? '수정해서 제출' : '제출하기'}</button>`}`);
+    if (el('fSubmit')) el('fSubmit').onclick = () => { const v = fSel[key]; if (v === undefined) return; delete fSel[key]; update(AP(`fq/${S.store}/${pid}`), { [S.key]: v, at: Date.now() }); };
   }
-  if (S.kind === 'q3') {
-    const A = my('q3'), d = q3Data(), opts = d.top.map(o => [o.j, `${o.it.emoji} ${o.it.name}`]);
-    shell(`<div class="ftag">질문 3</div><div class="card fqS"><div class="fqq big">우리 반은 어디에 <b>더 큰돈</b>을 내려고 했나요?</div>${btns(opts, A.it, d.win.length === 1 ? d.win[0] : '-', rev || A.it !== undefined, 'data-it')}</div>
-      <div class="card fqS"><div class="fqq">💬 왜 그럴까요?</div>${A.why ? `<div class="good" style="background:var(--sky)">${esc(A.why)}</div>` : `<textarea class="field" id="why" maxlength="60" rows="2" placeholder="예) 시험지는 점수랑 관련돼서…" style="width:100%"></textarea><button class="btn big mint" id="sendWhy" ${rev ? 'disabled' : ''}>보내기 📮</button>`}</div>`);
-    document.querySelectorAll('[data-it]:not([disabled])').forEach(b => b.onclick = () => update(AP(`fq/q3/${pid}`), { it: +b.dataset.it, at: Date.now() }));
-    if (el('sendWhy')) el('sendWhy').onclick = () => { const v = el('why').value.trim(); if (!v) return toast('이유를 한 줄 써 주세요 ✍️'); update(AP(`fq/q3/${pid}`), { why: v }); };
-    return;
+  else if (S.kind === 'q3') {
+    const A = my('q3'), d = q3Data(), opts = d.top.map(o => [o.j, `${o.it.emoji} ${o.it.name}`]), right = d.win.length === 1 ? d.win[0] : '-';
+    const saved = A.it === undefined ? undefined : String(A.it), sel = selOf('q3', saved), why = fWhy !== null ? fWhy : (A.why || '');
+    const changed = (fSel.q3 !== undefined && fSel.q3 !== saved) || (fWhy !== null && fWhy.trim() !== (A.why || ''));
+    shell(`<div class="ftag">질문 3</div><div class="card fqS"><div class="fqq big">우리 반은 어디에 <b>더 큰돈</b>을 내려고 했나요?</div>${optBtns(opts, 'q3', rev ? saved : sel, saved, rev, right, rev)}</div>
+      <div class="card fqS"><div class="fqq">💬 왜 그럴까요?</div>${rev ? `<div class="good" style="background:var(--sky)">${esc(A.why || '-')}</div>` : `<textarea class="field" id="why" maxlength="60" rows="2" placeholder="예) 시험지는 점수랑 관련돼서…" style="width:100%">${esc(why)}</textarea>`}</div>
+      ${rev ? '' : `${saved !== undefined && A.why && !changed ? '<div class="good" style="background:var(--sky)">✅ 냈어요! 바꾸고 싶으면 고쳐서 다시 제출해요</div>' : ''}<button class="btn big mint" id="fSubmit">📮 ${saved !== undefined ? '수정해서 제출' : '제출하기'}</button>`}`);
+    if (el('why')) el('why').oninput = e => { fWhy = e.target.value; const b = el('fSubmit'); if (b) b.disabled = false; };
+    if (el('fSubmit')) el('fSubmit').onclick = () => { const it = selOf('q3', saved), w = (el('why').value || '').trim();
+      if (it === undefined) return toast('먼저 상품을 골라 주세요 👆'); if (!w) return toast('이유를 한 줄 써 주세요 ✍️');
+      delete fSel.q3; fWhy = null; update(AP(`fq/q3/${pid}`), { it: +it, why: w, at: Date.now() }); };
   }
+  document.querySelectorAll('[data-pick]:not([disabled])').forEach(b => b.onclick = () => { if (el('why')) fWhy = el('why').value; pick(b.dataset.pick, b.dataset.v); });
+  if (S.kind !== 'draw') return;
   if (S.kind === 'draw') {
     const A = my('draw');
     if (A.ok) return shell(`<div class="bigEmoji bounce">🎉</div><div class="title" style="font-size:34px">수요 곡선 완성!</div><div class="rule">칠판을 보며 기다려요 👀</div><div class="svgbox card">${drawAnswerSVG()}</div>`);
@@ -1072,9 +1090,10 @@ function studentFinal(st, top) {
 /* 🔮 점 찍기 예언: 가격 줄마다 "이 가격이면 몇 명?" 점을 콕 → 자동으로 이어져요 */
 function setupDots(prices, N, initPts, i, chk) {
   const cv = el('cv'), ctx = cv.getContext('2d'), Lv = prices.length;
-  const dpr = window.devicePixelRatio || 1, cw = cv.clientWidth, ch = chk && chk.teacher ? Math.max(260, cv.parentElement.clientHeight) : Math.min(560, Math.max(320, Lv * 54 + 50));
-  cv.style.height = ch + 'px'; cv.width = cw * dpr; cv.height = ch * dpr; ctx.scale(dpr, dpr);
-  const L = 92, R = 18, Tp = 10, B = 40, pw = cw - L - R, ph = ch - Tp - B;
+  const big = !!(chk && chk.teacher), fs = big ? 1.55 : 1;
+  const dpr = window.devicePixelRatio || 1, cw = big ? cv.parentElement.clientWidth : cv.clientWidth, ch = big ? Math.max(260, cv.parentElement.clientHeight) : Math.min(560, Math.max(320, Lv * 54 + 50));
+  cv.style.height = ch + 'px'; if (big) cv.style.width = cw + 'px'; cv.width = cw * dpr; cv.height = ch * dpr; ctx.scale(dpr, dpr);
+  const L = Math.round(92 * fs), R = 24, Tp = 14, B = Math.round(44 * fs), pw = cw - L - R, ph = ch - Tp - B;
   const X = q => L + q / Math.max(1, N) * pw, Y = lv => Tp + (1 - (lv + 0.5) / Lv) * ph;
   const dots = {};   // 칸 번호 → 인원
   (initPts || []).forEach(([q, lv]) => { dots[Math.round(lv)] = Math.round(q); });
@@ -1083,18 +1102,22 @@ function setupDots(prices, N, initPts, i, chk) {
   function draw() {
     ctx.clearRect(0, 0, cw, ch);
     ctx.fillStyle = '#FFFDF9'; ctx.fillRect(L, Tp, pw, ph);
-    ctx.font = '15px Jua'; ctx.textAlign = 'right';
-    prices.forEach((p, lv) => { if (chk && chk.wrong.includes(lv)) { ctx.fillStyle = '#FFE1E1'; ctx.fillRect(L, Y(lv) - ph / Lv / 2, pw, ph / Lv); } ctx.strokeStyle = dots[lv] === undefined ? '#F4D9E2' : '#F2E6EC'; ctx.lineWidth = dots[lv] === undefined ? 2 : 1; ctx.beginPath(); ctx.moveTo(L, Y(lv)); ctx.lineTo(L + pw, Y(lv)); ctx.stroke(); ctx.fillStyle = dots[lv] === undefined ? '#F4A9BD' : '#A3919C'; ctx.fillText(kw(p), L - 8, Y(lv) + 5); });
+    ctx.font = `${Math.round(15 * fs)}px Jua`; ctx.textAlign = 'right';
+    prices.forEach((p, lv) => { if (chk && chk.wrong.includes(lv)) { ctx.fillStyle = '#FFE1E1'; ctx.fillRect(L, Y(lv) - ph / Lv / 2, pw, ph / Lv); } ctx.strokeStyle = dots[lv] === undefined ? '#F4D9E2' : '#F2E6EC'; ctx.lineWidth = dots[lv] === undefined ? 2 : 1; ctx.beginPath(); ctx.moveTo(L, Y(lv)); ctx.lineTo(L + pw, Y(lv)); ctx.stroke(); ctx.fillStyle = dots[lv] === undefined ? '#F4A9BD' : '#A3919C'; ctx.fillText(kw(p), L - 10, Y(lv) + 5 * fs); });
     ctx.textAlign = 'center'; ctx.fillStyle = '#A3919C'; ctx.lineWidth = 1;
     const qs = N <= 12 ? 1 : N <= 30 ? 2 : 5;
-    for (let q = 0; q <= N; q += qs) { ctx.strokeStyle = '#F6EEF2'; ctx.beginPath(); ctx.moveTo(X(q), Tp); ctx.lineTo(X(q), Tp + ph); ctx.stroke(); ctx.fillText(q, X(q), Tp + ph + 18); }
+    for (let q = 0; q <= N; q += qs) { ctx.strokeStyle = '#F6EEF2'; ctx.beginPath(); ctx.moveTo(X(q), Tp); ctx.lineTo(X(q), Tp + ph); ctx.stroke(); ctx.fillText(q, X(q), Tp + ph + 20 * fs); }
     ctx.fillText(chk ? '수요량(개) →' : '사겠다는 사람 수(명) →', L + pw / 2, ch - 4);
     const ks = Object.keys(dots).map(Number).sort((a, b) => a - b);
-    if (ks.length > 1) { ctx.strokeStyle = '#3B8FD9'; ctx.lineWidth = 4; ctx.lineJoin = 'round'; ctx.beginPath(); ks.forEach((lv, k) => k ? ctx.lineTo(X(dots[lv]), Y(lv)) : ctx.moveTo(X(dots[lv]), Y(lv))); ctx.stroke(); }
-    ks.forEach(lv => { ctx.fillStyle = '#3B8FD9'; ctx.beginPath(); ctx.arc(X(dots[lv]), Y(lv), 11, 0, 7); ctx.fill(); ctx.fillStyle = '#fff'; ctx.font = '13px Jua'; ctx.fillText(dots[lv], X(dots[lv]), Y(lv) + 5); });
-    if (chk && chk.show) { ctx.strokeStyle = 'rgba(47,166,122,.75)'; ctx.lineWidth = 6; ctx.setLineDash([12, 8]); ctx.beginPath(); chk.ans.forEach((q, lv) => lv ? ctx.lineTo(X(q), Y(lv)) : ctx.moveTo(X(q), Y(lv))); ctx.stroke(); ctx.setLineDash([]); ctx.fillStyle = '#2FA67A'; ctx.font = '20px Jua'; ctx.textAlign = 'left'; ctx.fillText('정답 수요 곡선 ↘️', X(chk.ans[Lv - 1]) + 16, Y(Lv - 1) + 6); ctx.textAlign = 'center'; }
+    if (chk && chk.show) {   // 정답 곡선: 두껍고 진하게, 점 아래에
+      ctx.strokeStyle = 'rgba(47,166,122,.55)'; ctx.lineWidth = 16 * fs; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.beginPath(); chk.ans.forEach((q, lv) => lv ? ctx.lineTo(X(q), Y(lv)) : ctx.moveTo(X(q), Y(lv))); ctx.stroke();
+      chk.ans.forEach((q, lv) => { ctx.fillStyle = '#2FA67A'; ctx.beginPath(); ctx.arc(X(q), Y(lv), 9 * fs, 0, 7); ctx.fill(); });
+      ctx.fillStyle = '#2FA67A'; ctx.font = `${Math.round(22 * fs)}px Jua`; ctx.textAlign = 'left'; ctx.fillText('✅ 정답 수요 곡선 ↘️', X(chk.ans[Lv - 1]) + 20 * fs, Y(Lv - 1) + 8 * fs); ctx.textAlign = 'center'; ctx.lineCap = 'butt';
+    }
+    if (ks.length > 1) { ctx.strokeStyle = '#3B8FD9'; ctx.lineWidth = 4; ctx.lineJoin = 'round'; ctx.beginPath(); ks.forEach((lv, k) => k ? ctx.lineTo(X(dots[lv]), Y(lv)) : ctx.moveTo(X(dots[lv]), Y(lv))); ctx.lineWidth = 4 * fs; ctx.stroke(); }
+    ks.forEach(lv => { ctx.fillStyle = '#3B8FD9'; ctx.beginPath(); ctx.arc(X(dots[lv]), Y(lv), 11 * fs, 0, 7); ctx.fill(); ctx.fillStyle = '#fff'; ctx.font = `${Math.round(13 * fs)}px Jua`; ctx.fillText(dots[lv], X(dots[lv]), Y(lv) + 5 * fs); });
     if (chk && chk.onChange) chk.onChange(Object.keys(dots).map(Number).map(lv => [dots[lv], lv]));
-    if (!ks.length) { ctx.fillStyle = '#D9C9D2'; ctx.font = '20px Jua'; ctx.fillText('👆 가격 줄마다 점을 콕!', L + pw / 2, Tp + ph / 2); }
+    if (!ks.length && !(chk && chk.show)) { ctx.fillStyle = '#D9C9D2'; ctx.font = `${Math.round(20 * fs)}px Jua`; ctx.fillText('👆 가격 줄마다 점을 콕!', L + pw / 2, Tp + ph / 2); }
     updCnt();
   }
   const hit = e => { const r = cv.getBoundingClientRect(), px = e.clientX - r.left, py = e.clientY - r.top;
@@ -1103,7 +1126,7 @@ function setupDots(prices, N, initPts, i, chk) {
   cv.onpointerdown = e => { e.preventDefault(); cv.setPointerCapture(e.pointerId); const h = hit(e); drag = h.lv; dots[h.lv] = h.q; draw(); };
   cv.onpointermove = e => { if (drag === null) return; e.preventDefault(); const h = hit(e); dots[drag] = h.q; draw(); };
   cv.onpointerup = cv.onpointercancel = () => { drag = null; };
-  el('clr').onclick = () => { Object.keys(dots).forEach(k => delete dots[k]); draw(); };
+  if (el('clr')) el('clr').onclick = () => { Object.keys(dots).forEach(k => delete dots[k]); draw(); };
   if (el('sendPred')) el('sendPred').onclick = () => {
     const ks = Object.keys(dots).map(Number);
     if (ks.length < Lv) return toast(`가격 줄마다 점을 다 찍어 주세요 (${ks.length}/${Lv}) ${chk ? '✏️' : '🔮'}`);
