@@ -143,6 +143,7 @@ canvas{display:block;width:100%;touch-action:none;border-radius:16px}
 .speech{position:relative;background:#fff;border:4px solid var(--ink);border-radius:26px;padding:12px 26px;font-size:34px;box-shadow:0 6px 0 var(--ink);max-width:92%}
 .speech::after{display:none}
 .wrap.wide{max-width:none;padding:8px 18px 8px}.wrap.wide .topbar{margin-bottom:6px}
+.pop2{position:fixed;inset:0;background:rgba(91,75,87,.45);display:flex;align-items:center;justify-content:center;z-index:90;padding:16px}
 .finNav{display:flex;flex-wrap:wrap;gap:4px;justify-content:center;margin-bottom:8px}.finNav .btn{padding:6px 12px;font-size:16px;margin:2px}
 .finGrid{display:grid;grid-template-columns:1fr 1fr;gap:16px;height:calc(100vh - 150px);min-height:480px}.finGrid.draw{grid-template-columns:1.6fr 1fr}
 .finGraphs{display:grid;grid-template-rows:1fr 1fr;gap:12px;min-height:0}.finGraphs .card,.finOne{margin:0;padding:10px 16px;display:flex;flex-direction:column;min-height:0;overflow:hidden}.finGraphs h3{margin:0 0 4px}.finGraphs svg{flex:1;min-height:0;width:100%;height:100%}
@@ -705,6 +706,7 @@ function wireTeacher(st, items, i, it) {
     if (el('finRev')) el('finRev').onclick = () => S({ frev: true });
     if (el('cvNext')) el('cvNext').onclick = () => S({ cv: Math.min(3, (st.cv || 0) + 1) });
     document.querySelectorAll('[data-fin]').forEach(b => b.onclick = () => S({ fin: +b.dataset.fin, frev: false }));
+    document.querySelectorAll('[data-dpeek]').forEach(b => b.onclick = () => { dPeek = b.dataset.dpeek; showDrawPeek(); });
     if (FIN[Math.min(f, FIN.length - 1)].kind === 'draw' && el('cv')) setupDots(DRAW.prices, DRAW.N, tDots, 'draw', { ans: DRAW.qty, wrong: [], teacher: true, show: !!st.frev, onChange: pts => { tDots = pts; } });
   }
 }
@@ -929,6 +931,8 @@ const CONCEPT = ex => [
 ];
 let tDots = null;   // 선생님 칠판에서 찍은 점 (다시 그려도 유지)
 
+// 칠판: 그리는 중인 점은 화면 전체를 다시 그리지 않고 이름표·엿보기만 새로 고침
+setInterval(() => { if (!isTeacher || !room || (room.state || {}).phase !== 'final') return; const c = el('drawChips'); if (c) { const h = drawChips(); if (c.innerHTML !== h) { c.innerHTML = h; document.querySelectorAll('[data-dpeek]').forEach(b => b.onclick = () => { dPeek = b.dataset.dpeek; showDrawPeek(); }); } } if (dPeek) showDrawPeek(); }, 600);
 function teacherFinal(st, items, done, minis, kings) {
   const f = Math.min(st.fin || 0, FIN.length - 1), S = FIN[f], rev = !!st.frev, ids = Object.keys(room.players || {}), ex = finExample();
   let pop = '', left = `<div class="finGraphs">${minis}</div>`, cnt = '';
@@ -967,8 +971,8 @@ function teacherFinal(st, items, done, minis, kings) {
     left = `<div class="card finOne"><div class="fqq">✏️ ${DRAW.emoji} ${DRAW.name} 수요표를 보고 점을 찍어 <b>수요 곡선</b>을 그려요!</div>${drawTable()}
       <div class="cvwrap"><canvas id="cv" style="width:100%;height:100%;touch-action:none;display:block"></canvas></div>
       <div class="center"><span class="pill" id="cnt"></span> <button class="btn sm" id="clr">🧽 지우기</button></div></div>`;
-    pop = `<div class="ftag">✏️ 곡선 그리기</div><div class="fqq">학생들도 태블릿에서 같은 화면으로 그리고 있어요</div>
-      ${ok.length ? `<div class="chips">${ok.map(id => `<span class="chip soft">🎉 ${st.showNames ? esc(nameOf(id)) : ''}</span>`).join('')}</div>` : '<div class="muted">아직 완성한 학생이 없어요</div>'}
+    pop = `<div class="ftag">✏️ 곡선 그리기</div><div class="fqq">👆 이름을 누르면 그 학생이 그리는 그래프를 볼 수 있어요</div>
+      <div class="chips" id="drawChips">${drawChips()}</div>
       ${rev ? '<div class="hl mint">초록 점선이 정답 수요 곡선이에요 ↘️</div>' : ''}`;
   }
   const needRev = ['check', 'ask', 'q3', 'draw'].includes(S.kind);
@@ -977,8 +981,27 @@ function teacherFinal(st, items, done, minis, kings) {
       <div class="card finPop pop">${cnt ? `<div class="fcnt">✍️ ${cnt}</div>` : ''}<div class="fbody">${pop}</div>
         <div class="center finBtns">${f > 0 ? '<button class="btn" id="finPrev">◀ 이전</button>' : ''}${needRev && !rev ? `<button class="btn lemon" id="finRev">✅ ${isDraw ? '정답 곡선 보기' : '정답 공개'}</button>` : ''}${f + 1 < FIN.length ? `<button class="btn mint" id="finNext">다음 ▶ ${FIN[f + 1].name}</button>` : ''}</div></div></div>`;
 }
+function drawChips() {
+  const A = fqOf('draw'), L = room.drawLive || {};
+  return Object.keys(room.players || {}).sort((a, b) => nameOf(a).localeCompare(nameOf(b))).map(id => {
+    const d = A[id] || {}, n = ((L[id] || {}).pts || d.pts || []).length;
+    const tag = d.ok ? '🎉 완성' : d.tries ? `🤔 ${d.tries}번 도전` : n ? `✏️ 점 ${n}/${DRAW.prices.length}` : '⚪ 아직';
+    return `<button class="chip ${d.ok ? 'soft' : ''}" data-dpeek="${id}" style="cursor:pointer;border:none;font-size:18px">${esc(nameOf(id))} <small>${tag}</small></button>`;
+  }).join('') || '<span class="muted">아직 학생이 없어요</span>';
+}
+let dPeek = null;
+function showDrawPeek() {
+  let d = document.querySelector('.dPeek');
+  if (!dPeek || !room.players || !room.players[dPeek] || (room.state || {}).phase !== 'final') { if (d) d.remove(); dPeek = null; return; }
+  const A = fqOf('draw')[dPeek] || {}, live = (room.drawLive || {})[dPeek] || {}, pts = A.ok ? A.pts : (live.pts || A.pts || []);
+  const wrong = pts.filter(([q, lv]) => q !== DRAW.qty[lv]).length;
+  if (!d) { d = document.createElement('div'); d.className = 'pop2 dPeek'; d.onclick = e => { if (e.target === d || e.target.closest('[data-x]')) { dPeek = null; d.remove(); } }; document.body.appendChild(d); }
+  d.innerHTML = `<div class="card" style="width:min(900px,96vw);margin:0"><h3 style="font-size:28px">👀 ${esc(nameOf(dPeek))}의 그래프 <span class="pill">${A.ok ? '🎉 완성!' : `점 ${pts.length}/${DRAW.prices.length}${pts.length ? ` · 틀린 점 ${wrong}개` : ''}${A.tries ? ` · ${A.tries}번 도전` : ''}`}</span></h3>
+    ${drawTable()}<div style="margin-top:8px">${drawSVG(pts, false)}</div><div class="center"><button class="btn big" data-x>닫기</button></div></div>`;
+}
 const drawTable = () => `<table class="dtab"><tr><th>가격(원)</th>${DRAW.prices.map(p => `<td>${p.toLocaleString()}</td>`).join('')}</tr><tr><th>수요량(개)</th>${DRAW.qty.map(q => `<td>${q}</td>`).join('')}</tr></table>`;
-function drawAnswerSVG() {
+function drawAnswerSVG() { return drawSVG(null, true); }
+function drawSVG(pts, answer) {
   const w = 600, h = 340, L = 70, B = 40, T = 14, Rr = 16, pw = w - L - Rr, ph = h - T - B, N = DRAW.N, mx = DRAW.prices[DRAW.prices.length - 1] + 1000;
   const X = q => L + q / N * pw, Y = p => T + (1 - p / mx) * ph;
   let g = `<rect x="${L}" y="${T}" width="${pw}" height="${ph}" fill="#FFFDF9"/>`;
@@ -986,8 +1009,15 @@ function drawAnswerSVG() {
   for (let q = 0; q <= N; q += 2) g += `<text x="${X(q)}" y="${h - 18}" text-anchor="middle" font-size="15" fill="#A3919C">${q}</text>`;
   g += `<line x1="${L}" y1="${T + ph}" x2="${L + pw}" y2="${T + ph}" stroke="#A3919C" stroke-width="2"/><line x1="${L}" y1="${T}" x2="${L}" y2="${T + ph}" stroke="#A3919C" stroke-width="2"/>
     <text x="${L + pw}" y="${h - 2}" text-anchor="end" font-size="15" fill="#A3919C">수요량(개)</text><text x="${L - 8}" y="${T + 4}" text-anchor="end" font-size="14" fill="#A3919C">가격</text>
-    <path d="${DRAW.qty.map((q, k) => `${k ? 'L' : 'M'}${X(q)},${Y(DRAW.prices[k])}`).join(' ')}" stroke="#3B8FD9" stroke-width="5" fill="none"/>${DRAW.qty.map((q, k) => `<circle cx="${X(q)}" cy="${Y(DRAW.prices[k])}" r="8" fill="#3B8FD9"/>`).join('')}
+    <text x="${L - 8}" y="${T + 4}" text-anchor="end" font-size="14" fill="#A3919C"></text>`;
+  if (answer) g += `<path d="${DRAW.qty.map((q, k) => `${k ? 'L' : 'M'}${X(q)},${Y(DRAW.prices[k])}`).join(' ')}" stroke="#3B8FD9" stroke-width="5" fill="none"/>${DRAW.qty.map((q, k) => `<circle cx="${X(q)}" cy="${Y(DRAW.prices[k])}" r="8" fill="#3B8FD9"/>`).join('')}
     <text x="${X(DRAW.qty[DRAW.qty.length - 1]) + 14}" y="${Y(DRAW.prices[DRAW.prices.length - 1]) + 6}" font-size="20" fill="#3B8FD9">수요 곡선 ↘️</text>`;
+  if (pts) {
+    const ps = pts.slice().sort((a, b) => a[1] - b[1]);
+    if (ps.length > 1) g += `<path d="${ps.map(([q, lv], k) => `${k ? 'L' : 'M'}${X(q)},${Y(DRAW.prices[lv])}`).join(' ')}" stroke="#B8A7EE" stroke-width="4" fill="none"/>`;
+    ps.forEach(([q, lv]) => { const ok = q === DRAW.qty[lv]; g += `<circle cx="${X(q)}" cy="${Y(DRAW.prices[lv])}" r="11" fill="${ok ? '#2FA67A' : '#E0607E'}"/><text x="${X(q)}" y="${Y(DRAW.prices[lv]) + 5}" text-anchor="middle" font-size="13" fill="#fff">${q}</text>`; });
+    if (!ps.length) g += `<text x="${L + pw / 2}" y="${T + ph / 2}" text-anchor="middle" font-size="22" fill="#D9C9D2">아직 점을 안 찍었어요</text>`;
+  }
   return `<svg viewBox="0 0 ${w} ${h}" font-family="Jua">${g}</svg>`;
 }
 
@@ -1033,7 +1063,9 @@ function studentFinal(st, top) {
       <div class="card" style="width:100%"><div class="muted" style="font-size:17px">가격 줄마다 수요량 자리에 점을 콕! (끌어서 옮길 수 있어요)</div><canvas id="cv" style="width:100%;touch-action:none;display:block"></canvas>
       <div class="center"><span class="pill" id="cnt"></span> <button class="btn sm" id="clr">🧽 지우기</button> <button class="btn big mint" id="sendPred">✅ 다 그렸어요!</button></div></div>
       ${A.tries ? '<div class="hint">🤔 틀린 점이 있어요! 빨간 줄을 표에서 다시 확인해요</div>' : ''}`);
-    setupDots(DRAW.prices, DRAW.N, A.pts || null, 'draw', { ans: DRAW.qty, tries: A.tries || 0, wrong: A.wrong || [] });
+    let lt = null;
+    setupDots(DRAW.prices, DRAW.N, A.pts || null, 'draw', { ans: DRAW.qty, tries: A.tries || 0, wrong: A.wrong || [],
+      onChange: pts => { clearTimeout(lt); lt = setTimeout(() => set(AP(`drawLive/${pid}`), { pts, at: Date.now() }), 350); } });
   }
 }
 
