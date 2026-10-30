@@ -238,7 +238,8 @@ const base = location.origin + location.pathname.replace(/[^/]*$/, '');
 const LESSONS = [
   { n: 1, name: '시장의 의미와 필요성', apps: [{ id: 'market', desc: '차곡차곡 늘어나는 실시간 기억 게임 · 깜짝 리버스·플래시' }] },
   { n: 2, name: '수요·공급과 시장 가격의 결정', apps: [
-    { id: 'auction', desc: '최대 얼마까지 낼래? → 예언 그리기 → 경매로 수요 곡선 만들기 → 최고가 부르기' },
+    { id: 'auction', desc: '🛒 살래요! 가격을 올리며 수요 곡선 만들기 → 최고가 부르기 → 수요 개념·수요 법칙 정리' },
+    { id: 'auctionS', desc: '🏷️ 팔래요! 가격을 올리며 공급 곡선 만들기 → 최저가 부르기 → 공급 개념·공급 법칙 정리' },
     { id: 'trade', desc: '수요자·공급자 카드로 거래하며 균형 가격 찾기' },
     { ext: 'https://rlaekdus1116.github.io/demandsupply/', emoji: '🧪', title: '수요·공급 실험실', desc: '호가 게임으로 시장 가격 결정 체험 (따로 만든 앱)' },
   ] },
@@ -283,7 +284,7 @@ function renderTeacher() {
     const a = APPS[x.id], now = c && c.app === x.id;
     return `<div class="appc ${now ? 'now' : ''}"><div class="ae">${a.emoji}</div><div class="an">${esc(a.title)}</div><div class="ad">${esc(x.desc)}</div>
       ${now ? `<a class="btn mint" href="${a.file}?t=1&room=${encodeURIComponent(c.room)}">▶ 진행 중인 방 ${esc(c.room)} 열기</a>` : ''}
-      <a class="btn ${now ? '' : 'mint'}" href="${a.file}?t=1">${now ? '새로 / 다른 방' : '▶ 선생님 화면 열기'}</a></div>`;
+      <a class="btn ${now ? '' : 'mint'}" href="${a.file}?t=1${a.q || ''}">${now ? '새로 / 다른 방' : '▶ 선생님 화면 열기'}</a></div>`;
   };
   app.innerHTML = `<div class="wrap">
     <div class="hubTop"><div class="bigEmoji" style="font-size:54px;margin:0">🧺</div><div class="title">3단원 <span>시장 경제</span></div></div>
