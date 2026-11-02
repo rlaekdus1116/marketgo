@@ -15,10 +15,16 @@ export const APPS = {
 };
 
 /* 👩‍🏫 선생님 화면이 방을 열면 → 허브의 '지금 수업'으로 등록 */
-let seen = '';
+let seen = '', seenTimer = null;
 export function hubSeen(app, room) {
-  if (!room || seen === app + room) return; seen = app + room;
-  update(H('current'), { app, room: String(room), at: Date.now() }).catch(() => {});
+  if (!room) return;
+  const key = `${app}|${room}`;
+  if (seen === key) return;
+  seen = key;
+  const send = () => update(H('current'), { app, room: String(room), at: Date.now() }).catch(() => {});
+  send();
+  if (seenTimer) clearInterval(seenTimer);
+  seenTimer = setInterval(send, 60 * 1000);
 }
 
 /* 📊 기록: 같은 날·같은 방은 한 줄로 덮어써요. 구글 시트 주소가 있으면 시트로도 보내요 */
@@ -46,17 +52,23 @@ export async function hubLog(app, room, cols, rows, extra = '') {
 /* 🧒 학생: 선생님이 다른 활동을 열면 → 화면 아래에 '이동' 버튼 */
 export function hubFollow(app, room) {
   if (window.__hubFollow) return; window.__hubFollow = true;
+  let expireTimer = null;
   const st = document.createElement('style');
   st.textContent = `.hubGo{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:9999;background:#FFE58F;color:#5B4B57;border:3px solid #5B4B57;border-radius:999px;padding:14px 26px;font-family:Jua,sans-serif;font-size:22px;box-shadow:0 6px 0 #5B4B57;text-decoration:none;animation:hubB 1s infinite alternate;white-space:nowrap}@keyframes hubB{to{transform:translateX(-50%) translateY(-6px)}}`;
   document.head.appendChild(st);
   onValue(H('current'), s => {
+    if (expireTimer) { clearTimeout(expireTimer); expireTimer = null; }
     document.querySelectorAll('.hubGo').forEach(x => x.remove());
     const c = s.val(); if (!c || !APPS[c.app]) return;
     if (c.app === app && String(c.room) === String(room)) return;
-    if (Date.now() - (c.at || 0) > 3 * 3600 * 1000) return;   // 3시간 지난 건 무시
+    const maxAge = 10 * 60 * 1000;
+    const age = Date.now() - Number(c.at || 0);
+    if (!c.at || age > maxAge) return;
+    const target = APPS[c.app];
     const a = document.createElement('a'); a.className = 'hubGo';
-    a.href = `${APPS[c.app].file}?room=${encodeURIComponent(c.room)}`;
-    a.textContent = `🚀 선생님이 '${APPS[c.app].title}'을(를) 열었어요 → 이동!`;
+    a.href = `${target.file}?room=${encodeURIComponent(c.room)}${target.q || ''}`;
+    a.textContent = `🚀 선생님이 '${target.title}'을(를) 열었어요 → 이동!`;
     document.body.appendChild(a);
+    expireTimer = setTimeout(() => a.remove(), Math.max(0, maxAge - age));
   });
 }

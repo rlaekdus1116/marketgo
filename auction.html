@@ -102,6 +102,8 @@ td.sum{background:var(--lav);border-color:var(--lav);color:var(--ink)}
 @keyframes bounce{50%{transform:translateY(-10px)}}
 .pop{animation:pop .35s cubic-bezier(.2,1.6,.4,1)}
 @keyframes pop{0%{transform:scale(.4);opacity:0}100%{transform:scale(1);opacity:1}}
+.toast.pop{animation:toastPop .35s cubic-bezier(.2,1.6,.4,1)}
+@keyframes toastPop{0%{transform:translateX(-50%) scale(.4);opacity:0}100%{transform:translateX(-50%) scale(1);opacity:1}}
 
 /* ===== 🌈 안내문: 일부러 촌스럽고 눈에 확 띄게 ===== */
 .ann{position:fixed;inset:0;z-index:200;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;overflow:hidden;cursor:pointer;animation:annIn .45s cubic-bezier(.2,1.7,.4,1)}
@@ -329,14 +331,13 @@ const KD = { curve: '수요 곡선', d: '수요', who: '수요자', qty: '수요
 const KS = { curve: '공급 곡선', d: '공급', who: '공급자', qty: '공급량', verb: '팔', verbs: '팔겠다는', want: '팔려는', other: '사는', otherN: '사는 개수', arrow: '↗️', btn: '🏷️ 팔래!', no: '🙅 안 팔래', law: '공급 법칙', icon: '🏭', title: '다연샘 판매소', logo: '🏷️' };
 const KW = () => SUP() ? KS : KD;
 const DEFAULT_ITEMS_S = [
-  { emoji: '🧹', name: '선생님 대신 교실 청소 10분', pitch: '선생님이 딱 1명에게만 맡길게요!', prices: [500, 1000, 2000, 3000, 5000, 10000], supply: 1, predict: false },
-  { emoji: '📒', name: '내 사회 필기 노트', pitch: '선생님이 5권만 살게요! 얼마면 팔래?', prices: [1000, 3000, 5000, 10000, 30000, 50000, 100000], supply: 5, predict: true },
+  { emoji: '🍡', name: '과일모찌 장수', pitch: '여러분은 과일모찌 장수예요! 얼마에 팔면 좋을까요?', cost: 2000, prices: [1000, 2000, 3000, 4000, 5000, 7000, 10000], supply: 5, predict: true },
 ];
 
 /* ========== 공통 계산 ========== */
-const itemsOf = () => ((room && room.items) || DEFAULT_ITEMS).map(x => {
+const itemsOf = () => ((room && room.items) || (SUP() ? DEFAULT_ITEMS_S : DEFAULT_ITEMS)).map(x => {
   const prices = Array.isArray(x.prices) && x.prices.length ? [...x.prices].map(Number).sort((a, b) => a - b) : [1000, 5000, 10000];
-  return { ...x, prices, supply: Math.max(0, Math.floor(+x.supply || 0)), predict: !!x.predict };
+  return { ...x, prices, supply: Math.max(0, Math.floor(+x.supply || 0)), cost: Math.max(0, Math.round(+x.cost || 0)), predict: !!x.predict };
 });
 // ans[상품][학생] = { last: ✋ 산다고 한 가장 비싼 가격 칸, quit: 안 산다고 한 칸 }  (0 = 가장 싼 가격)
 const ansOf = i => ((room.ans || {})[i]) || {};
@@ -449,7 +450,6 @@ function start() {
   render = isTeacher ? renderTeacher : renderStudent;
   if (isTeacher) localStorage.setItem('auction_teacher_room', code);
   else {
-    hubFollow('auction', code);
     const onl = AP(`players/${pid}/online`);
     onValue(ref(db, '.info/connected'), s => { if (s.val()) { onDisconnect(onl).set(false); set(onl, true); } });
   }
@@ -458,6 +458,7 @@ function start() {
     if (!room) { app.innerHTML = `<div class="wrap stage"><div class="bigEmoji">😢</div><p class="rule">경매소를 찾을 수 없어요</p></div>`; return; }
     applyKind();
     if (isTeacher) hubSeen(SUP() ? 'auctionS' : 'auction', code);
+    else hubFollow(SUP() ? 'auctionS' : 'auction', code);
     render(); firstPass = false;
   }, e => { console.error(e); toast('데이터를 못 불러왔어요 😢'); });
   setInterval(isTeacher ? teacherTick : studentTick, 150);
@@ -484,7 +485,7 @@ async function newRoom(kind = 'D') {
   try {
     let c;
     for (let i = 0; i < 20; i++) { c = String(Math.floor(1000 + Math.random() * 9000)); if (!(await get(A(c))).exists()) break; }
-    const lk = kind === 'S' ? 'auction_last_items_S' : 'auction_last_items';
+    const lk = kind === 'S' ? 'auction_last_items_S_v2' : 'auction_last_items';
     let items = kind === 'S' ? DEFAULT_ITEMS_S : DEFAULT_ITEMS;
     try { const last = JSON.parse(localStorage.getItem(lk) || 'null'); if (Array.isArray(last) && last.length) items = last; } catch (e) {}
     await set(A(c), { createdAt: Date.now(), kind, items, state: { phase: 'setup', item: 0, li: -1, sub: '', sold: null, sec: 5, showNames: true } });
@@ -495,8 +496,8 @@ async function newRoom(kind = 'D') {
 
 function studentForm(prefill) {
   app.innerHTML = `<div class="s-wrap"><div class="stage">
-    <div class="hammer bounce">🔨</div>
-    <div class="title">다연샘 <span>경매소</span></div>
+    <div class="hammer bounce">${P.get('kind') === 'S' ? '🏷️' : '🔨'}</div>
+    <div class="title">다연샘 <span>${P.get('kind') === 'S' ? '판매소' : '경매소'}</span></div>
     <div class="card" style="width:min(460px,100%);display:grid;gap:4px">
       <input class="field" id="jCode" inputmode="numeric" maxlength="4" placeholder="입장 코드 4자리" value="${esc(prefill)}">
       <input class="field" id="jName" maxlength="8" placeholder="내 이름" value="${esc(localStorage.getItem('auction_name') || '')}">
@@ -521,7 +522,7 @@ async function join(c, name) {
   }
   await update(ref(db, `rooms/auction_${c}/players/${id}`), { name, joinedAt: Date.now() });
   localStorage.setItem('auction_name', name); localStorage.setItem('auction_last_room', c);
-  location.href = `?room=${c}`;
+  location.href = `?room=${c}${P.get('kind') === 'S' ? '&kind=S' : ''}`;
 }
 
 /* =========================================================
@@ -553,6 +554,7 @@ function renderTeacher() {
         <div class="edit-row"><b style="font-size:22px">${k + 1}</b><input data-k="${k}" data-f="emoji" value="${esc(x.emoji)}" maxlength="4"><input data-k="${k}" data-f="name" value="${esc(x.name)}" maxlength="30">
           <span><button class="btn sm sky" data-up="${k}" style="margin:0;padding:6px 10px" ${k ? '' : 'disabled'}>▲</button><button class="btn sm" data-del="${k}" style="margin:0 0 0 4px;padding:6px 10px">✕</button></span></div>
         <div class="edit-row one"><label>📢 소개 문구<input data-k="${k}" data-f="pitch" value="${esc(x.pitch || '')}" maxlength="40"></label></div>
+        ${SUP() ? `<div class="edit-row one"><label class="sup">💸 1개 만드는 비용(원)<input data-k="${k}" data-f="cost" type="number" min="0" max="100000000" value="${Math.max(0, Math.round(+x.cost || 0))}"></label></div>` : ''}
         <div class="edit-row one"><label>💰 부를 가격 (싼 것부터 올라가요, 쉼표로)<input data-k="${k}" data-f="prices" value="${esc(listText(x.prices))}"></label></div>
         <div class="muted" style="font-size:15px;margin:0 0 6px">${x.prices.map(kw).join(' → ')}</div>
         <div style="display:flex;gap:18px;flex-wrap:wrap;align-items:center;font-size:18px">
@@ -566,7 +568,7 @@ function renderTeacher() {
     <div class="center"><button class="btn big mint" id="ready">✅ 준비 끝! 학생 입장 받기</button></div>`;
   }
   else if (st.phase === 'lobby') {
-    const url = location.origin + location.pathname + '?room=' + code;
+    const url = location.origin + location.pathname + '?room=' + encodeURIComponent(code) + (SUP() ? '&kind=S' : '');
     const ps = Object.values(room.players || {});
     body = `<div class="lobby">
       <div class="card center"><h3>태블릿으로 입장!</h3><div class="muted">입장 코드</div><div class="bigcode">${esc(code)}</div><div id="qr"></div>
@@ -581,6 +583,7 @@ function renderTeacher() {
     body = `<div class="stage">
       <span class="roundBadge">${i + 1}번째 ${SUP() ? '판매' : '경매'} 상품</span>
       <div class="item-hero"><div class="ie">${esc(it.emoji)}</div><div class="in">${esc(it.name)}</div>${it.pitch ? `<div class="ip">${esc(it.pitch)}</div>` : ''}</div>
+      ${it.cost > 0 ? `<div class="hl peach" style="margin:0">💸 1개 만드는 데 ${kw(it.cost)} 들어요</div>` : ''}
       ${S ? `<span class="hot" style="font-size:30px">${SUP() ? `🛒 선생님이 딱 ${S}개만 사요!` : `📦 단 ${S}개만 판매!`}</span>` : ''}
       <div class="speech">가격을 <b>${kw(prices[0])}</b>부터 점점 올릴게요!<br>가격마다 <b>${st.sec || 5}초 안에</b> ${KW().verb}지 말지 골라요 ${SUP() ? '🏷️🙅' : '✋🙅'}</div>
       ${it.predict ? '<button class="btn big lav" id="toPredict">🔮 먼저 예언하기!</button>' : '<button class="btn big peach" id="toAuction">🔨 경매 시작!</button>'}
@@ -702,7 +705,7 @@ function renderTeacher() {
     <button class="btn big mint" id="fresh">✨ 새 경매소 준비하기</button></div>`;
   app.innerHTML = `<div class="wrap ${st.phase === 'final' ? 'wide' : ''}">${topbar(st)}${body}</div>`;
   if (el('fresh')) { el('fresh').onclick = () => { localStorage.removeItem('auction_teacher_room'); newRoom(room.kind || 'D'); }; return; }
-  if (st.phase === 'lobby' && window.QRCode) new QRCode(el('qr'), { text: location.origin + location.pathname + '?room=' + code, width: 200, height: 200, colorDark: '#5B4B57', colorLight: '#ffffff' });
+  if (st.phase === 'lobby' && window.QRCode) new QRCode(el('qr'), { text: location.origin + location.pathname + '?room=' + encodeURIComponent(code) + (SUP() ? '&kind=S' : ''), width: 200, height: 200, colorDark: '#5B4B57', colorLight: '#ffffff' });
   wireTeacher(st, items, i, it);
 }
 
@@ -716,12 +719,13 @@ function wireTeacher(st, items, i, it) {
       document.querySelectorAll('.iedit [data-f]').forEach(f => {
         const k = +f.dataset.k, fl = f.dataset.f;
         if (fl === 'supply') next[k].supply = Math.max(0, Math.floor(+f.value || 0));
+        else if (fl === 'cost') next[k].cost = Math.max(0, Math.round(+f.value || 0));
         else if (fl === 'predict') next[k].predict = f.checked;
         else if (fl === 'prices') { const ps = parseList(f.value); if (ps.length >= 2) next[k].prices = ps; }
         else next[k][fl] = f.value;
       });
       set(AP('items'), next);
-      try { localStorage.setItem(SUP() ? 'auction_last_items_S' : 'auction_last_items', JSON.stringify(next)); } catch (e) {}
+      try { localStorage.setItem(SUP() ? 'auction_last_items_S_v2' : 'auction_last_items', JSON.stringify(next)); } catch (e) {}
     };
     document.querySelectorAll('.iedit input').forEach(inp => {
       if (inp.type === 'checkbox') { inp.onchange = () => { inp.blur(); save(); }; return; }
@@ -815,7 +819,8 @@ function renderStudent() {
   if (st.phase === 'setup' || st.phase === 'lobby') return wait('🎁', '입장 완료!', `칠판을 보세요 👀<br>곧 ${SUP() ? '팔 물건' : '경매 상품'}이 공개돼요`);
   if (st.phase === 'item') {
     app.innerHTML = `<div class="s-wrap">${top}<div class="stage"><span class="roundBadge">${i + 1}번째 ${SUP() ? '판매' : '경매'} 상품</span>
-      <div class="item-hero"><div class="ie">${esc(it.emoji)}</div><div class="in" style="font-size:30px">${esc(it.name)}</div></div>
+      <div class="item-hero"><div class="ie">${esc(it.emoji)}</div><div class="in" style="font-size:30px">${esc(it.name)}</div>${it.pitch ? `<div class="ip">${esc(it.pitch)}</div>` : ''}</div>
+      ${it.cost > 0 ? `<div class="hl peach" style="margin:0">💸 1개 만드는 데 ${kw(it.cost)} 들어요</div>` : ''}
       ${S ? `<span class="hot" style="font-size:24px">${SUP() ? `🛒 ${S}개만 사요!` : `📦 단 ${S}개!`}</span>` : ''}<div class="rule">칠판을 보세요 👀</div></div></div>`;
     return;
   }
@@ -927,6 +932,7 @@ function studentSupplyAsk(st, i, it, prices, S, my, li, p, top) {
   if (st.sub === 'ask') {
     app.innerHTML = `<div class="s-wrap">${top}<div class="stage" style="gap:12px">
       <div class="muted" style="font-size:22px">${esc(it.emoji)} ${esc(it.name)}${S ? ` · 🛒 ${S}개만 사요` : ''}</div>
+      ${it.cost > 0 ? `<div class="muted" style="font-size:18px">💸 1개 만드는 데 ${kw(it.cost)} 들어요</div>` : ''}
       <div class="price-big">${kw(p)}</div>
       ${before ? `<div class="stand">🏷️ 이미 팔기로 했어요!<br><span style="font-size:22px">${kw(prices[my.from])}부터 팔겠다고 했어요 → 이 가격에도 팔아요</span></div>`
         : `<div class="rule">이 가격이면 팔래? <b class="cdS" id="cdS"></b></div>
@@ -1025,7 +1031,7 @@ const FIN_S = {
   CHECK: [
     { q: ex => `${ex.name}을(를) <b>${kw(ex.p)}</b>에 사 준다면 우리 반 <b>${ex.n}명</b>이 팔겠다고 했어요.<br>이 '${ex.n}개'는?`, o: [['공급', '🏭 공급'], ['공급자', '🙋 공급자'], ['공급량', '🔢 공급량']], a: '공급량', why: '어떤 가격에서 팔려고 하는 <b>양</b> → 공급량!' },
     { q: () => `판매소에서 "팔래요!"를 누른<br><b>우리 반 친구들</b>은?`, o: [['공급', '🏭 공급'], ['공급자', '🙋 공급자'], ['공급량', '🔢 공급량']], a: '공급자', why: '상품을 팔려고 하는 <b>사람</b> → 공급자!' },
-    { q: () => `"청소 1만원이면 할래!" 하는<br><b>이 마음</b>은?`, o: [['공급', '🏭 공급'], ['공급자', '🙋 공급자'], ['공급량', '🔢 공급량']], a: '공급', why: '상품을 팔려고 하는 <b>욕구(마음)</b> → 공급!' },
+    { q: () => `"과일모찌 3,000원이면 팔래!" 하는<br><b>이 마음</b>은?`, o: [['공급', '🏭 공급'], ['공급자', '🙋 공급자'], ['공급량', '🔢 공급량']], a: '공급', why: '상품을 팔려고 하는 <b>욕구(마음)</b> → 공급!' },
   ],
   Q1: { q: '어느 상품이든 <b>가격이 올라갈수록</b><br>팔겠다는 사람 수는 어떻게 변했나요?', o: [['up', '📈 늘어났다'], ['down', '📉 줄어들었다'], ['same', '➖ 그대로였다']], a: 'up',
     after: '<div class="hl lav">📈 가격이 올라갈수록 팔겠다는 사람(공급량)이 <b>늘어났어요!</b><br><span class="muted">곡선이 오른쪽 위로 올라가죠? ↗️</span></div>' },
@@ -1037,7 +1043,7 @@ const FIN_S = {
     after: '<div class="hl lav">가격 ⬆️ → 공급량 ⬆️ &nbsp;·&nbsp; 가격 ⬇️ → 공급량 ⬇️<br>가격과 공급량은 <b>같은 방향</b>으로 움직여요!</div>' },
   LAW2: { q: '가격이 오르면 공급량이 늘고, 가격이 내리면 공급량이 줄어드는 것.<br>이걸 무엇이라고 할까요?', o: [['law', '📜 공급 법칙'], ['dem', '🛒 수요 법칙'], ['sq', '🔢 공급량 법칙']], a: 'law',
     after: '<div class="hl lemon" style="font-size:1.1em">📜 <b>공급 법칙</b><br>가격이 오르면 공급량은 증가하고, 가격이 내리면 공급량은 감소한다<br><span class="muted">→ 그래서 공급 곡선은 <b>오른쪽 위로 올라가는</b> 모양 ↗️</span></div>' },
-  DRAW: { emoji: '🧋', name: '버블티', prices: [1000, 2000, 3000, 4000, 5000], qty: [2, 4, 6, 8, 10], N: 12 },
+  DRAW: { emoji: '🍡', name: '과일모찌', prices: [1000, 2000, 3000, 4000, 5000], qty: [2, 4, 6, 8, 10], N: 12 },
   CONCEPT: ex => [
     ['🏭', '공급', '어떤 상품을 <b>팔려고 하는 욕구</b>', '= "이 가격이면 팔래!" 하는 마음'],
     ['🙋', '공급자', '상품을 <b>팔려고 하는 사람</b>', '= 오늘 "팔래요!"를 누른 우리 반 친구들'],
