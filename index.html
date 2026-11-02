@@ -174,7 +174,7 @@ const RESERVE = ['사과','계란','바나나','라면','떡볶이','붕어빵',
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getDatabase, ref, set, get, update, onValue, onDisconnect, runTransaction, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
-import { hubSeen, hubLog, hubFollow } from './hub.js';
+import { hubSeen, hubLog, hubFollow, getStudentName, saveStudentName } from './hub.js';
 
 /* ---------------- 공통 ---------------- */
 const app = document.getElementById('app');
@@ -822,7 +822,7 @@ function S_form(){
     <div class="title">시장에 <span>가면</span></div>
     <div class="card" style="width:min(460px,100%);display:grid;gap:12px">
       <input class="field" id="jCode" inputmode="numeric" maxlength="4" placeholder="입장 코드 4자리" value="${esc(c)}">
-      <input class="field" id="jName" maxlength="8" placeholder="내 이름" value="${esc(localStorage.getItem('market_name') || '')}">
+${getStudentName() ? `<div class="hl mint">🙂 ${esc(getStudentName())} 이름 저장 완료</div>` : `<input class="field" id="jName" maxlength="8" placeholder="내 이름">`}
       <button class="btn big mint" data-act="join">들어가기 🚪</button>
     </div>
   </div></div>`;
@@ -830,8 +830,8 @@ function S_form(){
 
 function S_init(){
   const c = params.get('room') || localStorage.getItem('market_last_room');
-  const name = localStorage.getItem('market_name');
-  if (c && name && localStorage.getItem('market_pid_' + c)) {
+  const name = getStudentName() || localStorage.getItem('market_name');
+  if (c && name) {
     app.innerHTML = `<div class="s-wrap"><div class="stage"><div class="bigEmoji bounce">🧺</div><div class="rule">${esc(name)}, 다시 들어가는 중...</div></div></div>`;
     S_join(c, name, true);
   } else S_form();
@@ -851,7 +851,7 @@ async function S_join(c, name, auto){
     localStorage.setItem('market_pid_' + c, pid);
   }
   S.code = c; S.name = name; S.pid = pid;
-  localStorage.setItem('market_name', name); localStorage.setItem('market_last_room', c);
+  saveStudentName(name); localStorage.setItem('market_name', name); localStorage.setItem('market_last_room', c);
   const pref = ref(db, `rooms/${c}/players/${pid}`);
   const ex = await get(pref);
   if (ex.exists()) await update(pref, { name });
@@ -1177,7 +1177,7 @@ function S_resultView(r, rr){
 document.addEventListener('click', e => {
   const b = e.target.closest('[data-act]'); if (!b || b.disabled) return;
   const a = b.dataset.act;
-  if (a === 'join') return S_join(el('jCode').value.trim(), el('jName').value.trim(), false);
+  if (a === 'join') return S_join(el('jCode').value.trim(), getStudentName() || (el('jName')?.value || '').trim(), false);
   if (a === 'addItem') return S_addItem();
   if (a === 'pick') return S_pick(b.dataset.id);
   if (a === 'unslot') return S_unslot(+b.dataset.i);

@@ -34,7 +34,7 @@ table{width:100%;border-collapse:collapse;font-size:15px}th,td{padding:10px 8px;
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getDatabase, ref, set, get, update, onValue, runTransaction } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
-import { hubSeen, hubFollow, hubLog } from "./hub.js";
+import { hubSeen, hubFollow, hubLog, getStudentName, saveStudentName } from "./hub.js";
 const firebaseConfig={apiKey:"AIzaSyDiehLZ1aKv8E3N_pD4bNmw0zgMexau99U",authDomain:"marketgo-80ab5.firebaseapp.com",databaseURL:"https://marketgo-80ab5-default-rtdb.firebaseio.com",projectId:"marketgo-80ab5",storageBucket:"marketgo-80ab5.firebasestorage.app",messagingSenderId:"666715038541",appId:"1:666715038541:web:b0f84a9703aa70aeca4d04"};
 const db=getDatabase(initializeApp(firebaseConfig)),app=document.getElementById("app"),P=new URLSearchParams(location.search),isTeacher=P.get("t")==="1";
 const pad=n=>String(n).padStart(2,"0"),stamp=n=>n?new Date(n).toLocaleString("ko-KR",{year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",second:"2-digit",hour12:false}):"-";
@@ -64,20 +64,20 @@ async function newRoom(){
  }catch(e){console.error(e);toast("투표 방을 열지 못했어요. 인터넷 연결을 확인해 주세요.");}
 }
 function studentJoinForm(){
- app.innerHTML='<section class="stage"><div class="emoji">🗳️</div><div class="title">시장 가격 결정 투표</div><div class="question">'+QUESTION+'</div><div class="card"><input class="field" id="name" maxlength="16" autocomplete="name" placeholder="내 이름"><button class="btn mint full" id="join">투표 참여하기 🚪</button></div><p class="small">이름을 입력하면 투표에 참여할 수 있어요.</p></section>';
- document.getElementById("join").onclick=joinStudent;
+ const savedName=getStudentName();
+ app.innerHTML='<section class="stage"><div class="emoji">🗳️</div><div class="title">시장 가격 결정 투표</div><div class="question">'+QUESTION+'</div><div class="card">'+(savedName?'<p>🙂 '+esc(savedName)+' 이름 저장 완료</p>':'<input class="field" id="name" maxlength="8" autocomplete="name" placeholder="내 이름">')+'<button class="btn mint full" id="join">투표 참여하기 🚪</button></div><p class="small">이름은 모든 시장 활동에서 한 번만 입력하면 돼요.</p></section>';
+ document.getElementById("join").onclick=()=>joinStudent();
 }
-async function joinStudent(){
- const name=(document.getElementById("name").value||"").trim();if(!name)return toast("이름을 입력해 주세요.");
- const b=document.getElementById("join");b.disabled=true;
+async function joinStudent(nameArg){
+ const name=String(nameArg||(document.getElementById("name")?.value||"")).trim();
+ if(!name)return toast("이름을 입력해 주세요.");
+ const b=document.getElementById("join");if(b)b.disabled=true;
  try{
   const idKey="poll_pid_"+code;let id=pid||saved(idKey);if(!id)id=Math.random().toString(36).slice(2,11);
-  const all=(await get(R("players"))).val()||{};
-  if(Object.entries(all).some(([other,p])=>other!==id&&p.name===name)) {b.disabled=false;return toast("같은 이름이 이미 있어요. 이름 뒤에 번호를 붙여 주세요.");}
   const old=(await get(R("players/"+id))).val();
   await set(R("players/"+id),{name,joinedAt:old&&old.joinedAt?old.joinedAt:Date.now()});
-  pid=id;me={name};store(idKey,id);store("poll_name",name);render();
- }catch(e){console.error(e);b.disabled=false;toast("참여 등록에 실패했어요. 다시 눌러 주세요.");}
+  pid=id;me={name};store(idKey,id);saveStudentName(name);store("poll_name",name);render();
+ }catch(e){console.error(e);if(b)b.disabled=false;toast("참여 등록에 실패했어요. 다시 눌러 주세요.");}
 }
 function studentRender(){
  if(!me){studentJoinForm();return;}
@@ -131,7 +131,12 @@ async function start(){
   room=(await get(R())).val();
   if(!room){if(isTeacher)teacherHome();else studentJoinForm();return;}
   if(isTeacher)hubSeen("poll",code);
-  else{pid=saved("poll_pid_"+code);if(pid){const p=(await get(R("players/"+pid))).val();if(p)me=p;else pid="";}hubFollow("poll",code);}
+  else{
+   pid=saved("poll_pid_"+code);
+   if(pid){const p=(await get(R("players/"+pid))).val();if(p)me=p;else pid="";}
+   if(!pid){const name=getStudentName();if(name)await joinStudent(name);else studentJoinForm();}
+   hubFollow("poll",code);
+  }
   onValue(R(),s=>{room=s.val();render();});
   render();
  }catch(e){console.error(e);app.innerHTML='<section class="stage"><div class="title">연결할 수 없어요</div><p class="muted">인터넷 연결을 확인해 주세요.</p></section>';}

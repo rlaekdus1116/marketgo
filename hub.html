@@ -215,7 +215,7 @@ pre.code{background:#2E2A33;color:#F6EFF4;border-radius:16px;padding:14px;font-s
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getDatabase, ref, set, update, onValue, remove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
-import { APPS } from './hub.js';
+import { APPS, getStudentName, saveStudentName, clearStudentName } from './hub.js';
 
 const firebaseConfig = {
   apiKey: "AIzaSyDiehLZ1aKv8E3N_pD4bNmw0zgMexau99U",
@@ -241,7 +241,7 @@ const LESSONS = [
     { id: 'auction', desc: '🛒 살래요! 가격을 올리며 수요 곡선 만들기 → 최고가 부르기 → 수요 개념·수요 법칙 정리' },
     { id: 'auctionS', desc: '🏷️ 팔래요! 가격을 올리며 공급 곡선 만들기 → 최저가 부르기 → 공급 개념·공급 법칙 정리' },
     { id: 'poll', desc: '🗳️ 질문: 시장에서 가격은 누가 결정할까? 학생별 실시간 투표·응답 시각·제출 점수 확인' },
-    { id: 'trade', desc: '🌶️ 떡볶이 시장 게임 · 수요자·공급자가 직접 거래하며 시장 가격 찾기' },
+    { id: 'trade', desc: '🥵 떡볶이 시장 게임 · 수요자·공급자가 직접 거래하며 시장 가격 찾기' },
     { ext: 'https://rlaekdus1116.github.io/demandsupply/', emoji: '🧪', title: '수요·공급 실험실', desc: '호가 게임으로 시장 가격 결정 체험 (따로 만든 앱)' },
   ] },
   { n: 3, name: '시장 가격의 변동', apps: [{ id: 'curve', desc: '수요편 → 공급편 → ⚡총정리 스피드 시험 · 곡선 위의 이동 vs 곡선 자체의 이동' }] },
@@ -256,18 +256,42 @@ function render() { (isTeacher ? renderTeacher : renderStudent)(); }
 /* ================= 🧒 학생 ================= */
 let goT = null, goKey = '';
 function renderStudent() {
+  if (document.activeElement && document.activeElement.id === 'studentName') return;
+  const studentName = getStudentName();
+  if (!studentName) {
+    clearTimeout(goT); goKey = '';
+    app.innerHTML = `<div class="s-wrap"><div class="stage" style="min-height:80vh">
+      <div class="bigEmoji bounce">🧺</div><div class="title">시장 <span>경제</span></div>
+      <div class="rule">먼저 이름을 한 번만 입력해 주세요 ✍️</div>
+      <div class="card" style="width:min(460px,100%);display:grid;gap:8px">
+        <input class="field" id="studentName" maxlength="8" autocomplete="name" placeholder="내 이름">
+        <button class="btn big mint" id="saveStudentName">이름 저장하고 기다리기</button>
+      </div>
+      <div class="muted">이름은 이 기기의 모든 시장 활동에서 계속 사용돼요.</div>
+    </div></div>`;
+    el('saveStudentName').onclick = () => {
+      const name = (el('studentName').value || '').trim();
+      if (!name) return toast('이름을 입력해 주세요.');
+      saveStudentName(name); renderStudent();
+    };
+    return;
+  }
   const c = hub.current;
   if (!fresh(c)) {
     clearTimeout(goT); goKey = '';
     app.innerHTML = `<div class="s-wrap"><div class="stage" style="min-height:80vh"><div class="bigEmoji bounce">🧺</div><div class="title">시장 <span>경제</span></div>
-      <div class="rule">선생님이 활동을 열면<br>여기에 바로 떠요 👀</div><div class="muted">이 화면을 켜 두고 기다려요</div></div></div>`;
+      <div class="rule">${esc(studentName)} 학생, 준비됐어요!<br>선생님이 활동을 열면<br>여기에 바로 떠요 👀</div>
+      <div class="muted">이름은 한 번 저장했어요. 다시 입력할 필요 없어요.</div>
+      <button class="btn sm sky" id="changeStudentName">이름 바꾸기</button></div></div>`;
+    el('changeStudentName').onclick = () => { clearStudentName(); renderStudent(); };
     return;
   }
   const a = APPS[c.app], url = `${a.file}?room=${encodeURIComponent(c.room)}`, key = c.app + c.room;
   app.innerHTML = `<div class="s-wrap"><div class="stage" style="min-height:80vh"><div class="bigEmoji bounce">${a.emoji}</div>
     <div class="muted" style="font-size:22px">${a.lesson}. ${esc(LESSONS[a.lesson - 1].name)} · 지금 수업</div><div class="title">${esc(a.title)}</div>
+    <div class="muted">${esc(studentName)} 학생, 자동으로 입장해요.</div>
     <a class="btn big mint" href="${url}" style="text-decoration:none;color:var(--ink)">입장하기 🚪 <span id="cd"></span></a></div></div>`;
-  if (goKey !== key) {   // 2초 뒤 자동 입장
+  if (goKey !== key) {
     goKey = key; clearTimeout(goT); let n = 2;
     const tick = () => { const d = el('cd'); if (d) d.textContent = `(${n})`; if (n-- <= 0) location.href = url; else goT = setTimeout(tick, 1000); };
     tick();

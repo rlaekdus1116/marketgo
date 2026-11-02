@@ -228,7 +228,7 @@ body.supply .title span,body.supply .price-big{color:#2F8F6B}
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getDatabase, ref, set, get, update, onValue, onDisconnect } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
-import { hubSeen, hubLog, hubFollow } from './hub.js';
+import { hubSeen, hubLog, hubFollow, getStudentName, saveStudentName } from './hub.js';
 
 /* 「시장에 가면」·「떡볶이 시장」과 같은 Firebase 프로젝트 (데이터는 rooms/auction_코드 에 저장) */
 const firebaseConfig = {
@@ -445,7 +445,12 @@ function start() {
   if (!isTeacher) {
     if (!code) code = localStorage.getItem('auction_last_room') || '';
     pid = code ? localStorage.getItem('auction_pid_' + code) : null;
-    if (!code || !pid) return studentForm(code);
+    if (!code) return studentForm(code);
+    if (!pid) {
+      const name = getStudentName();
+      if (name) return join(code, name);
+      return studentForm(code);
+    }
   }
   render = isTeacher ? renderTeacher : renderStudent;
   if (isTeacher) localStorage.setItem('auction_teacher_room', code);
@@ -500,11 +505,11 @@ function studentForm(prefill) {
     <div class="title">다연샘 <span>${P.get('kind') === 'S' ? '판매소' : '경매소'}</span></div>
     <div class="card" style="width:min(460px,100%);display:grid;gap:4px">
       <input class="field" id="jCode" inputmode="numeric" maxlength="4" placeholder="입장 코드 4자리" value="${esc(prefill)}">
-      <input class="field" id="jName" maxlength="8" placeholder="내 이름" value="${esc(localStorage.getItem('auction_name') || '')}">
+${getStudentName() ? `<div class="hl mint">🙂 ${esc(getStudentName())} 이름 저장 완료</div>` : `<input class="field" id="jName" maxlength="8" placeholder="내 이름">`}
       <button class="btn big mint" id="join">입장하기 🚪</button>
     </div>
   </div></div>`;
-  el('join').onclick = () => join(el('jCode').value.trim(), el('jName').value.trim());
+  el('join').onclick = () => join(el('jCode').value.trim(), getStudentName() || (el('jName')?.value || '').trim());
 }
 
 async function join(c, name) {
@@ -521,7 +526,7 @@ async function join(c, name) {
     localStorage.setItem('auction_pid_' + c, id);
   }
   await update(ref(db, `rooms/auction_${c}/players/${id}`), { name, joinedAt: Date.now() });
-  localStorage.setItem('auction_name', name); localStorage.setItem('auction_last_room', c);
+  saveStudentName(name); localStorage.setItem('auction_name', name); localStorage.setItem('auction_last_room', c);
   location.href = `?room=${c}${P.get('kind') === 'S' ? '&kind=S' : ''}`;
 }
 
