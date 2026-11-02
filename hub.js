@@ -10,6 +10,7 @@ export const APPS = {
   market: { title: '시장에 가면', lesson: 1, file: 'index.html', emoji: '🧺' },
   auction: { title: '다연샘 경매소', lesson: 2, file: 'auction.html', emoji: '🔨' },
   auctionS: { title: '다연샘 판매소 (공급)', lesson: 2, file: 'auction.html', q: '&kind=S', emoji: '🏷️' },
+  poll: { title: '시장 가격 결정 투표', lesson: 2, file: 'poll.html', emoji: '🗳️' },
   trade: { title: '떡볶이 시장', lesson: 2, file: 'market-trade.html', emoji: '🌶️' },
   curve: { title: '시장 예측하기', lesson: 3, file: 'curve.html', emoji: '📈' },
 };

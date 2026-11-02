@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="ko"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>시장 가격 결정 투표</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#FFF9F4;--ink:#5B4B57;--sub:#A3919C;--line:#F2E6EC;--pink:#FFE3EA;--pinkD:#F4A9BD;--mint:#DDF5EA;--mintD:#8FD5B5;--lemon:#FFF5CC;--lemonD:#F2D477;--sky:#E0F0FF;--skyD:#93C4EE;--peach:#FFE9DA;--peachD:#F5B48C}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}html,body{margin:0;min-height:100%}
+body{font-family:'Jua','Malgun Gothic','Apple SD Gothic Neo',sans-serif;color:var(--ink);background:var(--bg);background-image:radial-gradient(#F6E3EA 1.4px,transparent 1.4px);background-size:22px 22px;line-height:1.55;word-break:keep-all;overflow-wrap:break-word;line-break:strict}
+button,input{font:inherit;color:inherit}button{cursor:pointer;border:0}
+.wrap{width:min(100% - 28px,1000px);margin:0 auto;padding:22px 0 48px}
+.stage{background:#fff;border:2px solid var(--line);border-radius:28px;padding:clamp(18px,4vw,34px);box-shadow:0 7px 0 var(--line);text-align:center}
+.card{background:#fff;border:2px solid var(--line);border-radius:22px;padding:18px;margin:14px 0;text-align:left}
+.emoji{font-size:clamp(42px,7vw,66px);line-height:1.2}.title{font-size:clamp(28px,5vw,44px);line-height:1.3;margin:8px 0 12px}
+.question{font-size:clamp(23px,4vw,34px);line-height:1.45;margin:12px auto;max-width:760px}
+.muted{color:var(--sub);font-size:clamp(15px,2.5vw,18px)}.small{font-size:14px;color:var(--sub)}
+.field{width:100%;max-width:460px;padding:15px 16px;border:2px solid var(--line);border-radius:15px;background:#fff;font-size:20px;outline:none;min-width:0}
+.field:focus{border-color:var(--pinkD)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:13px 20px;margin:5px 4px;border-radius:16px;background:var(--pink);box-shadow:0 4px 0 var(--pinkD);font-size:19px;text-decoration:none;line-height:1.35;white-space:normal;word-break:keep-all}
+.btn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--pinkD)}.btn:disabled{opacity:.45;cursor:not-allowed;transform:none}
+.btn.mint{background:var(--mint);box-shadow:0 4px 0 var(--mintD)}.btn.sky{background:var(--sky);box-shadow:0 4px 0 var(--skyD)}.btn.lemon{background:var(--lemon);box-shadow:0 4px 0 var(--lemonD)}.btn.peach{background:var(--peach);box-shadow:0 4px 0 var(--peachD)}.btn.full{width:100%;margin:6px 0}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.option{display:flex;align-items:center;justify-content:flex-start;text-align:left;min-height:86px;padding:17px;border:2px solid var(--line);border-radius:18px;background:#fff;box-shadow:0 4px 0 var(--line);font-size:clamp(18px,3vw,23px);line-height:1.4;white-space:normal;word-break:keep-all}
+.option:active{transform:translateY(2px)}.option:disabled{opacity:.5}.option .letter{flex:0 0 38px;width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:var(--lemon);margin-right:12px}
+.row{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}.pill{display:inline-flex;align-items:center;border-radius:999px;padding:6px 12px;background:var(--lemon);font-size:15px}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:16px 0}.stat{background:#fff;border:2px solid var(--line);border-radius:16px;padding:12px;text-align:center}
+.stat b{display:block;font-size:clamp(22px,4vw,30px);line-height:1.3}.stat span{font-size:14px;color:var(--sub)}
+.barrow{margin:14px 0}.barhead{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;font-size:18px}.bar{height:16px;background:#F6EEF1;border-radius:99px;overflow:hidden;margin-top:7px}.bar i{display:block;height:100%;width:0;background:var(--mintD);border-radius:99px}
+table{width:100%;border-collapse:collapse;font-size:15px}th,td{padding:10px 8px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}th{white-space:nowrap;background:#FFF9F4}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:14px}.toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:20;max-width:calc(100vw - 28px);padding:12px 18px;border-radius:999px;background:var(--ink);color:#fff;font-size:16px;text-align:center}
+@media(max-width:620px){.grid{grid-template-columns:1fr}.stats{gap:6px}.stat{padding:10px 5px}.card{padding:14px}.option{min-height:70px}}
+</style></head><body><div id="app" class="wrap"></div>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getDatabase, ref, set, get, update, onValue, runTransaction } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import { hubSeen, hubFollow, hubLog } from "./hub.js";
+const firebaseConfig={apiKey:"AIzaSyDiehLZ1aKv8E3N_pD4bNmw0zgMexau99U",authDomain:"marketgo-80ab5.firebaseapp.com",databaseURL:"https://marketgo-80ab5-default-rtdb.firebaseio.com",projectId:"marketgo-80ab5",storageBucket:"marketgo-80ab5.firebasestorage.app",messagingSenderId:"666715038541",appId:"1:666715038541:web:b0f84a9703aa70aeca4d04"};
+const db=getDatabase(initializeApp(firebaseConfig)),app=document.getElementById("app"),P=new URLSearchParams(location.search),isTeacher=P.get("t")==="1";
+const pad=n=>String(n).padStart(2,"0"),stamp=n=>n?new Date(n).toLocaleString("ko-KR",{year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",second:"2-digit",hour12:false}):"-";
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const toast=m=>{document.querySelectorAll(".toast").forEach(x=>x.remove());const d=document.createElement("div");d.className="toast";d.textContent=m;document.body.appendChild(d);setTimeout(()=>d.remove(),2300);};
+const OPTIONS=[{id:"buyer",label:"소비자(수요자)가 결정한다"},{id:"seller",label:"생산자(공급자)가 결정한다"},{id:"market",label:"수요자와 공급자가 상호작용하여 결정한다"},{id:"government",label:"정부가 결정한다"}];
+const QUESTION="시장에서 가격은 누가 결정할까?";
+let code=P.get("room")||"",room=null,pid="",me=null,loggedSig="";
+const saved=k=>{try{return localStorage.getItem(k)||"";}catch(e){return "";}},
+store=(k,v)=>{try{localStorage.setItem(k,v);}catch(e){}};
+const R=path=>ref(db,"rooms/poll_"+code+(path?"/"+path:""));
+const playersOf=()=>room&&room.players?room.players:{},votesOf=()=>room&&room.votes?room.votes:{};
+const choiceLabel=id=>(OPTIONS.find(x=>x.id===id)||{}).label||"알 수 없음";
+
+function teacherHome(){
+ const old=saved("poll_teacher_room");
+ app.innerHTML='<section class="stage"><div class="emoji">🗳️</div><div class="title">시장 가격 결정 투표</div><p class="muted">수요·공급 법칙을 정리한 뒤 학생들의 생각을 먼저 들어봐요.</p><div class="question">'+QUESTION+'</div><button class="btn mint full" id="newRoom">투표 방 열기 ✨</button>'+(old?'<button class="btn sky full" id="resume">진행 중인 방 이어 열기 ('+esc(old)+')</button>':'')+'<p class="small">학생은 기존 허브 QR로 들어옵니다.</p></section>';
+ document.getElementById("newRoom").onclick=newRoom;
+ if(document.getElementById("resume"))document.getElementById("resume").onclick=()=>location.href="?t=1&room="+encodeURIComponent(old);
+}
+async function newRoom(){
+ try{
+  let c="";
+  for(let i=0;i<30;i++){c=String(Math.floor(1000+Math.random()*9000));if(!(await get(ref(db,"rooms/poll_"+c))).exists())break;}
+  await set(ref(db,"rooms/poll_"+c),{createdAt:Date.now(),question:QUESTION,options:OPTIONS,state:{phase:"waiting"},players:{},votes:{}});
+  store("poll_teacher_room",c);location.href="?t=1&room="+c;
+ }catch(e){console.error(e);toast("투표 방을 열지 못했어요. 인터넷 연결을 확인해 주세요.");}
+}
+function studentJoinForm(){
+ app.innerHTML='<section class="stage"><div class="emoji">🗳️</div><div class="title">시장 가격 결정 투표</div><div class="question">'+QUESTION+'</div><div class="card"><input class="field" id="name" maxlength="16" autocomplete="name" placeholder="내 이름"><button class="btn mint full" id="join">투표 참여하기 🚪</button></div><p class="small">이름을 입력하면 투표에 참여할 수 있어요.</p></section>';
+ document.getElementById("join").onclick=joinStudent;
+}
+async function joinStudent(){
+ const name=(document.getElementById("name").value||"").trim();if(!name)return toast("이름을 입력해 주세요.");
+ const b=document.getElementById("join");b.disabled=true;
+ try{
+  const idKey="poll_pid_"+code;let id=pid||saved(idKey);if(!id)id=Math.random().toString(36).slice(2,11);
+  const all=(await get(R("players"))).val()||{};
+  if(Object.entries(all).some(([other,p])=>other!==id&&p.name===name)) {b.disabled=false;return toast("같은 이름이 이미 있어요. 이름 뒤에 번호를 붙여 주세요.");}
+  const old=(await get(R("players/"+id))).val();
+  await set(R("players/"+id),{name,joinedAt:old&&old.joinedAt?old.joinedAt:Date.now()});
+  pid=id;me={name};store(idKey,id);store("poll_name",name);render();
+ }catch(e){console.error(e);b.disabled=false;toast("참여 등록에 실패했어요. 다시 눌러 주세요.");}
+}
+function studentRender(){
+ if(!me){studentJoinForm();return;}
+ const state=room.state||{phase:"waiting"},vote=(room.votes||{})[pid];let body="";
+ if(state.phase==="waiting")body='<div class="pill">투표 준비 중</div><div class="question">'+QUESTION+'</div><p class="muted">선생님이 투표를 시작하면 선택할 수 있어요.</p><div class="card">참여자: <b>'+esc(me.name)+'</b></div>';
+ else if(state.phase==="open"&&!vote)body='<div class="pill">투표 진행 중</div><div class="question">'+QUESTION+'</div><p class="muted">내 생각과 가장 가까운 답 하나를 골라 주세요.</p><div class="grid">'+OPTIONS.map((o,i)=>'<button class="option" data-vote="'+o.id+'"><span class="letter">'+String.fromCharCode(65+i)+'</span><span>'+esc(o.label)+'</span></button>').join("")+'</div>';
+ else if(vote)body='<div class="pill">'+(state.phase==="closed"?"투표 마감":"제출 완료")+'</div><div class="question">투표가 제출됐어요!</div><div class="card"><b>'+esc(me.name)+'</b><p>'+esc(choiceLabel(vote.choice))+'</p><span class="small">제출 시각: '+stamp(vote.at)+'</span></div><p class="muted">선생님 화면에서 응답 현황을 확인하고 있어요.</p>';
+ else body='<div class="pill">투표 마감</div><div class="question">투표가 마감됐어요.</div><p class="muted">참여해 줘서 고마워요!</p>';
+ app.innerHTML='<section class="stage"><div class="row"><span class="pill">🗳️ 시장 가격 결정 투표</span><span class="pill">방 '+esc(code)+'</span></div><div class="emoji">🌶️</div><div class="title">안녕, '+esc(me.name)+'!</div>'+body+'</section>';
+ app.querySelectorAll("[data-vote]").forEach(b=>b.onclick=()=>submitVote(b.dataset.vote,b));
+}
+async function submitVote(choice,button){
+ if(!OPTIONS.some(x=>x.id===choice))return;button.disabled=true;
+ try{
+  const state=(await get(R("state"))).val()||{};if(state.phase!=="open"){button.disabled=false;return toast("투표가 마감됐어요.");}
+  const result=await runTransaction(R("votes/"+pid),current=>{if(current)return;return{choice,at:Date.now()};});
+  if(!result.committed)return toast("이미 투표를 제출했어요.");
+  toast("투표 완료! 고마워요 🎉");
+ }catch(e){console.error(e);button.disabled=false;toast("제출에 실패했어요. 인터넷을 확인해 주세요.");}
+}
+function makeRows(){
+ const players=playersOf(),votes=votesOf();
+ return Object.keys(players).sort((a,b)=>(players[a].joinedAt||0)-(players[b].joinedAt||0)).map(id=>{const v=votes[id];return[players[id].name||"",v?"제출":"미제출",v?choiceLabel(v.choice):"",v?stamp(v.at):"",v?1:0];});
+}
+function csvCell(v){const s=String(v??"");return/[",\r\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s;}
+function downloadCsv(){
+ const rows=[["학생 이름","제출 여부","선택한 답","제출 시각","점수"],...makeRows()],csv="\uFEFF"+rows.map(r=>r.map(csvCell).join(",")).join("\r\n");
+ const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"}));a.download="시장가격_투표_"+code+".csv";document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},500);
+}
+function logClosed(){
+ if(!isTeacher||!room||(room.state||{}).phase!=="closed")return;
+ const rows=makeRows(),sig=JSON.stringify(rows);if(sig===loggedSig)return;loggedSig=sig;
+ hubLog("poll",code,["학생 이름","제출 여부","선택한 답","제출 시각","점수"],rows,"시장 가격 결정 투표");
+}
+function teacherRender(){
+ const players=playersOf(),votes=votesOf(),ids=Object.keys(players),voted=ids.filter(id=>!!votes[id]).length,waiting=ids.length-voted,state=room.state||{phase:"waiting"};
+ const counts=OPTIONS.map(o=>({label:o.label,n:Object.values(votes).filter(v=>v.choice===o.id).length}));
+ const phase=state.phase==="open"?"투표 진행 중":state.phase==="closed"?"투표 마감":"시작 전";
+ const bars=counts.map((o,i)=>'<div class="barrow"><div class="barhead"><span>'+String.fromCharCode(65+i)+'. '+esc(o.label)+'</span><b>'+o.n+'표</b></div><div class="bar"><i style="width:'+(voted?o.n/voted*100:0)+'%"></i></div></div>').join("");
+ const table=ids.length?'<div class="tablewrap"><table><thead><tr><th>학생</th><th>제출</th><th>응답</th><th>제출 시각</th><th>점수</th></tr></thead><tbody>'+ids.sort((a,b)=>(players[a].joinedAt||0)-(players[b].joinedAt||0)).map(id=>{const v=votes[id],p=players[id];return'<tr><td>'+esc(p.name||"")+'</td><td>'+(v?"✅ 제출":"미제출")+'</td><td>'+esc(v?choiceLabel(v.choice):"-")+'</td><td>'+esc(v?stamp(v.at):"-")+'</td><td>'+(v?1:0)+'</td></tr>';}).join("")+'</tbody></table></div>':'<p class="muted">아직 참여한 학생이 없어요. 학생들이 기존 QR로 들어오면 여기에 표시돼요.</p>';
+ app.innerHTML='<section class="stage"><div class="row"><span class="pill">🗳️ 시장 가격 결정 투표</span><span class="pill">방 '+esc(code)+'</span></div><div class="emoji">🌶️</div><div class="title">'+QUESTION+'</div><div class="muted">학생들의 생각을 먼저 모으고, 떡볶이 시장 게임 뒤에 다시 이야기해요.</div><div class="stats"><div class="stat"><b>'+ids.length+'</b><span>참여 학생</span></div><div class="stat"><b>'+voted+'</b><span>제출 완료</span></div><div class="stat"><b>'+waiting+'</b><span>미제출</span></div></div><div class="row"><span class="pill">상태: '+phase+'</span><span class="pill">1인 1회 · 제출 1점 / 미제출 0점</span></div><div class="card"><h3>실시간 투표 결과</h3>'+bars+'</div><div class="card"><div class="row"><h3>학생별 제출 현황</h3><button class="btn lemon" id="csv">엑셀용 CSV 저장 ⬇️</button></div>'+table+'</div><div class="card"><div class="row"><button class="btn mint" id="start" '+(state.phase!=="waiting"?"disabled":"")+'>투표 시작</button><button class="btn peach" id="close" '+(state.phase!=="open"?"disabled":"")+'>투표 마감</button><a class="btn sky" href="hub.html?t=1">허브로 돌아가기</a></div><p class="small">투표를 마감한 뒤 허브에서 떡볶이 시장을 열면 학생 화면도 게임으로 이동해요.</p></div></section>';
+ document.getElementById("csv").onclick=downloadCsv;
+ document.getElementById("start").onclick=()=>update(R("state"),{phase:"open",openedAt:Date.now()});
+ document.getElementById("close").onclick=()=>update(R("state"),{phase:"closed",closedAt:Date.now()});
+ logClosed();
+}
+function render(){if(!room){app.innerHTML='<section class="stage"><div class="emoji">😢</div><div class="title">투표 방을 찾을 수 없어요</div><p class="muted">허브에서 선생님이 투표를 열었는지 확인해 주세요.</p></section>';return;}if(isTeacher)teacherRender();else studentRender();}
+async function start(){
+ if(isTeacher&&!code){teacherHome();return;}if(!code){studentJoinForm();return;}
+ try{
+  room=(await get(R())).val();
+  if(!room){if(isTeacher)teacherHome();else studentJoinForm();return;}
+  if(isTeacher)hubSeen("poll",code);
+  else{pid=saved("poll_pid_"+code);if(pid){const p=(await get(R("players/"+pid))).val();if(p)me=p;else pid="";}hubFollow("poll",code);}
+  onValue(R(),s=>{room=s.val();render();});
+  render();
+ }catch(e){console.error(e);app.innerHTML='<section class="stage"><div class="title">연결할 수 없어요</div><p class="muted">인터넷 연결을 확인해 주세요.</p></section>';}
+}
+start();
+</script></body></html>
