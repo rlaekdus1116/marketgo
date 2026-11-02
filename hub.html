@@ -286,7 +286,7 @@ function renderStudent() {
     el('changeStudentName').onclick = () => { clearStudentName(); renderStudent(); };
     return;
   }
-  const a = APPS[c.app], url = `${a.file}?room=${encodeURIComponent(c.room)}`, key = c.app + c.room;
+  const a = APPS[c.app], url = `${a.file}?room=${encodeURIComponent(c.room)}${a.q || ''}`, key = c.app + c.room;
   app.innerHTML = `<div class="s-wrap"><div class="stage" style="min-height:80vh"><div class="bigEmoji bounce">${a.emoji}</div>
     <div class="muted" style="font-size:22px">${a.lesson}. ${esc(LESSONS[a.lesson - 1].name)} · 지금 수업</div><div class="title">${esc(a.title)}</div>
     <div class="muted">${esc(studentName)} 학생, 자동으로 입장해요.</div>
@@ -308,7 +308,7 @@ function renderTeacher() {
     if (x.ext) return `<div class="appc"><div class="ae">${x.emoji}</div><div class="an">${esc(x.title)}</div><div class="ad">${esc(x.desc)}</div><a class="btn sky" href="${x.ext}" target="_blank" rel="noopener">열기 ↗</a></div>`;
     const a = APPS[x.id], now = c && c.app === x.id;
     return `<div class="appc ${now ? 'now' : ''}"><div class="ae">${a.emoji}</div><div class="an">${esc(a.title)}</div><div class="ad">${esc(x.desc)}</div>
-      ${now ? `<a class="btn mint" href="${a.file}?t=1&room=${encodeURIComponent(c.room)}">▶ 진행 중인 방 ${esc(c.room)} 열기</a>` : ''}
+      ${now ? `<a class="btn mint" href="${a.file}?t=1&room=${encodeURIComponent(c.room)}${a.q || ''}">▶ 진행 중인 방 ${esc(c.room)} 열기</a>` : ''}
       <a class="btn ${now ? '' : 'mint'}" href="${a.file}?t=1${a.q || ''}">${now ? '새로 / 다른 방' : '▶ 선생님 화면 열기'}</a></div>`;
   };
   app.innerHTML = `<div class="wrap">

@@ -69,7 +69,7 @@ function studentJoinForm(){
  document.getElementById("join").onclick=()=>joinStudent();
 }
 async function joinStudent(nameArg){
- const name=String(nameArg||(document.getElementById("name")?.value||"")).trim();
+ const name=String(nameArg||getStudentName()||(document.getElementById("name")?.value||"")).trim();
  if(!name)return toast("이름을 입력해 주세요.");
  const b=document.getElementById("join");if(b)b.disabled=true;
  try{
@@ -86,7 +86,7 @@ function studentRender(){
  else if(state.phase==="open"&&!vote)body='<div class="pill">투표 진행 중</div><div class="question">'+QUESTION+'</div><p class="muted">내 생각과 가장 가까운 답 하나를 골라 주세요.</p><div class="grid">'+OPTIONS.map((o,i)=>'<button class="option" data-vote="'+o.id+'"><span class="letter">'+String.fromCharCode(65+i)+'</span><span>'+esc(o.label)+'</span></button>').join("")+'</div>';
  else if(vote)body='<div class="pill">'+(state.phase==="closed"?"투표 마감":"제출 완료")+'</div><div class="question">투표가 제출됐어요!</div><div class="card"><b>'+esc(me.name)+'</b><p>'+esc(choiceLabel(vote.choice))+'</p><span class="small">제출 시각: '+stamp(vote.at)+'</span></div><p class="muted">선생님 화면에서 응답 현황을 확인하고 있어요.</p>';
  else body='<div class="pill">투표 마감</div><div class="question">투표가 마감됐어요.</div><p class="muted">참여해 줘서 고마워요!</p>';
- app.innerHTML='<section class="stage"><div class="row"><span class="pill">🗳️ 시장 가격 결정 투표</span><span class="pill">방 '+esc(code)+'</span></div><div class="emoji">🌶️</div><div class="title">안녕, '+esc(me.name)+'!</div>'+body+'</section>';
+ app.innerHTML='<section class="stage"><div class="row"><span class="pill">🗳️ 시장 가격 결정 투표</span><span class="pill">방 '+esc(code)+'</span></div><div class="emoji">🗳️</div><div class="title">안녕, '+esc(me.name)+'!</div>'+body+'</section>';
  app.querySelectorAll("[data-vote]").forEach(b=>b.onclick=()=>submitVote(b.dataset.vote,b));
 }
 async function submitVote(choice,button){
@@ -118,7 +118,7 @@ function teacherRender(){
  const phase=state.phase==="open"?"투표 진행 중":state.phase==="closed"?"투표 마감":"시작 전";
  const bars=counts.map((o,i)=>'<div class="barrow"><div class="barhead"><span>'+String.fromCharCode(65+i)+'. '+esc(o.label)+'</span><b>'+o.n+'표</b></div><div class="bar"><i style="width:'+(voted?o.n/voted*100:0)+'%"></i></div></div>').join("");
  const table=ids.length?'<div class="tablewrap"><table><thead><tr><th>학생</th><th>제출</th><th>응답</th><th>제출 시각</th><th>점수</th></tr></thead><tbody>'+ids.sort((a,b)=>(players[a].joinedAt||0)-(players[b].joinedAt||0)).map(id=>{const v=votes[id],p=players[id];return'<tr><td>'+esc(p.name||"")+'</td><td>'+(v?"✅ 제출":"미제출")+'</td><td>'+esc(v?choiceLabel(v.choice):"-")+'</td><td>'+esc(v?stamp(v.at):"-")+'</td><td>'+(v?1:0)+'</td></tr>';}).join("")+'</tbody></table></div>':'<p class="muted">아직 참여한 학생이 없어요. 학생들이 기존 QR로 들어오면 여기에 표시돼요.</p>';
- app.innerHTML='<section class="stage"><div class="row"><span class="pill">🗳️ 시장 가격 결정 투표</span><span class="pill">방 '+esc(code)+'</span></div><div class="emoji">🌶️</div><div class="title">'+QUESTION+'</div><div class="muted">학생들의 생각을 먼저 모으고, 떡볶이 시장 게임 뒤에 다시 이야기해요.</div><div class="stats"><div class="stat"><b>'+ids.length+'</b><span>참여 학생</span></div><div class="stat"><b>'+voted+'</b><span>제출 완료</span></div><div class="stat"><b>'+waiting+'</b><span>미제출</span></div></div><div class="row"><span class="pill">상태: '+phase+'</span><span class="pill">1인 1회 · 제출 1점 / 미제출 0점</span></div><div class="card"><h3>실시간 투표 결과</h3>'+bars+'</div><div class="card"><div class="row"><h3>학생별 제출 현황</h3><button class="btn lemon" id="csv">엑셀용 CSV 저장 ⬇️</button></div>'+table+'</div><div class="card"><div class="row"><button class="btn mint" id="start" '+(state.phase!=="waiting"?"disabled":"")+'>투표 시작</button><button class="btn peach" id="close" '+(state.phase!=="open"?"disabled":"")+'>투표 마감</button><a class="btn sky" href="hub.html?t=1">허브로 돌아가기</a></div><p class="small">투표를 마감한 뒤 허브에서 떡볶이 시장을 열면 학생 화면도 게임으로 이동해요.</p></div></section>';
+ app.innerHTML='<section class="stage"><div class="row"><span class="pill">🗳️ 시장 가격 결정 투표</span><span class="pill">방 '+esc(code)+'</span></div><div class="emoji">🗳️</div><div class="title">'+QUESTION+'</div><div class="muted">학생들의 생각을 먼저 모으고, 떡볶이 시장 게임 뒤에 다시 이야기해요.</div><div class="stats"><div class="stat"><b>'+ids.length+'</b><span>참여 학생</span></div><div class="stat"><b>'+voted+'</b><span>제출 완료</span></div><div class="stat"><b>'+waiting+'</b><span>미제출</span></div></div><div class="row"><span class="pill">상태: '+phase+'</span><span class="pill">1인 1회 · 제출 1점 / 미제출 0점</span></div><div class="card"><h3>실시간 투표 결과</h3>'+bars+'</div><div class="card"><div class="row"><h3>학생별 제출 현황</h3><button class="btn lemon" id="csv">엑셀용 CSV 저장 ⬇️</button></div>'+table+'</div><div class="card"><div class="row"><button class="btn mint" id="start" '+(state.phase!=="waiting"?"disabled":"")+'>투표 시작</button><button class="btn peach" id="close" '+(state.phase!=="open"?"disabled":"")+'>투표 마감</button><a class="btn sky" href="hub.html?t=1">허브로 돌아가기</a></div><p class="small">투표를 마감한 뒤 허브에서 떡볶이 시장을 열면 학생 화면도 게임으로 이동해요.</p></div></section>';
  document.getElementById("csv").onclick=downloadCsv;
  document.getElementById("start").onclick=()=>update(R("state"),{phase:"open",openedAt:Date.now()});
  document.getElementById("close").onclick=()=>update(R("state"),{phase:"closed",closedAt:Date.now()});
