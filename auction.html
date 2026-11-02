@@ -249,7 +249,7 @@ const now = () => Date.now() + offset;   // 모든 기기가 같은 시계를 �
    prices: 부를 가격 (싼 가격부터 올라가요) / supply: 파는 개수 (0이면 공급선 없음) / predict: 🔮 예언하기 */
 const DEFAULT_ITEMS = [
   { emoji: '🍫', name: '선생님 책상 위 에너지바', pitch: '선생님이 아껴 먹던 바로 그 에너지바! 단 1개!', prices: [500, 1000, 2000, 3000, 5000, 10000], supply: 1, predict: false },
-  { emoji: '📄', name: '기말고사 사회 시험지', pitch: '따끈따끈 인쇄 직후! 단 5명에게만 판매!', prices: [1000, 5000, 10000, 50000, 100000, 1000000, 10000000, 100000000], supply: 5, predict: true },
+  { emoji: '📄', name: '기말고사 사회 시험지', pitch: '따끈따끈 인쇄 직후! 단 5명에게만 판매!', prices: [1000, 5000, 10000, 30000, 50000, 100000], supply: 5, predict: true },
 ];
 const SECS = [3, 5, 7, 10];
 const COLORS = ['#3B8FD9', '#E8803E', '#2FA67A', '#B44FC9', '#D94F6A'];
@@ -331,7 +331,7 @@ const KD = { curve: '수요 곡선', d: '수요', who: '수요자', qty: '수요
 const KS = { curve: '공급 곡선', d: '공급', who: '공급자', qty: '공급량', verb: '팔', verbs: '팔겠다는', want: '팔려는', other: '사는', otherN: '사는 개수', arrow: '↗️', btn: '🏷️ 팔래!', no: '🙅 안 팔래', law: '공급 법칙', icon: '🏭', title: '다연샘 판매소', logo: '🏷️' };
 const KW = () => SUP() ? KS : KD;
 const DEFAULT_ITEMS_S = [
-  { emoji: '🍡', name: '과일모찌 장수', pitch: '여러분은 과일모찌 장수예요! 얼마에 팔면 좋을까요?', cost: 2000, prices: [1000, 2000, 3000, 4000, 5000, 7000, 10000], supply: 5, predict: true },
+  { emoji: '🍡', name: '과일모찌 장수', pitch: '여러분은 과일모찌 장수예요! 얼마에 팔면 좋을까요?', cost: 2000, prices: [1000, 2000, 3000, 4000, 5000, 6000], supply: 5, predict: true },
 ];
 
 /* ========== 공통 계산 ========== */
@@ -490,7 +490,7 @@ async function newRoom(kind = 'D') {
   try {
     let c;
     for (let i = 0; i < 20; i++) { c = String(Math.floor(1000 + Math.random() * 9000)); if (!(await get(A(c))).exists()) break; }
-    const lk = kind === 'S' ? 'auction_last_items_S_v2' : 'auction_last_items';
+    const lk = kind === 'S' ? 'auction_last_items_S_v3' : 'auction_last_items_D_v2';
     let items = kind === 'S' ? DEFAULT_ITEMS_S : DEFAULT_ITEMS;
     try { const last = JSON.parse(localStorage.getItem(lk) || 'null'); if (Array.isArray(last) && last.length) items = last; } catch (e) {}
     await set(A(c), { createdAt: Date.now(), kind, items, state: { phase: 'setup', item: 0, li: -1, sub: '', sold: null, sec: 5, showNames: true } });
@@ -548,7 +548,7 @@ function topbar(st) {
 function renderTeacher() {
   const st = room.state || {}, items = itemsOf(), i = st.item || 0, it = items[i] || items[0], prices = it.prices, L = prices.length;
   if (st.phase === 'setup' && document.activeElement && document.activeElement.closest && document.activeElement.closest('.iedit')) return;
-  const ans = ansOf(i), preds = ((room.preds || {})[i]) || {}, N = nOf(i), S = it.supply;
+  const ans = ansOf(i), preds = ((room.preds || {})[i]) || {}, N = nOf(i), S = SUP() && !['bid', 'bidres'].includes(st.phase) ? 0 : it.supply;
   const sig = [st.phase, i, st.li, st.sub, st.sold, st.showNames, st.sec, st.phase === 'final' ? JSON.stringify([st.fin, st.frev, st.cv, room.fq, Object.keys(room.players || {}).length]) : ''].join('|');
   if (['auction', 'result', 'final', 'item'].includes(st.phase) && sig === render.sig) return;
   render.sig = sig;
@@ -563,10 +563,10 @@ function renderTeacher() {
         <div class="edit-row one"><label>💰 부를 가격 (싼 것부터 올라가요, 쉼표로)<input data-k="${k}" data-f="prices" value="${esc(listText(x.prices))}"></label></div>
         <div class="muted" style="font-size:15px;margin:0 0 6px">${x.prices.map(kw).join(' → ')}</div>
         <div style="display:flex;gap:18px;flex-wrap:wrap;align-items:center;font-size:18px">
-          <label class="sup">📦 ${SUP() ? '선생님이 살 개수' : '파는 개수'} <input data-k="${k}" data-f="supply" type="number" min="0" max="99" value="${x.supply}" style="width:70px"></label>
+          <label class="sup">📦 ${SUP() ? '최저가 입찰에서 살 개수 (입찰 때 공개)' : '파는 개수'} <input data-k="${k}" data-f="supply" type="number" min="0" max="99" value="${x.supply}" style="width:70px"></label>
           <label class="sup"><input data-k="${k}" data-f="predict" type="checkbox" ${x.predict ? 'checked' : ''} style="width:22px;height:22px"> 🔮 경매 전에 예언하기</label></div>
       </div>`).join('')}
-      <div class="muted" style="font-size:15px;margin-top:8px">가격은 "1천, 5천, 1만, 10만, 100만, 1억"처럼 써요 · ${SUP() ? '살 개수가 0이면 공급 곡선만' : '파는 개수가 0이면 공급선 없이 수요 곡선만'} 그려요</div>
+      <div class="muted" style="font-size:15px;margin-top:8px">가격은 "1천, 5천, 1만, 10만, 100만, 1억"처럼 써요 · ${SUP() ? '공급 곡선은 각 가격에서 팔겠다는 학생 수로 그려요. 구매 개수는 최저가 입찰에서만 사용해요' : '파는 개수가 0이면 공급선 없이 수요 곡선만 그려요'}</div>
       ${items.length < 5 ? '<button class="btn sm lemon" id="addItem">➕ 상품 추가</button>' : ''}
       <div style="margin-top:12px;font-size:20px">⏱ 가격마다 고르는 시간 ${SECS.map(s => `<button class="btn sm ${s === (st.sec || 5) ? 'mint' : 'sky'}" data-sec="${s}">${s}초</button>`).join('')}</div>
     </div>
@@ -655,7 +655,7 @@ function renderTeacher() {
         <div class="card"><h3>📢 가격 올리기 결과</h3>${line ? `<div class="hl mint">${line}</div>` : ''}<div class="hl lemon">🤔 가격이 올라갈수록 ${KW().want} 사람은?</div></div>
         ${it.predict ? `<div class="card"><h3>🔮 예언왕 TOP 3</h3>${top.map(([id, a], k) => `<div class="rule">${['🥇','🥈','🥉'][k]} ${esc(nameOf(id))} <b style="color:var(--peachD)">${a}%</b></div>`).join('') || '<p class="muted">예언한 친구가 없어요</p>'}
           <div class="muted" style="font-size:18px;margin-top:8px">반 평균 정확도 ${avgAcc}%</div></div>`
-          : `<div class="card"><h3>🧐 생각해 볼 질문</h3><div class="q"><p>${KW().want} 사람이 ${KW().otherN}보다 <b>많을 때</b>와 <b>적을 때</b>, 각각 어떤 일이 생겼나요?</p></div></div>`}
+          : `<div class="card"><h3>🧐 생각해 볼 질문</h3><div class="q"><p>${SUP() ? '1,000원에 팔겠다는 친구가 0명일 수도 있어요. 가격이 오르자 팔겠다는 친구 수는 어떻게 변했나요?' : `${KW().want} 사람이 ${KW().otherN}보다 <b>많을 때</b>와 <b>적을 때</b>, 각각 어떤 일이 생겼나요?`}</p></div></div>`}
       </div>
       <div class="center"><button class="btn big peach" id="toBid">🔥 이제 진짜 경매! ${SUP() ? '최저가 부르기' : '최고가 부르기'}</button></div>
       <div class="center">${i + 1 < items.length ? `<button class="btn sky" id="next">🎁 다음 상품 공개</button>` : ''}<button class="btn sky" id="final">🏁 결과 모아 보기</button></div>`;
@@ -665,7 +665,7 @@ function renderTeacher() {
     maybeAnnounce('bid' + i, () => announce(SUP() ? '🔥 최저가 부르기!!' : '🔥 최고가 부르기!!', SUP() ? '몰래 딱 한 번! 제일 싸게 부르면 낙찰 💸' : '몰래 딱 한 번! 제일 높게 부르면 낙찰 💸', '🔥', 3200));
     body = `<div class="stage" style="gap:12px">
       <span class="roundBadge">🔥 ${SUP() ? '최저가' : '최고가'} 부르기 · ${esc(it.emoji)} ${esc(it.name)}</span>
-      <div class="speech" style="font-size:34px">태블릿에 <b>${SUP() ? '받을 금액' : '낼 금액'}</b>을 몰래 <b>딱 한 번</b> 적어요!<br>${SUP() ? '낮게' : '높게'} 부른 순서대로 <b>${Math.max(1, S)}명</b> 낙찰 🔨</div>
+      <div class="speech" style="font-size:34px">${SUP() ? `<b>이제 최저가 입찰 게임!</b><br>선생님은 과일모찌를 <b>딱 ${Math.max(1, S)}개만</b> 살게요.<br>얼마를 받으면 팔지 한 번만 적어요. 낮은 가격을 부른 장수부터 <b>${Math.max(1, S)}명</b> 낙찰해요!` : `태블릿에 <b>낼 금액</b>을 몰래 <b>딱 한 번</b> 적어요!<br>높게 부른 순서대로 <b>${Math.max(1, S)}명</b> 낙찰 🔨`}</div>
       <div class="hl red" style="font-size:26px">⚠️ 낙찰받고 <b>취소</b>하면 부른 금액의 <b>10% 위약금!</b> 장난 금액 금지 😱</div>
       <div class="cd" id="bcd">${st.bidSec || 30}</div>
       <div class="rule">입찰 <b style="color:var(--peachD)">${n}</b> / ${N}명</div>
@@ -687,21 +687,21 @@ function renderTeacher() {
         <button class="btn big ${i + 1 < items.length ? 'lemon' : 'mint'}" id="final">🏁 결과 모아 보기</button></div>`;
   }
   else if (st.phase === 'final') {
-    maybeAnnounce('final', () => { Snd.fanfare(); announce(SUP() ? '판매 끝~!!' : '경매 끝~!!', '상품마다 곡선을 비교해 볼까? 🧐', '🏁', 3000); });
+    maybeAnnounce('final', () => { Snd.fanfare(); announce(SUP() ? '판매 끝~!!' : '경매 끝~!!', '우리 반이 만든 곡선을 살펴볼까? 🧐', '🏁', 3000); });
     const done = items.map((it2, k) => ({ it: it2, k })).filter(o => Object.keys(ansOf(o.k)).length);
     const minis = done.map((o, c) => { const NN = nOf(o.k), upto = Math.max(0, ((((room.meta || {})[o.k]) || {}).upto) ?? o.it.prices.length - 1), { g, x, y } = axes(o.it.prices, NN, upto);
-      return `<div class="card svgbox"><h3>${esc(o.it.emoji)} ${esc(o.it.name)}${o.it.supply ? ` · ${SUP() ? '🛒' : '📦'} ${o.it.supply}개` : ''}</h3><svg viewBox="0 0 ${W} ${H}" font-family="Jua">${g}<path d="${stairPath(ansOf(o.k), x, y, upto)}" fill="none" stroke="${COLORS[c]}" stroke-width="6" stroke-linejoin="round"/>${o.it.supply ? `<line x1="${x(Math.min(o.it.supply, NN))}" x2="${x(Math.min(o.it.supply, NN))}" y1="${MT}" y2="${H - MB}" stroke="#3B8FD9" stroke-width="4" stroke-dasharray="12 7"/>` : ''}</svg></div>`; }).join('');
+      return `<div class="card svgbox"><h3>${esc(o.it.emoji)} ${esc(o.it.name)}${!SUP() && o.it.supply ? ` · 📦 ${o.it.supply}개` : ''}</h3><svg viewBox="0 0 ${W} ${H}" font-family="Jua">${g}<path d="${stairPath(ansOf(o.k), x, y, upto)}" fill="none" stroke="${COLORS[c]}" stroke-width="6" stroke-linejoin="round"/>${!SUP() && o.it.supply ? `<line x1="${x(Math.min(o.it.supply, NN))}" x2="${x(Math.min(o.it.supply, NN))}" y1="${MT}" y2="${H - MB}" stroke="#3B8FD9" stroke-width="4" stroke-dasharray="12 7"/>` : ''}</svg></div>`; }).join('');
     const accAll = {};
     done.forEach(o => Object.entries(((room.acc || {})[o.k]) || {}).forEach(([id, a]) => { if (a !== null) (accAll[id] = accAll[id] || []).push(a); }));
     // 📊 기록: 이름 · 예측 정확도 평균 · 최고가 부르기 결과
     const bidTxt = id => items.map((it2, k) => { const sb = ((room.sbids || {})[k] || {})[id]; if (!sb) return ''; const { winners } = bidWinners(k, it2.supply); const can = ((room.cancel || {})[k] || {})[id];
       return `${it2.name} ${(+sb.v || 0).toLocaleString()}원${can ? ' (낙찰 취소·위약금 ' + fine(+sb.v || 0).toLocaleString() + '원)' : winners.some(w => w.pid === id) ? ' 낙찰' : ''}`; }).filter(Boolean).join(' / ');
     const fqv = (k, id) => (((room.fq || {})[k]) || {})[id];
-    hubLog(SUP() ? 'auctionS' : 'auction', code, ['이름', '예측 정확도 평균(%)', '최고가 부르기', '확인 질문(처음에 맞힘)', '질문1·2 정답', '질문3 이유', `${KW().curve} 그리기`, `${KW().law} 정리`], Object.keys(room.players || {}).map(id => {
-      const ck = fqv('check', id) || {}, q1 = fqv('q1', id), q2 = fqv('q2', id), q3 = fqv('q3', id), dr = fqv('draw', id);
+    hubLog(SUP() ? 'auctionS' : 'auction', code, ['이름', '예측 정확도 평균(%)', '최고가 부르기', '확인 질문(처음에 맞힘)', '질문1·2 정답', `${KW().curve} 그리기`, `${KW().law} 정리`], Object.keys(room.players || {}).map(id => {
+      const ck = fqv('check', id) || {}, q1 = fqv('q1', id), q2 = fqv('q2', id), dr = fqv('draw', id);
       return [nameOf(id), accAll[id] ? Math.round(accAll[id].reduce((s, v) => s + v, 0) / accAll[id].length) : '', bidTxt(id),
         `${CHECK.filter((q, c) => (ck[c] || {}).ok).length}/${CHECK.length}`, `${(q1 && q1.a === Q1.a ? 1 : 0) + (q2 && q2.a === Q2A.a ? 1 : 0) + (q2 && q2.b === Q2B.a ? 1 : 0)}/3`,
-        q3 ? `${(items[q3.it] || {}).name || ''}: ${q3.why || ''}` : '', dr ? (dr.ok ? `완성 (${dr.tries || 1}번 만에)` : `도전 중 (${dr.tries || 0}번)`) : '', (() => { const lw = fqv('law', id); return lw ? `${(lw.a === LAW1.a ? 1 : 0) + (lw.b === LAW2.a ? 1 : 0)}/2` : ''; })()];
+        dr ? (dr.ok ? `완성 (${dr.tries || 1}번 만에)` : `도전 중 (${dr.tries || 0}번)`) : '', (() => { const lw = fqv('law', id); return lw ? `${(lw.a === LAW1.a ? 1 : 0) + (lw.b === LAW2.a ? 1 : 0)}/2` : ''; })()];
     }));
     const kings = Object.entries(accAll).map(([id, a]) => [id, a.reduce((s, v) => s + v, 0) / a.length]).sort((a, b) => b[1] - a[1]).slice(0, 3);
     body = teacherFinal(st, items, done, minis, kings);
@@ -730,7 +730,7 @@ function wireTeacher(st, items, i, it) {
         else next[k][fl] = f.value;
       });
       set(AP('items'), next);
-      try { localStorage.setItem(SUP() ? 'auction_last_items_S_v2' : 'auction_last_items', JSON.stringify(next)); } catch (e) {}
+      try { localStorage.setItem(SUP() ? 'auction_last_items_S_v3' : 'auction_last_items_D_v2', JSON.stringify(next)); } catch (e) {}
     };
     document.querySelectorAll('.iedit input').forEach(inp => {
       if (inp.type === 'checkbox') { inp.onchange = () => { inp.blur(); save(); }; return; }
@@ -809,13 +809,13 @@ async function finishItem() {
    🧒 학생 화면
    ========================================================= */
 function renderStudent() {
-  const st = room.state || {}, items = itemsOf(), i = st.item || 0, it = items[i] || items[0], prices = it.prices, S = it.supply;
+  const st = room.state || {}, items = itemsOf(), i = st.item || 0, it = items[i] || items[0], prices = it.prices, S = SUP() && !['bid', 'bidres'].includes(st.phase) ? 0 : it.supply;
   const me = (room.players || {})[pid];
   if (!me) { localStorage.removeItem('auction_pid_' + code); return studentForm(code); }
   const my = ansOf(i)[pid], pred = (((room.preds || {})[i]) || {})[pid], myBid = (((room.sbids || {})[i]) || {})[pid];
   const top = `<div class="s-top"><span class="me">🙂 ${esc(me.name)}</span><span class="pill">${KW().logo} ${SUP() ? '판매소' : '경매소'} ${esc(code)}</span></div>`;
   const bsig = st.phase === 'bidres' ? JSON.stringify([room.cancel && room.cancel[i], room.confirm && room.confirm[i], room.sbids && room.sbids[i] && Object.keys(room.sbids[i]).length]) : '';
-  const fsig = st.phase === 'final' ? JSON.stringify([st.fin, st.frev, st.cv, ['check', 'q1', 'q2', 'q3', 'draw', 'law'].map(k => fqOf(k)[pid])]) : '';
+  const fsig = st.phase === 'final' ? JSON.stringify([st.fin, st.frev, st.cv, ['check', 'q1', 'q2', 'draw', 'law'].map(k => fqOf(k)[pid])]) : '';
   const sig = [st.phase, i, st.li, st.sub, my ? `${my.last}/${my.quit}/${my.from}/${my.no}` : '-', !!pred, myBid ? myBid.v : '-', bsig, fsig].join('|');
   if (sig === renderStudent.sig) return;
   renderStudent.sig = sig;
@@ -977,10 +977,10 @@ let CHECK = [
 ];
 let Q1 = { q: '어느 상품이든 <b>가격이 올라갈수록</b><br>사겠다는 사람 수는 어떻게 변했나요?', o: [['down', '📉 줄어들었다'], ['up', '📈 늘어났다'], ['same', '➖ 그대로였다']], a: 'down',
   after: '<div class="hl lav">📉 가격이 올라갈수록 사겠다는 사람(수요량)이 <b>줄어들었어요!</b><br><span class="muted">곡선이 오른쪽 아래로 내려가죠? ↘️</span></div>' };
-let Q2A = { q: '사려는 사람이 파는 개수보다 <b>많을 때</b>는?', o: [['up', '⬆️ 경쟁이 붙어 가격이 올라갔다'], ['left', '📦 물건이 남았다'], ['down', '⬇️ 가격이 내려갔다']], a: 'up',
-  after: '<div class="hl red">사려는 양 &gt; 파는 양 → 빈손이 생기고 가격이 올라가요<br>→ 이걸 <b>초과 수요</b>라고 해요</div>' };
-let Q2B = { q: '사려는 사람이 파는 개수보다 <b>적을 때</b>는?', o: [['left', '📦 물건이 남았다'], ['short', '😭 빈손인 사람이 생겼다'], ['up', '⬆️ 가격이 올라갔다']], a: 'left',
-  after: '<div class="hl sky">사려는 양 &lt; 파는 양 → 물건이 남아요 (가격을 내려야 팔려요)<br>→ 이걸 <b>초과 공급</b>이라고 해요</div>' };
+let Q2A = { q: '가격이 오르자 어떤 친구는 더 이상 에너지바를 사지 않겠다고 했어요.<br>이때 달라진 것은?', o: [['qty', '🔢 사려는 양(수요량)이 줄었다'], ['supply', '📦 상품을 파는 양이 늘었다'], ['same', '➖ 아무것도 달라지지 않았다']], a: 'qty',
+  after: '<div class="hl lav">같은 상품이라도 가격이 올라가면 사려는 양이 줄어들 수 있어요. 우리 반 수요 곡선에서 확인해요!</div>' };
+let Q2B = { q: '어떤 가격에 아무도 사겠다고 하지 않았다면, 그 가격의 <b>수요량</b>은?', o: [['zero', '0개'], ['one', '1개'], ['wrong', '그래프를 그릴 수 없다']], a: 'zero',
+  after: '<div class="hl sky">수요량이 <b>0개</b>여도 정상이에요. 실제 학생 응답으로 그린 그래프는 곧은 직선이 아니어도 괜찮아요!</div>' };
 let LAW1 = { q: '수요 곡선을 보고 답해요!<br><b>가격</b>과 <b>수요량</b>은 어떤 관계인가요?', o: [['opp', '↘️ 가격이 오르면 수요량은 줄어든다'], ['same', '↗️ 가격이 오르면 수요량도 늘어난다'], ['none', '➖ 가격과 수요량은 상관없다']], a: 'opp',
   after: '<div class="hl lav">가격 ⬆️ → 수요량 ⬇️ &nbsp;·&nbsp; 가격 ⬇️ → 수요량 ⬆️<br>가격과 수요량은 <b>반대 방향</b>으로 움직여요!</div>' };
 let LAW2 = { q: '가격이 오르면 수요량이 줄고, 가격이 내리면 수요량이 늘어나는 것.<br>이걸 무엇이라고 할까요?', o: [['law', '📜 수요 법칙'], ['sup', '🏭 공급 법칙'], ['dq', '🔢 수요량 법칙']], a: 'law',
@@ -995,7 +995,6 @@ let FIN = [
   { k: 'q1', name: '질문 1', kind: 'ask', Q: Q1, store: 'q1', key: 'a', title: '질문 1' },
   { k: 'q2a', name: '질문 2-①', kind: 'ask', Q: Q2A, store: 'q2', key: 'a', title: '질문 2-①' },
   { k: 'q2b', name: '질문 2-②', kind: 'ask', Q: Q2B, store: 'q2', key: 'b', title: '질문 2-②' },
-  { k: 'q3', name: '질문 3', kind: 'q3' },
   { k: 'draw', name: '✏️ 곡선 그리기', kind: 'draw' },
   { k: 'law1', name: '📜 정리 1', kind: 'ask', Q: LAW1, store: 'law', key: 'a', title: '수요 법칙 정리 ①', left: 'draw' },
   { k: 'law2', name: '📜 정리 2', kind: 'ask', Q: LAW2, store: 'law', key: 'b', title: '수요 법칙 정리 ②', left: 'draw' },
@@ -1040,15 +1039,15 @@ const FIN_S = {
   ],
   Q1: { q: '어느 상품이든 <b>가격이 올라갈수록</b><br>팔겠다는 사람 수는 어떻게 변했나요?', o: [['up', '📈 늘어났다'], ['down', '📉 줄어들었다'], ['same', '➖ 그대로였다']], a: 'up',
     after: '<div class="hl lav">📈 가격이 올라갈수록 팔겠다는 사람(공급량)이 <b>늘어났어요!</b><br><span class="muted">곡선이 오른쪽 위로 올라가죠? ↗️</span></div>' },
-  Q2A: { q: '팔려는 사람이 사는 개수보다 <b>많을 때</b>는?', o: [['left', '🙋 못 판 사람이 남았다'], ['up', '⬆️ 가격이 올라갔다'], ['short', '😭 사려는 사람이 못 샀다']], a: 'left',
-    after: '<div class="hl sky">팔려는 양 &gt; 사려는 양 → 못 판 게 남아요 (가격을 내려야 팔려요)<br>→ 이걸 <b>초과 공급</b>이라고 해요</div>' },
-  Q2B: { q: '팔려는 사람이 사는 개수보다 <b>적을 때</b>는?', o: [['up', '⬆️ 가격을 더 올려야 했다'], ['left', '🙋 못 판 사람이 남았다'], ['down', '⬇️ 가격이 내려갔다']], a: 'up',
-    after: '<div class="hl red">팔려는 양 &lt; 사려는 양 → 모자라서 가격이 올라가요<br>→ 이걸 <b>초과 수요</b>라고 해요</div>' },
+  Q2A: { q: '과일모찌 한 개를 만드는 데 2,000원이 들어요.<br><b>1,000원</b>에 팔면?', o: [['loss', '💸 1,000원 손해를 본다'], ['profit', '💰 1,000원 이익을 얻는다'], ['equal', '➖ 이익도 손해도 없다']], a: 'loss',
+    after: '<div class="hl peach">만드는 비용이 2,000원인데 판매가격이 1,000원이면 1,000원 손해예요. 그래서 이 가격에서 팔려는 사람이 0명일 수도 있어요!</div>' },
+  Q2B: { q: '1,000원에 팔겠다는 친구가 한 명도 없다면, 그 가격의 <b>공급량</b>은?', o: [['zero', '0개 · 그래프에 표시할 수 있다'], ['one', '1개 · 최소 한 명으로 계산한다'], ['wrong', '그래프를 그릴 수 없다']], a: 'zero',
+    after: '<div class="hl mint">공급량 <b>0개</b>도 올바른 데이터예요! 1,000원에 아무도 팔지 않아도 그 가격의 점은 0에서 시작해요. 실제 반응을 모아 그린 공급 곡선은 계단 모양이어도 괜찮아요.</div>' },
   LAW1: { q: '공급 곡선을 보고 답해요!<br><b>가격</b>과 <b>공급량</b>은 어떤 관계인가요?', o: [['same', '↗️ 가격이 오르면 공급량도 늘어난다'], ['opp', '↘️ 가격이 오르면 공급량은 줄어든다'], ['none', '➖ 가격과 공급량은 상관없다']], a: 'same',
     after: '<div class="hl lav">가격 ⬆️ → 공급량 ⬆️ &nbsp;·&nbsp; 가격 ⬇️ → 공급량 ⬇️<br>가격과 공급량은 <b>같은 방향</b>으로 움직여요!</div>' },
   LAW2: { q: '가격이 오르면 공급량이 늘고, 가격이 내리면 공급량이 줄어드는 것.<br>이걸 무엇이라고 할까요?', o: [['law', '📜 공급 법칙'], ['dem', '🛒 수요 법칙'], ['sq', '🔢 공급량 법칙']], a: 'law',
     after: '<div class="hl lemon" style="font-size:1.1em">📜 <b>공급 법칙</b><br>가격이 오르면 공급량은 증가하고, 가격이 내리면 공급량은 감소한다<br><span class="muted">→ 그래서 공급 곡선은 <b>오른쪽 위로 올라가는</b> 모양 ↗️</span></div>' },
-  DRAW: { emoji: '🍡', name: '과일모찌', prices: [1000, 2000, 3000, 4000, 5000], qty: [2, 4, 6, 8, 10], N: 12 },
+  DRAW: { emoji: '🍡', name: '과일모찌', prices: [1000, 2000, 3000, 4000, 5000], qty: [0, 1, 3, 6, 9], N: 12 },
   CONCEPT: ex => [
     ['🏭', '공급', '어떤 상품을 <b>팔려고 하는 욕구</b>', '= "이 가격이면 팔래!" 하는 마음'],
     ['🙋', '공급자', '상품을 <b>팔려고 하는 사람</b>', '= 오늘 "팔래요!"를 누른 우리 반 친구들'],
@@ -1062,7 +1061,6 @@ const buildFIN = () => [
   { k: 'q1', name: '질문 1', kind: 'ask', Q: Q1, store: 'q1', key: 'a', title: '질문 1' },
   { k: 'q2a', name: '질문 2-①', kind: 'ask', Q: Q2A, store: 'q2', key: 'a', title: '질문 2-①' },
   { k: 'q2b', name: '질문 2-②', kind: 'ask', Q: Q2B, store: 'q2', key: 'b', title: '질문 2-②' },
-  { k: 'q3', name: '질문 3', kind: 'q3' },
   { k: 'draw', name: '✏️ 곡선 그리기', kind: 'draw' },
   { k: 'law1', name: '📜 정리 1', kind: 'ask', Q: LAW1, store: 'law', key: 'a', title: `${KW().law} 정리 ①`, left: 'draw' },
   { k: 'law2', name: '📜 정리 2', kind: 'ask', Q: LAW2, store: 'law', key: 'b', title: `${KW().law} 정리 ②`, left: 'draw' },
@@ -1082,7 +1080,7 @@ setInterval(() => { if (!isTeacher || !room || (room.state || {}).phase !== 'fin
 function teacherFinal(st, items, done, minis, kings) {
   const f = Math.min(st.fin || 0, FIN.length - 1), S = FIN[f], rev = !!st.frev, ids = Object.keys(room.players || {}), ex = finExample();
   let pop = '', left = `<div class="finGraphs">${minis}</div>`, cnt = '';
-  if (S.kind === 'graphs') pop = `<div class="fqq big">🏁 우리 반이 만든 ${KW().curve}</div><div class="fqq">두 상품의 곡선을 같이 살펴봐요 🧐<br><span class="muted">가격(세로)이 올라갈수록 사람 수(가로)는?</span></div>
+  if (S.kind === 'graphs') pop = `<div class="fqq big">🏁 우리 반이 만든 ${KW().curve}</div><div class="fqq">${SUP() ? '우리 반의 과일모찌 공급 곡선을 살펴봐요 🧐' : '두 상품의 곡선을 같이 살펴봐요 🧐'}<br><span class="muted">가격(세로)이 올라갈수록 사람 수(가로)는?</span></div>
     ${kings.length ? `<div class="hl lemon">👑 오늘의 예언왕<br>${kings.map(([id, a], k) => `${['🥇', '🥈', '🥉'][k]} ${esc(nameOf(id))} <b>${a.toFixed(1)}%</b>`).join(' &nbsp; ')}</div>` : ''}`;
   if (S.kind === 'concept') {
     const cv = Math.max(1, st.cv || 0);
