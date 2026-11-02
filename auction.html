@@ -17,7 +17,7 @@
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;min-height:100%}
-body{font-family:'Jua',sans-serif;color:var(--ink);background:var(--bg);
+body{font-family:'Jua','Apple SD Gothic Neo','Malgun Gothic','Noto Sans KR',sans-serif;color:var(--ink);background:var(--bg);line-height:1.5;word-break:keep-all;overflow-wrap:break-word;line-break:strict;
   background-image:radial-gradient(#F6E3EA 1.4px,transparent 1.4px);background-size:22px 22px}
 button{font-family:inherit;color:inherit;cursor:pointer;border:none}
 .wrap{max-width:1440px;margin:0 auto;padding:18px 28px 24px}
@@ -220,6 +220,10 @@ body.supply .title span,body.supply .price-big{color:#2F8F6B}
 .ann .fl{animation:floaty 1.4s ease-in-out infinite alternate,spinEmo 2s linear infinite!important}
 @keyframes hueSpin{to{filter:hue-rotate(360deg)}}
 @keyframes spinEmo{to{transform:rotate(360deg)}}
+button,input,textarea,select{font-family:inherit}
+button,.btn,.speech,.rule,.title,.card{word-break:keep-all;overflow-wrap:break-word}
+.stage,.card,.finGrid,.finPop,.s-wrap{min-width:0}
+@media(max-width:700px){.price-big{font-size:clamp(44px,12vw,82px)}.speech{font-size:clamp(22px,6vw,34px);max-width:100%;padding:12px 14px}.title{font-size:clamp(28px,8vw,42px)}.btn{max-width:100%;white-space:normal}.finGrid{height:auto;min-height:0;display:block}.finPop{overflow:visible;min-height:300px}}
 </style>
 </head>
 <body>
@@ -227,7 +231,7 @@ body.supply .title span,body.supply .price-big{color:#2F8F6B}
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getDatabase, ref, set, get, update, onValue, onDisconnect } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import { getDatabase, ref, set, get, update, onValue, onDisconnect, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import { hubSeen, hubLog, hubFollow, getStudentName, saveStudentName } from './hub.js';
 
 /* 「시장에 가면」·「떡볶이 시장」과 같은 Firebase 프로젝트 (데이터는 rooms/auction_코드 에 저장) */
@@ -248,10 +252,11 @@ const now = () => Date.now() + offset;   // 모든 기기가 같은 시계를 �
 /* ========== 기본 경매 상품 (준비 화면에서 바꿀 수 있어요) ==========
    prices: 부를 가격 (싼 가격부터 올라가요) / supply: 파는 개수 (0이면 공급선 없음) / predict: 🔮 예언하기 */
 const DEFAULT_ITEMS = [
-  { emoji: '🍫', name: '선생님 책상 위 에너지바', pitch: '선생님이 아껴 먹던 바로 그 에너지바! 단 1개!', prices: [500, 1000, 2000, 3000, 5000, 10000], supply: 1, predict: false },
-  { emoji: '📄', name: '기말고사 사회 시험지', pitch: '따끈따끈 인쇄 직후! 단 5명에게만 판매!', prices: [1000, 5000, 10000, 30000, 50000, 100000], supply: 5, predict: true },
+  { emoji: '🍫', name: '선생님 책상 위 에너지바', pitch: '선생님이 아껴 먹던 바로 그 에너지바!', prices: [500, 1000, 2000, 3000, 5000, 10000], supply: 1, predict: false },
+  { emoji: '📄', name: '기말고사 사회 시험지', pitch: '가상의 사회 시험지! 여러분이라면 살까요?', prices: [1000, 5000, 10000, 30000, 50000, 100000], supply: 5, predict: true },
 ];
 const SECS = [3, 5, 7, 10];
+const CLASS_BUDGET = 100000; // 상품별 가상 예산, 학생당 한 개의 구매 의사
 const COLORS = ['#3B8FD9', '#E8803E', '#2FA67A', '#B44FC9', '#D94F6A'];
 
 const P = new URLSearchParams(location.search);
@@ -336,7 +341,7 @@ const DEFAULT_ITEMS_S = [
 
 /* ========== 공통 계산 ========== */
 const itemsOf = () => ((room && room.items) || (SUP() ? DEFAULT_ITEMS_S : DEFAULT_ITEMS)).map(x => {
-  const prices = Array.isArray(x.prices) && x.prices.length ? [...x.prices].map(Number).sort((a, b) => a - b) : [1000, 5000, 10000];
+  const prices = Array.isArray(x.prices) && x.prices.length ? [...new Set(x.prices.map(Number).filter(p => Number.isFinite(p) && p > 0))].sort((a, b) => a - b) : [1000, 5000, 10000];
   return { ...x, prices, supply: Math.max(0, Math.floor(+x.supply || 0)), cost: Math.max(0, Math.round(+x.cost || 0)), predict: !!x.predict };
 });
 // ans[상품][학생] = { last: ✋ 산다고 한 가장 비싼 가격 칸, quit: 안 산다고 한 칸 }  (0 = 가장 싼 가격)
@@ -548,7 +553,7 @@ function topbar(st) {
 function renderTeacher() {
   const st = room.state || {}, items = itemsOf(), i = st.item || 0, it = items[i] || items[0], prices = it.prices, L = prices.length;
   if (st.phase === 'setup' && document.activeElement && document.activeElement.closest && document.activeElement.closest('.iedit')) return;
-  const ans = ansOf(i), preds = ((room.preds || {})[i]) || {}, N = nOf(i), S = SUP() && !['bid', 'bidres'].includes(st.phase) ? 0 : it.supply;
+  const ans = ansOf(i), preds = ((room.preds || {})[i]) || {}, N = nOf(i), S = ['bid', 'bidres'].includes(st.phase) ? it.supply : 0;
   const sig = [st.phase, i, st.li, st.sub, st.sold, st.showNames, st.sec, st.phase === 'final' ? JSON.stringify([st.fin, st.frev, st.cv, room.fq, Object.keys(room.players || {}).length]) : ''].join('|');
   if (['auction', 'result', 'final', 'item'].includes(st.phase) && sig === render.sig) return;
   render.sig = sig;
@@ -590,7 +595,7 @@ function renderTeacher() {
       <div class="item-hero"><div class="ie">${esc(it.emoji)}</div><div class="in">${esc(it.name)}</div>${it.pitch ? `<div class="ip">${esc(it.pitch)}</div>` : ''}</div>
       ${it.cost > 0 ? `<div class="hl peach" style="margin:0">💸 1개 만드는 데 ${kw(it.cost)} 들어요</div>` : ''}
       ${S ? `<span class="hot" style="font-size:30px">${SUP() ? `🛒 선생님이 딱 ${S}개만 사요!` : `📦 단 ${S}개만 판매!`}</span>` : ''}
-      <div class="speech">가격을 <b>${kw(prices[0])}</b>부터 점점 올릴게요!<br>가격마다 <b>${st.sec || 5}초 안에</b> ${KW().verb}지 말지 골라요 ${SUP() ? '🏷️🙅' : '✋🙅'}</div>
+      <div class="speech">${SUP() ? `과일모찌는 <b>1인당 최대 1개</b> 팔 수 있고, 만드는 비용은 <b>${kw(it.cost)}</b>예요.` : `상품마다 가상 예산 <b>${kw(CLASS_BUDGET)}</b>을 새로 받고, <b>1인당 최대 1개</b> 살 수 있어요.`}<br>각 가격은 서로 <b>다른 상황</b>을 가정해요. 실제 구매나 판매는 아직 하지 않아요.<br><b>${kw(prices[0])}</b>부터 가격을 올리고 <b>${st.sec || 5}초 안에</b> 선택해요.</div>
       ${it.predict ? '<button class="btn big lav" id="toPredict">🔮 먼저 예언하기!</button>' : '<button class="btn big peach" id="toAuction">🔨 경매 시작!</button>'}
     </div>`;
   }
@@ -697,9 +702,12 @@ function renderTeacher() {
     const bidTxt = id => items.map((it2, k) => { const sb = ((room.sbids || {})[k] || {})[id]; if (!sb) return ''; const { winners } = bidWinners(k, it2.supply); const can = ((room.cancel || {})[k] || {})[id];
       return `${it2.name} ${(+sb.v || 0).toLocaleString()}원${can ? ' (낙찰 취소·위약금 ' + fine(+sb.v || 0).toLocaleString() + '원)' : winners.some(w => w.pid === id) ? ' 낙찰' : ''}`; }).filter(Boolean).join(' / ');
     const fqv = (k, id) => (((room.fq || {})[k]) || {})[id];
-    hubLog(SUP() ? 'auctionS' : 'auction', code, ['이름', '예측 정확도 평균(%)', '최고가 부르기', '확인 질문(처음에 맞힘)', '질문1·2 정답', `${KW().curve} 그리기`, `${KW().law} 정리`], Object.keys(room.players || {}).map(id => {
+    hubLog(SUP() ? 'auctionS' : 'auction', code, ['이름', '가격 선택 제출 여부', '마지막 가격 응답 시각', '참여 점수(1/0)', '예측 정확도 평균(%)', `${SUP() ? '최저가' : '최고가'} 부르기`, '확인 질문(처음에 맞힘)', '질문1·2 정답', `${KW().curve} 그리기`, `${KW().law} 정리`], Object.keys(room.players || {}).map(id => {
       const ck = fqv('check', id) || {}, q1 = fqv('q1', id), q2 = fqv('q2', id), dr = fqv('draw', id);
-      return [nameOf(id), accAll[id] ? Math.round(accAll[id].reduce((s, v) => s + v, 0) / accAll[id].length) : '', bidTxt(id),
+      const timestamps = items.map((_, j) => (ansOf(j)[id] || {}).at).filter(t => typeof t === 'number' && t > 0);
+      const submitted = items.some((_, j) => !!ansOf(j)[id]);
+      const submittedAt = timestamps.length ? new Date(Math.max(...timestamps)).toLocaleString('ko-KR', { hour12: false }) : '-';
+      return [nameOf(id), submitted ? '제출' : '미제출', submittedAt, submitted ? 1 : 0, accAll[id] ? Math.round(accAll[id].reduce((s, v) => s + v, 0) / accAll[id].length) : '', bidTxt(id),
         `${CHECK.filter((q, c) => (ck[c] || {}).ok).length}/${CHECK.length}`, `${(q1 && q1.a === Q1.a ? 1 : 0) + (q2 && q2.a === Q2A.a ? 1 : 0) + (q2 && q2.b === Q2B.a ? 1 : 0)}/3`,
         dr ? (dr.ok ? `완성 (${dr.tries || 1}번 만에)` : `도전 중 (${dr.tries || 0}번)`) : '', (() => { const lw = fqv('law', id); return lw ? `${(lw.a === LAW1.a ? 1 : 0) + (lw.b === LAW2.a ? 1 : 0)}/2` : ''; })()];
     }));
@@ -809,7 +817,7 @@ async function finishItem() {
    🧒 학생 화면
    ========================================================= */
 function renderStudent() {
-  const st = room.state || {}, items = itemsOf(), i = st.item || 0, it = items[i] || items[0], prices = it.prices, S = SUP() && !['bid', 'bidres'].includes(st.phase) ? 0 : it.supply;
+  const st = room.state || {}, items = itemsOf(), i = st.item || 0, it = items[i] || items[0], prices = it.prices, S = ['bid', 'bidres'].includes(st.phase) ? it.supply : 0;
   const me = (room.players || {})[pid];
   if (!me) { localStorage.removeItem('auction_pid_' + code); return studentForm(code); }
   const my = ansOf(i)[pid], pred = (((room.preds || {})[i]) || {})[pid], myBid = (((room.sbids || {})[i]) || {})[pid];
@@ -826,7 +834,7 @@ function renderStudent() {
     app.innerHTML = `<div class="s-wrap">${top}<div class="stage"><span class="roundBadge">${i + 1}번째 ${SUP() ? '판매' : '경매'} 상품</span>
       <div class="item-hero"><div class="ie">${esc(it.emoji)}</div><div class="in" style="font-size:30px">${esc(it.name)}</div>${it.pitch ? `<div class="ip">${esc(it.pitch)}</div>` : ''}</div>
       ${it.cost > 0 ? `<div class="hl peach" style="margin:0">💸 1개 만드는 데 ${kw(it.cost)} 들어요</div>` : ''}
-      ${S ? `<span class="hot" style="font-size:24px">${SUP() ? `🛒 ${S}개만 사요!` : `📦 단 ${S}개!`}</span>` : ''}<div class="rule">칠판을 보세요 👀</div></div></div>`;
+      ${S ? `<span class="hot" style="font-size:24px">${SUP() ? `🛒 ${S}개만 사요!` : `📦 단 ${S}개!`}</span>` : ''}<div class="rule">${SUP() ? `🍡 1인당 최대 1개 판매 · 제작비 ${kw(it.cost)}` : `🛒 상품마다 가상 예산 ${kw(CLASS_BUDGET)} · 1인당 최대 1개 구매`}<br>각 가격은 다른 상황이에요. 실제 거래는 아직 하지 않아요.</div></div></div>`;
     return;
   }
   if (st.phase === 'predict') {
@@ -844,13 +852,14 @@ function renderStudent() {
     const li = st.li ?? -1, p = li >= 0 ? prices[li] : null;
     if (li < 0) return wait('🔨', '곧 시작!', `${esc(it.emoji)} ${esc(it.name)}<br>가격을 점점 올릴게요`);
     if (SUP()) return studentSupplyAsk(st, i, it, prices, S, my, li, p, top);
-    const last = my ? (my.last ?? -1) : -1, eligible = li === 0 || last >= li - 1, out = !eligible;
+    const last = my ? (my.last ?? -1) : -1, eligible = li === 0 || last >= li - 1, noBudget = p > CLASS_BUDGET, out = !eligible || noBudget;
     const choice = my && my.last >= li ? 'buy' : (my && my.quit === li ? 'no' : null);
     if (st.sub === 'ask') {
       app.innerHTML = `<div class="s-wrap">${top}<div class="stage" style="gap:12px">
         <div class="muted" style="font-size:22px">${esc(it.emoji)} ${esc(it.name)}${S ? ` · ${SUP() ? '🛒' : '📦'} ${S}개` : ''}</div>
         <div class="price-big">${kw(p)}</div>
-        ${out ? `<div class="sit">🙅 탈락했어요<br><span style="font-size:22px">${last >= 0 ? `나는 ${kw(prices[last])}까지 사겠다고 했어요` : '이번 상품은 안 사기로 했어요'}</span></div>`
+        <div class="muted" style="font-size:17px">예산 ${kw(CLASS_BUDGET)} · 가격별 최대 1개</div>
+        ${out ? `<div class="sit">🙅 ${noBudget ? '가상 예산을 넘었어요' : '안 살래요'}<br><span style="font-size:22px">${noBudget ? `예산 ${kw(CLASS_BUDGET)}보다 비싸서 살 수 없어요` : last >= 0 ? `나는 ${kw(prices[last])}까지 사겠다고 했어요` : '이번 상품은 안 사기로 했어요'}</span></div>`
           : `<div class="rule">이 가격에도 살래? <b class="cdS" id="cdS"></b></div>
              <div style="display:flex;gap:14px;flex-wrap:wrap;justify-content:center">
                <button class="btn big ${choice === 'buy' ? 'mint' : 'sky'}" id="buy" style="font-size:40px;padding:24px 44px;${choice === 'buy' ? 'outline:5px solid var(--mintD)' : ''}">✋ 살래!</button>
@@ -858,8 +867,8 @@ function renderStudent() {
              <div class="muted" style="font-size:18px">${choice ? '시간 안에는 바꿔도 돼요' : '안 고르면 안 사는 걸로 쳐요!'}</div>`}
       </div></div>`;
       if (el('buy')) {
-        el('buy').onclick = () => { if (st.endsAt - now() <= 0) return; set(AP(`ans/${i}/${pid}`), { last: li, at: Date.now() }); };
-        el('nope').onclick = () => { if (st.endsAt - now() <= 0) return; set(AP(`ans/${i}/${pid}`), { last: li - 1, quit: li, at: Date.now() }); };
+        el('buy').onclick = () => { if (st.endsAt - now() <= 0) return; set(AP(`ans/${i}/${pid}`), { last: li, at: serverTimestamp() }); };
+        el('nope').onclick = () => { if (st.endsAt - now() <= 0) return; set(AP(`ans/${i}/${pid}`), { last: li - 1, quit: li, at: serverTimestamp() }); };
       }
       return;
     }
@@ -890,7 +899,7 @@ function renderStudent() {
     if (myBid) return wait('🔒', `${kw(myBid.v)} 입찰 완료!`, '딱 한 번이라 바꿀 수 없어요<br>칠판을 보세요 👀');
     app.innerHTML = `<div class="s-wrap">${top}<div class="stage" style="gap:12px">
       <span class="roundBadge">🔥 ${SUP() ? '최저가' : '최고가'} 부르기 · ${esc(it.emoji)} ${esc(it.name)}</span>
-      <div class="rule">${SUP() ? '얼마 받으면 팔래?' : '얼마 낼래?'} <b>몰래 딱 한 번!</b> <b class="cdS" id="bcdS"></b></div>
+      <div class="rule">${SUP() ? `얼마 받으면 팔래? (제작비 ${kw(it.cost)} 이상)` : `얼마 낼래? (가상 예산 ${kw(CLASS_BUDGET)} 이내)`} <b>몰래 딱 한 번!</b> <b class="cdS" id="bcdS"></b></div>
       <div style="display:flex;align-items:center;gap:8px;width:min(460px,100%)"><input class="field" id="bidIn" inputmode="numeric" placeholder="금액을 숫자로" style="font-size:34px;text-align:right"><span style="font-size:30px">원</span></div>
       <div class="hl red" id="fineBox" style="font-size:20px">⚠️ 낙찰받고 취소하면 10% 위약금!</div>
       <button class="btn big mint" id="sendBid">🔥 입찰하기</button></div></div>`;
@@ -898,10 +907,12 @@ function renderStudent() {
     inp.oninput = () => { const v = +inp.value.replace(/[^\d]/g, '') || 0; inp.value = v ? v.toLocaleString() : ''; el('fineBox').innerHTML = v ? `⚠️ 낙찰받고 취소하면 위약금 <b>${kw(fine(v))}</b>!` : '⚠️ 낙찰받고 취소하면 10% 위약금!'; };
     el('sendBid').onclick = () => {
       const v = +inp.value.replace(/[^\d]/g, '');
-      if (!inp.value.trim()) return toast('금액을 적어 주세요 ✍️');
+      if (!inp.value.trim() || !Number.isFinite(v) || v <= 0) return toast('0원보다 큰 금액을 적어 주세요 ✍️');
+      if (SUP() && it.cost > 0 && v < it.cost) return toast(`제작비 ${kw(it.cost)}보다 낮게 팔면 손해예요. 다시 적어 주세요.`);
+      if (!SUP() && v > CLASS_BUDGET) return toast(`가상 예산 ${kw(CLASS_BUDGET)}을 넘길 수 없어요.`);
       if (st.bidEnds - now() <= 0) return toast('시간이 끝났어요 ⏰');
       if (!confirm(`${kw(v)}으로 입찰할까요? 한 번만 낼 수 있어요!\n(낙찰받고 취소하면 위약금 ${kw(fine(v))})`)) return;
-      set(AP(`sbids/${i}/${pid}`), { v, at: Date.now() });
+      set(AP(`sbids/${i}/${pid}`), { v, at: serverTimestamp() });
     };
     return;
   }
@@ -939,6 +950,7 @@ function studentSupplyAsk(st, i, it, prices, S, my, li, p, top) {
       <div class="muted" style="font-size:22px">${esc(it.emoji)} ${esc(it.name)}${S ? ` · 🛒 ${S}개만 사요` : ''}</div>
       ${it.cost > 0 ? `<div class="muted" style="font-size:18px">💸 1개 만드는 데 ${kw(it.cost)} 들어요</div>` : ''}
       <div class="price-big">${kw(p)}</div>
+      <div class="muted" style="font-size:17px">최대 1개 판매 · 가격별로 다른 상황이에요</div>
       ${before ? `<div class="stand">🏷️ 이미 팔기로 했어요!<br><span style="font-size:22px">${kw(prices[my.from])}부터 팔겠다고 했어요 → 이 가격에도 팔아요</span></div>`
         : `<div class="rule">이 가격이면 팔래? <b class="cdS" id="cdS"></b></div>
            <div style="display:flex;gap:14px;flex-wrap:wrap;justify-content:center">
@@ -947,8 +959,8 @@ function studentSupplyAsk(st, i, it, prices, S, my, li, p, top) {
            <div class="muted" style="font-size:18px">${choice ? '시간 안에는 바꿔도 돼요' : '안 고르면 안 파는 걸로 쳐요!'}</div>`}
     </div></div>`;
     if (el('buy')) {
-      el('buy').onclick = () => { if (st.endsAt - now() <= 0) return; set(AP(`ans/${i}/${pid}`), { from: li, at: Date.now() }); };
-      el('nope').onclick = () => { if (st.endsAt - now() <= 0) return; set(AP(`ans/${i}/${pid}`), { no: li, at: Date.now() }); };
+      el('buy').onclick = () => { if (st.endsAt - now() <= 0) return; set(AP(`ans/${i}/${pid}`), { from: li, at: serverTimestamp() }); };
+      el('nope').onclick = () => { if (st.endsAt - now() <= 0) return; set(AP(`ans/${i}/${pid}`), { no: li, at: serverTimestamp() }); };
     }
     return;
   }
@@ -1026,7 +1038,7 @@ const barRows = (opts, vals, right, rev) => {
     return `<div class="frow ${ok ? 'ok' : rev ? 'dim' : ''}"><span>${ok ? '✅ ' : ''}${lab}</span><div class="fbar"><i style="width:${rev ? n / mx * 100 : 0}%"></i></div><b>${rev ? n + '명' : '?'}</b></div>`; }).join('');
 };
 let CONCEPT = ex => [
-  ['🛒', '수요', '어떤 상품을 <b>사려고 하는 욕구</b>', '= "이 가격이면 살래!" 하는 마음'],
+  ['🛒', '수요', '상품을 <b>사려는 의사와 구매할 능력</b>', '= 가상 예산 안에서 "이 가격이면 살래!" 하는 선택'],
   ['🙋', '수요자', '상품을 <b>사려고 하는 사람</b>', '= 오늘 "살래요!"를 누른 우리 반 친구들'],
   ['🔢', '수요량', '<b>어떤 가격에서</b> 사려고 하는 상품의 <b>양</b>', `${esc(ex.emoji)} ${kw(ex.p)}일 때 ${ex.n}명 → 수요량 <b>${ex.n}개</b> · ${kw(ex.p2)}일 때 ${ex.n2}명 → 수요량 <b>${ex.n2}개</b><br>가격이 바뀌면 수요량도 바뀌어요!`],
 ];
@@ -1049,7 +1061,7 @@ const FIN_S = {
     after: '<div class="hl lemon" style="font-size:1.1em">📜 <b>공급 법칙</b><br>가격이 오르면 공급량은 증가하고, 가격이 내리면 공급량은 감소한다<br><span class="muted">→ 그래서 공급 곡선은 <b>오른쪽 위로 올라가는</b> 모양 ↗️</span></div>' },
   DRAW: { emoji: '🍡', name: '과일모찌', prices: [1000, 2000, 3000, 4000, 5000], qty: [0, 1, 3, 6, 9], N: 12 },
   CONCEPT: ex => [
-    ['🏭', '공급', '어떤 상품을 <b>팔려고 하는 욕구</b>', '= "이 가격이면 팔래!" 하는 마음'],
+    ['🏭', '공급', '상품을 <b>팔려는 의사와 공급할 능력</b>', '= 과일모찌 1개를 만들어 "이 가격이면 팔래!" 하는 선택'],
     ['🙋', '공급자', '상품을 <b>팔려고 하는 사람</b>', '= 오늘 "팔래요!"를 누른 우리 반 친구들'],
     ['🔢', '공급량', '<b>어떤 가격에서</b> 팔려고 하는 상품의 <b>양</b>', `${esc(ex.emoji)} ${kw(ex.p)}일 때 ${ex.n}명 → 공급량 <b>${ex.n}개</b> · ${kw(ex.p2)}일 때 ${ex.n2}명 → 공급량 <b>${ex.n2}개</b><br>가격이 바뀌면 공급량도 바뀌어요!`],
   ],
@@ -1196,7 +1208,7 @@ function studentFinal(st, top) {
     shell(`<div class="ftag">${S.title}</div><div class="card fqS"><div class="fqq big">${S.Q.q}</div>${optBtns(S.Q.o, key, rev ? saved : sel, saved, rev, S.Q.a, rev)}</div>
       ${rev ? bigAns(S.Q.o, S.Q.a) + (saved === S.Q.a ? '<div class="good">🎯 맞혔어요!</div>' : '<div class="hint">😅 아쉬워요! 정답을 확인해요</div>') + S.Q.after
         : `${saved !== undefined && !changed ? '<div class="good" style="background:var(--sky)">✅ 냈어요! 바꾸고 싶으면 다시 골라 제출해요</div>' : ''}<button class="btn big mint" id="fSubmit" ${sel === undefined || !changed && saved !== undefined ? 'disabled' : ''}>📮 ${saved !== undefined ? '수정해서 제출' : '제출하기'}</button>`}`);
-    if (el('fSubmit')) el('fSubmit').onclick = () => { const v = fSel[key]; if (v === undefined) return; delete fSel[key]; update(AP(`fq/${S.store}/${pid}`), { [S.key]: v, at: Date.now() }); };
+    if (el('fSubmit')) el('fSubmit').onclick = () => { const v = fSel[key]; if (v === undefined) return; delete fSel[key]; update(AP(`fq/${S.store}/${pid}`), { [S.key]: v, at: serverTimestamp() }); };
   }
   else if (S.kind === 'q3') {
     const A = my('q3'), d = q3Data(), opts = d.top.map(o => [o.j, `${o.it.emoji} ${o.it.name}`]), right = d.win.length === 1 ? d.win[0] : '-';
@@ -1273,7 +1285,7 @@ function setupDots(prices, N, initPts, i, chk) {
       set(AP(`fq/draw/${pid}`), { pts, ok: !wrong.length, tries: chk.tries + 1, wrong }).then(() => toast(wrong.length ? `앗, ${wrong.length}개가 틀렸어요! 🤔` : '🎉 정답!'));
       return;
     }
-    set(AP(`preds/${i}/${pid}`), { pts: ks.sort((a, b) => a - b).map(lv => [dots[lv], lv]), at: Date.now() }).then(() => toast('🔮 예언 제출 완료!'));
+    set(AP(`preds/${i}/${pid}`), { pts: ks.sort((a, b) => a - b).map(lv => [dots[lv], lv]), at: serverTimestamp() }).then(() => toast('🔮 예언 제출 완료!'));
   };
   draw();
 }
