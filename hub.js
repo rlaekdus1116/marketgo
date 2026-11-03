@@ -92,10 +92,20 @@ export function hubSeen(app, room) {
   const key = `${app}|${room}`;
   if (seen === key) return;
   seen = key;
-  const send = () => update(H('current'), { app, room: String(room), at: Date.now() }).catch(() => {});
-  send();
-  if (seenTimer) clearInterval(seenTimer);
-  seenTimer = setInterval(send, 60 * 1000);
+  const send = async initial=>{
+    try{
+      if(!initial){
+        const current=(await get(H('current'))).val();
+        if(!current||current.app!==app||String(current.room)!==String(room)){
+          if(seenTimer){clearInterval(seenTimer);seenTimer=null;}return;
+        }
+      }
+      await update(H('current'),{app,room:String(room),at:Date.now()});
+    }catch(e){}
+  };
+  send(true);
+  if(seenTimer)clearInterval(seenTimer);
+  seenTimer=setInterval(()=>send(false),60*1000);
   monitorStudentPresence(app, room);
 }
 

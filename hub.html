@@ -418,7 +418,7 @@ async function downloadGrowthCSV(){
       for(const [i,records] of Object.entries(room.preds||{}))
         for(const [id,data] of Object.entries(records||{})){
           const p=find(names[id]?.name,stage);if(!p)continue;
-          const j=Number(i)+1;p[key+'Predict'+j]=(data.pts||[]).map(x=>x[0]).join(' / ');p[key+'Reason'+j]=data.reason||'';
+          const j=Number(i)+1;p[key+'Predict'+j]=(data.first?.pts||data.pts||[]).map(x=>x[0]).join(' / ');p[key+'Reason'+j]=data.first?.reason||data.reason||'';
         }
       for(const [i,records] of Object.entries(room.reflections||{}))
         for(const [id,data] of Object.entries(records||{})){

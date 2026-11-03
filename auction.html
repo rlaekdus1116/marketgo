@@ -231,7 +231,7 @@ button,.btn,.speech,.rule,.title,.card{word-break:keep-all;overflow-wrap:break-w
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getDatabase, ref, set, get, update, onValue, onDisconnect, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import { getDatabase, ref, set, get, update, onValue, onDisconnect, serverTimestamp, runTransaction } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import { hubSeen, hubLog, hubFollow, getStudentName, saveStudentName, patchHTML } from './hub.js';
 
 /* 「시장에 가면」·「떡볶이 시장」과 같은 Firebase 프로젝트 (데이터는 rooms/auction_코드 에 저장) */
@@ -701,7 +701,7 @@ function renderTeacher() {
       const submittedAt = timestamps.length ? new Date(Math.max(...timestamps)).toLocaleString('ko-KR', { hour12: false }) : '-';
       return [nameOf(id), submitted ? '제출' : '미제출', submittedAt, submitted ? 1 : 0, accAll[id] ? Math.round(accAll[id].reduce((s, v) => s + v, 0) / accAll[id].length) : '', bidTxt(id),
         `${CHECK.filter((q, c) => (ck[c] || {}).ok).length}/${CHECK.length}`, `${(q1 && q1.a === Q1.a ? 1 : 0) + (q2 && q2.a === Q2A.a ? 1 : 0) + (q2 && q2.b === Q2B.a ? 1 : 0)}/3`,
-        dr ? (dr.ok ? `완성 (${dr.tries || 1}번 만에)` : `도전 중 (${dr.tries || 0}번)`) : '', (() => { const lw = fqv('law', id); return lw ? `${(lw.a === LAW1.a ? 1 : 0) + (lw.b === LAW2.a ? 1 : 0)}/2` : ''; })(), items.map((_,j)=>(((room.preds||{})[j]||{})[id]||{}).reason||'').filter(Boolean).join(' / '), items.map((_,j)=>(((room.reflections||{})[j]||{})[id]||{}).text||'').filter(Boolean).join(' / ')];
+        dr ? (dr.ok ? `완성 (${dr.tries || 1}번 만에)` : `도전 중 (${dr.tries || 0}번)`) : '', (() => { const lw = fqv('law', id); return lw ? `${(lw.a === LAW1.a ? 1 : 0) + (lw.b === LAW2.a ? 1 : 0)}/2` : ''; })(), items.map((_,j)=>{const p=(((room.preds||{})[j]||{})[id]||{});return p.first?.reason||p.reason||'';}).filter(Boolean).join(' / '), items.map((_,j)=>(((room.reflections||{})[j]||{})[id]||{}).text||'').filter(Boolean).join(' / ')];
     }));
     const kings = Object.entries(accAll).map(([id, a]) => [id, a.reduce((s, v) => s + v, 0) / a.length]).sort((a, b) => b[1] - a[1]).slice(0, 3);
     body = teacherFinal(st, items, done, minis, kings);
@@ -1319,7 +1319,11 @@ function setupDots(prices, N, initPts, i, chk) {
     const reason=(el('predReason')?.value||'').trim();
     if(reason.length<5)return toast('예언한 이유를 한 문장으로 적어 주세요.');
     if((room.state||{}).predEnds && now() > room.state.predEnds)return toast('예언 시간이 끝났어요. 시간을 추가해 달라고 해 주세요.');
-    set(AP(`preds/${i}/${pid}`), { pts: ks.sort((a, b) => a - b).map(lv => [dots[lv], lv]), reason, at: serverTimestamp() }).then(() => toast('🔮 예언과 이유 제출 완료!'));
+    const pts=ks.sort((a,b)=>a-b).map(lv=>[dots[lv],lv]);
+    runTransaction(AP(`preds/${i}/${pid}`), old=>{
+      const first=old?.first||(old?.pts?{pts:old.pts,reason:old.reason||'',at:old.at||now()}:{pts,reason,at:now()});
+      return {...(old||{}),pts,reason,at:now(),first};
+    }).then(()=>toast('🔮 예언과 이유 제출 완료!')).catch(()=>toast('예언 저장 실패. 연결을 확인해 주세요.'));
   };
   draw();
 }
