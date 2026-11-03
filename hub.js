@@ -218,6 +218,8 @@ export function hubFollow(app, room) {
     a.href = `${target.file}?room=${encodeURIComponent(c.room)}${target.q || ''}`;
     a.textContent = `🚀 선생님이 '${target.title}'을(를) 열었어요 → 이동!`;
     document.body.appendChild(a);
-    expireTimer = setTimeout(() => a.remove(), Math.max(0, maxAge - age));
+    const go=setTimeout(()=>{if(document.body.contains(a))location.href=a.href;},3500);
+    a.addEventListener('click',()=>clearTimeout(go));
+    expireTimer = setTimeout(()=>{clearTimeout(go);a.remove();},Math.max(0,maxAge-age));
   });
 }

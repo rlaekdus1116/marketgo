@@ -268,17 +268,16 @@ function teacherHome() {
     ${saved ? `<button class="btn sky" id="resume">이어서 하기 (방 ${esc(saved)})</button>` : ''}
   </div></div>`;
   el('newRoom').onclick = newRoom;
+  if(P.get('auto')==='1')newRoom();
   if (el('resume')) el('resume').onclick = () => location.href = `?t=1&room=${saved}`;
 }
 
 async function newRoom() {
   try {
-    let c;
-    for (let i = 0; i < 20; i++) {
-      c = String(Math.floor(1000 + Math.random() * 9000));
-      if (!(await get(T(c))).exists()) break;
-    }
-    await set(T(c), { createdAt: Date.now(), state: { phase: 'lobby', round: 0, dur: DEFAULT_SEC } });
+    let c=localStorage.getItem('marketgo_lesson_room')||'';
+    if(!/^\d{4}$/.test(c)){for(let i=0;i<20;i++){c=String(Math.floor(1000+Math.random()*9000));if(!(await get(T(c))).exists())break;}}
+    if(!(await get(T(c))).exists())await set(T(c),{createdAt:Date.now(),state:{phase:'lobby',round:0,dur:DEFAULT_SEC}});
+    localStorage.setItem('marketgo_lesson_room',c);
     localStorage.setItem('trade_teacher_room', c);
     location.href = `?t=1&room=${c}`;
   } catch (e) {

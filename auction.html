@@ -266,8 +266,9 @@ let code = P.get('room') || '';
 const app = document.getElementById('app');
 const el = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const A = (c = code) => ref(db, 'rooms/auction_' + c);
-const AP = p => ref(db, `rooms/auction_${code}/${p}`);
+const auctionPrefix=()=>P.get('kind')==='S'?'auctionS':'auction';
+const A=(c=code)=>ref(db,'rooms/'+auctionPrefix()+'_'+c);
+const AP=p=>ref(db,`rooms/${auctionPrefix()}_${code}/${p}`);
 let toastT;
 const toast = msg => { document.querySelectorAll('.toast').forEach(t => t.remove()); const t = document.createElement('div'); t.className = 'toast pop'; t.textContent = msg; document.body.appendChild(t); clearTimeout(toastT); toastT = setTimeout(() => t.remove(), 2400); };
 
@@ -469,19 +470,23 @@ function teacherHome() {
   </div></div>`;
   if (el('newD')) el('newD').onclick = () => newRoom('D');
   if (el('newS')) el('newS').onclick = () => newRoom('S');
+  if(P.get('auto')==='1')newRoom(pre==='S'?'S':'D');
   if (el('resume')) el('resume').onclick = () => location.href = `?t=1&room=${saved}`;
 }
 
 async function newRoom(kind = 'D') {
   try {
-    let c;
-    for (let i = 0; i < 20; i++) { c = String(Math.floor(1000 + Math.random() * 9000)); if (!(await get(A(c))).exists()) break; }
+    const shared=localStorage.getItem('marketgo_lesson_room');
+    let c=shared&&/^\d{4}$/.test(shared)?shared:'';
+    if(!c){for(let i=0;i<20;i++){c=String(Math.floor(1000+Math.random()*9000));if(!(await get(A(c))).exists())break;}}
+    if((await get(A(c))).exists()){localStorage.setItem('auction_teacher_room',c);location.href='?t=1&room='+c+(kind==='S'?'&kind=S':'');return;}
     const lk = kind === 'S' ? 'auction_last_items_S_v4' : 'auction_last_items_D_v3';
     let items = kind === 'S' ? DEFAULT_ITEMS_S : DEFAULT_ITEMS;
     try { const last = JSON.parse(localStorage.getItem(lk) || 'null'); if (Array.isArray(last) && last.length) items = last; } catch (e) {}
     await set(A(c), { createdAt: Date.now(), kind, items, state: { phase: 'setup', item: 0, li: -1, sub: '', sold: null, sec: 5, showNames: true } });
     localStorage.setItem('auction_teacher_room', c);
-    location.href = `?t=1&room=${c}`;
+    localStorage.setItem('marketgo_lesson_room',c);
+    location.href = `?t=1&room=${c}${kind==='S'?'&kind=S':''}`;
   } catch (e) { console.error(e); toast('경매소를 못 열었어요 😢 인터넷을 확인해 주세요'); }
 }
 
@@ -511,7 +516,7 @@ async function join(c, name) {
     id = hit ? hit[0] : Math.random().toString(36).slice(2, 10);
     localStorage.setItem('auction_pid_' + c, id);
   }
-  await update(ref(db, `rooms/auction_${c}/players/${id}`), { name, joinedAt: Date.now() });
+  await update(ref(db, `rooms/${auctionPrefix()}_${c}/players/${id}`), { name, joinedAt: Date.now() });
   saveStudentName(name); localStorage.setItem('auction_name', name); localStorage.setItem('auction_last_room', c);
   location.href = `?room=${c}${P.get('kind') === 'S' ? '&kind=S' : ''}`;
 }
@@ -784,6 +789,7 @@ function wireTeacher(st, items, i, it) {
   }
   if (st.phase === 'bid') el('openBid').onclick = () => S({ phase: 'bidres' });
   if (st.phase === 'final') {
+    if(el('lessonNext'))el('lessonNext').onclick=()=>location.href=SUP()?'poll.html?t=1&auto=1':'auction.html?t=1&kind=S&auto=1';
     const f = st.fin || 0;
     if (el('finPrev')) el('finPrev').onclick = () => S({ fin: Math.max(0, f - 1), frev: false });
     if (el('finNext')) el('finNext').onclick = () => S({ fin: Math.min(FIN.length - 1, f + 1), frev: false });
@@ -1152,7 +1158,7 @@ function teacherFinal(st, items, done, minis, kings) {
     pop = `<div class="ftag">✏️ 곡선 그리기</div><div class="chips bigchips" id="drawChips">${drawChips()}</div>`;
   }
   const needRev = ['check', 'ask', 'q3', 'draw'].includes(S.kind);
-  return `<div class="finNav">${FIN.map((x, k) => `<button class="fdot ${k === f ? 'on' : k < f ? 'past' : ''}" data-fin="${k}" title="${esc(x.name)}"></button>`).join('')}<span class="fnow">${S.name}</span></div>
+  return `<div class="center"><button class="btn mint" id="lessonNext">${SUP()?"🗳️ 다음: 가격 결정 투표":"🍡 다음: 과일모찌 공급"}</button></div><div class="finNav">${FIN.map((x, k) => `<button class="fdot ${k === f ? 'on' : k < f ? 'past' : ''}" data-fin="${k}" title="${esc(x.name)}"></button>`).join('')}<span class="fnow">${S.name}</span></div>
     <div class="finGrid ${isDraw ? 'draw' : ''}">${left}
       <div class="card finPop pop">${cnt ? `<div class="fcnt">✍️ ${cnt}</div>` : ''}<div class="fbody">${pop}</div>
         <div class="center finBtns">${f > 0 ? '<button class="btn" id="finPrev">◀ 이전</button>' : ''}${needRev && !rev ? `<button class="btn lemon" id="finRev">✅ ${isDraw ? '정답 곡선 보기' : '정답 공개'}</button>` : ''}${f + 1 < FIN.length ? `<button class="btn mint" id="finNext">다음 ▶ ${FIN[f + 1].name}</button>` : ''}</div></div></div>`;
