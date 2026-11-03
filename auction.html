@@ -267,6 +267,8 @@ const app = document.getElementById('app');
 const el = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const auctionPrefix=()=>P.get('kind')==='S'?'auctionS':'auction';
+const auctionPidKey=c=>'auction_pid_'+auctionPrefix()+'_'+c;
+let autoJoining=false;
 const A=(c=code)=>ref(db,'rooms/'+auctionPrefix()+'_'+c);
 const AP=p=>ref(db,`rooms/${auctionPrefix()}_${code}/${p}`);
 let toastT;
@@ -431,7 +433,7 @@ function start() {
   if (isTeacher && !code) return teacherHome();
   if (!isTeacher) {
     if (!code) code = localStorage.getItem('auction_last_room') || '';
-    pid = code ? localStorage.getItem('auction_pid_' + code) : null;
+    pid = code ? (localStorage.getItem(auctionPidKey(code)) || (auctionPrefix()==='auction' ? localStorage.getItem('auction_pid_'+code) : null)) : null;
     if (!code) return studentForm(code);
     if (!pid) {
       const name = getStudentName();
@@ -509,12 +511,12 @@ async function join(c, name) {
   let snap;
   try { snap = await get(A(c)); } catch (e) { return toast('접속을 못 했어요 😢 인터넷을 확인해 주세요'); }
   if (!snap.exists()) return toast('그런 경매소가 없어요 😢 코드를 확인해 주세요');
-  let id = localStorage.getItem('auction_pid_' + c);
+  let id = localStorage.getItem(auctionPidKey(c)) || (auctionPrefix()==='auction' ? localStorage.getItem('auction_pid_'+c) : null);
   if (!id) {
     const ps = snap.val().players || {};
     const hit = Object.entries(ps).find(([, p]) => p.name === name && p.online !== true);   // 다른 기기로 다시 들어와도 이어서
     id = hit ? hit[0] : Math.random().toString(36).slice(2, 10);
-    localStorage.setItem('auction_pid_' + c, id);
+    localStorage.setItem(auctionPidKey(c), id);
   }
   await update(ref(db, `rooms/${auctionPrefix()}_${c}/players/${id}`), { name, joinedAt: Date.now() });
   saveStudentName(name); localStorage.setItem('auction_name', name); localStorage.setItem('auction_last_room', c);
@@ -554,7 +556,7 @@ function renderTeacher() {
         <div class="edit-row one"><label>💰 부를 가격 (싼 것부터 올라가요, 쉼표로)<input data-k="${k}" data-f="prices" value="${esc(listText(x.prices))}"></label></div>
         <div class="muted" style="font-size:15px;margin:0 0 6px">${x.prices.map(kw).join(' → ')}</div>
         <div style="display:flex;gap:18px;flex-wrap:wrap;align-items:center;font-size:18px">
-          <label class="sup">📦 ${SUP() ? '공급 조사: 입찰은 진행하지 않아요' : '파는 개수'} <input data-k="${k}" data-f="supply" type="number" min="0" max="99" value="${x.supply}" style="width:70px"></label>
+          ${SUP() ? '<span class="pill">🍡 학생 1명당 1개씩 공급</span>' : `<label class="sup">📦 파는 개수 <input data-k="${k}" data-f="supply" type="number" min="0" max="99" value="${x.supply}" style="width:70px"></label>`}
           <label class="sup"><input data-k="${k}" data-f="predict" type="checkbox" ${x.predict ? 'checked' : ''} style="width:22px;height:22px"> 🔮 경매 전에 예언하기</label></div>
       </div>`).join('')}
       <div class="muted" style="font-size:15px;margin-top:8px">가격은 "1천, 5천, 1만, 10만, 100만, 1억"처럼 써요 · ${SUP() ? '공급 곡선은 가격마다 팔겠다는 학생 수로 그려요. 경매는 진행하지 않아요' : '파는 개수가 0이면 공급선 없이 수요 곡선만 그려요'}</div>
@@ -839,7 +841,7 @@ async function finishItem() {
 function renderStudent() {
   const st = room.state || {}, items = itemsOf(), i = st.item || 0, it = items[i] || items[0], prices = it.prices, S = ['bid', 'bidres'].includes(st.phase) ? it.supply : 0;
   const me = (room.players || {})[pid];
-  if (!me) { localStorage.removeItem('auction_pid_' + code); return studentForm(code); }
+  if (!me) { localStorage.removeItem(auctionPidKey(code)); if(autoJoining)return; const name=getStudentName(); if(name){autoJoining=true;join(code,name).catch(()=>studentForm(code)).finally(()=>autoJoining=false);return;} return studentForm(code); }
   const my = ansOf(i)[pid], pred = (((room.preds || {})[i]) || {})[pid], myBid = (((room.sbids || {})[i]) || {})[pid];
   const top = `<div class="s-top"><span class="me">🙂 ${esc(me.name)}</span><span class="pill">${KW().logo} ${SUP() ? '판매소' : '경매소'} ${esc(code)}</span></div>`;
   const bsig = st.phase === 'bidres' ? JSON.stringify([room.cancel && room.cancel[i], room.confirm && room.confirm[i], room.sbids && room.sbids[i] && Object.keys(room.sbids[i]).length]) : '';
