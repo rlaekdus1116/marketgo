@@ -386,7 +386,7 @@ function renderTeacher() {
   const link = location.origin + location.pathname + '?room=' + code;
   const nm = id => esc((players[id] || {}).name || '?');
   const cols = [...Array(ROUNDS)].map((_, i) => i + 1);
-  const roundStarted = r => r <= (st.phase === 'lobby' ? 0 : st.round);
+  const roundStarted = r => r <= completedRounds(st);
   const isEnd = st.phase === 'closed' && st.round >= ROUNDS;
 
   // 안내문
@@ -402,7 +402,7 @@ function renderTeacher() {
     ${st.round ? `<span class="pill">${st.round} / ${ROUNDS}회차</span>` : ''}
     <span class="pill">🙋 ${pids.length}명</span>
     <span class="pill">방 ${esc(code)}</span>
-    <button class="btn sm ${showNames ? 'lemon' : 'sky'}" id="names">👀 이름 보기: ${showNames ? '켬' : '끔'}</button>
+    <button class="btn sm ${showNames ? 'lemon' : 'sky'}" id="names">👀 이름 보기: ${showNames ? '켬' : '끔'}</button><button class="btn sm" id="backStep">◀ 이전 단계</button><a class="btn sm sky" href="hub.html?t=1">🏠 허브로</a>
   </div>`;
 
   let main = '';
@@ -454,7 +454,7 @@ function renderTeacher() {
   }
 
   // 가격 × 회차 결과표
-  const table = st.phase === 'lobby' ? '' : (() => {
+  const table = completedRounds(st)<1 ? '' : (() => {
     const thead = `<tr><th></th>${cols.map(r => `<th>${r}회차</th>`).join('')}</tr>`;
     const prices = [...new Set(cols.flatMap(r => pairsOf(r).map(x => x.price)))].sort((a, b) => a - b);
     let tbody = prices.length ? '' : `<tr><td colspan="${ROUNDS + 1}" style="color:var(--sub)">아직 성사된 거래가 없어요</td></tr>`;
@@ -490,13 +490,22 @@ function renderTeacher() {
 
   const bind = (id, fn) => { const b = el(id); if (b) b.onclick = fn; };
   bind('names', () => { showNames = !showNames; render(); });
+  bind('backStep', async()=>{
+    if(st.phase==='lobby'){location.href='hub.html?t=1';return;}
+    if(!confirm('이전 단계로 돌아갈까요? 기존 거래와 카드는 유지돼요.'))return;
+    closing=false;
+    if(st.phase==='closed')await update(T(),{'state/phase':'trading','state/endsAt':now()+dur*1000});
+    else if(st.round===1)await update(T(),{'state/phase':'lobby','state/round':0,'state/endsAt':null});
+    else await update(T(),{'state/phase':'closed','state/round':st.round-1,'state/endsAt':null});
+    chartRound=0;
+  });
   bind('eq', () => { showEq = !showEq; render(); });
   app.querySelectorAll('[data-mode]').forEach(b => b.onclick = () => { chartMode = b.dataset.mode; render(); });
   app.querySelectorAll('[data-cr]').forEach(b => b.onclick = () => { chartRound = Number(b.dataset.cr); render(); });
   bind('next', () => {
     closing = false;
     const r = (st.round || 0) + 1;
-    update(T(), { [`rounds/${r}/cards`]: makeCards(pids), 'state/phase': 'trading', 'state/round': r, 'state/endsAt': now() + dur * 1000 });
+    update(T(), { [`rounds/${r}/cards`]: ((room.rounds||{})[r]||{}).cards || makeCards(pids), 'state/phase': 'trading', 'state/round': r, 'state/endsAt': now() + dur * 1000 });
   });
   bind('plus', () => update(T(), { 'state/endsAt': (st.endsAt || now()) + 60000 }));
   bind('close', () => update(T(), { 'state/phase': 'closed' }));
