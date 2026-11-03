@@ -232,7 +232,7 @@ button,.btn,.speech,.rule,.title,.card{word-break:keep-all;overflow-wrap:break-w
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getDatabase, ref, set, get, update, onValue, onDisconnect, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
-import { hubSeen, hubLog, hubFollow, getStudentName, saveStudentName } from './hub.js';
+import { hubSeen, hubLog, hubFollow, getStudentName, saveStudentName, patchHTML } from './hub.js';
 
 /* 「시장에 가면」·「떡볶이 시장」과 같은 Firebase 프로젝트 (데이터는 rooms/auction_코드 에 저장) */
 const firebaseConfig = {
@@ -535,7 +535,7 @@ function renderTeacher() {
   const st = room.state || {}, items = itemsOf(), i = st.item || 0, it = items[i] || items[0], prices = it.prices, L = prices.length;
   if (st.phase === 'setup' && document.activeElement && document.activeElement.closest && document.activeElement.closest('.iedit')) return;
   const ans = ansOf(i), preds = ((room.preds || {})[i]) || {}, N = nOf(i), S = ['bid', 'bidres'].includes(st.phase) ? it.supply : 0;
-  const sig = [st.phase, i, st.li, st.sub, st.sold, st.showNames, st.sec, st.phase === 'final' ? JSON.stringify([st.fin, st.frev, st.cv, room.fq, Object.keys(room.players || {}).length]) : ''].join('|');
+  const sig = [st.phase, i, st.li, st.sub, st.sold, st.showNames, st.sec, JSON.stringify(room.ans||{}), JSON.stringify(room.preds||{}), JSON.stringify(room.acc||{}), Object.keys(room.players||{}).length, st.phase === 'final' ? JSON.stringify([st.fin, st.frev, st.cv, room.fq]) : ''].join('|');
   if (['auction', 'result', 'final', 'item'].includes(st.phase) && sig === render.sig) return;
   render.sig = sig;
   let body = '';
@@ -697,9 +697,9 @@ function renderTeacher() {
   }
   if (!body) body = `<div class="stage"><div class="bigEmoji">🔄</div><div class="rule">이 방은 예전 버전 경매소라 열 수 없어요 😢</div>
     <button class="btn big mint" id="fresh">✨ 새 경매소 준비하기</button></div>`;
-  app.innerHTML = `<div class="wrap ${st.phase === 'final' ? 'wide' : ''}">${topbar(st)}${body}</div>`;
+  patchHTML(app, `<div class="wrap ${st.phase === 'final' ? 'wide' : ''}">${topbar(st)}${body}</div>`);
   if (el('fresh')) { el('fresh').onclick = () => { localStorage.removeItem('auction_teacher_room'); newRoom(room.kind || 'D'); }; return; }
-  if (st.phase === 'lobby' && window.QRCode) new QRCode(el('qr'), { text: location.origin + location.pathname + '?room=' + encodeURIComponent(code) + (SUP() ? '&kind=S' : ''), width: 200, height: 200, colorDark: '#5B4B57', colorLight: '#ffffff' });
+  if (st.phase === 'lobby' && window.QRCode && el('qr') && !el('qr').firstChild) new QRCode(el('qr'), { text: location.origin + location.pathname + '?room=' + encodeURIComponent(code) + (SUP() ? '&kind=S' : ''), width: 200, height: 200, colorDark: '#5B4B57', colorLight: '#ffffff' });
   wireTeacher(st, items, i, it);
 }
 

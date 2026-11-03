@@ -219,7 +219,7 @@ button,.btn,.speech,.rule,.title,.card{word-break:keep-all;overflow-wrap:break-w
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getDatabase, ref, set, update, onValue, remove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
-import { APPS, getStudentName, saveStudentName, clearStudentName } from './hub.js';
+import { APPS, getStudentName, saveStudentName, clearStudentName, patchHTML } from './hub.js';
 
 const firebaseConfig = {
   apiKey: "AIzaSyDiehLZ1aKv8E3N_pD4bNmw0zgMexau99U",
@@ -252,7 +252,13 @@ const LESSONS = [
 ];
 
 let hub = {};
-onValue(H(), s => { hub = s.val() || {}; render(); }, e => { console.error(e); app.innerHTML = '<div class="wrap"><div class="card">데이터를 못 불러왔어요 😢 인터넷을 확인해 주세요</div></div>'; });
+const hubError=e=>{console.error(e);app.innerHTML='<div class="wrap"><div class="card">데이터를 못 불러왔어요 😢 인터넷을 확인해 주세요</div></div>';};
+// Avoid redrawing the hub for every student's presence heartbeat.
+onValue(H('current'),s=>{hub.current=s.val();render();},hubError);
+if(isTeacher){
+ onValue(H('logs'),s=>{hub.logs=s.val()||{};render();},hubError);
+ onValue(H('sheetUrl'),s=>{hub.sheetUrl=s.val()||'';render();},hubError);
+}
 const fresh = c => c && APPS[c.app] && Date.now() - (c.at || 0) < 3 * 3600 * 1000;
 
 function render() { (isTeacher ? renderTeacher : renderStudent)(); }
@@ -315,7 +321,7 @@ function renderTeacher() {
       ${now ? `<a class="btn mint" href="${a.file}?t=1&room=${encodeURIComponent(c.room)}${a.q || ''}">▶ 진행 중인 방 ${esc(c.room)} 열기</a>` : ''}
       <a class="btn ${now ? '' : 'mint'}" href="${a.file}?t=1${a.q || ''}">${now ? '새로 / 다른 방' : '▶ 선생님 화면 열기'}</a></div>`;
   };
-  app.innerHTML = `<div class="wrap">
+  patchHTML(app, `<div class="wrap">
     <div class="hubTop"><div class="bigEmoji" style="font-size:54px;margin:0">🧺</div><div class="title">3단원 <span>시장 경제</span></div></div>
     <div class="card"><div class="nowGrid">
       <div><h3>📍 지금 수업</h3>
@@ -345,9 +351,9 @@ function renderTeacher() {
         <div class="muted" style="font-size:15px">활동마다 탭이 따로 생기고, 같은 날 같은 방 기록은 새로 덮어써서 중복이 안 생겨요.</div>
       </details>
     </div>
-  </div>`;
+  </div>`);
   el('gsCode').textContent = GS_CODE;
-  if (window.QRCode) new QRCode(el('qr'), { text: base + 'hub.html', width: 190, height: 190, colorDark: '#5B4B57', colorLight: '#ffffff' });
+  if (window.QRCode && el('qr') && !el('qr').firstChild) new QRCode(el('qr'), { text: base + 'hub.html', width: 190, height: 190, colorDark: '#5B4B57', colorLight: '#ffffff' });
   wire(logs);
 }
 const GS_CODE = `// 3단원 시장 경제 기록 받기 (다연샘)

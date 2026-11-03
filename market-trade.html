@@ -141,7 +141,7 @@ button,.btn,.speech,.rule,.title,.card{word-break:keep-all;overflow-wrap:break-w
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getDatabase, ref, set, get, update, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
-import { hubSeen, hubFollow, getStudentName, saveStudentName } from './hub.js';   // 3단원 허브 연결
+import { hubSeen, hubFollow, getStudentName, saveStudentName, patchHTML } from './hub.js';   // 3단원 허브 연결
 
 /* 「시장에 가면」과 같은 Firebase 프로젝트 사용 (데이터는 rooms/trade_코드 에 저장 → 기존 보안 규칙 그대로 통과) */
 const firebaseConfig = {
@@ -485,8 +485,8 @@ function renderTeacher() {
     return `<div style="margin:8px 0"><span class="roundBadge" style="font-size:16px;padding:4px 14px">${r}회차</span> <span class="chips" style="display:inline-flex">${ps.length ? ps.map(x => { const s = x.buyer === x.a ? x.b : x.a; return `<span class="chip soft">🛒 ${nm(x.buyer)} ↔ 🏷️ ${nm(s)} · ${won(x.price)}</span>`; }).join('') : '<span class="muted">거래 없음</span>'}</span></div>`;
   }).join('')}</div>` : '';
 
-  app.innerHTML = `<div class="wrap">${topbar}${main}${table}${isEnd ? imbalanceHTML() + questionsHTML(cols) : ''}${logHTML}</div>`;
-  if (st.phase === 'lobby' && window.QRCode) new QRCode(el('qr'), { text: link, width: 200, height: 200, colorDark: '#5B4B57', colorLight: '#ffffff' });
+  patchHTML(app, `<div class="wrap">${topbar}${main}${table}${isEnd ? imbalanceHTML() + questionsHTML(cols) : ''}${logHTML}</div>`);
+  if (st.phase === 'lobby' && window.QRCode && el('qr') && !el('qr').firstChild) new QRCode(el('qr'), { text: link, width: 200, height: 200, colorDark: '#5B4B57', colorLight: '#ffffff' });
 
   const bind = (id, fn) => { const b = el(id); if (b) b.onclick = fn; };
   bind('names', () => { showNames = !showNames; render(); });

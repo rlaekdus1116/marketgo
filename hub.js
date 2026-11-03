@@ -46,6 +46,45 @@ export const APPS = {
   curve: { title: '시장 예측하기', lesson: 3, file: 'curve.html', emoji: '📈' },
 };
 
+
+/* Smooth realtime UI updates: preserve focused fields, QR images and unchanged DOM nodes. */
+export function patchHTML(root,html){
+ const fresh=document.createElement('div');fresh.innerHTML=html;
+ function sync(a,b){
+  if(a.nodeType!==b.nodeType||(a.nodeType===1&&(a.tagName!==b.tagName||(a.id&&b.id&&a.id!==b.id)))){a.replaceWith(b.cloneNode(true));return;}
+  if(a.nodeType===3){if(a.nodeValue!==b.nodeValue)a.nodeValue=b.nodeValue;return;}
+  if(a.nodeType!==1)return;
+  if(a.id==='qr'&&a.childNodes.length&&!b.childNodes.length)return;
+  const focused=a===document.activeElement&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName);
+  for(const attr of Array.from(a.attributes))if(!b.hasAttribute(attr.name))a.removeAttribute(attr.name);
+  for(const attr of Array.from(b.attributes)){
+   if(focused&&['value','checked'].includes(attr.name))continue;
+   if(a.getAttribute(attr.name)!==attr.value)a.setAttribute(attr.name,attr.value);
+  }
+  if(!focused&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)){
+   if(a.type==='checkbox'||a.type==='radio')a.checked=b.checked;
+   else if(a.value!==b.value)a.value=b.value;
+  }
+  const incoming=Array.from(b.childNodes);
+  for(let i=0;i<incoming.length;i++){
+   const next=incoming[i];let existing=a.childNodes[i];
+   if(!existing){a.appendChild(next.cloneNode(true));continue;}
+   if(next.nodeType===1&&next.id&&existing.nodeType===1&&existing.id!==next.id){
+    const found=Array.from(a.childNodes).find(node=>node.nodeType===1&&node.id===next.id);
+    if(found){a.insertBefore(found,existing);existing=found;}
+   }
+   sync(existing,next);
+  }
+  while(a.childNodes.length>incoming.length)a.lastChild.remove();
+ }
+ const nodes=Array.from(fresh.childNodes);
+ for(let i=0;i<nodes.length;i++){
+  const old=root.childNodes[i];
+  if(!old)root.appendChild(nodes[i].cloneNode(true));else sync(old,nodes[i]);
+ }
+ while(root.childNodes.length>nodes.length)root.lastChild.remove();
+}
+
 /* 👩‍🏫 선생님 화면이 방을 열면 → 허브의 '지금 수업'으로 등록 */
 let seen = '', seenTimer = null;
 export function hubSeen(app, room) {
