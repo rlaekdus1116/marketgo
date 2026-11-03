@@ -218,8 +218,8 @@ button,.btn,.speech,.rule,.title,.card{word-break:keep-all;overflow-wrap:break-w
 <div id="app"></div>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getDatabase, ref, set, update, onValue, remove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
-import { APPS, getStudentName, saveStudentName, clearStudentName, patchHTML } from './hub.js';
+import { getDatabase, ref, set, get, update, onValue, remove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import { APPS, getStudentName, saveStudentName, clearStudentName, patchHTML, teacherLogs, removeTeacherLog } from './hub.js';
 
 const firebaseConfig = {
   apiKey: "AIzaSyDiehLZ1aKv8E3N_pD4bNmw0zgMexau99U",
@@ -243,7 +243,7 @@ const LESSONS = [
   { n: 1, name: '시장의 의미와 필요성', apps: [{ id: 'market', desc: '차곡차곡 늘어나는 실시간 기억 게임 · 깜짝 리버스·플래시' }] },
   { n: 2, name: '수요·공급과 시장 가격의 결정', apps: [
     { id: 'auction', desc: '🛒 살래요! 가격을 올리며 수요 곡선 만들기 → 최고가 부르기 → 수요 개념·수요 법칙 정리' },
-    { id: 'auctionS', desc: '🏷️ 팔래요! 가격을 올리며 공급 곡선 만들기 → 최저가 부르기 → 공급 개념·공급 법칙 정리' },
+    { id: 'auctionS', desc: '🏷️ 팔래요! 공급 조사 → 곡선 → 공급 법칙 정리 (경매 없음)' },
     { id: 'poll', desc: '🗳️ 질문: 시장에서 가격은 누가 결정할까? 학생별 실시간 투표·응답 시각·제출 점수 확인' },
     { id: 'trade', desc: '🥵 떡볶이 시장 게임 · 수요자·공급자가 직접 거래하며 시장 가격 찾기' },
     { ext: 'https://rlaekdus1116.github.io/demandsupply/', emoji: '🧪', title: '수요·공급 실험실', desc: '호가 게임으로 시장 가격 결정 체험 (따로 만든 앱)' },
@@ -311,9 +311,11 @@ function renderStudent() {
 /* ================= 👩‍🏫 선생님 ================= */
 let qrDone = false;
 function renderTeacher() {
-  if (document.activeElement && document.activeElement.id === 'sheetUrl') return;
+  if (document.activeElement && ['sheetUrl','classCode','growthRoom'].includes(document.activeElement.id)) return;
   const c = fresh(hub.current) ? hub.current : null;
-  const logs = Object.values(hub.logs || {}).sort((a, b) => (b.at || 0) - (a.at || 0));
+  const logs = Object.values({...hub.logs,...teacherLogs()}).sort((a,b)=>(b.at||0)-(a.at||0));
+  const classCode=localStorage.getItem('marketgo_class_code')||'201';
+  const sessionRoom=localStorage.getItem('marketgo_lesson_room')||c?.room||'';
   const card = x => {
     if (x.ext) return `<div class="appc"><div class="ae">${x.emoji}</div><div class="an">${esc(x.title)}</div><div class="ad">${esc(x.desc)}</div><a class="btn sky" href="${x.ext}" target="_blank" rel="noopener">열기 ↗</a></div>`;
     const a = APPS[x.id], now = c && c.app === x.id;
@@ -323,6 +325,16 @@ function renderTeacher() {
   };
   patchHTML(app, `<div class="wrap">
     <div class="hubTop"><div class="bigEmoji" style="font-size:54px;margin:0">🧺</div><div class="title">3단원 <span>시장 경제</span></div></div>
+    <div class="card"><h3>🏫 학급별 수업 기록 · 공모전 성장 자료</h3>
+      <label for="classCode">학급 코드 (201 = 2학년 1반)</label>
+      <input id="classCode" class="field" maxlength="4" inputmode="numeric" value="${esc(classCode)}" style="width:130px">
+      <button class="btn mint" id="saveClass">학급 저장</button>
+      <label for="growthRoom">전체 활동에서 사용할 네 자리 방 코드</label>
+      <input id="growthRoom" class="field" maxlength="4" inputmode="numeric" value="${esc(sessionRoom)}" style="width:130px">
+      <button class="btn sky" id="setRoom">방 코드 저장</button>
+      <button class="btn mint" id="growthExport">⬇️ 학생별 사고 성장 기록 CSV 다운로드</button>
+      <p class="muted">예언 → 예언 이유 → 실제 그래프 비교 → 떡볶이 새 가격과 근거를 합친 기록입니다. 학급과 방 번호는 교사 브라우저에만 저장돼요. 학생 이름이 중복되면 서로 다른 학생의 기록이 합쳐질 수 있으니 주의하세요.</p>
+    </div>
     <div class="card"><div class="nowGrid">
       <div><h3>📍 지금 수업</h3>
         ${c ? `<div class="nowApp">${APPS[c.app].emoji} ${esc(APPS[c.app].title)} <span class="pill">방 ${esc(c.room)}</span></div>` : '<div class="nowApp muted">아직 연 활동이 없어요</div>'}
@@ -332,10 +344,14 @@ function renderTeacher() {
     </div></div>
     <div class="lessons">${LESSONS.map(L => `<div class="lesson"><h3><span class="lnum">${L.n}</span>${esc(L.name)}</h3><div class="apps">${L.apps.map(card).join('')}</div></div>`).join('')}</div>
     <div class="card" style="margin-top:16px"><h3>📊 기록 <span class="muted" style="font-size:16px">활동이 끝나면(최종 결과 화면) 자동으로 쌓여요</span></h3>
-      ${logs.length ? `<table class="logs"><tr><th>날짜</th><th>활동</th><th>방</th><th>학생</th><th>구글 시트</th><th></th></tr>
-        ${logs.map(l => `<tr><td>${esc(l.date)}</td><td>${(APPS[l.app] || {}).emoji || ''} ${esc(l.title)}${l.extra ? ` <span class="muted">${esc(l.extra)}</span>` : ''}</td><td>${esc(l.room)}</td><td>${(l.rows || []).length}명</td><td>${l.sent ? '✅ 보냄' : '—'}</td>
-          <td style="white-space:nowrap"><button class="btn sm sky" data-view="${esc(l.key)}">보기</button><button class="btn sm lemon" data-csv="${esc(l.key)}">엑셀(CSV)</button>${hub.sheetUrl ? `<button class="btn sm" data-send="${esc(l.key)}">시트로 다시 보내기</button>` : ''}</td></tr>`).join('')}</table>
-        <button class="btn mint" id="csvAll">⬇️ 전체 기록 엑셀(CSV)로 받기</button>` : '<div class="muted">아직 기록이 없어요</div>'}
+      ${logs.length ? `<table class="logs"><tr><th>날짜</th><th>학급</th><th>활동</th><th>방</th><th>학생</th><th>저장 위치</th><th></th></tr>
+        ${logs.map(l => `<tr><td>${esc(l.date)}</td><td>${esc(l.classCode||'미지정')}</td><td>${(APPS[l.app] || {}).emoji || ''} ${esc(l.title)}${l.extra ? ` <span class="muted">${esc(l.extra)}</span>` : ''}</td><td>${esc(l.room)}</td><td>${(l.rows || []).length}명</td><td>${l.sent ? '외부 시트' : l.classCode ? '이 브라우저' : '기존 서버 기록'}</td>
+          <td style="white-space:nowrap"><button class="btn sm sky" data-view="${esc(l.key)}">보기</button><button class="btn sm lemon" data-csv="${esc(l.key)}">엑셀(CSV)</button><button class="btn sm peach" data-remove-log="${esc(l.key)}">삭제</button>${hub.sheetUrl ? `<button class="btn sm" data-send="${esc(l.key)}">시트로 다시 보내기</button>` : ''}</td></tr>`).join('')}</table>
+        <button class="btn mint" id="csvAll">⬇️ 전체 기록 엑셀(CSV)로 받기</button><button class="btn peach" id="clearLogs">전체 기록 삭제</button>` : '<div class="muted">아직 기록이 없어요</div>'}
+    </div>
+    <div class="card"><h3>🔐 서버 기록 삭제</h3>
+      <p class="muted">실시간 수업 응답은 기존 Firebase에 저장돼요. 성장 CSV를 다운로드한 후 이 방의 수요·공급·투표·떡볶이 응답을 서버에서 삭제할 수 있어요. 삭제 후 복구는 불가능해요.</p>
+      <button class="btn peach" id="eraseRoom">⚠️ 입력한 방 코드의 수업 데이터 서버 삭제</button>
     </div>
     <div class="card"><h3>🔗 구글 시트 연결 ${hub.sheetUrl ? '<span class="pill" style="background:var(--mint)">✅ 연결됨</span>' : '<span class="pill">연결 안 됨</span>'}</h3>
       <div style="display:flex;gap:8px;flex-wrap:wrap"><input class="field" id="sheetUrl" style="flex:1;min-width:260px;margin:0" placeholder="Apps Script 웹 앱 주소 (https://script.google.com/macros/s/…/exec)" value="${esc(hub.sheetUrl || '')}"><button class="btn mint" id="saveUrl">저장</button>${hub.sheetUrl ? '<button class="btn" id="testUrl">테스트 보내기</button>' : ''}</div>
@@ -355,6 +371,10 @@ function renderTeacher() {
   el('gsCode').textContent = GS_CODE;
   if (window.QRCode && el('qr') && !el('qr').firstChild) new QRCode(el('qr'), { text: base + 'hub.html', width: 190, height: 190, colorDark: '#5B4B57', colorLight: '#ffffff' });
   wire(logs);
+  el('saveClass').onclick=()=>{const v=el('classCode').value.trim();if(!/^\d{3,4}$/.test(v))return toast('201처럼 학급 코드를 입력해 주세요');localStorage.setItem('marketgo_class_code',v);toast('학급 '+v+' 저장');};
+  el('setRoom').onclick=()=>{const v=el('growthRoom').value.trim();if(!/^\d{4}$/.test(v))return toast('방 코드 네 자리를 입력하세요');localStorage.setItem('marketgo_lesson_room',v);toast('방 코드 '+v+' 저장');};
+  el('growthExport').onclick=downloadGrowthCSV;
+  el('eraseRoom').onclick=eraseLessonRoom;
 }
 const GS_CODE = `// 3단원 시장 경제 기록 받기 (다연샘)
 function doPost(e) {
@@ -370,15 +390,95 @@ function doPost(e) {
 const csvOf = list => {
   const q = v => { const s = String(v ?? ''); return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
   const lines = [];
-  list.forEach(l => { lines.push(['날짜', '활동', '방 코드', ...(l.cols || [])].map(q).join(',')); (l.rows || []).forEach(r => lines.push([l.date, l.title + (l.extra ? ' ' + l.extra : ''), l.room, ...r].map(q).join(','))); lines.push(''); });
+  list.forEach(l => { lines.push(['날짜', '학급', '활동', '방 코드', ...(l.cols || [])].map(q).join(',')); (l.rows || []).forEach(r => lines.push([l.date, l.classCode||'미지정', l.title + (l.extra ? ' ' + l.extra : ''), l.room, ...r].map(q).join(','))); lines.push(''); });
   return '﻿' + lines.join('\r\n');
 };
 const download = (name, text) => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], { type: 'text/csv;charset=utf-8' })); a.download = name; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500); };
 const post = (url, l) => fetch(url, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ key: l.key, sheet: l.title, date: l.date, room: l.room, cols: l.cols || [], rows: l.rows || [] }) });
+async function downloadGrowthCSV(){
+  const c=(document.getElementById('growthRoom')?.value||localStorage.getItem('marketgo_lesson_room')||'').trim();
+  const klass=(document.getElementById('classCode')?.value||localStorage.getItem('marketgo_class_code')||'201').trim();
+  if(!/^\d{4}$/.test(c))return toast('네 자리 방 코드를 입력해 주세요.');
+  if(!/^\d{3,4}$/.test(klass))return toast('201처럼 학급 코드를 입력해 주세요.');
+  localStorage.setItem('marketgo_lesson_room',c);
+  localStorage.setItem('marketgo_class_code',klass);
+  try{
+    const prefixes=['auction','auctionS','poll','trade'];
+    const results=await Promise.all(prefixes.map(p=>get(ref(db,'rooms/'+p+'_'+c))));
+    const rooms=Object.fromEntries(prefixes.map((p,i)=>[p,results[i].val()||{}]));
+    const byName=new Map();
+    function find(n,stage){
+      n=String(n||'').trim();if(!n)return null;
+      if(!byName.has(n))byName.set(n,{name:n,stages:new Set()});
+      const p=byName.get(n);p.stages.add(stage);return p;
+    }
+    for(const stage of ['auction','auctionS']){
+      const room=rooms[stage],names=room.players||{},key=stage==='auction'?'d':'s';
+      for(const p of Object.values(names))find(p.name,stage);
+      for(const [i,records] of Object.entries(room.preds||{}))
+        for(const [id,data] of Object.entries(records||{})){
+          const p=find(names[id]?.name,stage);if(!p)continue;
+          const j=Number(i)+1;p[key+'Predict'+j]=(data.pts||[]).map(x=>x[0]).join(' / ');p[key+'Reason'+j]=data.reason||'';
+        }
+      for(const [i,records] of Object.entries(room.reflections||{}))
+        for(const [id,data] of Object.entries(records||{})){
+          const p=find(names[id]?.name,stage);if(p)p[key+'Reflect'+(Number(i)+1)]=data.text||'';
+        }
+    }
+    const trade=rooms.trade,tradePlayers=trade.players||{};
+    for(const p of Object.values(tradePlayers))find(p.name,'trade');
+    for(const [id,data] of Object.entries(trade.recommendations||{})){
+      const p=find(tradePlayers[id]?.name,'trade');if(!p)continue;
+      p.price=data.price||'';p.reason=data.reason||'';
+    }
+    const poll=rooms.poll,pollPlayers=poll.players||{};
+    for(const p of Object.values(pollPlayers))find(p.name,'poll');
+    for(const [id,data] of Object.entries(poll.votes||{})){
+      const p=find(pollPlayers[id]?.name,'poll');if(p)p.vote=data.choice||'';
+    }
+    const header=['학급','기록 내려받은 날짜','방 코드','이름','수요 예언값(상품1)','수요 예언 이유(상품1)','수요 그래프 비교(상품1)','수요 예언값(상품2)','수요 예언 이유(상품2)','수요 그래프 비교(상품2)','공급 예언값','공급 예언 이유','공급 그래프 비교','시장 가격 결정 최초 투표','새로 제안한 떡볶이 가격(원)','가격 제안 근거','참여 활동'];
+    const date=new Date().toLocaleDateString('sv-SE');
+    const rows=Array.from(byName.values()).sort((a,b)=>a.name.localeCompare(b.name,'ko')).map(p=>[
+      klass,date,c,p.name,p.dPredict1||'',p.dReason1||'',p.dReflect1||'',
+      p.dPredict2||'',p.dReason2||'',p.dReflect2||'',
+      p.sPredict1||'',p.sReason1||'',p.sReflect1||'',
+      p.vote||'',p.price||'',p.reason||'',Array.from(p.stages).join(' / ')
+    ]);
+    if(!rows.length)return toast('해당 방에 학생 기록이 없어요.');
+    const quote=v=>{const t=String(v??'');const safe=/^[=+\-@]/.test(t)?"'"+t:t;return '"'+safe.replace(/"/g,'""')+'"';};
+    download(klass+'_시장경제_성장기록_'+c+'.csv','\uFEFF'+[header,...rows].map(row=>row.map(quote).join(',')).join('\r\n'));
+    toast(rows.length+'명 성장 기록을 내려받았어요.');
+  }catch(e){console.error(e);toast('기록을 읽지 못했어요. 인터넷과 Firebase 권한을 확인하세요.');}
+}
+async function eraseLessonRoom(){
+  const c=(document.getElementById('growthRoom')?.value||localStorage.getItem('marketgo_lesson_room')||'').trim();
+  if(!/^\d{4}$/.test(c))return toast('방 코드 네 자리를 입력하세요.');
+  if(!confirm('방 '+c+'의 네 활동 학생 응답을 Firebase에서 모두 삭제할까요? CSV를 먼저 내려받으세요.'))return;
+  if(!confirm('최종 확인: 삭제한 서버 데이터는 복구할 수 없습니다. 계속할까요?'))return;
+  try{
+    await Promise.all(['auction','auctionS','poll','trade'].map(p=>remove(ref(db,'rooms/'+p+'_'+c))));
+    await Promise.all(['auction','auctionS','poll','trade'].map(p=>remove(H('presence/'+p+'_'+c))));
+    if((hub.current||{}).room===c)await remove(H('current'));
+    toast('수업방 학생 데이터가 Firebase에서 삭제됐어요.');
+  }catch(e){console.error(e);toast('서버 삭제가 일부 실패했어요. 권한을 확인해 주세요.');}
+}
 function wire(logs) {
   const byKey = k => logs.find(l => l.key === k);
   document.querySelectorAll('[data-csv]').forEach(b => b.onclick = () => { const l = byKey(b.dataset.csv); download(`${l.date.slice(0, 10)}_${l.title}_${l.room}.csv`, csvOf([l])); });
   if (el('csvAll')) el('csvAll').onclick = () => download(`3단원_전체기록_${new Date().toISOString().slice(0, 10)}.csv`, csvOf(logs.slice().reverse()));
+  document.querySelectorAll('[data-remove-log]').forEach(b=>b.onclick=async()=>{
+    const l=byKey(b.dataset.removeLog);if(!l||!confirm('선택한 기록을 삭제할까요? 먼저 CSV를 받아 두세요.'))return;
+    removeTeacherLog(l.key);
+    if((hub.logs||{})[l.key])try{await remove(H('logs/'+l.key));}catch(e){toast('기존 서버 로그 삭제 실패');return;}
+    renderTeacher();
+  });
+  if(el('clearLogs'))el('clearLogs').onclick=async()=>{
+    if(!confirm('전체 평가 기록을 삭제할까요? 먼저 CSV를 내려받으세요.'))return;
+    if(!confirm('정말 모든 기록을 삭제할까요? 복구할 수 없어요.'))return;
+    localStorage.removeItem('marketgo_teacher_logs_v3');
+    try{await remove(H('logs'));}catch(e){toast('기존 서버 로그 삭제 실패');return;}
+    renderTeacher();
+  };
   document.querySelectorAll('[data-view]').forEach(b => b.onclick = () => {
     const l = byKey(b.dataset.view), d = document.createElement('div'); d.className = 'pop2';
     d.innerHTML = `<div class="card"><h3>${esc(l.title)} ${esc(l.extra || '')} · 방 ${esc(l.room)} · ${esc(l.date)}</h3><table class="vt"><tr>${(l.cols || []).map(c => `<th>${esc(c)}</th>`).join('')}</tr>${(l.rows || []).map(r => `<tr>${r.map(v => `<td>${esc(v)}</td>`).join('')}</tr>`).join('')}</table><div class="center" style="margin-top:12px"><button class="btn">닫기</button></div></div>`;
