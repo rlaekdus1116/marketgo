@@ -350,10 +350,10 @@ const itemsOf = () => ((room && room.items) || (SUP() ? DEFAULT_ITEMS_S : DEFAUL
 });
 // ans[상품][학생] = { last: ✋ 산다고 한 가장 비싼 가격 칸, quit: 안 산다고 한 칸 }  (0 = 가장 싼 가격)
 const ansOf = i => ((room.ans || {})[i]) || {};
-const nOf = i => ((((room.meta || {})[i]) || {}).n) || Math.max(1, Object.keys(room.players || {}).length);
+const nOf = i => Math.max(1, ((((room.meta || {})[i]) || {}).n) || 0, Object.keys(room.players || {}).length, Object.keys(ansOf(i)).length);
 // 공급: ans[상품][학생] = { from: 🏷️ 팔겠다고 한 첫 가격 칸 (그 뒤로는 계속 팖), no: 안 판다고 한 칸 }
 const inAt = (a, lv) => SUP() ? (a.from !== undefined && a.from !== null && a.from <= lv) : a.last >= lv;
-const Qat = (ans, lv) => Object.values(ans).filter(a => inAt(a, lv)).length;          // lv 칸 가격에서 사겠다는(팔겠다는) 사람 수
+const Qat = (ans, lv) => Object.values(ans).filter(a => inAt(a, lv)).length;          // 가격별 판매·구매 의사가 있는 학생 수, 실제 거래량을 누적하지 않음
 const sortedAns = ans => SUP()
   ? Object.entries(ans).map(([pid, a]) => ({ pid, from: a.from, at: a.at || 0 })).filter(a => a.from !== undefined && a.from !== null).sort((a, b) => a.from - b.from || a.at - b.at)
   : Object.entries(ans).map(([pid, a]) => ({ pid, last: a.last ?? -1, at: a.at || 0 })).filter(a => a.last >= 0).sort((a, b) => b.last - a.last || a.at - b.at);
@@ -615,7 +615,7 @@ function renderTeacher() {
       const q = Qat(ans, li), ended = li >= L - 1 || (SUP() ? q >= N : q === 0);
       body = `<div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;justify-content:center;margin-bottom:8px">
           <span class="hammer bang">🔨</span>
-          <div class="speech" style="font-size:38px"><b>${kw(p)}</b>에 ${KW().verbs} 사람 <b style="color:var(--peachD)">${q}명!</b></div>
+          <div class="speech" style="font-size:38px"><b>${kw(p)}</b>에 ${KW().verbs} 사람 <b style="color:var(--peachD)">${q}명!</b>${SUP() ? '<div class="muted" style="font-size:18px">이 가격에 팔겠다는 사람 수 · 실제 판매 건수 아님</div>' : ''}</div>
         </div>
         ${S ? `<div class="center"><span class="hot" style="font-size:28px;${q > S ? 'background:var(--red);box-shadow:0 4px 0 var(--redD)' : q < S ? 'background:var(--sky);box-shadow:0 4px 0 var(--skyD)' : 'background:var(--mint);box-shadow:0 4px 0 var(--mintD)'}">${gapText(q, S)}</span></div>` : ''}
         <div class="card svgbox" style="margin-top:10px">${barsSVG(ans, prices, N, li, nameOf, S)}</div>
@@ -644,7 +644,7 @@ function renderTeacher() {
     const written=Object.entries((room.reflections||{})[i]||{}).filter(([,a])=>a&&a.text);
     const avgAcc = ranked.length ? (ranked.reduce((a, [, v]) => a + v, 0) / ranked.length).toFixed(1) : '-';
     body = `<div class="center" style="margin-bottom:8px"><span class="roundBadge">📊 ${esc(it.emoji)} ${esc(it.name)} 결과</span></div>
-      <div class="card svgbox">${barsSVG(ans, prices, N, upto, nameOf, S, extra, false)}
+      ${SUP() ? '<div class="hl mint center">📊 각 가격에서 팔겠다는 학생 수예요. 실제로 팔린 개수를 합산한 것이 아니에요.</div>' : ''}<div class="card svgbox">${barsSVG(ans, prices, N, upto, nameOf, S, extra, false)}
         <div class="legend"><span class="pill"><span class="sw" style="background:${SUP() ? '#2FA67A' : '#E8803E'}"></span>우리 반 ${KW().curve}</span>${S ? `<span class="pill"><span class="sw" style="background:#3B8FD9"></span>${KW().otherN}</span>` : ''}
         ${it.predict ? top.map(([id, a], k) => `<span class="pill"><span class="sw" style="background:${COLORS[k]}"></span>${['🥇','🥈','🥉'][k]} ${st.showNames ? esc(nameOf(id)) : `${k + 1}등`} ${a}%</span>`).join('') : ''}</div></div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
@@ -684,7 +684,7 @@ function renderTeacher() {
         <button class="btn big ${i + 1 < items.length ? 'lemon' : 'mint'}" id="final">🏁 결과 모아 보기</button></div>`;
   }
   else if (st.phase === 'final') {
-    maybeAnnounce('final', () => { Snd.fanfare(); announce(SUP() ? '판매 끝~!!' : '경매 끝~!!', '우리 반이 만든 곡선을 살펴볼까? 🧐', '🏁', 3000); });
+    maybeAnnounce('final', () => { Snd.fanfare(); announce(SUP() ? '공급량 조사 끝~!!' : '경매 끝~!!', '우리 반이 만든 곡선을 살펴볼까? 🧐', '🏁', 3000); });
     const done = items.map((it2, k) => ({ it: it2, k })).filter(o => Object.keys(ansOf(o.k)).length);
     const minis = done.map((o, c) => { const NN = nOf(o.k), upto = Math.max(0, ((((room.meta || {})[o.k]) || {}).upto) ?? o.it.prices.length - 1), { g, x, y } = axes(o.it.prices, NN, upto);
       return `<div class="card svgbox"><h3>${esc(o.it.emoji)} ${esc(o.it.name)}${!SUP() && o.it.supply ? ` · 📦 ${o.it.supply}개` : ''}</h3><svg viewBox="0 0 ${W} ${H}" font-family="Jua">${g}<path d="${stairPath(ansOf(o.k), x, y, upto)}" fill="none" stroke="${COLORS[c]}" stroke-width="6" stroke-linejoin="round"/>${!SUP() && o.it.supply ? `<line x1="${x(Math.min(o.it.supply, NN))}" x2="${x(Math.min(o.it.supply, NN))}" y1="${MT}" y2="${H - MB}" stroke="#3B8FD9" stroke-width="4" stroke-dasharray="12 7"/>` : ''}</svg></div>`; }).join('');
@@ -966,7 +966,7 @@ function renderStudent() {
   if (st.phase === 'final') {
     const mine = itemsOf().map((_, k) => (((room.acc || {})[k]) || {})[pid]).filter(a => a !== undefined && a !== null);
     const avg = mine.length ? mine.reduce((a, b) => a + b, 0) / mine.length : null;
-    app.innerHTML = `<div class="s-wrap">${top}<div class="stage"><div class="bigEmoji bounce">🏁</div><div class="title" style="font-size:40px">${SUP() ? '판매' : '경매'} 끝!</div>
+    app.innerHTML = `<div class="s-wrap">${top}<div class="stage"><div class="bigEmoji bounce">🏁</div><div class="title" style="font-size:40px">${SUP() ? '공급량 조사' : '경매'} 끝!</div>
       ${avg !== null ? `<div class="muted" style="font-size:22px">내 예언 정확도</div><div class="acc" style="font-size:80px">${avg.toFixed(1)}<small>%</small></div><div class="rule">${accComment(avg)}</div>` : ''}
       <div class="rule muted">칠판에서 곡선들을 비교해 봐요 🧐</div></div></div>`;
   }
@@ -981,7 +981,7 @@ function studentSupplyAsk(st, i, it, prices, S, my, li, p, top) {
       ${it.cost > 0 ? `<div class="muted" style="font-size:18px">💸 1개 만드는 데 ${kw(it.cost)} 들어요</div>` : ''}
       <div class="price-big">${kw(p)}</div>
       <div class="muted" style="font-size:17px">1인당 최대 1개 · 제작비 ${kw(it.cost)}</div>
-      ${before ? `<div class="stand">🏷️ 이미 팔기로 했어요!<br><span style="font-size:22px">${kw(prices[my.from])}부터 팔겠다고 했어요 → 이 가격에도 팔아요</span></div>`
+      ${before ? `<div class="stand">✅ 이 가격에도 팔래요!<br><span style="font-size:22px">앞에서 선택한 판매 의사가 자동 반영됐어요. (1개)</span></div>`
         : `<div class="rule">이 가격이면 팔래? <b class="cdS" id="cdS"></b></div>
            <div style="display:flex;gap:14px;flex-wrap:wrap;justify-content:center">
              <button class="btn big ${choice === 'sell' ? 'mint' : 'sky'}" id="buy" style="font-size:40px;padding:24px 44px;${choice === 'sell' ? 'outline:5px solid var(--mintD)' : ''}">🏷️ 팔래!</button>
@@ -996,7 +996,7 @@ function studentSupplyAsk(st, i, it, prices, S, my, li, p, top) {
   }
   app.innerHTML = `<div class="s-wrap">${top}<div class="stage">
     <div class="price-big s">${kw(p)}</div>
-    ${joined && my.from <= li ? '<div class="stand pop">🏷️ 팔래! 했어요</div>' : '<div class="sit">🙅 아직 안 팔아요</div>'}
+    ${joined && my.from <= li ? '<div class="stand pop">✅ 이 가격에 팔겠다고 선택했어요</div>' : '<div class="sit">🙅 이 가격에는 팔지 않겠다고 선택했어요</div>'}
     <div class="rule muted">칠판을 보세요 👀</div></div></div>`;
 }
 function studentTick() {
