@@ -802,6 +802,10 @@ function renderStudent() {
         <div class="desc">떡볶이 1인분을 최대한 <b>높은 가격</b>으로 파세요.<br>떡볶이 1인분 만드는 데 ${won(card.limit)}의 비용이 들었어요.<br>이보다 싸게 팔면 손해!</div></div>`;
 
   let body = '';
+  const roster = ['buyer','seller'].map(role=>{
+    const ids=Object.entries(cards).filter(([,x])=>x?.role===role).map(([id])=>id);
+    return '<div class="hl '+(role==='buyer'?'sky':'peach')+'" style="flex:1;min-width:200px"><b>'+(role==='buyer'?'🛒 수요자':'🏷️ 공급자')+' '+ids.length+'명</b><div class="chips">'+ids.map(id=>'<span class="chip soft">'+nameOf(id)+'</span>').join('')+'</div></div>';
+  }).join('');
   const done = completedRounds(st);
   const lastResult = () => {
     if (done < 1) return '';
@@ -814,7 +818,7 @@ function renderStudent() {
 
   if (st.phase === 'trading') {
     body += `<div class="card center"><div class="timer s" id="timer"></div><div class="bar" id="tbar"><i></i></div></div>`;
-    body += `<div class="card">${cardHTML}</div>`;
+    body += `<div class="card">${cardHTML}</div><details class="card" open><summary style="cursor:pointer;font-size:23px">👥 이번 회차 수요자·공급자 명단</summary><div style="display:flex;gap:12px;flex-wrap:wrap">${roster}</div></details>`;
 
     if (myPair) {
       body += `<div class="card"><div class="doneBox">✅ ${nameOf(curSub.partner)} 친구와 거래 성사!<br>${won(myPair.price)} · 손익 <b>${signed(profitOf(card, myPair.price))}</b></div>

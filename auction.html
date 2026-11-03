@@ -252,7 +252,7 @@ const now = () => Date.now() + offset;   // 모든 기기가 같은 시계를 �
 /* ========== 기본 경매 상품 (준비 화면에서 바꿀 수 있어요) ==========
    prices: 부를 가격 (싼 가격부터 올라가요) / supply: 파는 개수 (0이면 공급선 없음) / predict: 🔮 예언하기 */
 const DEFAULT_ITEMS = [
-  { emoji: '🍫', name: '선생님 책상 위 에너지바', pitch: '선생님이 아껴 먹던 바로 그 에너지바!', prices: [500, 1000, 2000, 3000, 5000, 10000], supply: 1, predict: false },
+  { emoji: '🍫', name: '선생님 책상 위 에너지바', pitch: '선생님이 아껴 먹던 바로 그 에너지바!', prices: [100, 300, 500, 1000, 1500], supply: 1, predict: false },
   { emoji: '📄', name: '기말고사 사회 시험지', pitch: '가상의 사회 시험지! 여러분이라면 살까요?', prices: [1000, 50000, 100000, 300000, 1000000, 10000000], supply: 5, predict: true },
 ];
 const SECS = [3, 5, 7, 10];
@@ -482,7 +482,7 @@ async function newRoom(kind = 'D') {
     let c=shared&&/^\d{4}$/.test(shared)?shared:'';
     if(!c){for(let i=0;i<20;i++){c=String(Math.floor(1000+Math.random()*9000));if(!(await get(A(c))).exists())break;}}
     if((await get(A(c))).exists()){localStorage.setItem('auction_teacher_room',c);location.href='?t=1&room='+c+(kind==='S'?'&kind=S':'');return;}
-    const lk = kind === 'S' ? 'auction_last_items_S_v4' : 'auction_last_items_D_v3';
+    const lk = kind === 'S' ? 'auction_last_items_S_v4' : 'auction_last_items_D_v4';
     let items = kind === 'S' ? DEFAULT_ITEMS_S : DEFAULT_ITEMS;
     try { const last = JSON.parse(localStorage.getItem(lk) || 'null'); if (Array.isArray(last) && last.length) items = last; } catch (e) {}
     await set(A(c), { createdAt: Date.now(), kind, items, state: { phase: 'setup', item: 0, li: -1, sub: '', sold: null, sec: 5, showNames: true } });
@@ -753,7 +753,7 @@ function wireTeacher(st, items, i, it) {
         else next[k][fl] = f.value;
       });
       set(AP('items'), next);
-      try { localStorage.setItem(SUP() ? 'auction_last_items_S_v4' : 'auction_last_items_D_v3', JSON.stringify(next)); } catch (e) {}
+      try { localStorage.setItem(SUP() ? 'auction_last_items_S_v4' : 'auction_last_items_D_v4', JSON.stringify(next)); } catch (e) {}
     };
     document.querySelectorAll('.iedit input').forEach(inp => {
       if (inp.type === 'checkbox') { inp.onchange = () => { inp.blur(); save(); }; return; }
