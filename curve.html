@@ -614,7 +614,7 @@ function topbar(st) {
     ${play && (st.mode === 'together' || isRace()) ? `<button class="btn sm ${st.auto ? 'mint on' : ''}" id="auto">⏩ 자동 진행 ${st.auto ? 'ON' : 'OFF'}</button>` : ''}
     <button class="btn sm lav" id="names">${st.showNames ? '👤 이름 ON' : '🙈 이름 OFF'}</button>
     ${play ? '<button class="btn sm lemon" id="toEnd">🏁 끝내기</button>' : ''}
-    <button class="btn sm" id="home">처음 화면</button></div>`;
+    <button class="btn sm" id="backStep">◀ 이전 단계</button><a class="btn sm sky" href="hub.html?t=1">🏠 허브로</a><button class="btn sm" id="home">처음 화면</button></div>`;
 }
 const caseRow = (c, ci) => `<div class="case row"><div class="ce">${esc(c.emoji)}</div><div><span class="cm">${esc(c.market)} · 사례 ${ci + 1}</span>${c.price ? `<span class="cp">💰 지금 <b>${esc(c.price)}</b></span>` : ''}<div class="ct">${esc(c.text)}</div></div></div>`;
 let tSumm = null;
@@ -747,6 +747,24 @@ function heatTable(cs, from) {
 function wireTeacher(st, cs) {
   const S = o => update(AP('state'), o);
   el('names').onclick = () => S({ showNames: !st.showNames });
+  el('backStep').onclick=async()=>{
+    if(st.phase==='setup'){location.href='hub.html?t=1';return;}
+    if(!await ask('이전 단계로 돌아갈까요?<br><small>제출된 답은 삭제되지 않아요.</small>'))return;
+    if(st.phase==='lobby')return S({phase:'setup'});
+    if(st.phase==='end')return S({phase:'play',mode:st.mode||'together',ci:Math.max(0,(st.ci||0)),reveal:true});
+    if(st.phase==='play'&&isRace()){
+      if(st.sub==='res')return S({sub:'q',qStarts:{[st.ci||0]:now()+1800}});
+      if((st.ci||0)>0)return S({ci:st.ci-1,sub:'res'});
+      return S({phase:'lobby'});
+    }
+    if(st.phase==='play'){
+      if(st.mode==='solo')return S({phase:'lobby'});
+      if(st.reveal)return S({reveal:false});
+      if((st.step||0)>0)return S({step:st.step-1,reveal:false});
+      if((st.ci||0)>0)return S({ci:st.ci-1,step:0,reveal:false});
+      return S({phase:'lobby'});
+    }
+  };
   if (el('auto')) el('auto').onclick = () => S({ auto: !st.auto });
   document.querySelectorAll('[data-sec]').forEach(b => b.onclick = () => update(A(), { raceSec: +b.dataset.sec }));
   if (el('goRace')) el('goRace').onclick = () => S({ phase: 'play', mode: 'race', ci: 0, sub: 'q', qStarts: { 0: now() + 1800 }, auto: true });

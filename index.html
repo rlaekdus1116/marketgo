@@ -433,7 +433,7 @@ function T_topbar(){
     ${Music.fileName ? '<button class="btn sm" data-act="musicPick" title="음악 파일 바꾸기">📁</button>' : ''}
     <button class="btn sm sky" data-act="toggleMute">${Music.muted ? '🔇' : '🔊'}</button>
     <button class="btn sm lav" data-act="toggleNames">${st.showNames ? '👤 이름 ON' : '🙈 이름 OFF'}</button>
-    <button class="btn sm" data-act="newGame">새 게임</button>
+    <button class="btn sm" data-act="goBack">◀ 이전 단계</button><a class="btn sm sky" href="hub.html?t=1">🏠 허브로</a><button class="btn sm" data-act="newGame">새 게임</button>
   </div>`;
 }
 const resumeBtn = () => looping ? '' : `<button class="btn big sky" data-act="resumeLoop">▶ 이어서 하기</button>`;
@@ -1204,6 +1204,21 @@ document.addEventListener('click', e => {
     const t = el('tgt' + i); if (t) t.textContent = targets[i];
     if (room.state.phase === 'lobby') T_update();
     return;
+  }
+  if (a === 'goBack'){
+    if(!isTeacher||!room)return;
+    if(!confirm('이전 단계로 돌아갈까요? 이미 기록된 학생 점수와 제출 내역은 유지됩니다.'))return;
+    loopGen++;looping=false;paused=true;Music.stop();
+    const st=room.state||{},r=st.round||0,si=st.si||0;
+    let prev;
+    if(st.phase==='end')prev={phase:'result',round:r};
+    else if(st.phase==='result')prev={phase:'check',round:r,si:Math.max(0,si),answerEndsAt:0};
+    else if(st.phase==='check')prev={phase:'answer',round:r,si,answerEndsAt:now()+15000};
+    else if(st.phase==='answer')prev={phase:'show',round:r,si,answerEndsAt:0};
+    else if(st.phase==='show')prev=si>0?{phase:'check',round:r,si:si-1,answerEndsAt:0}:{phase:'intro',round:r};
+    else if(st.phase==='intro')prev={phase:'lobby',round:-1,si:0};
+    else {location.href='hub.html?t=1';return;}
+    return update(ref(db,'rooms/'+code+'/state'),prev).then(()=>{tKey='';T_render()});
   }
   if (a === 'revNext') return T_revNext();
   if (a === 'skipCheck') { skipCheck = true; paused = false; return; }
