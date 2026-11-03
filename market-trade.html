@@ -793,7 +793,7 @@ function renderStudent() {
     return;
   }
 
-  const cardHTML = card.role === 'buyer'
+  const cardHTML = !card ? '' : card.role === 'buyer'
     ? `<div class="tcard buyer"><span class="rn">${st.round}회차 내 카드</span>
         <div class="role">🛒 수요자 카드</div><div class="amt">${won(card.limit)}</div>
         <div class="desc">떡볶이 1인분을 최대한 <b>낮은 가격</b>으로 사세요.<br>떡볶이는 나에게 ${won(card.limit)}만큼의 만족을 줘요.<br>이보다 비싸게 사면 손해!</div></div>`
