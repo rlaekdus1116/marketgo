@@ -175,26 +175,18 @@ function monitorStudentPresence(app,room) {
   teacherPresenceTimer=setInterval(inspect,3000);
 }
 
-/* 📊 기록: 같은 날·같은 방은 한 줄로 덮어써요. 구글 시트 주소가 있으면 시트로도 보내요 */
-const pad = n => String(n).padStart(2, '0');
-const dayStr = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-const lastSent = {};
-export async function hubLog(app, room, cols, rows, extra = '') {
-  try {
-    const d = new Date(), key = `${dayStr(d).replace(/-/g, '')}_${app}_${room}`;
-    const json = JSON.stringify([cols, rows, extra]);
-    if (lastSent[key] === json) return; lastSent[key] = json;
-    const prev = (await get(H('logs/' + key))).val();
-    if (prev && prev.json === json && prev.sent) return;
-    const title = (APPS[app] || {}).title || app;
-    const data = { key, app, title, room: String(room), at: Date.now(), date: `${dayStr(d)} ${pad(d.getHours())}:${pad(d.getMinutes())}`, cols, rows, extra, json, sent: false };
-    await set(H('logs/' + key), data);
-    const url = (await get(H('sheetUrl'))).val();
-    if (url) {
-      await fetch(url, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ key, sheet: title, date: data.date, room: data.room, cols, rows }) });
-      await update(H('logs/' + key), { sent: true });
-    }
-  } catch (e) { console.warn('hubLog', e); }
+/* 교사용 평가 기록은 현재 브라우저에만 저장. 실시간 수업 데이터는 Firebase에 따로 보관됩니다. */
+export function teacherLogs(){try{return JSON.parse(localStorage.getItem('marketgo_teacher_logs_v3')||'{}')||{}}catch(e){return {}}}
+export function removeTeacherLog(k){const logs=teacherLogs();delete logs[k];try{localStorage.setItem('marketgo_teacher_logs_v3',JSON.stringify(logs))}catch(e){}}
+export async function hubLog(app,room,cols,rows,extra=''){
+  try{
+    const d=new Date(),pad=n=>String(n).padStart(2,'0'),day=[d.getFullYear(),pad(d.getMonth()+1),pad(d.getDate())].join('-');
+    const classCode=(localStorage.getItem('marketgo_class_code')||'201').trim()||'201';
+    const key=day.replace(/-/g,'')+'_'+classCode+'_'+app+'_'+room,logs=teacherLogs();
+    const data={key,app,title:(APPS[app]||{}).title||app,room:String(room),classCode,at:Date.now(),date:day+' '+pad(d.getHours())+':'+pad(d.getMinutes()),cols,rows,extra,sent:false};
+    if(logs[key]&&JSON.stringify(logs[key].rows)===JSON.stringify(rows)&&JSON.stringify(logs[key].cols)===JSON.stringify(cols))return;
+    logs[key]=data;localStorage.setItem('marketgo_teacher_logs_v3',JSON.stringify(logs));
+  }catch(e){console.warn('local teacher records',e)}
 }
 
 /* 🧒 학생: 선생님이 다른 활동을 열면 → 화면 아래에 '이동' 버튼 */
