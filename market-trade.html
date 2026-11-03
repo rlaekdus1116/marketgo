@@ -163,6 +163,7 @@ const BUYER_VALUES  = [2500, 3000, 3500, 4000, 4500, 5000, 5500];   // 교과서
 const SELLER_VALUES = [3000, 3500, 4000, 4500, 5000, 5500, 6000];
 const ROUNDS = 3;
 const DEFAULT_SEC = 180;   // 회차당 기본 3분
+const lessonCode=()=>localStorage.getItem('marketgo_lesson_room')||'';
 
 const P = new URLSearchParams(location.search);
 const isTeacher = P.get('t') === '1';
@@ -396,7 +397,7 @@ function renderTeacher() {
     : announce('그만~~!!', `${st.round}회차 거래 끝! ⏰`, '🛑'));
   else maybeAnnounce('lobby', () => {});
 
-  const durCtl = `<span class="dur">⏱ 회차 시간 <button class="btn sm" data-dur="-30">−30초</button><b>${fmt(dur)}</b><button class="btn sm" data-dur="30">+30초</button></span>`;
+  const durCtl = `<span class="dur">⏱ 회차 시간 <button class="btn sm" data-dur="-30">−30초</button><b>${fmt(dur)}</b><button class="btn sm" data-dur="30">+30초</button><input id="durInput" type="number" min="10" max="1800" step="10" value="${dur}" style="width:84px">초 <button class="btn sm mint" id="durSave">설정</button></span>`;
   const topbar = `<div class="topbar">
     <span class="logo">🥵 떡볶이 시장</span>
     ${st.round ? `<span class="pill">${st.round} / ${ROUNDS}회차</span>` : ''}
@@ -440,7 +441,7 @@ function renderTeacher() {
         <div class="timer" id="timer"></div>
         <div class="bar" id="tbar"><i></i></div>
         <div class="rule">기록 <b>${Object.keys(subs).length}</b> / ${Object.keys(cardsOf(st.round)).length}명 · 🤝 성사 <b>${pairsOf(st.round).length}</b>건</div>
-        <div><button class="btn mint" id="bigT">⛶ 타이머 크게</button><button class="btn lemon" id="plus">+1분</button><button class="btn" id="close">⏹ 바로 마감</button></div>
+        <div><button class="btn mint" id="bigT">⛶ 타이머 크게</button><button class="btn lemon" id="minus">−1분</button><button class="btn lemon" id="plus">+1분</button><input id="remainInput" type="number" min="10" max="1800" step="10" style="width:90px" placeholder="남은 초"><button class="btn sm sky" id="remainSave">시간 변경</button><button class="btn" id="close">⏹ 바로 마감</button></div>
       </div>
       ${unmatched.length ? `<div class="card"><h3>🤔 짝이 안 맞는 기록 ${unmatched.length}건</h3>${showNames
         ? `<p class="muted">상대가 아직 안 적었거나, 서로 다르게 적었어요</p><div class="chips">${unmatched.map(id => `<span class="chip soft">${nm(id)} <button class="btn sm" data-reset="${id}">기록 지우기</button></span>`).join('')}</div>`
@@ -480,12 +481,15 @@ function renderTeacher() {
   })();
 
   // 이름 보기 켰을 때만: 누가 누구와 거래했는지
+  const proposalEntries=Object.entries(room.recommendations||{}).filter(([,v])=>v&&v.price);
+  const proposalHTML=isEnd?`<div class="card"><h3>🧠 다음 시장 가격 제안 · ${proposalEntries.length}/${pids.length}명</h3>
+   ${proposalEntries.map(([id,v])=>`<div class="hl sky" style="margin:7px 0"><b>${nm(id)} · ${won(v.price)}</b><p>${esc(v.reason||'')}</p></div>`).join('')||'<p class="muted">학생들이 제출한 뒤 나타나요.</p>'}</div>`:'';
   const logHTML = showNames && st.phase !== 'lobby' ? `<div class="card"><h3>🤝 거래 내역</h3>${cols.filter(roundStarted).map(r => {
     const ps = pairsOf(r);
     return `<div style="margin:8px 0"><span class="roundBadge" style="font-size:16px;padding:4px 14px">${r}회차</span> <span class="chips" style="display:inline-flex">${ps.length ? ps.map(x => { const s = x.buyer === x.a ? x.b : x.a; return `<span class="chip soft">🛒 ${nm(x.buyer)} ↔ 🏷️ ${nm(s)} · ${won(x.price)}</span>`; }).join('') : '<span class="muted">거래 없음</span>'}</span></div>`;
   }).join('')}</div>` : '';
 
-  patchHTML(app, `<div class="wrap">${topbar}${main}${table}${isEnd ? imbalanceHTML() + questionsHTML(cols) : ''}${logHTML}</div>`);
+  patchHTML(app, `<div class="wrap">${topbar}${main}${table}${isEnd ? imbalanceHTML() + questionsHTML(cols) + proposalHTML : ''}${logHTML}</div>`);
   if (st.phase === 'lobby' && window.QRCode && el('qr') && !el('qr').firstChild) new QRCode(el('qr'), { text: link, width: 200, height: 200, colorDark: '#5B4B57', colorLight: '#ffffff' });
 
   const bind = (id, fn) => { const b = el(id); if (b) b.onclick = fn; };
@@ -507,7 +511,10 @@ function renderTeacher() {
     const r = (st.round || 0) + 1;
     update(T(), { [`rounds/${r}/cards`]: ((room.rounds||{})[r]||{}).cards || makeCards(pids), 'state/phase': 'trading', 'state/round': r, 'state/endsAt': now() + dur * 1000 });
   });
-  bind('plus', () => update(T(), { 'state/endsAt': (st.endsAt || now()) + 60000 }));
+  bind('plus', () => update(T(), { 'state/endsAt': Math.max(st.endsAt||now(),now()) + 60000 }));
+  bind('minus', () => update(T(), { 'state/endsAt': Math.max(now()+10000,(st.endsAt||now())-60000) }));
+  bind('remainSave',()=>{const v=Math.round(+el('remainInput').value);if(!v||v<10||v>1800)return toast('10~1800초를 입력하세요');update(T(),{'state/endsAt':now()+v*1000});});
+  bind('durSave',()=>{const v=Math.round(+el('durInput').value);if(!v||v<10||v>1800)return toast('10~1800초를 입력하세요');update(T(),{'state/dur':v});});
   bind('close', () => update(T(), { 'state/phase': 'closed' }));
   app.querySelectorAll('[data-dur]').forEach(b => b.onclick = () => update(T(), { 'state/dur': Math.min(600, Math.max(60, dur + Number(b.dataset.dur))) }));
   app.querySelectorAll('[data-reset]').forEach(b => b.onclick = () => set(ref(db, `rooms/trade_${code}/rounds/${st.round}/subs/${b.dataset.reset}`), null));
@@ -773,14 +780,14 @@ function renderStudent() {
   if (myPair) maybeAnnounce(`deal-${st.round}`, () => announce('거래 성사!!', '🪑 이제 자리에 가서 앉아요!', '🤝', 6000));
 
   // 같은 상태면 다시 그리지 않음 (입력 중인 내용이 날아가지 않게)
-  const sig = JSON.stringify([st.phase, st.round, card, Object.keys(players).length, curSub, !!myPair, partnerSub, claims, editing]);
+  const sig = JSON.stringify([st.phase, st.round, card, Object.keys(players).length, curSub, !!myPair, partnerSub, claims, editing, isEnd ? (room.recommendations||{})[pid]||null : null]);
   if (sig === lastSig) return;
   lastSig = sig;
   if (sel.r !== st.round) { sel = { r: st.round, partner: '', price: 0 }; editing = false; }
 
   const head = `<div class="s-top"><span class="me">🙂 ${esc(name)}</span><span class="pill">⭐ 총 손익 ${signed(totalProfit(st))}</span></div>`;
 
-  if (!card) {
+  if (!card && !isEnd) {
     app.innerHTML = `<div class="s-wrap">${head}<div class="stage" style="min-height:60vh"><div class="bigEmoji bounce">🥵</div><div class="rule">${st.phase === 'lobby'
       ? '선생님이 시작하면<br>카드가 나와요 ⏳'
       : '이번 회차가 끝나면<br>다음 회차부터 카드를 받아요 ⏳'}</div></div></div>`;
@@ -857,8 +864,16 @@ function renderStudent() {
     }
     body += lastResult();
   } else if (isEnd) {
+    const rec=(room.recommendations||{})[pid]||{};
     body += `<div class="stage"><div class="bigEmoji bounce">🎉</div><div class="title">수고했어요!</div>
-      <div class="doneBox">내 총 손익<br><span style="font-size:56px">${signed(totalProfit(st))}</span></div></div>${lastResult()}`;
+      <div class="doneBox">내 총 손익<br><span style="font-size:56px">${signed(totalProfit(st))}</span></div></div>${lastResult()}
+      <div class="card"><h3>🧠 다음 시장의 가격을 제안해 보세요!</h3>
+      <p class="muted">우리 반 거래 결과를 살펴보고 다음 시장의 가격을 제안해 보세요.</p>
+      <label for="recPrice">새로 제안할 가격 (원)</label><input class="field" type="number" id="recPrice" inputmode="numeric" min="100" max="100000" step="100" value="${rec.price||''}" placeholder="예: 4500">
+      <label for="recReason">왜 그 가격을 제안하나요? 실제 거래 결과를 근거로 적어 보세요.</label>
+      <textarea class="field" id="recReason" rows="3" maxlength="400" placeholder="예: 4,500원에 거래가 많이 이루어졌기 때문이에요.">${esc(rec.reason||'')}</textarea>
+      <button class="btn mint" id="saveRec">📩 가격과 근거 제출</button>
+      ${rec.price?'<div class="hl mint">✅ 제출했어요. 수정할 수 있어요.</div>':''}</div>`;
   } else {
     body += lastResult() + `<div class="stage" style="min-height:30vh"><div class="bigEmoji bounce">🎲</div><div class="rule">다음 회차엔 카드가 새로 섞여요!<br><span class="muted">선생님이 시작할 때까지 기다려요 ⏳</span></div></div>`;
   }
@@ -886,6 +901,13 @@ function renderStudent() {
     submit(sel.partner, v);
   };
   if (el('none')) el('none').onclick = () => submit('none', 0);
+  if (el('saveRec')) el('saveRec').onclick=async()=>{
+    const p=Number(el('recPrice').value),reason=(el('recReason').value||'').trim();
+    if(!Number.isInteger(p)||p<100||p>100000||p%100)return toast('가격을 100원 단위로 적어 주세요.');
+    if(reason.length<5)return toast('거래 결과를 근거로 한 문장 이상 적어 주세요.');
+    try{await set(ref(db,`rooms/trade_${code}/recommendations/${pid}`),{price:p,reason,at:Date.now()});toast('가격 제안과 근거를 저장했어요 ✅');}
+    catch(e){toast('저장에 실패했어요. 연결을 확인해 주세요.');}
+  };
 }
 
 function totalProfit(st) {
