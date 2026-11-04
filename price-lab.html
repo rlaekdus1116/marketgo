@@ -23,6 +23,8 @@ const BASE=[
 {id:"m1",q:"시장에서는 사람들이 직접 만나야만 거래할 수 있다.",opts:["맞다","아니다"],a:1,tag:"시장 개념"},
 {id:"m2",q:"기업이 근로자에게 노동을 제공받고 임금을 주는 거래는 어떤 시장에서 이루어질까?",opts:["생산물 시장","생산 요소 시장"],a:1,tag:"시장 구분"},
 {id:"m3",q:"가계와 기업의 경제 순환에서 노동을 공급하는 주체는?",opts:["가계","기업"],a:0,tag:"경제 순환"},
+{id:"m4",q:"가계가 기업이 만든 상품을 사고 대금을 지불하는 시장은?",opts:["생산물 시장","생산 요소 시장"],a:0,tag:"생산물 시장"},
+{id:"m5",q:"시장이 필요한 중요한 이유는?",opts:["거래 상대를 찾는 시간과 비용을 줄여 주기 때문에","사람들이 물건을 직접 만들지 못하게 하기 때문에"],a:0,tag:"시장의 필요성"},
 {id:"p1",q:"다른 조건이 같을 때 과일모찌의 가격이 오르면 수요량은?",opts:["증가","감소"],a:1,tag:"수요 법칙"},
 {id:"p2",q:"다른 조건이 같을 때 과일모찌의 가격이 오르면 공급량은?",opts:["증가","감소"],a:0,tag:"공급 법칙"},
 {id:"p3",q:"수요량이 공급량보다 많을 때, 균형 가격을 향해 가격은?",opts:["상승","하락"],a:0,tag:"초과 수요"}];
@@ -119,7 +121,7 @@ let html='<div class="eyebrow">교사용 대시보드 · 실시간 평가 기록
 html+=teacherStats(rows)+'<div class="row" style="margin:16px 0">'+btn(closed?"활동 다시 열기":"활동 마감","teacherToggle",closed?"mint":"peach")+btn("⬇ 학생별 성장 기록 CSV","download","primary")+btn("새 학습방 선택","teacherSwitch","lav")+'</div>';
 html+='<h3>🔍 자주 틀리는 내용 (첫 응답 기준)</h3>'+(topics.length?topics.map(t=>'<div class="status" style="margin:7px 0"><b>'+esc(t.q.tag)+'</b> · '+esc(t.q.q)+' <b>'+t.wrong+' / '+t.tries+'명 오답</b></div>').join(""):'<p class="muted">훈련 응답이 쌓이면 나타납니다.</p>');
 html+='<h3 style="margin-top:23px">학생별 참여와 평가</h3><div class="tablewrap"><table><thead><tr><th>이름</th><th>진행</th><th>사전 진단</th><th>훈련 첫 정답</th><th>서술 제출</th><th>기록</th></tr></thead><tbody>';
-html+=rows.map(x=>'<tr><td>'+esc(x.s.name||"—")+'</td><td>'+stageOf(x.s)+'</td><td class="num">'+(val(x.s,"baseline.completedAt")?scoreBase(x.s)+"/6":"—")+'</td><td class="num">'+scorePractice(x.s)+'/10</td><td>'+fmt(val(x.s,"final.submittedAt"))+'</td><td><button class="btn lav" data-act="teacherDetail" data-id="'+esc(x.id)+'">확인·평가</button></td></tr>').join("")||'<tr><td colspan="6">학생이 입장하면 여기에 기록돼요.</td></tr>';
+html+=rows.map(x=>'<tr><td>'+esc(x.s.name||"—")+'</td><td>'+stageOf(x.s)+'</td><td class="num">'+(val(x.s,"baseline.completedAt")?scoreBase(x.s)+"/"+BASE.length:"—")+'</td><td class="num">'+scorePractice(x.s)+'/10</td><td>'+fmt(val(x.s,"final.submittedAt"))+'</td><td><button class="btn lav" data-act="teacherDetail" data-id="'+esc(x.id)+'">확인·평가</button></td></tr>').join("")||'<tr><td colspan="6">학생이 입장하면 여기에 기록돼요.</td></tr>';
 html+='</tbody></table></div><div id="detail"></div><p class="small">주의: 교사 화면은 비밀번호가 있는 관리자 페이지가 아닙니다. 교사용 주소를 학생에게 공유하지 마세요. 본 화면의 수치로 서술형을 자동 채점하지 않습니다.</p>';
 app.innerHTML=card(html,"hero");
 }
@@ -128,7 +130,7 @@ return '<div style="margin-top:24px;border-top:2px solid #dae7ee;padding-top:17p
 }
 function downloadCSV(){
 const rows=teacherRows(),klass=localStorage.getItem("marketgo_class_code")||"201";
-const header=["학급","방코드","이름","참여시각","진행단계","사전진단점수(6)","처음가격설명","훈련첫정답(10)","연습응답/재도전","초과수요예측","초과공급예측","독립서술_초과수요","독립서술_초과공급","수요량_용어구분","독립서술시각","수정서술_초과수요","수정서술_초과공급","성찰_바뀐생각","수정제출시각","교사서술평가(0~2)","교사메모"];
+const header=["학급","방코드","이름","참여시각","진행단계","사전진단점수(8)","처음가격설명","훈련첫정답(10)","연습응답/재도전","초과수요예측","초과공급예측","독립서술_초과수요","독립서술_초과공급","수요량_용어구분","독립서술시각","수정서술_초과수요","수정서술_초과공급","성찰_바뀐생각","수정제출시각","교사서술평가(0~2)","교사메모"];
 const body=rows.map(({s})=>[klass,code,s.name,fmt(s.joinedAt),stageOf(s),val(s,"baseline.completedAt")?scoreBase(s):"",val(s,"baseline.why")||"",scorePractice(s),PRACT.map(q=>q.id+":"+(val(s,"practice.answers."+q.id+".choices")||[]).map(i=>q.opts[i]).join("→")).join(" | "),JSON.stringify(val(s,"lab.low")||{}),JSON.stringify(val(s,"lab.high")||{}),val(s,"final.low")||"",val(s,"final.high")||"",val(s,"final.term")||"",fmt(val(s,"final.submittedAt")),val(s,"revision.low")||"",val(s,"revision.high")||"",val(s,"revision.why")||"",fmt(val(s,"revision.submittedAt")),val(s,"review.score")??"",val(s,"review.note")||""]);
 const blob=new Blob(["\ufeff"+[header,...body].map(r=>r.map(csv).join(",")).join("\r\n")],{type:"text/csv;charset=utf-8"});
 const url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download=klass+"_가격탐정_학습성장_"+code+".csv";document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);
