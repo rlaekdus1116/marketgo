@@ -166,8 +166,9 @@ const DEFAULT_SEC = 180;   // 회차당 기본 3분
 const lessonCode=()=>localStorage.getItem('marketgo_lesson_room')||'';
 
 const P = new URLSearchParams(location.search);
-const isTeacher = P.get('t') === '1';
-const code = P.get('room') || '';
+const demoMode = P.get('demo') === '1';
+const isTeacher = P.get('t') === '1' || demoMode;
+const code = P.get('room') || (demoMode ? '가상예시' : '');
 const app = document.getElementById('app');
 let pid = null, room = null, lastSig = '', closing = false;
 let showNames = false;          // 선생님 화면 전용
@@ -178,7 +179,7 @@ let chartRound = 0;             // 그래프: 0 = 전체, 1~3 = 회차만
 let chartMode = 'sd';           // 'sd' 수요·공급 그래프 / 'bar' 가격별 건수 / 'table' 표
 let analysisPrice = null;        // 게임 후 초과수요·초과공급을 살펴볼 가격
 let showImbalance = false;
-let showEq = false;             // 균형 가격 표시 (정답이라 기본은 숨김)
+let showEq = demoMode;             // 균형 가격 표시 (정답이라 기본은 숨김)
 const ROUND_COLORS = ['#3B8FD9', '#E8803E', '#2FA67A'];   // 1·2·3회차 (색각이상 검사 통과, 범례·숫자와 함께 사용)
 const annSeen = new Set();      // 이미 띄운 안내문
 let firstPass = true;           // 처음 접속·새로고침 땐 안내문 안 띄움
@@ -404,7 +405,7 @@ function renderTeacher() {
     <span class="logo">🥵 떡볶이 시장</span>
     ${st.round ? `<span class="pill">${st.round} / ${ROUNDS}회차</span>` : ''}
     <span class="pill">🙋 ${pids.length}명</span>
-    <span class="pill">방 ${esc(code)}</span>
+    <span class="pill">${demoMode ? '가상 데이터 · 실제 기록 아님' : '방 ' + esc(code)}</span>
     <button class="btn sm ${showNames ? 'lemon' : 'sky'}" id="names">👀 이름 보기: ${showNames ? '켬' : '끔'}</button><button class="btn sm" id="backStep">◀ 이전 단계</button><a class="btn sm sky" href="hub.html?t=1">🏠 허브로</a>
   </div>`;
 
@@ -961,9 +962,35 @@ async function submit(partner, price) {
   toast(partner === 'none' ? '거래 안 함으로 기록했어요' : '기록했어요 ✅');
 }
 
+/* 가상 데이터 미리보기: 서버에 방/학생/거래 기록을 생성하지 않음. */
+function renderDemo(){
+  const buyerLimits=[6500,6000,5500,5000,5000,5000,4500,4500,4000,3500];
+  const sellerLimits=[2500,3000,3500,4000,4000,4000,4500,4500,5000,5500];
+  const samplePrices=[5000,4800,4000,4300,4500,4500,4500,4500];
+  const players={},rounds={};
+  for(let i=0;i<20;i++)players['demo'+i]={name:(i<10?'구매자 ':'판매자 ')+(i<10?i+1:i-9),joinedAt:Date.now()-100000};
+  for(let r=1;r<=3;r++){
+    const cards={},subs={};
+    buyerLimits.forEach((limit,i)=>cards['demo'+i]={role:'buyer',limit});
+    sellerLimits.forEach((limit,i)=>cards['demo'+(i+10)]={role:'seller',limit});
+    samplePrices.forEach((p,i)=>{
+      const buyer='demo'+i,seller='demo'+(i+10);
+      subs[buyer]={partner:seller,price:p,at:Date.now()};
+      subs[seller]={partner:buyer,price:p,at:Date.now()};
+    });
+    rounds[r]={cards,subs};
+  }
+  room={createdAt:Date.now(),players,rounds,state:{phase:'closed',round:ROUNDS,dur:180}};
+  chartMode='sd';chartRound=0;showEq=true;showImbalance=false;
+  renderTeacher();
+  const disabled=['backStep','names','durSave','next','close','plus','minus','remainSave'];
+  disabled.forEach(id=>{const x=el(id);if(x){x.disabled=true;x.title='가상 데이터 화면에서는 사용할 수 없어요';}});
+  app.querySelectorAll('[data-reset],[data-kick],[data-dur]').forEach(b=>{b.disabled=true;b.title='가상 데이터 화면';});
+}
+
 /* ========== 실행 ========== */
 function render() { if (isTeacher) renderTeacher(); else renderStudent(); if (el('bigT')) el('bigT').onclick = () => { Snd.ensure(); bigTimer = true; tick(); }; tick(); firstPass = false; }
-start();
+if (demoMode) renderDemo(); else start();
 </script>
 </body>
 </html>
