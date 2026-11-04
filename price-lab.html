@@ -102,7 +102,7 @@ body+='<div class="row" style="margin-top:18px">'+btn("답 제출하기","quizSu
 if(screenError)body+='<p class="errorText">'+esc(screenError)+'</p>';
 return card(body,"hero");
 }
-function baselineDraft(){return card(nav()+steps(0)+'<div class="eyebrow">사전 진단 · 내 생각 기록</div><h2>가격이 왜 바뀌어야 할까?</h2><p>고@바 모찌가 2,000원일 때 사려는 양은 22개, 팔려는 양은 6개입니다. <b>이 시장에서 가격이 어떻게 변할지</b> 이유와 함께 자유롭게 설명해 보세요.</p><textarea id="baselineWhy" maxlength="600" placeholder="내 생각을 2문장 이상 써 보세요."></textarea><div class="row" style="margin-top:15px">'+btn("다음 단계로 넘어가기","baselineDone","primary")+'</div>'+ (screenError?'<p class="errorText">'+esc(screenError)+'</p>':"")); }
+function baselineDraft(){return card(nav()+steps(0)+'<div class="eyebrow">사전 진단 · 내 생각 기록</div><h2>가격이 왜 바뀌어야 할까?</h2><p>고@바 모찌가 3,000원일 때 사려는 양은 20개, 팔려는 양은 10개입니다. <b>이 시장에서 가격이 어떻게 변할지</b> 이유와 함께 자유롭게 설명해 보세요.</p><textarea id="baselineWhy" maxlength="600" placeholder="내 생각을 2문장 이상 써 보세요."></textarea><div class="row" style="margin-top:15px">'+btn("다음 단계로 넘어가기","baselineDone","primary")+'</div>'+ (screenError?'<p class="errorText">'+esc(screenError)+'</p>':"")); }
 function practicePage(){
 const answers=val(me,"practice.answers")||{};
 const ix=PRACT.findIndex(q=>!answers[q.id]||!answers[q.id].done);
@@ -151,10 +151,35 @@ if(screenError)body+='<p class="errorText">'+esc(screenError)+'</p>';return card
 const i=prices.indexOf(priceChoice),delta=demand[i]-supply[i],kind=delta>0?"초과 수요":delta<0?"초과 공급":"균형",change=delta>0?"상승":delta<0?"하락":"변화 없음";
 return card(nav()+steps(2)+'<div class="eyebrow">가격 실험 · 자료 분석</div><h2>📈 가격을 직접 바꿔 보세요</h2><p>다른 조건을 그대로 두고 <b>상품의 가격만</b> 바꿉니다. 선택한 가격에서 수요량과 공급량을 비교해 보세요.</p><div class="choiceGrid">'+prices.map(p=>'<button class="btn '+(priceChoice===p?"mint":"")+'" data-act="price" data-v="'+p+'">'+comma(p)+'원</button>').join("")+'</div><div class="cols" style="margin-top:15px"><div>'+chart(priceChoice)+'</div><div><div class="tri" style="grid-template-columns:1fr 1fr"><div class="stat"><strong>'+demand[i]+'</strong><span>수요량 (개)</span></div><div class="stat"><strong>'+supply[i]+'</strong><span>공급량 (개)</span></div></div><div class="feedback"><b>'+kind+'</b><div>'+(delta===0?"사려는 양과 팔려는 양이 같아 더 이상 가격이 움직일 이유가 없어요.":"수요량과 공급량의 차이 "+Math.abs(delta)+"개. 균형 가격을 향한 가격 "+change+".")+'</div></div></div></div>'+tablePrice(priceChoice)+'<div class="row" style="margin-top:16px">'+btn("다음 단계로 넘어가기","labFinish","primary")+'</div>','hero');
 }
-function finalPage(){return card(nav()+steps(3)+'<div class="eyebrow">서술형 문제</div><h2>균형 가격은 어떻게 결정될까요?</h2><label class="label">① 3,000원에서 초과 수요가 발생했을 때</label><textarea id="finalLow" maxlength="700" placeholder="가격과 수요량·공급량 변화의 관계를 설명하세요."></textarea><label class="label">② 15,000원에서 초과 공급이 발생했을 때</label><textarea id="finalHigh" maxlength="700" placeholder="왜 균형 가격으로 향하는지 설명하세요."></textarea><label class="label">③ 이번 시간, 가격 변화에 따라 달라지는 것은 수요·공급일까요, 수요량·공급량일까요?</label><textarea id="finalTerm" style="min-height:80px" maxlength="250" placeholder="정확한 용어와 이유를 적어 보세요."></textarea><div class="row" style="margin-top:14px">'+btn("제출하고 피드백 확인하기","finalSubmit","primary")+'</div>'+(screenError?'<p class="errorText">'+esc(screenError)+'</p>':"")+'','hero');}
+function finalPage(){
+ return card(nav()+steps(3)+'<div class="eyebrow">서술형 문제</div><h2>모찌 시장을 설명해 보세요!</h2>'+
+  '<div class="note">우리 반 거래 가격과 이 문제의 가상 시장 자료는 구분해서 생각해 보세요.</div>'+
+  '<label class="label">① 모찌가 3,000원일 때 (수요량 20개, 공급량 10개)</label>'+
+  '<textarea id="finalLow" maxlength="700" placeholder="가격이 어떻게 달라지고 수요량과 공급량은 어떻게 변할까요?"></textarea>'+
+  '<label class="label">② 모찌가 15,000원일 때 (수요량 10개, 공급량 20개)</label>'+
+  '<textarea id="finalHigh" maxlength="700" placeholder="가격이 어떤 방향으로 조정되는지 설명해 보세요."></textarea>'+
+  '<label class="label">③ 균형 가격과 균형 거래량은 무엇인지, 둘의 차이를 설명해 보세요.</label>'+
+  '<textarea id="finalEq" maxlength="700" placeholder="균형 가격은 무엇이고, 균형 거래량은 무엇인가요?"></textarea>'+
+  '<label class="label">④ 이번 활동에서 바뀐 것은 수요·공급인가요, 수요량·공급량인가요?</label>'+
+  '<textarea id="finalTerm" maxlength="350" placeholder="가격이 변할 때 정확한 용어를 사용해 보세요."></textarea>'+
+  '<div class="row" style="margin-top:18px">'+btn("제출하고 피드백 확인하기","finalSubmit","primary")+'</div>'+
+  (screenError?'<p class="errorText">'+esc(screenError)+'</p>':'') ,'hero');
+}
 function revisionPage(){
-const first=val(me,"baseline.why")||"",last=val(me,"final.low")||"";
-return card(nav()+steps(4)+'<div class="eyebrow">답안 수정</div><h2>설명을 수정해 보세요.</h2><div class="cols"><div><h3>처음 쓴 설명</h3><div class="quote">'+esc(first)+'</div></div><div><h3>연습 후 독립 서술</h3><div class="quote">'+esc(last)+'</div></div></div><div class="feedback"><b>수정 전 점검 기준</b><div>① 초과 수요/공급을 구분했나? ② 가격의 방향을 썼나? ③ 그 때문에 수요량과 공급량이 각각 어떻게 움직이는지 썼나? ④ 결국 수요량과 공급량이 같아지는 이유를 설명했나?</div></div><label class="label">① 초과 수요 → 균형 가격 (수정본)</label><textarea id="revLow" maxlength="700" placeholder="처음 설명에서 부족했던 부분을 보완하세요."></textarea><label class="label">② 초과 공급 → 균형 가격 (수정본)</label><textarea id="revHigh" maxlength="700" placeholder="두 번째 상황도 보완하세요."></textarea><label class="label">③ 어떤 부분을 고쳤고, 왜 고쳤나요? (성찰)</label><textarea id="revWhy" maxlength="500" placeholder="예: 처음에는 가격만 썼지만…"></textarea>'+btn("수정본 제출하기","revisionSubmit","primary")+(screenError?'<p class="errorText">'+esc(screenError)+'</p>':""),'hero');
+ const first=val(me,"baseline.why")||"",f=me.final||{},guide=val(f,"feedback")||{};
+ const explain=['low','high','eq','term'].map((k,i)=>{
+  const labels=['① 초과 수요 상황','② 초과 공급 상황','③ 균형 가격과 균형 거래량','④ 용어 구별'];
+  const inputId={low:'revLow',high:'revHigh',eq:'revEq',term:'revTerm'}[k];
+  return '<div class="panel" style="background:#FFF9F4"><h3>'+labels[i]+'</h3>'+
+   '<div class="quote"><b>내 답변</b>\n'+esc(f[k]||"")+'</div>'+
+   '<div class="feedback"><b>확인할 부분</b><div>'+esc(guide[k]||'가격과 수요량·공급량의 인과관계를 확인해 보세요.')+'</div></div>'+
+   '<label class="label">수정한 답변</label><textarea id="'+inputId+'" maxlength="700" placeholder="빠진 이유를 추가하고 설명을 고쳐 보세요."></textarea></div>';
+ }).join("");
+ return card(nav()+steps(4)+'<div class="eyebrow">피드백</div><h2>내 설명을 더 정확하게!</h2>'+
+ '<div class="cols"><div><h3>처음 생각</h3><div class="quote">'+esc(first)+'</div></div><div><h3>서술한 내용</h3><div class="quote">'+esc(f.low||'')+'</div></div></div>'+
+ explain+'<label class="label">어떤 부분을 수정했나요?</label><textarea id="revWhy" maxlength="600" placeholder="내 생각에서 달라진 점을 설명해 보세요."></textarea>'+
+ btn("수정본 제출하기","revisionSubmit","primary")+
+ (screenError?'<p class="errorText">'+esc(screenError)+'</p>':'') ,'hero');
 }
 function completedPage(){const b=me.baseline||{},pr=me.practice||{},arr=Object.values(pr.answers||{}),first=arr.filter(v=>v.firstCorrect).length;return card(nav()+'<h1>시장 가격 · 학습 완료</h1><div class="tri"><div class="stat"><strong>'+BASE.filter(q=>val(b,"answers."+q.id)===q.a).length+' / '+BASE.length+'</strong><span>사전 개념 진단</span></div><div class="stat"><strong>'+first+' / '+PRACT.length+'</strong><span>훈련 첫 응답 정답</span></div><div class="stat"><strong>2</strong><span>균형 과정 서술 수정</span></div></div><div class="cols"><div><h3>첫 생각</h3><div class="quote">'+esc(b.why||"")+'</div></div><div><h3>수정 후 생각</h3><div class="quote">'+esc(val(me,"revision.low")||"")+'</div></div></div><div class="row">'+btn("시장경제 허브로 돌아가기","hubStudent","mint")+'</div>','hero');}
 function renderStudent(){if(!code||!myId){studentEntry();return;}if(!me){app.innerHTML=card("학생 기록을 확인하고 있어요…");return;}const p=progress();if(state.phase==="closed"&&p<5){app.innerHTML=card(nav()+'<h2>🔒 선생님이 활동을 마감했어요.</h2><p>작성한 기록은 그대로 남아 있어요. 선생님이 다시 열면 이어 할 수 있어요.</p>');return;}if(p===5){completedPage();return;}if(p===0){const a=val(me,"baseline.answers")||{};app.innerHTML=quizPage(BASE,a,true)||baselineDraft();return;}if(p===1){app.innerHTML=practicePage();return;}if(p===2){app.innerHTML=labPage();return;}if(p===3){app.innerHTML=finalPage();return;}app.innerHTML=revisionPage();}
@@ -198,7 +223,51 @@ hubFollow("priceLab",code);
 onValue(R("state"),s=>{state=s.val()||{};render();},e=>alertMsg("연결이 끊겼어요. 인터넷을 확인해 주세요."));
 onValue(R(studentPath()),s=>{me=s.val();if(!me){alertMsg("진도 기록을 찾을 수 없어요. 선생님께 알려 주세요.");return;}render();},e=>alertMsg("학생 기록을 읽지 못했어요."));
 }
+
+/* 정형화된 피드백: 외부 생성형 AI를 호출하지 않고 개념별 누락 사항을 확인합니다. */
+function explainFeedback(kind,answer){
+ const text=answer.replace(/\s+/g,'');
+ const has=(a)=>a.some(w=>text.includes(w));
+ const missing=[];
+ if(kind==='low'||kind==='high'){
+  if(!has(['초과수요','초과공급','부족','남','많']))missing.push('사려는 양과 팔려는 양을 먼저 비교해 보세요');
+  if(kind==='low'&&!has(['가격상승','가격이상승','가격이오','가격을올']))missing.push('왜 가격이 올라갈 압력이 생기는지 설명해 보세요');
+  if(kind==='high'&&!has(['가격하락','가격이하락','가격이내','가격을낮']))missing.push('왜 가격이 내려갈 압력이 생기는지 설명해 보세요');
+  if(!has(['수요량']))missing.push('수요가 아닌 수요량이 어떻게 변하는지 명확히 써 보세요');
+  if(!has(['공급량']))missing.push('공급량의 변화도 연결해 보세요');
+  if(!has(['균형','같아','일치']))missing.push('마지막에 두 수량이 어떻게 되는지 정리해 보세요');
+ }else if(kind==='eq'){
+  if(!has(['균형가격']))missing.push('균형 가격의 의미를 정의해 보세요');
+  if(!has(['균형거래량']))missing.push('균형 거래량의 의미를 따로 정의해 보세요');
+  if(!has(['수요량','공급량']))missing.push('수요량과 공급량이 일치하는 조건을 설명해 보세요');
+  if(!has(['원','가격']))missing.push('가격과 거래량이 서로 다른 개념이라는 점을 확인해 보세요');
+ }else{
+  if(!has(['수요량','공급량']))missing.push('가격 변화에 따른 수요량·공급량 변화를 정확한 용어로 작성해 보세요');
+  if(!has(['가격']))missing.push('이번 문제에서 변한 조건이 무엇인지 밝혀 보세요');
+ }
+ return missing.length?missing.join(' · '):'핵심 개념을 모두 언급했어요. 원인 → 가격 변화 → 수요량과 공급량의 변화가 논리적으로 이어지는지 다시 확인해 보세요.';
+}
+function validWriting(value,minimum=25){
+ const s=String(value||'').trim(),hangul=(s.match(/[가-힣]/g)||[]).length;
+ const words=s.split(/\s+/).filter(Boolean),uniq=new Set(words.map(w=>w.replace(/[.,!?]/g,'')));
+ if(s.length<minimum||hangul<Math.max(14,Math.floor(minimum*.55)))return '자신의 생각을 문장으로 조금 더 자세히 써 주세요.';
+ if(words.length<5||uniq.size<4)return '단어 나열보다 원인과 결과를 연결한 문장으로 작성해 주세요.';
+ if(/(.{2,12})\1{3,}/u.test(s)||/(.)\1{6,}/u.test(s))return '같은 말이나 글자를 반복하지 말고 이유를 설명해 주세요.';
+ if(!/[.?!]|때문|따라|그래서|그러|하여|해서|므로|면|되/g.test(s))return '왜 그렇게 되는지 원인과 결과를 연결해 설명해 주세요.';
+ return '';
+}
+const checkWritten=(v,min)=>{const msg=validWriting(v,min);if(msg)throw Error(msg);};
+
 let detailId="";
+// 서술형 입력 영역의 일반적인 복사·붙여넣기 및 드롭 제한 (완전한 부정행위 차단은 아님).
+const writingField=t=>t&&t.tagName==='TEXTAREA'&&app.contains(t);
+['paste','copy','cut','drop'].forEach(type=>app.addEventListener(type,e=>{
+ if(writingField(e.target)){e.preventDefault();}
+}));
+app.addEventListener('keydown',e=>{
+ if(writingField(e.target)&&(e.ctrlKey||e.metaKey)&&['v','c','x'].includes(e.key.toLowerCase()))e.preventDefault();
+});
+
 app.addEventListener("click",async e=>{
 const t=e.target.closest("[data-act]");if(!t)return;const act=t.dataset.act;screenError="";
 try{
@@ -232,13 +301,22 @@ await set(R(studentPath()+"/lab/"+k),{state:s,direction:d,correct:ok,at:stamp()}
 if(act==="price"){priceChoice=Number(t.dataset.v);render(true);return;}
 if(act==="labFinish"){await update(R(studentPath()+"/lab"),{completedAt:stamp(),lastPrice:priceChoice});return;}
 if(act==="finalSubmit"){
-const low=document.getElementById("finalLow").value.trim(),high=document.getElementById("finalHigh").value.trim(),term=document.getElementById("finalTerm").value.trim();
-if(low.length<25||high.length<25||term.length<8)throw Error("초과 수요·초과 공급은 각각 25자, 용어 설명은 8자 이상 써 주세요.");
-await set(R(studentPath()+"/final"),{low,high,term,submittedAt:stamp()});return;}
+ const low=document.getElementById("finalLow").value.trim(),high=document.getElementById("finalHigh").value.trim(),
+ eq=document.getElementById("finalEq").value.trim(),term=document.getElementById("finalTerm").value.trim();
+ [low,high,eq].forEach(v=>checkWritten(v,35));checkWritten(term,25);
+ const generated={low:explainFeedback('low',low),high:explainFeedback('high',high),
+  eq:explainFeedback('eq',eq),term:explainFeedback('term',term)};
+ await set(R(studentPath()+"/final"),{low,high,eq,term,feedback:generated,feedbackType:"rule-based",submittedAt:stamp()});
+ document.activeElement?.blur();render(true);return;
+}
 if(act==="revisionSubmit"){
-const low=document.getElementById("revLow").value.trim(),high=document.getElementById("revHigh").value.trim(),why=document.getElementById("revWhy").value.trim();
-if(low.length<25||high.length<25||why.length<12)throw Error("수정 설명(각 25자)과 고친 이유(12자)를 작성해 주세요.");
-await set(R(studentPath()+"/revision"),{low,high,why,submittedAt:stamp()});return;}
+ const low=document.getElementById("revLow").value.trim(),high=document.getElementById("revHigh").value.trim(),
+ eq=document.getElementById("revEq").value.trim(),term=document.getElementById("revTerm").value.trim(),
+ why=document.getElementById("revWhy").value.trim();
+ [low,high,eq].forEach(v=>checkWritten(v,35));checkWritten(term,25);checkWritten(why,25);
+ await set(R(studentPath()+"/revision"),{low,high,eq,term,why,submittedAt:stamp()});
+ document.activeElement?.blur();render(true);return;
+}
 }catch(err){console.error(err);screenError=String(err&&err.message||"저장에 실패했어요. 인터넷을 확인해 주세요.");if(document.activeElement&&["TEXTAREA","INPUT"].includes(document.activeElement.tagName)){const old=document.querySelector(".errorText");if(old)old.textContent=screenError;else{const p=document.createElement("p");p.className="errorText";p.textContent=screenError;app.querySelector(".panel")?.appendChild(p);}}else render(true);}
 });
 async function start(){
