@@ -577,11 +577,16 @@ function sdHTML(rs) {
   while (eqQ < Math.min(D.length, Sp.length) && D[eqQ] >= Sp[eqQ]) eqQ++;
   const eqLo = eqQ ? Math.max(Sp[eqQ - 1], D[eqQ] ?? -Infinity) : Sp[0];
   const eqHi = eqQ ? Math.min(D[eqQ - 1], Sp[eqQ] ?? Infinity) : D[0];
-  const qd = p => D.filter(v => v >= p).length, qs = p => Sp.filter(v => v <= p).length;
-  if (showEq) {
-    g += `<rect x="${L}" y="${y(eqHi + 50)}" width="${pw}" height="${Math.max(6, y(eqLo - 50) - y(eqHi + 50))}" fill="#FFF5CC"/>
-      <text x="${W - Rr + 8}" y="${(y(eqHi) + y(eqLo)) / 2 + 6}" font-size="17" fill="#5B4B57">⚖️ 균형</text>`;
-  }
+  
+  // 교과서와 같은 직선형 모식도: 균형을 나타내는 교점은 실제 카드 자료로 산출함.
+  // 거래 가격대·균형 수치는 원자료를 그대로 사용하고, 두 곡선의 모양만 단순화함.
+  const eqP=(eqLo+eqHi)/2;
+  const qE=eqQ;
+  const nL=Math.max(1,qE),nR=Math.max(1,qMax-qE);
+  const dSlope=Math.max(1,Math.min((pMax-eqP)/nL,(eqP-pMin)/nR)*0.88);
+  const sSlope=Math.max(1,Math.min((eqP-pMin)/nL,(pMax-eqP)/nR)*0.88);
+  const dAt=q=>eqP+dSlope*(qE-q);
+  const sAt=q=>eqP+sSlope*(q-qE);
 
   // 실제 성사된 거래의 최빈 500원 구간을 곡선과 함께 표시해요.
   // 균형 가격은 별도의 교사 공개 버튼으로만 나타냅니다.
@@ -594,18 +599,20 @@ function sdHTML(rs) {
     peaks.forEach(([p,n])=>{
       const low=Math.max(pMin,p),high=Math.min(pMax,p+binSize);
       const top=y(high),bottom=y(low);
-      g+=`<rect x="${L}" y="${top}" width="${pw}" height="${Math.max(2,bottom-top)}" fill="#DDF5EA" opacity="0.65" stroke="#2FA67A" stroke-width="2" stroke-dasharray="8 6" />`;
+      g+=`<rect x="${L}" y="${top}" width="${pw}" height="${Math.max(2,bottom-top)}" fill="#DDF5EA" opacity="0.35" stroke="#2FA67A" stroke-width="2" stroke-dasharray="8 6" />`;
     });
   }
-  // 계단 곡선
-  const steps = vals => vals.map((v, i) => `${i ? 'V' : 'M' + x(0) + ','}${y(v)}H${x(i + 1)}`).join('');
-  g += `<path d="${steps(D)}" fill="none" stroke="${BLUE}" stroke-width="4" stroke-linejoin="round"/>`;
-  g += `<path d="${steps(Sp)}" fill="none" stroke="${ORANGE}" stroke-width="4" stroke-linejoin="round"/>`;
-  g += `<text x="${x(D.length) + 8}" y="${y(D[D.length - 1]) + 6}" font-size="20" fill="${BLUE}">수요 D</text>`;
-  g += `<text x="${x(Sp.length) + 8}" y="${y(Sp[Sp.length - 1]) + 6}" font-size="20" fill="${ORANGE}">공급 S</text>`;
-  // 계단 꼭짓점에 마우스 올리면 설명
-  D.forEach((v, i) => g += `<circle cx="${x(i + 1)}" cy="${y(v)}" r="9" fill="transparent"><title>${won(v)} 이상이면 사겠다는 수요자 ${qd(v)}명</title></circle>`);
-  Sp.forEach((v, i) => g += `<circle cx="${x(i + 1)}" cy="${y(v)}" r="9" fill="transparent"><title>${won(v)} 이하로도 팔겠다는 공급자 ${qs(v)}명</title></circle>`);
+  // 학생용 그래프는 꺾임 없이 곧은 수요선·공급선으로 표현.
+  g += `<line x1="${x(0)}" y1="${y(dAt(0))}" x2="${x(qMax)}" y2="${y(dAt(qMax))}" stroke="${BLUE}" stroke-width="5" stroke-linecap="round"/>`;
+  g += `<line x1="${x(0)}" y1="${y(sAt(0))}" x2="${x(qMax)}" y2="${y(sAt(qMax))}" stroke="${ORANGE}" stroke-width="5" stroke-linecap="round"/>`;
+  g += `<text x="${x(qMax)+10}" y="${y(dAt(qMax))+6}" font-size="21" fill="${BLUE}">수요 D</text>`;
+  g += `<text x="${x(qMax)+10}" y="${y(sAt(qMax))+6}" font-size="21" fill="${ORANGE}">공급 S</text>`;
+  if(showEq){
+    g += `<line x1="${L}" x2="${x(qE)}" y1="${y(eqP)}" y2="${y(eqP)}" stroke="#9470B8" stroke-width="2.5" stroke-dasharray="7 6"/>`;
+    g += `<line x1="${x(qE)}" x2="${x(qE)}" y1="${y(eqP)}" y2="${Tp+ph}" stroke="#9470B8" stroke-width="2.5" stroke-dasharray="7 6"/>`;
+    g += `<circle cx="${x(qE)}" cy="${y(eqP)}" r="10" stroke="#fff" stroke-width="3" fill="#9470B8"/>`;
+    g += `<text x="${x(qE)+15}" y="${y(eqP)-16}" font-size="20" fill="#72548B">균형</text>`;
+  }
 
   let note = '<span class="muted">아직 성사된 거래가 없어요</span>';
   if (deals.length) {
