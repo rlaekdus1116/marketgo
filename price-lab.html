@@ -44,6 +44,7 @@ table{font-size:17px}thead th{background:#FFF5CC}
 .chart{background:#fff}
 @media(max-width:720px){.panel{padding:16px}.btn{font-size:19px}body{font-size:18px}.label{font-size:20px}h1{font-size:34px}.opt{font-size:20px}}
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
 </head>
 <body><div class="shell"><header class="top"><a class="brand" href="hub.html">시장 가격</a></header><main id="app"><div class="panel">교실에 연결하고 있어요…</div></main></div>
 <script type="module">
@@ -106,6 +107,22 @@ const PRACT=[
 {id:"a9",q:"'가격이 올라서 수요가 감소했다'를 이번 시간에 더 정확히 표현하면?",opts:["수요량이 감소했다","수요 곡선이 이동했다"],a:0,why:"상품 자체의 가격 변화만 생각할 때는 수요·공급이 아니라 수요량·공급량 변화로 말해요.",tag:"개념 구분"},
 {id:"a10",q:"가격이 변해도 그대로라고 가정한 조건은?",opts:["소득·취향·생산비 등 다른 조건","상품 자체의 가격"],a:0,why:"이번 시간에는 다른 조건이 같다고 가정하고 가격만 변하게 했어요.",tag:"개념 구분"}];
 let code=P.get("room")||"",room=null,me=null,myId="",name="",state={},selected=null,feedback=null,priceChoice=9000,screenError="",lastLog="";
+let viewingQuiz={baseline:null,practice:null},sentenceSelections={},submitBusy=false;
+const sentenceOrder=['low','high','eq','term'];
+const SENTENCES={
+low:{title:"① 가격이 3,000원이라면?",context:"사려는 사람 20명 · 팔려는 사람 10명",bits:[
+"사려는 양이 팔려는 양보다 많아서","물건이 부족한 초과 수요가 발생하고","가격이 상승하면서 수요량은 감소하고 공급량은 증가하여","결국 두 수량이 같아지는 균형 가격에 가까워진다."],
+extras:["가격이 하락하면서 공급량만 늘어난다.","가격 외 조건이 달라졌기 때문에"]},
+high:{title:"② 가격이 15,000원이라면?",context:"사려는 사람 10명 · 팔려는 사람 20명",bits:[
+"팔려는 양이 사려는 양보다 많아서","물건이 남는 초과 공급이 발생하고","가격이 하락하면서 수요량은 증가하고 공급량은 감소하여","결국 두 수량이 같아지는 균형 가격에 가까워진다."],
+extras:["가격이 올라가면서 수요량이 증가한다.","공급 자체가 무조건 감소한다."]},
+eq:{title:"③ 균형 가격과 균형 거래량",context:"모찌 시장의 수요량과 공급량이 각각 15개가 되는 가격은 9,000원",bits:[
+"수요량과 공급량이 서로 같아지는 가격을","균형 가격이라고 하며","그 균형 가격에서 실제로 거래되는 상품의 수량을","균형 거래량이라고 한다."],
+extras:["가격 자체를 균형 거래량이라고 하며","공급량만을 균형 가격이라고 한다."]},
+term:{title:"④ 가격이 변할 때 달라지는 것",context:"가격 외 다른 조건은 일정함",bits:[
+"다른 조건이 일정한 상황에서","상품 자체의 가격이 변화하면","수요와 공급 자체가 이동하는 것이 아니라","수요량과 공급량이 변한다."],
+extras:["수요 곡선과 공급 곡선이 반드시 이동한다.","가격은 변하지 않는다."]}
+};
 const R=p=>ref(db,"rooms/priceLab_"+code+(p?"/"+p:""));
 const val=(obj,path)=>path.split(".").reduce((a,k)=>a&&a[k],obj);
 const esc=v=>String(v==null?"":v).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -119,36 +136,49 @@ const card=(body,klass)=>'<section class="panel '+(klass||"")+'">'+body+'</secti
 const alertMsg=m=>{screenError=m;render(true);};
 const studentPath=()=> "students/"+myId;
 function nav(){return '<div class="row between"><span class="pill">학습방 '+esc(code)+'</span><span class="pill">'+esc(name)+'</span></div>';}
-function steps(n){return '<div class="gridSteps">'+["① 사전 진단","② 가격 변동 훈련","③ 시장 가격 실험","④ 독립 서술","⑤ 피드백·수정"].map((s,i)=>'<span class="step '+(i===n?"on":"")+'">'+s+'</span>').join("")+'</div>';}
+function steps(n){return '<div class="gridSteps">'+Array.from({length:5},(_,i)=>'<span class="step '+(i===n?'on':'')+'">'+(i+1)+'단계</span>').join('')+'</div>';}
 function progress(){if(!me)return 0;return me.revision&&me.revision.submittedAt?5:me.final&&me.final.submittedAt?4:me.lab&&me.lab.completedAt?3:me.baseline&&me.baseline.completedAt?(me.practice&&me.practice.completedAt?2:1):0;}
 function render(force){if(!force&&document.activeElement&&["TEXTAREA","INPUT","SELECT"].includes(document.activeElement.tagName))return; if(isTeacher)renderTeacher();else renderStudent();}
 function teacherHome(){const old=localStorage.getItem("marketgo_lesson_room")||"";app.innerHTML=card('<h1>시장 가격</h1><label class="label" for="teacherRoom">이어 사용할 4자리 방 코드</label><input class="field" id="teacherRoom" inputmode="numeric" maxlength="4" value="'+esc(old)+'" placeholder="예: 2588"><div class="row" style="margin-top:14px">'+btn("이 방 열기 / 이어 하기","teacherOpen","primary")+btn("새 코드 만들기","teacherNew","mint")+'</div>','hero');}
 function studentEntry(){const from=localStorage.getItem("marketgo_lesson_room")||"";app.innerHTML=card('<h1>시장 가격</h1><label class="label">학습방 코드 4자리</label><input class="field" id="joinCode" inputmode="numeric" maxlength="4" value="'+esc(code||from)+'" placeholder="선생님이 알려 준 코드"><label class="label">이름 또는 학급별명 (8자 이내)</label><input class="field" id="joinName" maxlength="8" value="'+esc(getStudentName())+'" placeholder="예: 20305"><div class="row" style="margin-top:16px">'+btn("학습방 입장하기","studentJoin","primary")+'</div>','hero');}
 function quizPage(items,answers,baseline){
-const i=items.findIndex(q=>!Object.prototype.hasOwnProperty.call(answers,q.id)||(baseline?false:!answers[q.id]?.done));
-if(i===-1)return "";
-const q=items[i];const heading=baseline?"첫 생각을 진단해요":"가격 변동을 훈련해요";
-let body=nav()+steps(baseline?0:1)+'<div class="eyebrow">'+heading+' · '+(i+1)+' / '+items.length+'</div><div class="track"><div style="width:'+(i/items.length*100)+'%"></div></div><h2>'+esc(q.q)+'</h2><p class="muted">'+(baseline?"":"다른 조건이 같다고 가정합니다.")+'</p>';
-body+=q.opts.map((o,j)=>'<button class="opt '+(selected===j?"chosen":"")+'" data-act="select" data-v="'+j+'">'+esc(o)+'</button>').join("");
-body+='<div class="row" style="margin-top:18px">'+btn("답 제출하기","quizSubmit","primary")+'</div>';
-if(screenError)body+='<p class="errorText">'+esc(screenError)+'</p>';
-return card(body,"hero");
+ const kind=baseline?'baseline':'practice';
+ const next=items.findIndex(q=>!Object.prototype.hasOwnProperty.call(answers,q.id)||(baseline?false:!answers[q.id]?.done));
+ if(next<0)return "";
+ const idx=viewingQuiz[kind]===null?next:Math.max(0,Math.min(next,viewingQuiz[kind]));
+ const q=items[idx],saved=answers[q.id],answered=Object.prototype.hasOwnProperty.call(answers,q.id)&&(baseline||saved?.done);
+ const choice=answered?(baseline?saved:(saved?.choices||[])[(saved?.choices||[]).length-1]):selected;
+ let body=nav()+steps(baseline?0:1)+'<div class="eyebrow">'+(baseline?'1단계':'2단계')+' · '+(idx+1)+' / '+items.length+'</div>'+
+ '<div class="track"><div style="width:'+((idx+1)/items.length*100)+'%"></div></div><h2>'+esc(q.q)+'</h2>'+
+ '<p class="muted">'+(answered?'이미 제출한 문제입니다. 답은 바꿀 수 없어요.':'')+'</p>';
+ body+=q.opts.map((o,j)=>'<button class="opt '+(choice===j?'chosen':'')+'" '+(answered?'disabled':'')+' data-act="select" data-v="'+j+'">'+esc(o)+'</button>').join("");
+ if(answered&& !baseline)body+='<div class="feedback">'+esc(q.why)+'</div>';
+ body+='<div class="row" style="margin-top:18px">'+
+ (idx>0?btn("이전 문제","quizBack","lav"):'')+
+ (answered?btn("다음 문제","quizForward","primary"):btn("답 제출하기",baseline?"quizSubmit":"practiceSubmit","primary"))+'</div>';
+ if(screenError)body+='<p class="errorText">'+esc(screenError)+'</p>';
+ return card(body,"hero");
 }
 function baselineDraft(){return card(nav()+steps(0)+'<div class="eyebrow">사전 진단 · 내 생각 기록</div><h2>가격이 왜 바뀌어야 할까?</h2><p>고@바 모찌가 3,000원일 때 사려는 양은 20개, 팔려는 양은 10개입니다. <b>이 시장에서 가격이 어떻게 변할지</b> 이유와 함께 자유롭게 설명해 보세요.</p><textarea id="baselineWhy" maxlength="600" placeholder="내 생각을 2문장 이상 써 보세요."></textarea><div class="row" style="margin-top:15px">'+btn("다음 단계로 넘어가기","baselineDone","primary")+'</div>'+ (screenError?'<p class="errorText">'+esc(screenError)+'</p>':"")); }
 function practicePage(){
-const answers=val(me,"practice.answers")||{};
-const ix=PRACT.findIndex(q=>!answers[q.id]||!answers[q.id].done);
-if(ix<0){if(!val(me,"practice.completedAt")){markPracticeDone();return card("훈련 결과를 저장하고 있어요…");}return "";}
-const q=PRACT[ix],prev=answers[q.id]||{},attempts=Number(prev.attempts||0);
-let body=nav()+steps(1)+'<div class="eyebrow">가격의 변화가 원인이에요 · '+(ix+1)+' / '+PRACT.length+'</div><div class="track"><div style="width:'+(ix/PRACT.length*100)+'%"></div></div><h2>'+esc(q.q)+'</h2>';
-if(feedback&&feedback.id===q.id){
-body+='<div class="feedback '+(feedback.correct?"":"error")+'"><b>'+(feedback.correct?"✅ 정답이에요!":"🔁 다시 생각해 봐요.")+'</b><div>'+esc(q.why)+'</div></div>'+btn(feedback.done?"다음 문제 →":"한 번 더 풀어 보기 →","practiceNext","primary");
-}else{
-body+=q.opts.map((o,j)=>'<button class="opt '+(selected===j?"chosen":"")+'" data-act="select" data-v="'+j+'">'+esc(o)+'</button>').join("")+btn(attempts?"두 번째 답 제출":"답 확인하기","practiceSubmit","primary");
+ const answers=val(me,"practice.answers")||{},next=PRACT.findIndex(q=>!answers[q.id]||!answers[q.id].done);
+ if(next<0){if(!val(me,"practice.completedAt")){markPracticeDone();return card("기록을 저장하는 중이에요…");}return "";}
+ if(viewingQuiz.practice!==null&&viewingQuiz.practice<next)return quizPage(PRACT,answers,false);
+ const q=PRACT[next],prev=answers[q.id]||{},attempts=Number(prev.attempts||0);
+ let body=nav()+steps(1)+'<div class="eyebrow">2단계 · '+(next+1)+' / '+PRACT.length+'</div>'+
+ '<div class="track"><div style="width:'+(next/PRACT.length*100)+'%"></div></div><h2>'+esc(q.q)+'</h2>';
+ if(feedback&&feedback.id===q.id){
+   body+='<div class="feedback '+(feedback.correct?"":"error")+'"><b>'+(feedback.correct?"정답이에요!":"다시 생각해 봐요.")+'</b><div>'+esc(q.why)+'</div></div>'+
+   btn(feedback.done?"다음 문제":"다시 풀기","practiceNext","primary");
+ }else{
+   body+=q.opts.map((o,j)=>'<button class="opt '+(selected===j?"chosen":"")+'" data-act="select" data-v="'+j+'">'+esc(o)+'</button>').join("")+
+   btn(attempts?"다시 제출":"답 확인하기","practiceSubmit","primary");
+ }
+ if(next>0)body+='<div class="row" style="margin-top:10px">'+btn("이전 문제","quizBack","lav")+'</div>';
+ if(screenError)body+='<p class="errorText">'+esc(screenError)+'</p>';
+ return card(body,"hero");
 }
-if(screenError)body+='<p class="errorText">'+esc(screenError)+'</p>';
-return card(body,"hero");
-}
+
 async function markPracticeDone(){try{await update(R(studentPath()+"/practice"),{completedAt:stamp()});}catch(e){alertMsg("기록 저장에 실패했어요.");}}
 function chart(price){
  const W=620,H=390,L=86,R=110,T=25,B=65,xx=q=>L+(q-8)/16*(W-L-R),yy=p=>T+(16000-p)/14000*(H-T-B);
@@ -231,13 +261,19 @@ function wrongTopics(rows){return PRACT.map(q=>({q,wrong:rows.filter(x=>val(x.s,
 function renderTeacher(){
 if(!code){teacherHome();return;}if(!room){app.innerHTML=card("학습방 데이터를 불러오는 중이에요…");return;}
 const rows=teacherRows(),closed=val(room,"state.phase")==="closed",topics=wrongTopics(rows);
-let html='<h1>시장 가격</h1><div class="row"><span class="pill">방 코드 '+esc(code)+'</span><span class="pill">'+(closed?"🔒 마감":"🟢 학습 진행 중")+'</span><a href="hub.html?t=1" class="btn mint">시장경제 허브</a></div>';
+const qrUrl=location.origin+location.pathname+"?room="+encodeURIComponent(code);
+let html='<h1>시장 가격</h1><div class="row" style="align-items:center;justify-content:space-between;gap:20px">'+
+'<div><span class="pill">학습방 '+esc(code)+'</span> <span class="pill">'+(closed?'마감':'진행 중')+'</span>'+
+'<p>학생용 입장 코드: <b>'+esc(code)+'</b></p><a href="hub.html?t=1" class="btn mint">시장경제 허브</a></div>'+
+'<div style="text-align:center"><div id="priceLabQR" style="background:white;padding:10px;border:2px solid #F2E6EC;border-radius:16px;display:inline-block"></div>'+
+'<div style="font-size:16px">학생용 QR 코드</div></div></div>';
 html+=teacherStats(rows)+'<div class="row" style="margin:16px 0">'+btn(closed?"활동 다시 열기":"활동 마감","teacherToggle",closed?"mint":"peach")+btn("⬇ 학생별 성장 기록 CSV","download","primary")+btn("새 학습방 선택","teacherSwitch","lav")+'</div>';
 html+='<h3>🔍 자주 틀리는 내용 (첫 응답 기준)</h3>'+(topics.length?topics.map(t=>'<div class="status" style="margin:7px 0"><b>'+esc(t.q.tag)+'</b> · '+esc(t.q.q)+' <b>'+t.wrong+' / '+t.tries+'명 오답</b></div>').join(""):'<p class="muted">훈련 응답이 쌓이면 나타납니다.</p>');
 html+='<h3 style="margin-top:23px">학생별 참여와 평가</h3><div class="tablewrap"><table><thead><tr><th>이름</th><th>진행</th><th>사전 진단</th><th>훈련 첫 정답</th><th>서술 제출</th><th>기록</th></tr></thead><tbody>';
 html+=rows.map(x=>'<tr><td>'+esc(x.s.name||"—")+'</td><td>'+stageOf(x.s)+'</td><td class="num">'+(val(x.s,"baseline.completedAt")?scoreBase(x.s)+"/"+BASE.length:"—")+'</td><td class="num">'+scorePractice(x.s)+'/10</td><td>'+fmt(val(x.s,"final.submittedAt"))+'</td><td><button class="btn lav" data-act="teacherDetail" data-id="'+esc(x.id)+'">확인·평가</button></td></tr>').join("")||'<tr><td colspan="6">학생이 입장하면 여기에 기록돼요.</td></tr>';
 html+='</tbody></table></div><div id="detail"></div>';
 app.innerHTML=card(html,"hero");
+ if(window.QRCode){const target=document.getElementById("priceLabQR");if(target)new QRCode(target,{text:qrUrl,width:176,height:176,colorDark:"#5B4B57",colorLight:"#fff"});}
 }
 function detailHTML(id){const x=(room.students||{})[id];if(!x)return "";const b=x.baseline||{},f=x.final||{},r=x.revision||{},review=x.review||{};
 return '<div style="margin-top:24px;border-top:2px solid #dae7ee;padding-top:17px"><div class="row between"><h3>'+esc(x.name)+' 학생 답안</h3>'+btn("학생 기록 삭제","deleteStudent","peach")+'</div><div class="cols"><div><p class="eyebrow">사전 생각 · '+fmt(b.completedAt)+'</p><div class="quote">'+esc(b.why||"미제출")+'</div></div><div><p class="eyebrow">독립 서술 · '+fmt(f.submittedAt)+'</p><div class="quote"><b>[초과 수요]</b>\n'+esc(f.low||"미제출")+'</div><div class="quote"><b>[초과 공급]</b>\n'+esc(f.high||"미제출")+'</div><div class="quote"><b>[균형 가격·거래량]</b>\n'+esc(f.eq||"미제출")+'</div><p class="small">용어 구별: '+esc(f.term||"—")+'</p><div class="feedback"><b>학생에게 제공된 답안 피드백</b><div>'+esc(Object.entries(f.feedback||{}).map(([k,v])=>k+": "+v).join(" / ")||"없음")+'</div></div></div></div><h3>피드백 후 수정</h3><div class="cols"><div><div class="quote"><b>[초과 수요 수정]</b>\n'+esc(r.low||"미제출")+'</div></div><div><div class="quote"><b>[초과 공급 수정]</b>\n'+esc(r.high||"미제출")+'</div></div></div><div class="quote"><b>[균형 가격·거래량 수정]</b>\n'+esc(r.eq||"미제출")+'</div><p><b>학생의 성찰</b></p><div class="quote">'+esc(r.why||"미제출")+'</div><div class="cols"><div><label class="label">서술 평가 (교사 판단 · 0~2점)</label><select id="reviewScore"><option value="">아직 평가하지 않음</option><option value="0" '+(review.score===0?"selected":"")+'>0점: 개념 또는 인과관계 불충분</option><option value="1" '+(review.score===1?"selected":"")+'>1점: 일부 단계 설명</option><option value="2" '+(review.score===2?"selected":"")+'>2점: 가격과 두 수량 변동·균형 연결</option></select></div><div><label class="label">교사 피드백 메모</label><textarea id="reviewNote" maxlength="500" style="min-height:85px">'+esc(review.note||"")+'</textarea></div></div>'+btn("교사 평가 저장","reviewSave","primary")+' '+btn("기록 닫기","detailClose","")+'</div>';
