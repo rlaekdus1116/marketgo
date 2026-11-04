@@ -226,8 +226,6 @@ function matchRound(cards, subs) {
     const b = sa.partner, sb = (subs || {})[b], ca = (cards || {})[a], cb = (cards || {})[b];
     if (!sb || sb.partner !== a || !ca || !cb || ca.role === cb.role) continue;
     if (sa.price !== sb.price) continue;
-    const bc=ca.role==='buyer'?ca:cb,sc=ca.role==='seller'?ca:cb;
-    if(!Number.isFinite(sa.price)||sa.price<=0||sa.price>bc.limit||sa.price<sc.limit)continue;
     const key = [a, b].sort().join('|');
     if (seen.has(key)) continue;
     seen.add(key);
@@ -940,7 +938,6 @@ async function submit(partner, price) {
     const own=(fresh.cards||{})[pid],other=(fresh.cards||{})[partner];
     if(!own||!other||own.role===other.role)return toast('거래 상대를 다시 확인해 주세요');
     if(!Number.isInteger(price)||price<=0)return toast('정확한 가격을 입력해 주세요');
-    if(profitOf(own,price)<0||profitOf(other,price)<0)return toast('서로 손해를 보지 않는 가격으로 거래해 주세요');
   }
   await set(ref(db, `${base}/subs/${pid}`), { partner, price, at: Date.now() });
   editing = false; sel.partner = '';
