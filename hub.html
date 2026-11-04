@@ -246,6 +246,7 @@ const LESSONS = [
     { id: 'auctionS', desc: '🏷️ 팔래요! 공급 조사 → 곡선 → 공급 법칙 정리 (경매 없음)' },
     { id: 'poll', desc: '🗳️ 질문: 시장에서 가격은 누가 결정할까? 학생별 실시간 투표·응답 시각·제출 점수 확인' },
     { id: 'trade', desc: '🥵 떡볶이 시장 게임 · 수요자·공급자가 직접 거래하며 시장 가격 찾기' },
+    { id: 'priceLab', desc: '🔎 가격 탐정 · 사전 진단 → 가격 변동 훈련 → 초과 수요·공급 실험 → 서술 → 피드백 수정 · 성장 기록 CSV' },
     { ext: 'https://rlaekdus1116.github.io/demandsupply/', emoji: '🧪', title: '수요·공급 실험실', desc: '호가 게임으로 시장 가격 결정 체험 (따로 만든 앱)' },
   ] },
   { n: 3, name: '시장 가격의 변동', apps: [{ id: 'curve', desc: '수요편 → 공급편 → ⚡총정리 스피드 시험 · 곡선 위의 이동 vs 곡선 자체의 이동' }] },
@@ -403,7 +404,7 @@ async function downloadGrowthCSV(){
   localStorage.setItem('marketgo_lesson_room',c);
   localStorage.setItem('marketgo_class_code',klass);
   try{
-    const prefixes=['auction','auctionS','poll','trade'];
+    const prefixes=['auction','auctionS','poll','trade','priceLab'];
     const results=await Promise.all(prefixes.map(p=>get(ref(db,'rooms/'+p+'_'+c))));
     const rooms=Object.fromEntries(prefixes.map((p,i)=>[p,results[i].val()||{}]));
     const byName=new Map();
@@ -431,18 +432,25 @@ async function downloadGrowthCSV(){
       const p=find(tradePlayers[id]?.name,'trade');if(!p)continue;
       p.price=data.price||'';p.reason=data.reason||'';
     }
+    const lab=rooms.priceLab||{};
+    for(const p of Object.values(lab.students||{})){
+      const st=find(p.name,'priceLab');if(!st)continue;
+      st.labBase=p.baseline?.why||'';st.labFirst=p.final?.low||'';st.labFirstHigh=p.final?.high||'';
+      st.labRevised=p.revision?.low||'';st.labRevisedHigh=p.revision?.high||'';st.labReflection=p.revision?.why||'';
+      st.labScore=p.review?.score??'';
+    }
     const poll=rooms.poll,pollPlayers=poll.players||{};
     for(const p of Object.values(pollPlayers))find(p.name,'poll');
     for(const [id,data] of Object.entries(poll.votes||{})){
       const p=find(pollPlayers[id]?.name,'poll');if(p)p.vote=data.choice||'';
     }
-    const header=['학급','기록 내려받은 날짜','방 코드','이름','수요 예언값(상품1)','수요 예언 이유(상품1)','수요 그래프 비교(상품1)','수요 예언값(상품2)','수요 예언 이유(상품2)','수요 그래프 비교(상품2)','공급 예언값','공급 예언 이유','공급 그래프 비교','시장 가격 결정 최초 투표','새로 제안한 떡볶이 가격(원)','가격 제안 근거','참여 활동'];
+    const header=['학급','기록 내려받은 날짜','방 코드','이름','수요 예언값(상품1)','수요 예언 이유(상품1)','수요 그래프 비교(상품1)','수요 예언값(상품2)','수요 예언 이유(상품2)','수요 그래프 비교(상품2)','공급 예언값','공급 예언 이유','공급 그래프 비교','시장 가격 결정 최초 투표','새로 제안한 떡볶이 가격(원)','가격 제안 근거','가격 탐정 최초 생각','가격 탐정 독립서술(초과 수요)','가격 탐정 독립서술(초과 공급)','가격 탐정 수정서술(초과 수요)','가격 탐정 수정서술(초과 공급)','가격 탐정 성찰','가격 탐정 교사평가','참여 활동'];
     const date=new Date().toLocaleDateString('sv-SE');
     const rows=Array.from(byName.values()).sort((a,b)=>a.name.localeCompare(b.name,'ko')).map(p=>[
       klass,date,c,p.name,p.dPredict1||'',p.dReason1||'',p.dReflect1||'',
       p.dPredict2||'',p.dReason2||'',p.dReflect2||'',
       p.sPredict1||'',p.sReason1||'',p.sReflect1||'',
-      p.vote||'',p.price||'',p.reason||'',Array.from(p.stages).join(' / ')
+      p.vote||'',p.price||'',p.reason||'',p.labBase||'',p.labFirst||'',p.labFirstHigh||'',p.labRevised||'',p.labRevisedHigh||'',p.labReflection||'',p.labScore??'',Array.from(p.stages).join(' / ')
     ]);
     if(!rows.length)return toast('해당 방에 학생 기록이 없어요.');
     const quote=v=>{const t=String(v??'');const safe=/^[=+\-@]/.test(t)?"'"+t:t;return '"'+safe.replace(/"/g,'""')+'"';};
@@ -457,7 +465,7 @@ async function eraseLessonRoom(){
   if(!confirm('최종 확인: 삭제한 서버 데이터는 복구할 수 없습니다. 계속할까요?'))return;
   try{
     await Promise.all(['auction','auctionS','poll','trade'].map(p=>remove(ref(db,'rooms/'+p+'_'+c))));
-    await Promise.all(['auction','auctionS','poll','trade'].map(p=>remove(H('presence/'+p+'_'+c))));
+    await Promise.all(['auction','auctionS','poll','trade','priceLab'].map(p=>remove(H('presence/'+p+'_'+c))));
     if((hub.current||{}).room===c)await remove(H('current'));
     toast('수업방 학생 데이터가 Firebase에서 삭제됐어요.');
   }catch(e){console.error(e);toast('서버 삭제가 일부 실패했어요. 권한을 확인해 주세요.');}
