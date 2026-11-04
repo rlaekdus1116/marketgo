@@ -1,0 +1,17 @@
+{
+  "name": "marketgo-ai-feedback",
+  "private": true,
+  "version": "1.0.0",
+  "main": "index.js",
+  "engines": {
+    "node": "22"
+  },
+  "scripts": {
+    "check": "node --check index.js"
+  },
+  "dependencies": {
+    "firebase-admin": "^13.0.0",
+    "firebase-functions": "^7.0.0",
+    "openai": "^6.0.0"
+  }
+}
