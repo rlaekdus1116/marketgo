@@ -175,6 +175,9 @@ let showNames = false;          // 선생님 화면 전용
 const hintOpen = new Set();     // 결과 질문에서 힌트 펼친 번호
 let sel = { r: 0, partner: '', price: 0 };   // 학생이 고르는 중인 상대·가격
 let editing = false;            // 학생이 기록을 고치는 중
+let nameEditorOpen = false;      // 학생 이름 수정 패널
+let nameDraft = '';              // 실시간 화면 갱신에도 입력값 유지
+let nameSaving = false;
 let chartRound = 0;             // 그래프: 0 = 전체, 1~3 = 회차만
 let resultChartRoom='';
 let chartMode = 'sd';           // 'sd' 수요·공급 그래프 / 'bar' 가격별 건수 / 'table' 표
@@ -321,11 +324,12 @@ function studentForm(prefillCode) {
     <div class="title">고@바 모찌 <span>시장</span></div>
     <div class="card" style="width:min(460px,100%);display:grid;gap:4px">
       <input class="field" id="jCode" inputmode="numeric" maxlength="4" placeholder="입장 코드 4자리" value="${esc(prefillCode)}">
-${getStudentName() ? `<div class="hl mint">🙂 ${esc(getStudentName())} 이름 저장 완료</div>` : `<input class="field" id="jName" maxlength="8" placeholder="내 이름">`}
+      <label for="jName" class="muted">내 이름 (틀리면 여기에서 수정하세요)</label>
+      <input class="field" id="jName" maxlength="8" placeholder="내 이름" value="${esc(getStudentName())}">
       <button class="btn big mint" id="join">들어가기 🚪</button>
     </div>
   </div></div>`;
-  el('join').onclick = () => join(el('jCode').value.trim(), getStudentName() || (el('jName')?.value || '').trim());
+  el('join').onclick = () => join(el('jCode').value.trim(), (el('jName')?.value || '').trim());
 }
 
 async function join(c, name) {
@@ -946,6 +950,55 @@ function questionsHTML(cols) {
     </div>`).join('')}</div>`;
 }
 
+/* 이름 수정은 학생 ID를 그대로 두고 이름 필드만 바꿉니다. 거래·점수·제출 기록은 유지됩니다. */
+function bindNameEditor() {
+  const editButton = el('editNameBtn');
+  if (editButton) editButton.onclick = () => {
+    nameDraft = String((room.players || {})[pid]?.name || getStudentName() || '');
+    nameEditorOpen = true;
+    lastSig = '';
+    renderStudent();
+    el('editNameInput')?.focus();
+  };
+  const input = el('editNameInput');
+  if (input) {
+    input.oninput = () => { nameDraft = input.value; };
+    input.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); el('saveNameBtn')?.click(); } };
+  }
+  const cancel = el('cancelNameBtn');
+  if (cancel) cancel.onclick = () => { nameEditorOpen = false; nameDraft = ''; lastSig = ''; renderStudent(); };
+  const save = el('saveNameBtn');
+  if (save) save.onclick = async () => {
+    if (nameSaving) return;
+    const next = (el('editNameInput')?.value || '').trim();
+    if (!next) return toast('이름을 입력해 주세요.');
+    if (next.length > 8) return toast('이름은 8자까지 입력할 수 있어요.');
+    const old = (room.players || {})[pid]?.name || getStudentName() || '';
+    if (next === old) { nameEditorOpen = false; lastSig = ''; renderStudent(); return; }
+    nameSaving = true;
+    save.disabled = true;
+    try {
+      await update(ref(db, `rooms/trade_${code}/players/${pid}`), { name: next });
+      saveStudentName(next);
+      localStorage.setItem('trade_name', next);
+      // 허브의 현재 접속 학생 표시도 즉시 갱신합니다.
+      const presenceId = localStorage.getItem('marketgo_presence_id');
+      if (presenceId) update(ref(db, `rooms/hub_main/presence/trade_${code}/${presenceId}`), { name: next }).catch(() => {});
+      nameEditorOpen = false;
+      nameDraft = '';
+      lastSig = '';
+      renderStudent();
+      toast('이름을 바꿨어요! 기존 거래·점수는 그대로예요 ✅');
+    } catch(e) {
+      console.error(e);
+      toast('이름 저장에 실패했어요. 인터넷을 확인해 주세요.');
+    } finally {
+      nameSaving = false;
+      const stillSave = el('saveNameBtn');
+      if (stillSave) stillSave.disabled = false;
+    }
+  };
+}
 /* ========== 학생 화면 ========== */
 function renderStudent() {
   const players = room.players || {}, rounds = room.rounds || {};
@@ -976,17 +1029,22 @@ function renderStudent() {
   if (myPair) maybeAnnounce(`deal-${st.round}`, () => announce('거래 성사!!', '🪑 이제 자리에 가서 앉아요!', '🤝', 6000));
 
   // 같은 상태면 다시 그리지 않음 (입력 중인 내용이 날아가지 않게)
-  const sig = JSON.stringify([st.phase, st.round, card, Object.keys(players).length, curSub, !!myPair, partnerSub, claims, editing, isEnd ? (room.recommendations||{})[pid]||null : null]);
+  const sig = JSON.stringify([st.phase, st.round, card, Object.entries(players).map(([id, p]) => [id, p?.name || '']), nameEditorOpen, curSub, !!myPair, partnerSub, claims, editing, isEnd ? (room.recommendations||{})[pid]||null : null]);
   if (sig === lastSig) return;
   lastSig = sig;
   if (sel.r !== st.round) { sel = { r: st.round, partner: '', price: 0 }; editing = false; }
 
-  const head = `<div class="s-top"><span class="me">🙂 ${esc(name)}</span><span class="pill">⭐ 총 손익 ${signed(totalProfit(st))}</span></div>`;
+  const head = `<div class="s-top" style="flex-wrap:wrap"><span class="me">🙂 ${esc(name)}</span><button type="button" class="btn sm sky" id="editNameBtn">✏️ 이름 수정</button><span class="pill">⭐ 총 손익 ${signed(totalProfit(st))}</span></div>
+    ${nameEditorOpen ? `<div class="card" style="margin-bottom:12px"><label for="editNameInput" class="lab">바꿀 이름을 입력하세요 (최대 8자)</label>
+      <input class="field" id="editNameInput" maxlength="8" autocomplete="name" value="${esc(nameDraft)}">
+      <div class="chips"><button type="button" class="btn sm mint" id="saveNameBtn">✅ 이름 저장</button><button type="button" class="btn sm" id="cancelNameBtn">취소</button></div>
+      <p class="muted" style="font-size:15px;margin:8px 0 0">이름만 바뀌고 지금까지의 거래·점수는 유지돼요.</p></div>` : ''}`;
 
   if (!card && !isEnd) {
     app.innerHTML = `<div class="s-wrap">${head}<div class="stage" style="min-height:60vh"><div class="bigEmoji bounce">🍡</div><div class="rule">${st.phase === 'lobby'
       ? '선생님이 시작하면<br>카드가 나와요 ⏳'
       : '이번 회차가 끝나면<br>다음 회차부터 카드를 받아요 ⏳'}</div></div></div>`;
+    bindNameEditor();
     return;
   }
 
@@ -1080,6 +1138,7 @@ function renderStudent() {
   }
 
   app.innerHTML = `<div class="s-wrap">${head}${body}</div>`;
+  bindNameEditor();
 
   // 가격 입력하면 손익 미리 보기
   const showPL = () => {
