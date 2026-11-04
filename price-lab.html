@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>가격 탐정 | 시장과 수요·공급 성장 실험실</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Jua&family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#293849;--sub:#637386;--line:#dfebf4;--navy:#2a435c;--mint:#c8f2e6;--peach:#ffe1d3;--sky:#d9edff;--lav:#ede3ff;--yellow:#fff0b3;--bg:#f5f9fd;--white:#fff}*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(circle at 100% 0,#e4f7f7,transparent 36%),radial-gradient(circle at 0 65%,#fceef6,transparent 32%),var(--bg);color:var(--ink);font-family:'Noto Sans KR',system-ui,sans-serif;font-size:16px;line-height:1.7;word-break:keep-all}h1,h2,h3,.brand,.big,.btn{font-family:'Jua','Noto Sans KR',sans-serif;font-weight:400}h1{font-size:clamp(28px,5vw,43px);margin:4px 0 8px;line-height:1.26}h2{font-size:27px;line-height:1.4;margin:0 0 13px}h3{font-size:22px;margin:0 0 10px}.shell{max-width:1080px;margin:auto;padding:22px 16px 80px}.top{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:18px;flex-wrap:wrap}.brand{font-size:23px;color:var(--navy);text-decoration:none}.top small{color:var(--sub)}.panel{background:#fff;border:1.5px solid var(--line);border-radius:24px;padding:24px;box-shadow:0 10px 28px #45566a0c;margin-bottom:16px}.hero{background:linear-gradient(120deg,#e6f8ee,#e6f1ff 68%,#fff0e7)}.eyebrow{font-size:13px;letter-spacing:.5px;color:#446778;font-weight:800;text-transform:uppercase}.muted{color:var(--sub)}.small{font-size:13px;color:var(--sub)}.btn{border:2px solid transparent;padding:11px 17px;border-radius:14px;background:#eaf2f9;color:var(--navy);font-size:18px;cursor:pointer;transition:transform .1s,box-shadow .1s;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:7px;line-height:1.3;white-space:normal;text-align:center}.btn:hover{transform:translateY(-2px)}.btn:focus-visible,.opt:focus-visible{outline:3px solid #5679d9;outline-offset:2px}.btn:disabled{opacity:.55;cursor:not-allowed}.primary{background:#244b66;color:white}.mint{background:var(--mint)}.peach{background:var(--peach)}.lav{background:var(--lav)}.yellow{background:var(--yellow)}.wide{width:100%}.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.between{justify-content:space-between}.cols{display:grid;grid-template-columns:1fr 1fr;gap:14px}.tri{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.stat{background:#f2f8fd;border-radius:16px;padding:13px}.stat strong{font-family:Jua;font-size:30px;display:block;line-height:1.2}.stat span{color:var(--sub);font-size:13px}.pill{display:inline-flex;background:#eef4f8;border:1px solid #dae6ee;border-radius:99px;padding:6px 12px;font-size:13px;color:#456174;font-weight:700;line-height:1.3}.track{height:9px;background:#e8edf3;border-radius:40px;overflow:hidden;margin:14px 0 20px}.track>div{height:100%;background:#70ceb5;transition:width .2s}.question{font-size:20px;font-weight:700;margin:12px 0 18px;line-height:1.6}.opt{background:#f8fbfd;border:2px solid #deebf3;border-radius:16px;padding:15px 16px;text-align:left;display:block;width:100%;font:600 16px/1.6 'Noto Sans KR';cursor:pointer;color:var(--ink);margin:8px 0}.opt.chosen{border-color:#3ba894;background:#e6fbf1}.feedback{background:#effaf4;border:1px solid #b6e3d5;border-radius:17px;padding:15px;margin:15px 0}.feedback.error{background:#fff3ee;border-color:#ffd7c8}.field,textarea,select{font:inherit;color:var(--ink);border:2px solid #dae7f0;border-radius:14px;padding:13px 14px;background:#fff;max-width:100%;width:100%;outline:none}.field:focus,textarea:focus,select:focus{border-color:#58bdb0}textarea{min-height:130px;resize:vertical}.label{display:block;font-size:14px;font-weight:800;margin:10px 0 6px}.note{background:#fff9e5;border-left:5px solid #edc15f;padding:12px 15px;border-radius:10px;margin:14px 0}.tablewrap{overflow-x:auto;width:100%;border:1px solid #e0e9f0;border-radius:15px}table{border-collapse:collapse;width:100%;font-size:14px;min-width:680px}th,td{padding:10px 12px;border-bottom:1px solid #e7eef3;text-align:left;vertical-align:top}th{background:#eff7fc;font-weight:800}tbody tr:last-child td{border-bottom:0}.num{font-weight:800;color:#245c78;font-variant-numeric:tabular-nums}.choiceGrid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}.choiceGrid button{padding:14px 4px}.chart{width:100%;height:auto;max-width:650px;background:#fafcff;border-radius:16px}.quote{background:#f3f8fc;border-radius:13px;padding:13px;margin:8px 0;white-space:pre-wrap}.dot{width:9px;height:9px;border-radius:50%;display:inline-block;background:#3db49c;margin-right:6px}.gridSteps{display:flex;gap:5px;flex-wrap:wrap;margin:12px 0}.step{background:#edf2f6;padding:7px 10px;border-radius:9px;color:#6b7d8b;font-size:12px;font-weight:700}.step.on{background:var(--mint);color:#1b6555}.errorText{color:#a33b2c;font-weight:700}.status{background:#e8f4fc;border-radius:12px;padding:10px 13px;font-size:14px}.hidden{display:none}.footer{font-size:12px;color:#8a99a6;text-align:center;margin-top:28px}
+@media(max-width:720px){.shell{padding:12px 11px 70px}.panel{padding:17px;border-radius:18px}.cols,.tri{grid-template-columns:1fr}.choiceGrid{grid-template-columns:repeat(3,1fr)}.btn{font-size:16px}.question{font-size:18px}h2{font-size:24px}}
+</style>
+</head>
+<body><div class="shell"><header class="top"><a class="brand" href="hub.html">🔎 가격 탐정 · 성장 실험실</a><span class="pill">시장 → 수요·공급 → 균형 가격</span></header><main id="app"><div class="panel">교실에 연결하고 있어요…</div></main><footer class="footer">MarketGo 학습 성장 기록 · 정답뿐 아니라 생각의 변화까지 남깁니다.</footer></div>
+<script type="module">
+import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {getDatabase,ref,get,set,update,onValue,remove} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import {hubSeen,hubFollow,hubLog,getStudentName,saveStudentName} from "./hub.js";
+const firebaseConfig={apiKey:"AIzaSyDiehLZ1aKv8E3N_pD4bNmw0zgMexau99U",authDomain:"marketgo-80ab5.firebaseapp.com",databaseURL:"https://marketgo-80ab5-default-rtdb.firebaseio.com",projectId:"marketgo-80ab5",storageBucket:"marketgo-80ab5.firebasestorage.app",messagingSenderId:"666715038541",appId:"1:666715038541:web:b0f84a9703aa70aeca4d04"};
+const db=getDatabase(initializeApp(firebaseConfig)),P=new URLSearchParams(location.search),isTeacher=P.get("t")==="1",app=document.getElementById("app");
+const prices=[2000,2500,3000,3500,4000],demand=[22,18,14,10,6],supply=[6,10,14,18,22];
+const BASE=[
+{id:"m1",q:"시장에서는 사람들이 직접 만나야만 거래할 수 있다.",opts:["맞다","아니다"],a:1,tag:"시장 개념"},
+{id:"m2",q:"기업이 근로자에게 노동을 제공받고 임금을 주는 거래는 어떤 시장에서 이루어질까?",opts:["생산물 시장","생산 요소 시장"],a:1,tag:"시장 구분"},
+{id:"m3",q:"가계와 기업의 경제 순환에서 노동을 공급하는 주체는?",opts:["가계","기업"],a:0,tag:"경제 순환"},
+{id:"p1",q:"다른 조건이 같을 때 과일모찌의 가격이 오르면 수요량은?",opts:["증가","감소"],a:1,tag:"수요 법칙"},
+{id:"p2",q:"다른 조건이 같을 때 과일모찌의 가격이 오르면 공급량은?",opts:["증가","감소"],a:0,tag:"공급 법칙"},
+{id:"p3",q:"수요량이 공급량보다 많을 때, 균형 가격을 향해 가격은?",opts:["상승","하락"],a:0,tag:"초과 수요"}];
+const PRACT=[
+{id:"a1",q:"가격이 상승하면 수요량은?",opts:["증가","감소"],a:1,why:"가격이 오른 것이 원인이에요. 비싸지면 사려는 수량(수요량)은 감소해요.",tag:"수요 법칙"},
+{id:"a2",q:"가격이 하락하면 수요량은?",opts:["증가","감소"],a:0,why:"가격이 내려가면 같은 상품을 사려는 수량(수요량)은 증가해요.",tag:"수요 법칙"},
+{id:"a3",q:"가격이 상승하면 공급량은?",opts:["증가","감소"],a:0,why:"가격이 오르면 팔려는 수량(공급량)이 증가해요.",tag:"공급 법칙"},
+{id:"a4",q:"가격이 하락하면 공급량은?",opts:["증가","감소"],a:1,why:"가격이 내리면 팔려는 수량(공급량)이 감소해요.",tag:"공급 법칙"},
+{id:"a5",q:"수요량이 공급량보다 더 많으면?",opts:["초과 수요","초과 공급"],a:0,why:"사려는 양이 팔려는 양보다 많아 상품이 부족한 상태, 초과 수요예요.",tag:"초과 수요"},
+{id:"a6",q:"공급량이 수요량보다 더 많으면?",opts:["초과 수요","초과 공급"],a:1,why:"팔려는 양이 사려는 양보다 많아 상품이 남는 상태, 초과 공급이에요.",tag:"초과 공급"},
+{id:"a7",q:"초과 수요가 나타날 때 균형 가격을 향한 가격 변화 방향은?",opts:["가격 상승","가격 하락"],a:0,why:"상품이 부족해 가격이 오르면 수요량은 감소하고 공급량은 증가해요.",tag:"가격 조정"},
+{id:"a8",q:"초과 공급이 나타날 때 균형 가격을 향한 가격 변화 방향은?",opts:["가격 상승","가격 하락"],a:1,why:"상품이 남아 가격이 내려가면 수요량은 증가하고 공급량은 감소해요.",tag:"가격 조정"},
+{id:"a9",q:"'가격이 올라서 수요가 감소했다'를 이번 시간에 더 정확히 표현하면?",opts:["수요량이 감소했다","수요 곡선이 이동했다"],a:0,why:"상품 자체의 가격 변화만 생각할 때는 수요·공급이 아니라 수요량·공급량 변화로 말해요.",tag:"개념 구분"},
+{id:"a10",q:"가격이 변해도 그대로라고 가정한 조건은?",opts:["소득·취향·생산비 등 다른 조건","상품 자체의 가격"],a:0,why:"이번 시간에는 다른 조건이 같다고 가정하고 가격만 변하게 했어요.",tag:"개념 구분"}];
+let code=P.get("room")||"",room=null,me=null,myId="",name="",state={},selected=null,feedback=null,priceChoice=3000,screenError="",lastLog="";
+const R=p=>ref(db,"rooms/priceLab_"+code+(p?"/"+p:""));
+const val=(obj,path)=>path.split(".").reduce((a,k)=>a&&a[k],obj);
+const esc=v=>String(v==null?"":v).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const fmt=t=>t?new Date(t).toLocaleString("ko-KR",{month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit"}):"—";
+const comma=n=>Number(n).toLocaleString("ko-KR");
+const stamp=()=>Date.now();
+const idFor=s=>Array.from(new TextEncoder().encode(s.trim().normalize("NFC"))).map(b=>b.toString(16).padStart(2,"0")).join("");
+const csv=v=>{let s=String(v==null?"":v);if(/^[\s]*[=+\-@]/.test(s))s="'"+s;return '"'+s.replace(/"/g,'""')+'"';};
+const btn=(title,action,klass)=>'<button type="button" class="btn '+(klass||"")+'" data-act="'+action+'">'+title+'</button>';
+const card=(body,klass)=>'<section class="panel '+(klass||"")+'">'+body+'</section>';
+const alertMsg=m=>{screenError=m;render(true);};
+const studentPath=()=> "students/"+myId;
+function nav(){return '<div class="row between"><span class="pill">학습방 '+esc(code)+'</span><span class="pill">'+esc(name)+'</span></div>';}
+function steps(n){return '<div class="gridSteps">'+["① 사전 진단","② 가격 변동 훈련","③ 시장 가격 실험","④ 독립 서술","⑤ 피드백·수정"].map((s,i)=>'<span class="step '+(i===n?"on":"")+'">'+s+'</span>').join("")+'</div>';}
+function progress(){if(!me)return 0;return me.revision&&me.revision.submittedAt?5:me.final&&me.final.submittedAt?4:me.lab&&me.lab.completedAt?3:me.baseline&&me.baseline.completedAt?(me.practice&&me.practice.completedAt?2:1):0;}
+function render(force){if(!force&&document.activeElement&&["TEXTAREA","INPUT","SELECT"].includes(document.activeElement.tagName))return; if(isTeacher)renderTeacher();else renderStudent();}
+function teacherHome(){const old=localStorage.getItem("marketgo_lesson_room")||"";app.innerHTML=card('<div class="eyebrow">MarketGo · 탐구·평가 통합</div><h1>🔎 가격 탐정 성장 실험실</h1><p>시장 개념 → 가격에 따른 수요량·공급량 → 초과 수요·초과 공급 → 균형 가격 → 서술 수정. 학생의 처음 생각과 수정한 생각을 같은 방에 저장합니다.</p><div class="note">기존 시장경제 허브의 4자리 방 코드를 그대로 사용해요. 학생은 기존 허브 QR로 입장합니다.</div><label class="label" for="teacherRoom">이어 사용할 4자리 방 코드</label><input class="field" id="teacherRoom" inputmode="numeric" maxlength="4" value="'+esc(old)+'" placeholder="예: 2588"><div class="row" style="margin-top:14px">'+btn("이 방 열기 / 이어 하기","teacherOpen","primary")+btn("새 코드 만들기","teacherNew","mint")+'</div><p class="small">교사용 주소는 별도 인증이 적용되지 않았습니다. 학생 이름 대신 별명을 사용하고 공개 공유를 피하세요.</p>','hero');}
+function studentEntry(){const from=localStorage.getItem("marketgo_lesson_room")||"";app.innerHTML=card('<div class="eyebrow">MarketGo 학습 활동</div><h1>🕵️ 시장 가격의 비밀을 찾아라!</h1><p>정답보다 중요한 건 <b>왜 가격이 바뀌는지</b> 설명하는 힘이에요.</p><label class="label">학습방 코드 4자리</label><input class="field" id="joinCode" inputmode="numeric" maxlength="4" value="'+esc(code||from)+'" placeholder="선생님이 알려 준 코드"><label class="label">이름 또는 학급별명 (8자 이내)</label><input class="field" id="joinName" maxlength="8" value="'+esc(getStudentName())+'" placeholder="예: 20305"><div class="row" style="margin-top:16px">'+btn("학습방 입장하기","studentJoin","primary")+'</div>','hero');}
+function quizPage(items,answers,baseline){
+const i=items.findIndex(q=>!answers[q.id]||(baseline?false:!answers[q.id].done));
+if(i===-1)return "";
+const q=items[i];const heading=baseline?"첫 생각을 진단해요":"가격 변동을 훈련해요";
+let body=nav()+steps(baseline?0:1)+'<div class="eyebrow">'+heading+' · '+(i+1)+' / '+items.length+'</div><div class="track"><div style="width:'+(i/items.length*100)+'%"></div></div><h2>'+esc(q.q)+'</h2><p class="muted">'+(baseline?"힌트 없는 사전 진단입니다. 지금 생각대로 답하세요.":"다른 조건은 같고, 상품 자체의 가격만 변한다고 생각해요.")+'</p>';
+body+=q.opts.map((o,j)=>'<button class="opt '+(selected===j?"chosen":"")+'" data-act="select" data-v="'+j+'">'+esc(o)+'</button>').join("");
+body+='<div class="row" style="margin-top:18px">'+btn("답 제출하기","quizSubmit","primary")+'</div>';
+if(screenError)body+='<p class="errorText">'+esc(screenError)+'</p>';
+return card(body,"hero");
+}
+function baselineDraft(){return card(nav()+steps(0)+'<div class="eyebrow">사전 진단 · 내 생각 기록</div><h2>가격이 왜 바뀌어야 할까?</h2><p>과일모찌가 2,000원일 때 사려는 양은 22개, 팔려는 양은 6개입니다. <b>이 시장에서 가격이 어떻게 변할지</b> 이유와 함께 자유롭게 설명해 보세요.</p><div class="note">정답 힌트 없이 처음 생각을 남기는 단계예요. 나중에 수정한 설명과 비교합니다.</div><textarea id="baselineWhy" maxlength="600" placeholder="내 생각을 2문장 이상 써 보세요."></textarea><div class="row" style="margin-top:15px">'+btn("첫 생각 저장하고 훈련 시작","baselineDone","primary")+'</div>'+ (screenError?'<p class="errorText">'+esc(screenError)+'</p>':"")); }
+function practicePage(){
+const answers=val(me,"practice.answers")||{};
+const ix=PRACT.findIndex(q=>!answers[q.id]||!answers[q.id].done);
+if(ix<0){if(!val(me,"practice.completedAt")){markPracticeDone();return card("훈련 결과를 저장하고 있어요…");}return "";}
+const q=PRACT[ix],prev=answers[q.id]||{},attempts=Number(prev.attempts||0);
+let body=nav()+steps(1)+'<div class="eyebrow">가격의 변화가 원인이에요 · '+(ix+1)+' / '+PRACT.length+'</div><div class="track"><div style="width:'+(ix/PRACT.length*100)+'%"></div></div><h2>'+esc(q.q)+'</h2><p class="small">정답을 맞히거나 2번 시도하면 다음 문제로 넘어가요. 첫 응답과 수정 여부가 기록됩니다.</p>';
+if(feedback&&feedback.id===q.id){
+body+='<div class="feedback '+(feedback.correct?"":"error")+'"><b>'+(feedback.correct?"✅ 정답이에요!":"🔁 다시 생각해 봐요.")+'</b><div>'+esc(q.why)+'</div></div>'+btn(feedback.done?"다음 문제 →":"한 번 더 풀어 보기 →","practiceNext","primary");
+}else{
+body+=q.opts.map((o,j)=>'<button class="opt '+(selected===j?"chosen":"")+'" data-act="select" data-v="'+j+'">'+esc(o)+'</button>').join("")+btn(attempts?"두 번째 답 제출":"답 확인하기","practiceSubmit","primary");
+}
+if(screenError)body+='<p class="errorText">'+esc(screenError)+'</p>';
+return card(body,"hero");
+}
+async function markPracticeDone(){try{await update(R(studentPath()+"/practice"),{completedAt:stamp()});}catch(e){alertMsg("기록 저장에 실패했어요.");}}
+function chart(price){
+const x=q=>56+q*18,y=p=>263-(p-2000)*.094,plot=(arr)=>arr.map((q,i)=>x(q)+","+y(prices[i])).join(" ");
+const dDots=prices.map((p,i)=>'<circle cx="'+x(demand[i])+'" cy="'+y(p)+'" r="4" fill="#478dc2"/>').join("");
+const sDots=prices.map((p,i)=>'<circle cx="'+x(supply[i])+'" cy="'+y(p)+'" r="4" fill="#df9772"/>').join("");
+return '<svg role="img" aria-label="가로축 거래 수량, 세로축 가격. 수요곡선 우하향, 공급곡선 우상향. 균형가격 3000원, 균형수량 14개" class="chart" viewBox="0 0 540 315"><rect x="0" y="0" width="540" height="315" rx="16" fill="#fafcff"/><line x1="56" y1="18" x2="56" y2="275" stroke="#7a8da2" stroke-width="2"/><line x1="56" y1="275" x2="520" y2="275" stroke="#7a8da2" stroke-width="2"/><text x="17" y="25" font-size="13" fill="#475e6d">가격(원)</text><text x="425" y="303" font-size="13" fill="#475e6d">수량(개)</text><polyline points="'+plot(demand)+'" fill="none" stroke="#478dc2" stroke-width="4"/><polyline points="'+plot(supply)+'" fill="none" stroke="#df9772" stroke-width="4"/>'+dDots+sDots+prices.map(p=>'<text x="7" y="'+(y(p)+4)+'" font-size="11" fill="#718394">'+p+'</text>').join("")+'<line x1="56" x2="518" y1="'+y(price)+'" y2="'+y(price)+'" stroke="#88a5b8" stroke-dasharray="6 5" stroke-width="2"/><line x1="'+x(14)+'" x2="'+x(14)+'" y1="'+y(3000)+'" y2="275" stroke="#93acb7" stroke-dasharray="3 5"/><circle cx="'+x(14)+'" cy="'+y(3000)+'" r="7" fill="#247a64" stroke="white" stroke-width="3"/><text x="452" y="46" font-size="13" fill="#478dc2">수요 D</text><text x="452" y="65" font-size="13" fill="#df9772">공급 S</text><text x="'+(x(14)+9)+'" y="'+(y(3000)-12)+'" font-size="13" fill="#247a64">균형</text></svg>';
+}
+function tablePrice(current){return '<div class="tablewrap"><table style="min-width:460px"><thead><tr><th>가격</th><th>수요량</th><th>공급량</th><th>차이</th></tr></thead><tbody>'+prices.map((p,i)=>'<tr style="'+(current===p?"background:#ebf8f1;font-weight:800":"")+'"><td>'+comma(p)+'원</td><td>'+demand[i]+'개</td><td>'+supply[i]+'개</td><td>'+(demand[i]===supply[i]?"일치":Math.abs(demand[i]-supply[i])+"개")+'</td></tr>').join("")+'</tbody></table></div>';}
+function labPage(){
+const low=val(me,"lab.low"),high=val(me,"lab.high");
+if(!low||!high){
+const c=!low?"low":"high",p=c==="low"?2000:4000,i=prices.indexOf(p);
+let body=nav()+steps(2)+'<div class="eyebrow">가격 실험 · '+(!low?"첫 번째":"두 번째")+' 조사</div><h2>🧪 가격이 '+comma(p)+'원이라면?</h2><p>과일모찌를 사려는 양은 <b>'+demand[i]+'개</b>, 팔려는 양은 <b>'+supply[i]+'개</b>예요.</p><div class="cols"><div><label class="label">① 시장의 상태는?</label><select id="labState"><option value="">선택해 주세요</option><option value="excessD">초과 수요</option><option value="excessS">초과 공급</option><option value="equal">균형</option></select></div><div><label class="label">② 균형 가격을 향해 가격은?</label><select id="labDirection"><option value="">선택해 주세요</option><option value="up">상승</option><option value="down">하락</option><option value="same">그대로</option></select></div></div><p class="small">예측한 뒤 결과를 확인해요. 나중에 생각이 어떻게 바뀌었는지도 남아요.</p>'+btn("예측 제출하고 결과 보기","labGuess","primary");
+if(screenError)body+='<p class="errorText">'+esc(screenError)+'</p>';return card(body,"hero");
+}
+const i=prices.indexOf(priceChoice),delta=demand[i]-supply[i],kind=delta>0?"초과 수요":delta<0?"초과 공급":"균형",change=delta>0?"상승":delta<0?"하락":"변화 없음";
+return card(nav()+steps(2)+'<div class="eyebrow">가격 실험 · 자료 분석</div><h2>📈 가격을 직접 바꿔 보세요</h2><p>다른 조건을 그대로 두고 <b>상품의 가격만</b> 바꿉니다. 선택한 가격에서 수요량과 공급량을 비교해 보세요.</p><div class="choiceGrid">'+prices.map(p=>'<button class="btn '+(priceChoice===p?"mint":"")+'" data-act="price" data-v="'+p+'">'+comma(p)+'원</button>').join("")+'</div><div class="cols" style="margin-top:15px"><div>'+chart(priceChoice)+'</div><div><div class="tri" style="grid-template-columns:1fr 1fr"><div class="stat"><strong>'+demand[i]+'</strong><span>수요량 (개)</span></div><div class="stat"><strong>'+supply[i]+'</strong><span>공급량 (개)</span></div></div><div class="feedback"><b>'+kind+'</b><div>'+(delta===0?"사려는 양과 팔려는 양이 같아 더 이상 가격이 움직일 이유가 없어요.":"수요량과 공급량의 차이 "+Math.abs(delta)+"개. 균형 가격을 향한 가격 "+change+".")+'</div></div><p class="small">2000원과 4000원을 비교한 뒤, 3000원에서 어떤 변화가 일어나는지 확인해요.</p></div></div>'+tablePrice(priceChoice)+'<div class="row" style="margin-top:16px">'+btn("자료를 분석했어요 → 독립 서술","labFinish","primary")+'</div>','hero');
+}
+function finalPage(){return card(nav()+steps(3)+'<div class="eyebrow">평가 · 힌트 없는 독립 서술</div><h2>✍️ 균형 가격까지의 과정을 설명하세요</h2><div class="note">순서를 따라 쓰세요: 출발 상황 → 가격이 움직이는 이유와 방향 → 수요량·공급량의 변화 → 균형. 정답 문장은 보이지 않아요.</div><label class="label">① 2,000원에서 초과 수요가 발생했을 때</label><textarea id="finalLow" maxlength="700" placeholder="가격과 수요량·공급량 변화의 관계를 설명하세요."></textarea><label class="label">② 4,000원에서 초과 공급이 발생했을 때</label><textarea id="finalHigh" maxlength="700" placeholder="왜 균형 가격으로 향하는지 설명하세요."></textarea><label class="label">③ 이번 시간, 가격 변화에 따라 달라지는 것은 '수요·공급'일까요, '수요량·공급량'일까요?</label><textarea id="finalTerm" style="min-height:80px" maxlength="250" placeholder="정확한 용어와 이유를 적어 보세요."></textarea><div class="row" style="margin-top:14px">'+btn("독립 서술 제출하고 피드백 보기","finalSubmit","primary")+'</div>'+(screenError?'<p class="errorText">'+esc(screenError)+'</p>':"")+'<p class="small">교사가 서술 내용을 확인하고 채점합니다. 키워드 자동 검사로 서술형 점수를 매기지 않아요.</p>','hero');}
+function revisionPage(){
+const first=val(me,"baseline.why")||"",last=val(me,"final.low")||"";
+return card(nav()+steps(4)+'<div class="eyebrow">평가를 위한 학습 · 수정 기록</div><h2>🌱 처음과 지금, 내 생각은 어떻게 달라졌을까?</h2><div class="cols"><div><h3>처음 쓴 설명</h3><div class="quote">'+esc(first)+'</div></div><div><h3>연습 후 독립 서술</h3><div class="quote">'+esc(last)+'</div></div></div><div class="feedback"><b>수정 전 점검 기준</b><div>① 초과 수요/공급을 구분했나? ② 가격의 방향을 썼나? ③ 그 때문에 수요량과 공급량이 각각 어떻게 움직이는지 썼나? ④ 결국 수요량과 공급량이 같아지는 이유를 설명했나?</div></div><label class="label">① 초과 수요 → 균형 가격 (수정본)</label><textarea id="revLow" maxlength="700" placeholder="처음 설명에서 부족했던 부분을 보완하세요."></textarea><label class="label">② 초과 공급 → 균형 가격 (수정본)</label><textarea id="revHigh" maxlength="700" placeholder="두 번째 상황도 보완하세요."></textarea><label class="label">③ 어떤 부분을 고쳤고, 왜 고쳤나요? (성찰)</label><textarea id="revWhy" maxlength="500" placeholder="예: 처음에는 가격만 썼지만…"></textarea><p class="small">다음 시간 연결: 가격이 그대로인데도 수요량이 달라지게 만드는 다른 조건이 있을까?</p>'+btn("수정본 제출하고 성장 기록 마무리","revisionSubmit","primary")+(screenError?'<p class="errorText">'+esc(screenError)+'</p>':""),'hero');
+}
+function completedPage(){const b=me.baseline||{},pr=me.practice||{},arr=Object.values(pr.answers||{}),first=arr.filter(v=>v.firstCorrect).length;return card(nav()+'<div class="eyebrow">성장 탐구 완료</div><h1>🎉 가격 탐정 활동 완료!</h1><div class="tri"><div class="stat"><strong>'+BASE.filter(q=>val(b,"answers."+q.id)===q.a).length+' / '+BASE.length+'</strong><span>사전 개념 진단</span></div><div class="stat"><strong>'+first+' / '+PRACT.length+'</strong><span>훈련 첫 응답 정답</span></div><div class="stat"><strong>2</strong><span>균형 과정 서술 수정</span></div></div><p>내가 처음 쓴 답, 독립 서술 답, 피드백을 반영한 수정본이 저장됐어요. 점수보다 <b>근거가 구체적으로 변했는지</b> 확인해 보세요.</p><div class="cols"><div><h3>첫 생각</h3><div class="quote">'+esc(b.why||"")+'</div></div><div><h3>수정 후 생각</h3><div class="quote">'+esc(val(me,"revision.low")||"")+'</div></div></div><div class="note">다음 차시 질문: 가격이 바뀌지 않았는데도 사려는 양이 달라질 수 있을까? 어떤 조건이 달라졌을까?</div><div class="row">'+btn("시장경제 허브로 돌아가기","hubStudent","mint")+'</div>','hero');}
+function renderStudent(){if(!code||!myId){studentEntry();return;}if(!me){app.innerHTML=card("학생 기록을 확인하고 있어요…");return;}const p=progress();if(state.phase==="closed"&&p<5){app.innerHTML=card(nav()+'<h2>🔒 선생님이 활동을 마감했어요.</h2><p>작성한 기록은 그대로 남아 있어요. 선생님이 다시 열면 이어 할 수 있어요.</p>');return;}if(p===5){completedPage();return;}if(p===0){const a=val(me,"baseline.answers")||{};app.innerHTML=quizPage(BASE,a,true)||baselineDraft();return;}if(p===1){app.innerHTML=practicePage();return;}if(p===2){app.innerHTML=labPage();return;}if(p===3){app.innerHTML=finalPage();return;}app.innerHTML=revisionPage();}
+function teacherRows(){return Object.entries(room&&room.students||{}).map(([id,s])=>({id,s})).sort((a,b)=>(a.s.joinedAt||0)-(b.s.joinedAt||0));}
+function teacherStats(rows){const n=rows.length,base=rows.filter(x=>val(x.s,"baseline.completedAt")).length,practice=rows.filter(x=>val(x.s,"practice.completedAt")).length,done=rows.filter(x=>val(x.s,"revision.submittedAt")).length;return '<div class="tri"><div class="stat"><strong>'+n+'</strong><span>참여 학생</span></div><div class="stat"><strong>'+base+' / '+n+'</strong><span>사전 진단 완료</span></div><div class="stat"><strong>'+done+' / '+n+'</strong><span>서술 수정 완료</span></div></div><p class="small">가격 변동 훈련 완료: '+practice+'명 · 학생 정보는 이름/별명으로 기록됩니다.</p>';}
+function stageOf(s){return val(s,"revision.submittedAt")?"완료":val(s,"final.submittedAt")?"수정 중":val(s,"lab.completedAt")?"독립 서술":val(s,"practice.completedAt")?"가격 실험":val(s,"baseline.completedAt")?"반복 훈련":"사전 진단";}
+function scoreBase(s){return BASE.filter(q=>val(s,"baseline.answers."+q.id)===q.a).length;}
+function scorePractice(s){return PRACT.filter(q=>val(s,"practice.answers."+q.id+".firstCorrect")).length;}
+function wrongTopics(rows){return PRACT.map(q=>({q,wrong:rows.filter(x=>val(x.s,"practice.answers."+q.id+".firstCorrect")===false).length,tries:rows.filter(x=>val(x.s,"practice.answers."+q.id)).length})).sort((a,b)=>b.wrong-a.wrong).filter(v=>v.tries).slice(0,5);}
+function renderTeacher(){
+if(!code){teacherHome();return;}if(!room){app.innerHTML=card("학습방 데이터를 불러오는 중이에요…");return;}
+const rows=teacherRows(),closed=val(room,"state.phase")==="closed",topics=wrongTopics(rows);
+let html='<div class="eyebrow">교사용 대시보드 · 실시간 평가 기록</div><h1>📊 가격 탐정 · 성장 관찰</h1><div class="row"><span class="pill">방 코드 '+esc(code)+'</span><span class="pill">'+(closed?"🔒 마감":"🟢 학습 진행 중")+'</span><a href="hub.html?t=1" class="btn mint">시장경제 허브</a></div><p>기존 허브 QR에서 자동 이동합니다. 최초 응답, 연습 중 오류, 독립 서술, 피드백 후 수정본을 순서대로 확인할 수 있어요.</p>';
+html+=teacherStats(rows)+'<div class="row" style="margin:16px 0">'+btn(closed?"활동 다시 열기":"활동 마감","teacherToggle",closed?"mint":"peach")+btn("⬇ 학생별 성장 기록 CSV","download","primary")+btn("새 학습방 선택","teacherSwitch","lav")+'</div>';
+html+='<h3>🔍 자주 틀리는 내용 (첫 응답 기준)</h3>'+(topics.length?topics.map(t=>'<div class="status" style="margin:7px 0"><b>'+esc(t.q.tag)+'</b> · '+esc(t.q.q)+' <b>'+t.wrong+' / '+t.tries+'명 오답</b></div>').join(""):'<p class="muted">훈련 응답이 쌓이면 나타납니다.</p>');
+html+='<h3 style="margin-top:23px">학생별 참여와 평가</h3><div class="tablewrap"><table><thead><tr><th>이름</th><th>진행</th><th>사전 진단</th><th>훈련 첫 정답</th><th>서술 제출</th><th>기록</th></tr></thead><tbody>';
+html+=rows.map(x=>'<tr><td>'+esc(x.s.name||"—")+'</td><td>'+stageOf(x.s)+'</td><td class="num">'+(val(x.s,"baseline.completedAt")?scoreBase(x.s)+"/6":"—")+'</td><td class="num">'+scorePractice(x.s)+"/10</td><td>'+fmt(val(x.s,"final.submittedAt"))+'</td><td><button class="btn lav" data-act="teacherDetail" data-id="'+esc(x.id)+'">확인·평가</button></td></tr>').join("")||'<tr><td colspan="6">학생이 입장하면 여기에 기록돼요.</td></tr>';
+html+='</tbody></table></div><div id="detail"></div><p class="small">주의: 교사 화면은 비밀번호가 있는 관리자 페이지가 아닙니다. 교사용 주소를 학생에게 공유하지 마세요. 본 화면의 수치로 서술형을 자동 채점하지 않습니다.</p>';
+app.innerHTML=card(html,"hero");
+}
+function detailHTML(id){const x=(room.students||{})[id];if(!x)return "";const b=x.baseline||{},f=x.final||{},r=x.revision||{},review=x.review||{};
+return '<div style="margin-top:24px;border-top:2px solid #dae7ee;padding-top:17px"><div class="row between"><h3>🗒️ '+esc(x.name)+' 학생의 사고 변화</h3>'+btn("학생 기록 삭제","deleteStudent","peach")+'</div><div class="cols"><div><p class="eyebrow">사전 생각 · '+fmt(b.completedAt)+'</p><div class="quote">'+esc(b.why||"미제출")+'</div></div><div><p class="eyebrow">독립 서술 · '+fmt(f.submittedAt)+'</p><div class="quote"><b>[초과 수요]</b>\n'+esc(f.low||"미제출")+'</div><div class="quote"><b>[초과 공급]</b>\n'+esc(f.high||"미제출")+'</div><p class="small">용어 구별: '+esc(f.term||"—")+'</p></div></div><h3>피드백 후 수정</h3><div class="cols"><div><div class="quote"><b>[초과 수요 수정]</b>\n'+esc(r.low||"미제출")+'</div></div><div><div class="quote"><b>[초과 공급 수정]</b>\n'+esc(r.high||"미제출")+'</div></div></div><p><b>학생의 성찰</b></p><div class="quote">'+esc(r.why||"미제출")+'</div><div class="cols"><div><label class="label">서술 평가 (교사 판단 · 0~2점)</label><select id="reviewScore"><option value="">아직 평가하지 않음</option><option value="0" '+(review.score===0?"selected":"")+'>0점: 개념 또는 인과관계 불충분</option><option value="1" '+(review.score===1?"selected":"")+'>1점: 일부 단계 설명</option><option value="2" '+(review.score===2?"selected":"")+'>2점: 가격과 두 수량 변동·균형 연결</option></select></div><div><label class="label">교사 피드백 메모</label><textarea id="reviewNote" maxlength="500" style="min-height:85px">'+esc(review.note||"")+'</textarea></div></div>'+btn("교사 평가 저장","reviewSave","primary")+' '+btn("기록 닫기","detailClose","")+'</div>';
+}
+function downloadCSV(){
+const rows=teacherRows(),klass=localStorage.getItem("marketgo_class_code")||"201";
+const header=["학급","방코드","이름","참여시각","진행단계","사전진단점수(6)","처음가격설명","훈련첫정답(10)","연습응답/재도전","초과수요예측","초과공급예측","독립서술_초과수요","독립서술_초과공급","수요량_용어구분","독립서술시각","수정서술_초과수요","수정서술_초과공급","성찰_바뀐생각","수정제출시각","교사서술평가(0~2)","교사메모"];
+const body=rows.map(({s})=>[klass,code,s.name,fmt(s.joinedAt),stageOf(s),val(s,"baseline.completedAt")?scoreBase(s):"",val(s,"baseline.why")||"",scorePractice(s),PRACT.map(q=>q.id+":"+(val(s,"practice.answers."+q.id+".choices")||[]).map(i=>q.opts[i]).join("→")).join(" | "),JSON.stringify(val(s,"lab.low")||{}),JSON.stringify(val(s,"lab.high")||{}),val(s,"final.low")||"",val(s,"final.high")||"",val(s,"final.term")||"",fmt(val(s,"final.submittedAt")),val(s,"revision.low")||"",val(s,"revision.high")||"",val(s,"revision.why")||"",fmt(val(s,"revision.submittedAt")),val(s,"review.score")??"",val(s,"review.note")||""]);
+const blob=new Blob(["\ufeff"+[header,...body].map(r=>r.map(csv).join(",")).join("\r\n")],{type:"text/csv;charset=utf-8"});
+const url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download=klass+"_가격탐정_학습성장_"+code+".csv";document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);
+const logRows=body.map(r=>[r[2],r[5],r[7],r[11],r[12],r[15],r[16],r[18],r[19]]);
+const sig=JSON.stringify(logRows);if(sig!==lastLog){lastLog=sig;hubLog("priceLab",code,["이름","사전점수","훈련첫정답","독립초과수요","독립초과공급","수정초과수요","수정초과공급","수정시각","교사평가"],logRows,"사전→독립→수정 성장 기록");}
+}
+async function openTeacher(c){code=c;localStorage.setItem("marketgo_lesson_room",c);const s=await get(R());if(!s.exists())await set(R(),{createdAt:stamp(),state:{phase:"open"},students:{}});location.href="price-lab.html?t=1&room="+encodeURIComponent(c);}
+async function joinStudent(c,n){
+code=c;const s=await get(R());if(!s.exists())throw Error("선생님이 아직 이 학습방을 열지 않았어요.");
+if(val(s.val(),"state.phase")==="closed")throw Error("마감된 학습방이에요.");
+name=saveStudentName(n);myId=idFor(name);localStorage.setItem("marketgo_lesson_room",code);
+const existing=await get(R(studentPath()));if(!existing.exists())await set(R(studentPath()),{name,joinedAt:stamp(),baseline:{answers:{}},practice:{answers:{}},lab:{}});
+const u=new URL(location.href);u.searchParams.set("room",code);history.replaceState(null,"",u);
+hubFollow("priceLab",code);
+onValue(R("state"),s=>{state=s.val()||{};render();},e=>alertMsg("연결이 끊겼어요. 인터넷을 확인해 주세요."));
+onValue(R(studentPath()),s=>{me=s.val();if(!me){alertMsg("진도 기록을 찾을 수 없어요. 선생님께 알려 주세요.");return;}render();},e=>alertMsg("학생 기록을 읽지 못했어요."));
+}
+let detailId="";
+app.addEventListener("click",async e=>{
+const t=e.target.closest("[data-act]");if(!t)return;const act=t.dataset.act;screenError="";
+try{
+if(act==="teacherOpen"){const c=(document.getElementById("teacherRoom").value||"").trim();if(!/^\d{4}$/.test(c))throw Error("4자리 방 코드를 입력해 주세요.");await openTeacher(c);return;}
+if(act==="teacherNew"){for(let i=0;i<30;i++){let c=String(Math.floor(1000+Math.random()*9000));code=c;if(!(await get(R())).exists()){await openTeacher(c);return;}}throw Error("새 코드 생성에 실패했어요.");}
+if(act==="studentJoin"){const c=(document.getElementById("joinCode").value||"").trim(),n=(document.getElementById("joinName").value||"").trim();if(!/^\d{4}$/.test(c)||!n||n.length>8)throw Error("방 코드 4자리와 이름/별명(8자 이내)을 확인하세요.");await joinStudent(c,n);return;}
+if(act==="teacherToggle"){await update(R("state"),{phase:val(room,"state.phase")==="closed"?"open":"closed",changedAt:stamp()});return;}
+if(act==="teacherSwitch"){code="";localStorage.removeItem("marketgo_lesson_room");location.href="price-lab.html?t=1";return;}
+if(act==="download"){downloadCSV();return;}
+if(act==="teacherDetail"){detailId=t.dataset.id;document.getElementById("detail").innerHTML=detailHTML(detailId);document.getElementById("detail").scrollIntoView({behavior:"smooth",block:"start"});return;}
+if(act==="detailClose"){detailId="";document.getElementById("detail").innerHTML="";return;}
+if(act==="deleteStudent"){if(!detailId||!confirm("해당 학생의 기록을 삭제할까요? 되돌릴 수 없습니다."))return;await remove(R("students/"+detailId));detailId="";return;}
+if(act==="reviewSave"){if(!detailId)return;const z=document.getElementById("reviewScore").value,nt=document.getElementById("reviewNote").value;await set(R("students/"+detailId+"/review"),{score:z===""?null:Number(z),note:nt,at:stamp()});detailId="";return;}
+if(act==="hubStudent"){location.href="hub.html";return;}
+if(act==="select"){selected=Number(t.dataset.v);render(true);return;}
+if(act==="quizSubmit"){
+if(selected===null)throw Error("답을 하나 선택해 주세요.");const answers=val(me,"baseline.answers")||{},q=BASE.find(v=>!(v.id in answers));
+if(!q)return;await set(R(studentPath()+"/baseline/answers/"+q.id),selected);selected=null;render(true);return;}
+if(act==="baselineDone"){const why=document.getElementById("baselineWhy").value.trim();if(why.length<12)throw Error("생각을 한두 문장으로 써 보세요 (12자 이상).");await update(R(studentPath()+"/baseline"),{why,completedAt:stamp()});selected=null;render(true);return;}
+if(act==="practiceSubmit"){
+if(selected===null)throw Error("답을 하나 선택해 주세요.");
+const answers=val(me,"practice.answers")||{},q=PRACT.find(v=>!answers[v.id]||!answers[v.id].done);
+if(!q)return;const prev=answers[q.id]||{},choices=[...(prev.choices||[]),selected],correct=selected===q.a,done=correct||choices.length>=2;
+const a={choices,attempts:choices.length,firstCorrect:choices.length===1?correct:prev.firstCorrect===true,correct,done,at:stamp()};
+feedback={id:q.id,correct,done};selected=null;await set(R(studentPath()+"/practice/answers/"+q.id),a);render(true);return;}
+if(act==="practiceNext"){feedback=null;selected=null;render(true);return;}
+if(act==="labGuess"){
+const s=document.getElementById("labState").value,d=document.getElementById("labDirection").value;if(!s||!d)throw Error("시장 상태와 가격 변동 방향을 모두 선택해 주세요.");
+const low=!!val(me,"lab.low"),k=low?"high":"low",ok=s===(low?"excessS":"excessD")&&d===(low?"down":"up");
+await set(R(studentPath()+"/lab/"+k),{state:s,direction:d,correct:ok,at:stamp()});return;}
+if(act==="price"){priceChoice=Number(t.dataset.v);render(true);return;}
+if(act==="labFinish"){await update(R(studentPath()+"/lab"),{completedAt:stamp(),lastPrice:priceChoice});return;}
+if(act==="finalSubmit"){
+const low=document.getElementById("finalLow").value.trim(),high=document.getElementById("finalHigh").value.trim(),term=document.getElementById("finalTerm").value.trim();
+if(low.length<25||high.length<25||term.length<8)throw Error("초과 수요·초과 공급은 각각 25자, 용어 설명은 8자 이상 써 주세요.");
+await set(R(studentPath()+"/final"),{low,high,term,submittedAt:stamp()});return;}
+if(act==="revisionSubmit"){
+const low=document.getElementById("revLow").value.trim(),high=document.getElementById("revHigh").value.trim(),why=document.getElementById("revWhy").value.trim();
+if(low.length<25||high.length<25||why.length<12)throw Error("수정 설명(각 25자)과 고친 이유(12자)를 작성해 주세요.");
+await set(R(studentPath()+"/revision"),{low,high,why,submittedAt:stamp()});return;}
+}catch(err){console.error(err);screenError=String(err&&err.message||"저장에 실패했어요. 인터넷을 확인해 주세요.");if(document.activeElement&&["TEXTAREA","INPUT"].includes(document.activeElement.tagName)){const old=document.querySelector(".errorText");if(old)old.textContent=screenError;else{const p=document.createElement("p");p.className="errorText";p.textContent=screenError;app.querySelector(".panel")?.appendChild(p);}}else render(true);}
+});
+async function start(){
+try{
+await get(ref(db,".info/connected")).then(s=>{if(s.val()===false)throw Error("서버에 연결할 수 없어요. 인터넷을 확인해 주세요.");});
+if(isTeacher&&!code){teacherHome();return;}
+if(!code){studentEntry();return;}
+const s=await get(R());if(!s.exists()){if(isTeacher){teacherHome();return;}studentEntry();screenError="학습방이 아직 열리지 않았어요.";return;}
+if(isTeacher){room=s.val();hubSeen("priceLab",code);onValue(R(),snap=>{room=snap.val()||{};render();});return;}
+const n=getStudentName();if(!n){studentEntry();return;}await joinStudent(code,n);
+}catch(e){app.innerHTML=card('<h2>연결 확인이 필요해요</h2><p class="errorText">'+esc(e.message||e)+'</p><p>실시간 저장이 안 되면 활동을 시작하지 않아요. 페이지를 새로고침해 주세요.</p>'+btn("다시 연결","retry","primary"));}}
+start();
+app.addEventListener("click",e=>{if(e.target.closest('[data-act="retry"]'))location.reload();});
+</script>
+</body></html>
