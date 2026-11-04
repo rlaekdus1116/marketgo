@@ -428,6 +428,29 @@ async function downloadGrowthCSV(){
     }
     const trade=rooms.trade,tradePlayers=trade.players||{};
     for(const p of Object.values(tradePlayers))find(p.name,'trade');
+    // Export only actual matched deals. Keep every price, including a loss-making agreement.
+    const allDeals=[];
+    for(const [round,pack] of Object.entries(trade.rounds||{})){
+      const cards=pack.cards||{},subs=pack.subs||{},seen=new Set();
+      for(const [id,s] of Object.entries(subs)){
+        const other=s?.partner,t=subs[other],a=cards[id],b=cards[other];
+        if(!other||other==='none'||!t||t.partner!==id||!a||!b||a.role===b.role||s.price!==t.price)continue;
+        const key=[id,other].sort().join('|');if(seen.has(key))continue;seen.add(key);
+        const price=Number(s.price),buyer=a.role==='buyer'?id:other,seller=a.role==='seller'?id:other;
+        allDeals.push({round,price,buyer,seller});
+        for(const person of [buyer,seller]){
+          const p=find(tradePlayers[person]?.name,'trade');if(!p)continue;
+          (p.tradePrices||(p.tradePrices=[])).push(round+'회차 '+price+'원');
+          const profit=person===buyer?cards[buyer].limit-price:price-cards[seller].limit;
+          (p.tradeProfits||(p.tradeProfits=[])).push(round+'회차 '+profit+'원');
+        }
+      }
+    }
+    const priceGroups={};
+    allDeals.forEach(d=>{const start=Math.floor(d.price/500)*500;priceGroups[start]=(priceGroups[start]||0)+1;});
+    const most=Object.entries(priceGroups).sort((a,b)=>b[1]-a[1]||Number(a[0])-Number(b[0]))[0];
+    const tradeSummary=allDeals.length+'건'+(most?' · 최다 가격대 '+most[0]+'~'+(Number(most[0])+499)+'원 ('+most[1]+'건)':'');
+    for(const p of byName.values())if(p.stages.has('trade'))p.tradeSummary=tradeSummary;
     for(const [id,data] of Object.entries(trade.recommendations||{})){
       const p=find(tradePlayers[id]?.name,'trade');if(!p)continue;
       p.price=data.price||'';p.reason=data.reason||'';
@@ -437,6 +460,7 @@ async function downloadGrowthCSV(){
       const st=find(p.name,'priceLab');if(!st)continue;
       st.labBase=p.baseline?.why||'';st.labFirst=p.final?.low||'';st.labFirstHigh=p.final?.high||'';
       st.labRevised=p.revision?.low||'';st.labRevisedHigh=p.revision?.high||'';st.labReflection=p.revision?.why||'';
+      st.labEq=p.final?.eq||'';st.labEqRevised=p.revision?.eq||'';st.labFeedback=Object.entries(p.final?.feedback||{}).map(([k,v])=>k+': '+v).join(' / ');
       st.labScore=p.review?.score??'';
     }
     const poll=rooms.poll,pollPlayers=poll.players||{};
@@ -444,13 +468,13 @@ async function downloadGrowthCSV(){
     for(const [id,data] of Object.entries(poll.votes||{})){
       const p=find(pollPlayers[id]?.name,'poll');if(p)p.vote=data.choice||'';
     }
-    const header=['학급','기록 내려받은 날짜','방 코드','이름','수요 예언값(상품1)','수요 예언 이유(상품1)','수요 그래프 비교(상품1)','수요 예언값(상품2)','수요 예언 이유(상품2)','수요 그래프 비교(상품2)','공급 예언값','공급 예언 이유','공급 그래프 비교','시장 가격 결정 최초 투표','새로 제안한 모찌 가격(원)','가격 제안 근거','가격 탐정 최초 생각','가격 탐정 독립서술(초과 수요)','가격 탐정 독립서술(초과 공급)','가격 탐정 수정서술(초과 수요)','가격 탐정 수정서술(초과 공급)','가격 탐정 성찰','가격 탐정 교사평가','참여 활동'];
+    const header=['학급','기록 내려받은 날짜','방 코드','이름','수요 예언값(상품1)','수요 예언 이유(상품1)','수요 그래프 비교(상품1)','수요 예언값(상품2)','수요 예언 이유(상품2)','수요 그래프 비교(상품2)','공급 예언값','공급 예언 이유','공급 그래프 비교','시장 가격 결정 최초 투표','새로 제안한 모찌 가격(원)','가격 제안 근거','모찌 거래 가격(회차별)','모찌 거래 손익(회차별)','모찌 시장 전체 결과','시장 가격 최초 생각','독립서술(초과 수요)','독립서술(초과 공급)','균형 가격·거래량 설명','답안 피드백','수정서술(초과 수요)','수정서술(초과 공급)','균형 가격·거래량 수정','서술 성찰','교사 평가','참여 활동'];
     const date=new Date().toLocaleDateString('sv-SE');
     const rows=Array.from(byName.values()).sort((a,b)=>a.name.localeCompare(b.name,'ko')).map(p=>[
       klass,date,c,p.name,p.dPredict1||'',p.dReason1||'',p.dReflect1||'',
       p.dPredict2||'',p.dReason2||'',p.dReflect2||'',
       p.sPredict1||'',p.sReason1||'',p.sReflect1||'',
-      p.vote||'',p.price||'',p.reason||'',p.labBase||'',p.labFirst||'',p.labFirstHigh||'',p.labRevised||'',p.labRevisedHigh||'',p.labReflection||'',p.labScore??'',Array.from(p.stages).join(' / ')
+      p.vote||'',p.price||'',p.reason||'',(p.tradePrices||[]).join(' / '),(p.tradeProfits||[]).join(' / '),p.tradeSummary||'',p.labBase||'',p.labFirst||'',p.labFirstHigh||'',p.labEq||'',p.labFeedback||'',p.labRevised||'',p.labRevisedHigh||'',p.labEqRevised||'',p.labReflection||'',p.labScore??'',Array.from(p.stages).join(' / ')
     ]);
     if(!rows.length)return toast('해당 방에 학생 기록이 없어요.');
     const quote=v=>{const t=String(v??'');const safe=/^[=+\-@]/.test(t)?"'"+t:t;return '"'+safe.replace(/"/g,'""')+'"';};
