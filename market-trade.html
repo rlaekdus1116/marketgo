@@ -177,8 +177,6 @@ let sel = { r: 0, partner: '', price: 0 };   // 학생이 고르는 중인 상�
 let editing = false;            // 학생이 기록을 고치는 중
 let chartRound = 0;             // 그래프: 0 = 전체, 1~3 = 회차만
 let chartMode = 'sd';           // 'sd' 수요·공급 그래프 / 'bar' 가격별 건수 / 'table' 표
-let analysisPrice = null;        // 게임 후 초과수요·초과공급을 살펴볼 가격
-let showImbalance = false;
 let showEq = demoMode;             // 균형 가격 표시 (정답이라 기본은 숨김)
 const ROUND_COLORS = ['#3B8FD9', '#E8803E', '#2FA67A'];   // 1·2·3회차 (색각이상 검사 통과, 범례·숫자와 함께 사용)
 const annSeen = new Set();      // 이미 띄운 안내문
@@ -474,7 +472,7 @@ function renderTeacher() {
       ${[0, ...cols.filter(roundStarted)].map(r => `<button class="btn sm ${chartRound === r ? 'lemon' : 'sky'}" data-cr="${r}">${r ? r + '회차' : '전체'}</button>`).join('')}
       <span style="margin-left:auto"></span>
       ${[['bar', '📊 실제 거래 분포'], ['sd', '📈 수요·공급'], ['table', '📋 거래 결과']].map(([m, t]) => `<button class="btn sm ${chartMode === m ? 'mint' : ''}" data-mode="${m}">${t}</button>`).join('')}
-      ${chartMode === 'sd' ? `<button class="btn sm ${showEq ? 'lemon' : 'sky'}" id="eq">⚖️ 균형 가격 ${showEq ? '숨기기' : '보이기'}</button>` : ''}${isEnd ? `<button class="btn sm ${showImbalance ? 'lemon' : 'sky'}" id="imbalanceToggle">${showImbalance ? '초과 수요·공급 숨기기' : '③ 초과 수요·공급 살펴보기'}</button>` : ''}</div>`;
+      ${chartMode === 'sd' ? `<button class="btn sm ${showEq ? 'lemon' : 'sky'}" id="eq">⚖️ 균형 가격 ${showEq ? '숨기기' : '보이기'}</button>` : ''}</div>`;
     const rs = chartRound ? [chartRound] : cols.filter(roundStarted);
     const titles = { sd: '📈 수요·공급 그래프 <span class="muted" style="font-size:16px">실제 거래가 많이 이루어진 가격대를 함께 살펴보세요.</span>',
       bar: '📊 가격별 거래 건수 <span class="muted" style="font-size:16px">어느 가격에서 거래가 가장 많았을까?</span>', table: '📋 전체 거래 결과표' };
@@ -492,7 +490,7 @@ function renderTeacher() {
     return `<div style="margin:8px 0"><span class="roundBadge" style="font-size:16px;padding:4px 14px">${r}회차</span> <span class="chips" style="display:inline-flex">${ps.length ? ps.map(x => { const s = x.buyer === x.a ? x.b : x.a; return `<span class="chip soft">🛒 ${nm(x.buyer)} ↔ 🏷️ ${nm(s)} · ${won(x.price)}</span>`; }).join('') : '<span class="muted">거래 없음</span>'}</span></div>`;
   }).join('')}</div>` : '';
 
-  patchHTML(app, `<div class="wrap">${topbar}${main}${table}${isEnd ? (showImbalance ? imbalanceHTML() : '') + questionsHTML(cols) + proposalHTML : ''}${logHTML}</div>`);
+  patchHTML(app, `<div class="wrap">${topbar}${main}${table}${isEnd ? questionsHTML(cols) + proposalHTML : ''}${logHTML}</div>`);
   if (st.phase === 'lobby' && window.QRCode && el('qr') && !el('qr').firstChild) new QRCode(el('qr'), { text: link, width: 200, height: 200, colorDark: '#5B4B57', colorLight: '#ffffff' });
 
   const bind = (id, fn) => { const b = el(id); if (b) b.onclick = fn; };
@@ -507,7 +505,6 @@ function renderTeacher() {
     chartRound=0;
   });
   bind('eq', () => { showEq = !showEq; render(); });
-  bind('imbalanceToggle', () => { showImbalance = !showImbalance; render(); });
   app.querySelectorAll('[data-mode]').forEach(b => b.onclick = () => { chartMode = b.dataset.mode; render(); });
   app.querySelectorAll('[data-cr]').forEach(b => b.onclick = () => { chartRound = Number(b.dataset.cr); render(); });
   bind('next', () => {
@@ -524,7 +521,6 @@ function renderTeacher() {
   app.querySelectorAll('[data-reset]').forEach(b => b.onclick = () => set(ref(db, `rooms/trade_${code}/rounds/${st.round}/subs/${b.dataset.reset}`), null));
   app.querySelectorAll('[data-kick]').forEach(b => b.onclick = () => { if (confirm('이 친구를 목록에서 뺄까요?')) set(ref(db, `rooms/trade_${code}/players/${b.dataset.kick}`), null); });
   app.querySelectorAll('[data-hint]').forEach(b => b.onclick = () => { const k = b.dataset.hint; hintOpen.has(k) ? hintOpen.delete(k) : hintOpen.add(k); render(); });
-  app.querySelectorAll('[data-analysis-price]').forEach(b => b.onclick = () => { analysisPrice = Math.max(2000, Math.min(6500, (analysisPrice || 4500) + Number(b.dataset.analysisPrice))); render(); });
 }
 
 // 교과서 분포 ×5 (수요자 2,500~5,500원 / 공급자 3,000~6,000원)대로 카드를 만들고 학생에게 무작위로 나눠 줌
@@ -683,51 +679,6 @@ function chartHTML(rs) {
   const legend = rs.length > 1 ? `<div class="chips" style="justify-content:center;margin-top:4px">${rs.map(r => `<span class="pill"><span style="display:inline-block;width:14px;height:14px;border-radius:4px;background:${ROUND_COLORS[r - 1]};vertical-align:-1px"></span> ${r}회차</span>`).join('')}</div>` : '';
   return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;font-family:Jua,sans-serif" role="img" aria-label="거래 가격별 거래 건수 그래프">${g}</svg>${legend}
     <div class="hl lemon center" style="font-size:24px">👑 가장 많이 거래된 가격: <b>${topBins.join(', ')}</b> (${maxN}건)</div>`;
-}
-
-/* ========== 게임 후: 초과수요·초과공급 분석 ========== */
-function imbalanceHTML() {
-  const cards = Object.values(cardsOf(ROUNDS));
-  const buyers = cards.filter(c => c.role === 'buyer');
-  const sellers = cards.filter(c => c.role === 'seller');
-  if (!cards.length) return '';
-  const trades = pairsOf(ROUNDS);
-  if (analysisPrice === null) {
-    const avg = trades.length ? trades.reduce((s, x) => s + x.price, 0) / trades.length : 4500;
-    analysisPrice = Math.max(2000, Math.min(6500, Math.round(avg / 500) * 500));
-  }
-  const price = analysisPrice;
-  const qd = buyers.filter(c => c.limit >= price).length;
-  const qs = sellers.filter(c => c.limit <= price).length;
-  const gap = Math.abs(qd - qs);
-  let result, explanation, color;
-  if (qd > qs) {
-    result = '초과수요'; color = 'sky';
-    explanation = `사고 싶은 수요량이 팔려는 공급량보다 ${gap}개 많아요. 떡볶이를 사려는 사람은 많은데 팔 물건이 부족해요. 사려는 사람들 사이에 경쟁이 생기면서 가격이 올라갈 압력이 생겨요.`;
-  } else if (qs > qd) {
-    result = '초과공급'; color = 'peach';
-    explanation = `팔려는 공급량이 사고 싶은 수요량보다 ${gap}개 많아요. 팔 물건은 많은데 사려는 사람이 적어 물건이 남아요. 판매자들이 가격을 낮춰서라도 팔려는 압력이 생겨요.`;
-  } else {
-    result = '수요량과 공급량이 같아요'; color = 'mint';
-    explanation = '이 가격에서는 사고 싶은 양과 팔고 싶은 양이 같아요. 남거나 모자라는 양이 없어요.';
-  }
-  return `<div class="card" id="imbalanceLesson">
-    <h3>🧠 게임 결과로 초과수요·초과공급 알아보기</h3>
-    <p class="muted" style="font-size:18px">마지막 3회차 카드를 기준으로 시장 가격을 바꿔 보세요. 한 사람의 카드 한 장은 떡볶이 1인분을 뜻해요.</p>
-    <div class="hl lemon center">
-      <div style="font-size:18px">가정한 시장 가격</div>
-      <div style="font-size:36px;margin:5px 0">${won(price)}</div>
-      <button class="btn sm sky" data-analysis-price="-500" ${price<=2000?'disabled':''}>−500원</button>
-      <button class="btn sm sky" data-analysis-price="500" ${price>=6500?'disabled':''}>+500원</button>
-    </div>
-    <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:14px 0">
-      <div class="hl sky center" style="margin:0"><div style="font-size:32px">${qd}명</div><b>수요량</b><div class="muted" style="font-size:15px">이 가격이면 사려는 사람</div></div>
-      <div class="hl peach center" style="margin:0"><div style="font-size:32px">${qs}명</div><b>공급량</b><div class="muted" style="font-size:15px">이 가격이면 팔려는 사람</div></div>
-    </div>
-    <div class="hl ${color} center"><b style="font-size:28px">${result}</b><br>${explanation}</div>
-    <div class="q"><p>Q1. 가격을 낮추면 수요량과 공급량 중 어느 쪽이 더 커지나요?</p><div class="muted">가격이 낮아질수록 사려는 사람은 늘고, 팔려는 사람은 줄어요.</div></div>
-    <div class="q"><p>Q2. 가격을 높이면 어떤 현상이 나타날 수 있나요?</p><div class="muted">가격이 높아질수록 팔려는 사람은 늘고, 사려는 사람은 줄어요.</div></div>
-  </div>`;
 }
 
 /* ========== 결과표 정리 질문 (마지막 회차 후 선생님 화면) ========== */
@@ -988,7 +939,7 @@ function renderDemo(){
     rounds[r]={cards,subs};
   }
   room={createdAt:Date.now(),players,rounds,state:{phase:'closed',round:ROUNDS,dur:180}};
-  chartMode='sd';chartRound=0;showEq=true;showImbalance=false;
+  chartMode='sd';chartRound=0;showEq=true;
   renderTeacher();
   const disabled=['backStep','names','durSave','next','close','plus','minus','remainSave'];
   disabled.forEach(id=>{const x=el(id);if(x){x.disabled=true;x.title='가상 데이터 화면에서는 사용할 수 없어요';}});
