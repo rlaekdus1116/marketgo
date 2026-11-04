@@ -598,7 +598,8 @@ function renderTeacher() {
       <div class="bigEmoji bounce">🔮</div>
       <div class="speech">가격을 올리면, 가격마다 <b>몇 명이</b> ${SUP() ? '팔겠다고' : '끝까지 사겠다고'} 할까?<br>태블릿에 가격마다 점을 찍어보세요!</div>
       <div class="rule">예언 제출 <b style="color:var(--peachD)">${done}</b> / ${N}명 <span class="pill" id="predRemain"></span></div><div class="center"><button class="btn sm sky" id="predMinus">−15초</button><button class="btn sm mint" id="predPlus">+15초</button></div>
-      <button class="btn big peach" id="toAuction">🔨 경매 시작!</button>
+      <button class="btn big peach" id="toAuction">✅ 예언 마감하고 경매 시작!</button>
+      <div class="muted center">예언 시간 종료 후에도 이 버튼으로 다음 단계로 이동할 수 있어요.</div>
     </div>`;
   }
   else if (st.phase === 'auction') {
@@ -655,7 +656,7 @@ function renderTeacher() {
           <div class="muted" style="font-size:18px;margin-top:8px">반 평균 정확도 ${avgAcc}%</div></div>`
           : `<div class="card"><h3>🧐 생각해 볼 질문</h3><div class="q"><p>${SUP() ? '첫 가격인 2,000원부터 가격이 오르자 팔겠다는 친구 수는 어떻게 변했나요?' : `${KW().want} 사람이 ${KW().otherN}보다 <b>많을 때</b>와 <b>적을 때</b>, 각각 어떤 일이 생겼나요?`}</p></div></div>`}
       </div>
-      <div class="card"><h3>✍️ 예측-실제 비교 · ${written.length}/${N}명 제출</h3><div class="chips">${written.map(([id,x])=>`<span class="chip soft" title="${esc(x.text)}">${esc(nameOf(id))}: ${esc(x.text)}</span>`).join('')||'<span class="muted">아직 제출한 학생이 없어요.</span>'}</div></div>
+      <div class="card"><h3>✍️ 예측-실제 비교 · ${written.length}/${N}명 제출</h3><div class="chips">${written.map(([id,x])=>`<span class="chip soft" title="${esc(x.text)}">${esc(nameOf(id))}: ${esc(x.text)}</span>`).join('')||'<span class="muted">아직 제출한 학생이 없어요.</span>'}</div><div class="center" style="margin-top:14px"><button class="btn big mint" id="closeComparison">✅ 비교 마감하고 ${i+1<items.length?"다음 상품으로":"마무리로"} 이동</button></div><p class="muted center" style="font-size:16px">전원 제출을 기다리지 않아도 진행할 수 있어요. 이미 제출한 기록은 보존됩니다.</p></div>
       <div class="center">${!SUP() && it.supply > 0 && prices.some((_,lv)=>lv<=upto&&Qat(ans,lv)>it.supply) ? '<button class="btn big peach" id="toBid">🔥 살 사람이 더 많아요! 최고가 경매 시작</button>' : '<span class="hl mint">공급량 조사이거나, 사려는 인원이 판매 수량보다 많지 않아 경매를 진행하지 않아요.</span>'}</div>
       <div class="center">${i + 1 < items.length ? `<button class="btn sky" id="next">🎁 다음 상품 공개</button>` : ''}<button class="btn sky" id="final">🏁 결과 모아 보기</button></div>`;
   }
@@ -787,6 +788,20 @@ function wireTeacher(st, items, i, it) {
     if (el('toResult')) el('toResult').onclick = () => finishItem();
   }
   if (['result', 'bidres'].includes(st.phase)) {
+    // 비교 결과가 마감되지 않아 다음으로 못 가는 일이 없도록 독립된 진행 버튼을 둡니다.
+    if(el('closeComparison'))el('closeComparison').onclick=async()=>{
+      const nextPhase=i+1<items.length?'item':'final';
+      const updates={[`meta/${i}/comparisonClosedAt`]:Date.now(),
+        'state/phase':nextPhase,'state/reflectionClosed':true};
+      if(nextPhase==='item'){
+        updates['state/item']=i+1;updates['state/li']=-1;
+        updates['state/sub']='';updates['state/sold']=null;
+        updates[`meta/${i+1}/n`]=Math.max(1,onlineIds().length);
+      }else{
+        updates['state/fin']=0;updates['state/frev']=false;
+      }
+      try{await update(A(),updates);}catch(e){console.error(e);toast('다음 단계로 이동하지 못했어요. 인터넷을 확인해 주세요.');}
+    };
     if (el('next')) el('next').onclick = () => { Snd.ensure(); update(A(), { [`meta/${i + 1}/n`]: Math.max(1, onlineIds().length), 'state/phase': 'item', 'state/item': i + 1, 'state/li': -1, 'state/sub': '', 'state/sold': null }); };
     el('final').onclick = () => S({ phase: 'final' });
     if (el('toBid')) el('toBid').onclick = () => { if (SUP() || !prices.some((_,lv)=>lv<=Math.max(0,st.li??0)&&Qat(ansOf(i),lv)>it.supply))return; Snd.ensure(); lastBeep = null; S({ phase: 'bid', bidEnds: now() + (st.bidSec || 30) * 1000 }); };
@@ -921,6 +936,7 @@ function renderStudent() {
        ${reflection.text?'<span class="pill">✅ 제출 완료</span>':''}
       </div></div></div>`;
     el('saveGraphReason').onclick=async()=>{
+      if((((room.meta||{})[i]||{}).comparisonClosedAt))return toast('선생님이 비교 활동을 마감했어요.');
       const text=(el('graphReason').value||'').trim();
       if(text.length<5)return toast('그래프를 근거로 한 문장을 적어 주세요.');
       try{await set(AP(`reflections/${i}/${pid}`),{text,at:serverTimestamp()});toast('해석이 저장됐어요 ✅');}catch(e){toast('저장 실패. 인터넷 연결을 확인해 주세요.');}
