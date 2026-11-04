@@ -44,7 +44,7 @@ export const APPS = {
   poll: { title: '시장 가격 결정 투표', lesson: 2, file: 'poll.html', emoji: '🗳️' },
   trade: { title: '떡볶이 시장', lesson: 2, file: 'market-trade.html', emoji: '🥵' },
   curve: { title: '시장 예측하기', lesson: 3, file: 'curve.html', emoji: '📈' },
-  priceLab: { title: '가격 탐정 성장 실험실', lesson: 2, file: 'price-lab.html', emoji: '🔎' },
+  priceLab: { title: '시장 가격', lesson: 2, file: 'price-lab.html', emoji: '📊' },
 };
 
 
