@@ -245,7 +245,7 @@ const LESSONS = [
     { id: 'auction', desc: '🛒 살래요! 가격을 올리며 수요 곡선 만들기 → 최고가 부르기 → 수요 개념·수요 법칙 정리' },
     { id: 'auctionS', desc: '🏷️ 팔래요! 공급 조사 → 곡선 → 공급 법칙 정리 (경매 없음)' },
     { id: 'poll', desc: '🗳️ 질문: 시장에서 가격은 누가 결정할까? 학생별 실시간 투표·응답 시각·제출 점수 확인' },
-    { id: 'trade', desc: '🥵 떡볶이 시장 게임 · 수요자·공급자가 직접 거래하며 시장 가격 찾기' },
+    { id: 'trade', desc: '🍡 고@바 모찌 시장 · 거래 가격과 균형 가격 찾기' },
     { id: 'priceLab', desc: '시장 가격 · 수요·공급 확인 및 서술형' },
     { ext: 'https://rlaekdus1116.github.io/demandsupply/', emoji: '🧪', title: '수요·공급 실험실', desc: '호가 게임으로 시장 가격 결정 체험 (따로 만든 앱)' },
   ] },
@@ -334,7 +334,7 @@ function renderTeacher() {
       <input id="growthRoom" class="field" maxlength="4" inputmode="numeric" value="${esc(sessionRoom)}" style="width:130px">
       <button class="btn sky" id="setRoom">방 코드 저장</button>
       <button class="btn mint" id="growthExport">⬇️ 학생별 사고 성장 기록 CSV 다운로드</button>
-      <p class="muted">예언 → 예언 이유 → 실제 그래프 비교 → 떡볶이 새 가격과 근거를 합친 기록입니다. 학급과 방 번호는 교사 브라우저에만 저장돼요. 학생 이름이 중복되면 서로 다른 학생의 기록이 합쳐질 수 있으니 주의하세요.</p>
+      <p class="muted">예언 → 이유 → 그래프 비교 → 모찌 거래 가격과 근거를 합친 기록입니다. 학급과 방 번호는 교사 브라우저에만 저장돼요. 학생 이름이 중복되면 서로 다른 학생의 기록이 합쳐질 수 있으니 주의하세요.</p>
     </div>
     <div class="card"><div class="nowGrid">
       <div><h3>📍 지금 수업</h3>
@@ -351,7 +351,7 @@ function renderTeacher() {
         <button class="btn mint" id="csvAll">⬇️ 전체 기록 엑셀(CSV)로 받기</button><button class="btn peach" id="clearLogs">전체 기록 삭제</button>` : '<div class="muted">아직 기록이 없어요</div>'}
     </div>
     <div class="card"><h3>🔐 서버 기록 삭제</h3>
-      <p class="muted">실시간 수업 응답은 기존 Firebase에 저장돼요. 성장 CSV를 다운로드한 후 이 방의 수요·공급·투표·떡볶이 응답을 서버에서 삭제할 수 있어요. 삭제 후 복구는 불가능해요.</p>
+      <p class="muted">실시간 수업 응답은 기존 Firebase에 저장돼요. 성장 CSV를 다운로드한 후 이 방의 수요·공급·투표·모찌 응답을 서버에서 삭제할 수 있어요. 삭제 후 복구는 불가능해요.</p>
       <button class="btn peach" id="eraseRoom">⚠️ 입력한 방 코드의 수업 데이터 서버 삭제</button>
     </div>
     <div class="card"><h3>🔗 구글 시트 연결 ${hub.sheetUrl ? '<span class="pill" style="background:var(--mint)">✅ 연결됨</span>' : '<span class="pill">연결 안 됨</span>'}</h3>
@@ -444,7 +444,7 @@ async function downloadGrowthCSV(){
     for(const [id,data] of Object.entries(poll.votes||{})){
       const p=find(pollPlayers[id]?.name,'poll');if(p)p.vote=data.choice||'';
     }
-    const header=['학급','기록 내려받은 날짜','방 코드','이름','수요 예언값(상품1)','수요 예언 이유(상품1)','수요 그래프 비교(상품1)','수요 예언값(상품2)','수요 예언 이유(상품2)','수요 그래프 비교(상품2)','공급 예언값','공급 예언 이유','공급 그래프 비교','시장 가격 결정 최초 투표','새로 제안한 떡볶이 가격(원)','가격 제안 근거','가격 탐정 최초 생각','가격 탐정 독립서술(초과 수요)','가격 탐정 독립서술(초과 공급)','가격 탐정 수정서술(초과 수요)','가격 탐정 수정서술(초과 공급)','가격 탐정 성찰','가격 탐정 교사평가','참여 활동'];
+    const header=['학급','기록 내려받은 날짜','방 코드','이름','수요 예언값(상품1)','수요 예언 이유(상품1)','수요 그래프 비교(상품1)','수요 예언값(상품2)','수요 예언 이유(상품2)','수요 그래프 비교(상품2)','공급 예언값','공급 예언 이유','공급 그래프 비교','시장 가격 결정 최초 투표','새로 제안한 모찌 가격(원)','가격 제안 근거','가격 탐정 최초 생각','가격 탐정 독립서술(초과 수요)','가격 탐정 독립서술(초과 공급)','가격 탐정 수정서술(초과 수요)','가격 탐정 수정서술(초과 공급)','가격 탐정 성찰','가격 탐정 교사평가','참여 활동'];
     const date=new Date().toLocaleDateString('sv-SE');
     const rows=Array.from(byName.values()).sort((a,b)=>a.name.localeCompare(b.name,'ko')).map(p=>[
       klass,date,c,p.name,p.dPredict1||'',p.dReason1||'',p.dReflect1||'',
