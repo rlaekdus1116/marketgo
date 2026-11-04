@@ -148,7 +148,47 @@ const studentPath=()=> "students/"+myId;
 function nav(){return '<div class="row between"><span class="pill">학습방 '+esc(code)+'</span><span class="pill">'+esc(name)+'</span></div>';}
 function steps(n){return '<div class="gridSteps">'+Array.from({length:5},(_,i)=>'<span class="step '+(i===n?'on':'')+'">'+(i+1)+'단계</span>').join('')+'</div>';}
 function progress(){if(!me)return 0;return me.revision&&me.revision.submittedAt?5:me.final&&me.final.submittedAt?4:me.lab&&me.lab.completedAt?3:me.baseline&&me.baseline.completedAt?(me.practice&&me.practice.completedAt?2:1):0;}
-function render(force){if(!force&&document.activeElement&&["TEXTAREA","INPUT","SELECT"].includes(document.activeElement.tagName))return; if(isTeacher)renderTeacher();else renderStudent();}
+const draftFields=new Set(['baselineWhy','revLow','revHigh','revEq','revTerm','revWhy']);
+let draftSaveTimer=null;
+function draftTextKey(){return 'marketgo_textDraft_'+code+'_'+myId;}
+function readTextDraft(){
+ try{return JSON.parse(localStorage.getItem(draftTextKey())||'{}')||{};}catch{return {};}
+}
+function captureTextDraft(){
+ if(!myId||isTeacher)return;
+ const values=readTextDraft();
+ for(const node of app.querySelectorAll('textarea[id]')){
+  if(draftFields.has(node.id))values[node.id]=node.value;
+ }
+ localStorage.setItem(draftTextKey(),JSON.stringify(values));
+}
+function restoreTextDraft(){
+ if(isTeacher||!myId)return;
+ const local=readTextDraft(),remote=val(me,'drafts.writing')||{};
+ for(const field of draftFields){
+  const el=app.querySelector('#'+field);
+  if(el)el.value=Object.prototype.hasOwnProperty.call(local,field)?local[field]:remote[field]||'';
+ }
+}
+function render(force){
+ if(!force&&document.activeElement&&["TEXTAREA","INPUT","SELECT"].includes(document.activeElement.tagName))return;
+ if(!isTeacher)captureTextDraft();
+ if(isTeacher)renderTeacher();else renderStudent();
+ if(!isTeacher)restoreTextDraft();
+}
+app.addEventListener('input',e=>{
+ if(!e.target||!draftFields.has(e.target.id)||!myId)return;
+ captureTextDraft();
+ if(draftSaveTimer)clearTimeout(draftSaveTimer);
+ draftSaveTimer=setTimeout(async()=>{
+  const values=readTextDraft();
+  try{await update(R(studentPath()+'/drafts/writing'),values);}
+  catch(err){
+   const status=app.querySelector('#draftStatus');
+   if(status)status.textContent='임시 저장에 실패했어요. 입력 내용은 이 기기에 보관되어 있어요.';
+  }
+ },1000);
+});
 function teacherHome(){const old=localStorage.getItem("marketgo_lesson_room")||"";app.innerHTML=card('<h1>시장 가격</h1><label class="label" for="teacherRoom">이어 사용할 4자리 방 코드</label><input class="field" id="teacherRoom" inputmode="numeric" maxlength="4" value="'+esc(old)+'" placeholder="예: 2588"><div class="row" style="margin-top:14px">'+btn("이 방 열기 / 이어 하기","teacherOpen","primary")+btn("새 코드 만들기","teacherNew","mint")+'</div>','hero');}
 function studentEntry(){const from=localStorage.getItem("marketgo_lesson_room")||"";app.innerHTML=card('<h1>시장 가격</h1><label class="label">학습방 코드 4자리</label><input class="field" id="joinCode" inputmode="numeric" maxlength="4" value="'+esc(code||from)+'" placeholder="선생님이 알려 준 코드"><label class="label">이름 또는 학급별명 (8자 이내)</label><input class="field" id="joinName" maxlength="8" value="'+esc(getStudentName())+'" placeholder="예: 20305"><div class="row" style="margin-top:16px">'+btn("학습방 입장하기","studentJoin","primary")+'</div>','hero');}
 function quizPage(items,answers,baseline){
@@ -438,7 +478,7 @@ if(act==="select"){selected=Number(t.dataset.v);render(true);return;}
 if(act==="quizSubmit"){
 if(selected===null)throw Error("답을 하나 선택해 주세요.");const answers=val(me,"baseline.answers")||{},q=BASE.find(v=>!(v.id in answers));
 if(!q)return;await set(R(studentPath()+"/baseline/answers/"+q.id),selected);selected=null;render(true);return;}
-if(act==="baselineDone"){const why=document.getElementById("baselineWhy").value.trim();if(why.length<12)throw Error("생각을 한두 문장으로 써 보세요 (12자 이상).");await update(R(studentPath()+"/baseline"),{why,completedAt:stamp()});selected=null;render(true);return;}
+if(act==="baselineDone"){const why=document.getElementById("baselineWhy").value.trim();if(why.length<12)throw Error("생각을 한두 문장으로 써 보세요 (12자 이상).");await update(R(studentPath()+"/baseline"),{why,completedAt:stamp()});selected=null;me={...me,baseline:{...(me.baseline||{}),why,completedAt:stamp()}};render(true);return;}
 if(act==="practiceSubmit"){
 if(selected===null)throw Error("답을 하나 선택해 주세요.");
 const answers=val(me,"practice.answers")||{},q=PRACT.find(v=>!answers[v.id]||!answers[v.id].done);
@@ -487,8 +527,14 @@ if(act==="revisionSubmit"){
  eq=document.getElementById("revEq").value.trim(),term=document.getElementById("revTerm").value.trim(),
  why=document.getElementById("revWhy").value.trim();
  [low,high,eq].forEach(v=>checkWritten(v,35));checkWritten(term,25);checkWritten(why,25);
- await set(R(studentPath()+"/revision"),{low,high,eq,term,why,submittedAt:stamp()});
- document.activeElement?.blur();render(true);return;
+ const submittedAt=stamp();
+ const revisionPayload={low,high,eq,term,why,submittedAt};
+ await set(R(studentPath()+"/revision"),revisionPayload);
+ const stored=(await get(R(studentPath()+"/revision"))).val();
+ if(!stored||stored.submittedAt!==submittedAt)throw Error("저장 확인에 실패했습니다. 답안은 이 기기에 남아 있어요.");
+ me={...me,revision:stored};render(true);
+ try{localStorage.removeItem(draftTextKey());}catch{}
+ return;
 }
 }catch(err){console.error(err);screenError=String(err&&err.message||"저장에 실패했어요. 인터넷을 확인해 주세요.");if(document.activeElement&&["TEXTAREA","INPUT"].includes(document.activeElement.tagName)){const old=document.querySelector(".errorText");if(old)old.textContent=screenError;else{const p=document.createElement("p");p.className="errorText";p.textContent=screenError;app.querySelector(".panel")?.appendChild(p);}}else render(true);}
 });
