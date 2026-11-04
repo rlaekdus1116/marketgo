@@ -745,6 +745,29 @@ function equilibriumLessonHTML(){
 }
 
 /* 수업용 가상 수요·공급 사례: 실제 거래 및 학급 인원과는 별도입니다. */
+function scenarioChart(price){
+ const values=[{p:3000,d:20,s:10},{p:9000,d:15,s:15},{p:15000,d:10,s:20}];
+ const W=930,H=430,L=100,R=96,T=35,B=84;
+ const x=q=>L+(q-7)/16*(W-L-R), y=p=>T+(17000-p)/16000*(H-T-B);
+ const data=values.find(v=>v.p===price),xD=x(data.d),xS=x(data.s),level=y(price);
+ const line=k=>values.map(v=>x(v[k])+','+y(v.p)).join(' ');
+ const dots='<line x1="'+L+'" x2="'+Math.max(xD,xS)+'" y1="'+level+'" y2="'+level+'" stroke="#7D679F" stroke-dasharray="9 7" stroke-width="3"/>'+
+   [data.d,data.s].map((q,i)=>'<line x1="'+x(q)+'" x2="'+x(q)+'" y1="'+level+'" y2="'+(H-B)+'" stroke="'+(i?'#E8803E':'#3B8FD9')+'" stroke-dasharray="7 7" stroke-width="2.5"/>').join('')+
+   '<circle cx="'+xD+'" cy="'+level+'" r="10" fill="#3B8FD9" stroke="white" stroke-width="3"/>'+
+   '<circle cx="'+xS+'" cy="'+level+'" r="8" fill="#E8803E" stroke="white" stroke-width="2"/>'+
+   '<text x="'+xD+'" y="'+(H-B+31)+'" font-size="21" fill="#3B8FD9" text-anchor="middle">'+data.d+'</text>'+
+   '<text x="'+xS+'" y="'+(H-B+56)+'" font-size="21" fill="#E8803E" text-anchor="middle">'+data.s+'</text>';
+ return '<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:auto;background:white;border-radius:18px" role="img" aria-label="가격 '+price+'원일 때 수요량 '+data.d+'개 공급량 '+data.s+'개를 점선으로 표시한 수요 공급 직선 그래프">'+
+ '<line x1="'+L+'" x2="'+L+'" y1="'+T+'" y2="'+(H-B)+'" stroke="#8A7384" stroke-width="2"/>'+
+ '<line x1="'+L+'" x2="'+(W-R)+'" y1="'+(H-B)+'" y2="'+(H-B)+'" stroke="#8A7384" stroke-width="2"/>'+
+ '<polyline points="'+line('d')+'" fill="none" stroke="#3B8FD9" stroke-width="5" stroke-linecap="round"/>'+
+ '<polyline points="'+line('s')+'" fill="none" stroke="#E8803E" stroke-width="5" stroke-linecap="round"/>'+dots+
+ '<text x="'+(L-14)+'" y="'+(level+7)+'" text-anchor="end" font-size="22" fill="#72548B">'+price.toLocaleString('ko-KR')+'</text>'+
+ '<text x="'+(W-R+12)+'" y="'+(y(3000)+6)+'" fill="#3B8FD9" font-size="23">수요 D</text>'+
+ '<text x="'+(W-R+12)+'" y="'+(y(15000)+6)+'" fill="#E8803E" font-size="23">공급 S</text>'+
+ '<text x="'+L+'" y="'+(T-11)+'" fill="#5B4B57" font-size="19">가격(원)</text>'+
+ '<text x="'+(W-R)+'" y="'+(H-10)+'" fill="#5B4B57" text-anchor="end" font-size="19">수량(개)</text></svg>';
+}
 function scenarioHTML(){
  const cases={9000:{d:15,s:15},15000:{d:10,s:20},3000:{d:20,s:10}};
  const v=cases[scenarioPrice],eq=v.d===v.s,diff=Math.abs(v.d-v.s);
@@ -762,7 +785,7 @@ function scenarioHTML(){
    '<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px">'+
    '<div class="hl sky center" style="margin:0"><div style="font-size:40px">'+v.d+'명</div>이 가격이면 사려는 사람</div>'+
    '<div class="hl peach center" style="margin:0"><div style="font-size:40px">'+v.s+'명</div>이 가격이면 팔려는 사람</div></div>'+
-   '<div class="q"><p>'+question+'</p></div>'+
+   scenarioChart(scenarioPrice)+'<div class="q"><p>'+question+'</p></div>'+
    '<button class="btn mint" id="scenarioReveal">'+(revealScenario?'설명 숨기기':'정답 확인')+'</button>'+
    (revealScenario?'<div class="hl mint" style="font-size:22px"><b>'+label+'</b>'+(eq?'':' · '+diff+'개 차이')+
      '<div style="margin-top:6px">'+explain+'</div></div>':'')+
