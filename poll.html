@@ -35,7 +35,7 @@ button,input,textarea{font-family:inherit}.title,.question,.option,.card{word-br
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getDatabase, ref, set, get, update, onValue, runTransaction } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
-import { hubSeen, hubFollow, hubLog, getStudentName, saveStudentName, patchHTML } from "./hub.js";
+import { hubSeen, hubFollow, hubLog, getStudentName, saveStudentName, requireStudentRoom, patchHTML } from "./hub.js";
 const firebaseConfig={apiKey:"AIzaSyDiehLZ1aKv8E3N_pD4bNmw0zgMexau99U",authDomain:"marketgo-80ab5.firebaseapp.com",databaseURL:"https://marketgo-80ab5-default-rtdb.firebaseio.com",projectId:"marketgo-80ab5",storageBucket:"marketgo-80ab5.firebasestorage.app",messagingSenderId:"666715038541",appId:"1:666715038541:web:b0f84a9703aa70aeca4d04"};
 const db=getDatabase(initializeApp(firebaseConfig)),app=document.getElementById("app"),P=new URLSearchParams(location.search),isTeacher=P.get("t")==="1";
 const pad=n=>String(n).padStart(2,"0"),stamp=n=>n?new Date(n).toLocaleString("ko-KR",{year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",second:"2-digit",hour12:false}):"-";
@@ -73,6 +73,7 @@ function studentJoinForm(){
  document.getElementById("join").onclick=()=>joinStudent();
 }
 async function joinStudent(nameArg){
+ if(!requireStudentRoom(code))return;
  const name=String(nameArg||getStudentName()||(document.getElementById("name")?.value||"")).trim();
  if(!name)return toast("이름을 입력해 주세요.");
  const b=document.getElementById("join");if(b)b.disabled=true;
@@ -134,6 +135,7 @@ function teacherRender(){
 function render(){if(!room){app.innerHTML='<section class="stage"><div class="emoji">😢</div><div class="title">투표 방을 찾을 수 없어요</div><p class="muted">허브에서 선생님이 투표를 열었는지 확인해 주세요.</p></section>';return;}if(isTeacher)teacherRender();else studentRender();}
 async function start(){
  if(isTeacher&&!code){teacherHome();return;}if(!code){studentJoinForm();return;}
+ if(!isTeacher && !requireStudentRoom(code))return;
  try{
   room=(await get(R())).val();
   if(!room){if(isTeacher)teacherHome();else studentJoinForm();return;}

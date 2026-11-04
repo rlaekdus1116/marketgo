@@ -7,6 +7,21 @@ const db = () => getDatabase(getApp());
 const H = p => ref(db(), 'rooms/hub_main' + (p ? '/' + p : ''));
 
 const STUDENT_NAME_KEY = 'marketgo_student_name';
+const STUDENT_ROOM_KEY = 'marketgo_student_confirmed_room';
+export function studentRoomConfirmed(room) {
+  if(!/^\d{4}$/.test(String(room||'')))return false;
+  try{return localStorage.getItem(STUDENT_ROOM_KEY)===String(room);}catch(e){return false;}
+}
+export function confirmStudentRoom(room) {
+  if(!/^\d{4}$/.test(String(room||'')))return false;
+  try{localStorage.setItem(STUDENT_ROOM_KEY,String(room));return true;}catch(e){return false;}
+}
+// Never automatically enroll a browser from an earlier class in a newly opened room.
+export function requireStudentRoom(room) {
+  if(studentRoomConfirmed(room))return true;
+  location.replace('hub.html?joinRoom='+encodeURIComponent(String(room||'')));
+  return false;
+}
 const LEGACY_NAME_KEYS = ['market_name', 'trade_name', 'auction_name', 'curve_name', 'poll_name'];
 export function getStudentName() {
   try {
@@ -212,6 +227,7 @@ export function hubFollow(app, room) {
     if (expireTimer) { clearTimeout(expireTimer); expireTimer = null; }
     document.querySelectorAll('.hubGo').forEach(x => x.remove());
     const c = s.val(); if (!c || !APPS[c.app]) return;
+    if(String(c.room)!==String(room) || !studentRoomConfirmed(room))return; // never jump to another class
     if (c.app === app && String(c.room) === String(room)) return;
     const maxAge = 10 * 60 * 1000;
     const age = Date.now() - Number(c.at || 0);

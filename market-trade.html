@@ -141,7 +141,7 @@ button,.btn,.speech,.rule,.title,.card{word-break:keep-all;overflow-wrap:break-w
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getDatabase, ref, set, get, update, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
-import { hubSeen, hubFollow, getStudentName, saveStudentName, patchHTML } from './hub.js';   // 3단원 허브 연결
+import { hubSeen, hubFollow, getStudentName, saveStudentName, requireStudentRoom, patchHTML } from './hub.js';   // 3단원 허브 연결
 
 /* 「시장에 가면」과 같은 Firebase 프로젝트 사용 (데이터는 rooms/trade_코드 에 저장 → 기존 보안 규칙 그대로 통과) */
 const firebaseConfig = {
@@ -244,6 +244,7 @@ const secLeft = st => st.phase === 'trading' && st.endsAt ? Math.max(0, Math.cei
 function start() {
   if (isTeacher && !code) return teacherHome();
   if (!code) return studentForm('');
+  if (!isTeacher && !requireStudentRoom(code))return;
   if (!isTeacher) {
     pid = localStorage.getItem('trade_pid_' + code);
     if (!pid) {
@@ -328,6 +329,7 @@ ${getStudentName() ? `<div class="hl mint">🙂 ${esc(getStudentName())} 이름 
 }
 
 async function join(c, name) {
+  if (!requireStudentRoom(c))return;
   if (!/^\d{4}$/.test(c)) return toast('입장 코드 4자리를 써 주세요');
   if (!name) return toast('이름을 써 주세요');
   let snap;

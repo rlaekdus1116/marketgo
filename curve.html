@@ -268,7 +268,7 @@ button,.btn,.speech,.rule,.title,.card{word-break:keep-all;overflow-wrap:break-w
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getDatabase, ref, set, get, update, onValue, onDisconnect } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
-import { hubSeen, hubLog, hubFollow, getStudentName, saveStudentName } from './hub.js';
+import { hubSeen, hubLog, hubFollow, getStudentName, saveStudentName, requireStudentRoom } from './hub.js';
 
 /* 「시장에 가면」·「떡볶이 시장」·「경매소」와 같은 Firebase 프로젝트 (데이터는 rooms/curve_코드 에 저장) */
 const firebaseConfig = {
@@ -515,6 +515,7 @@ function start() {
     if (!code) code = localStorage.getItem('curve_last_room') || '';
     pid = code ? localStorage.getItem('curve_pid_' + code) : null;
     if (!code) return studentForm(code);
+    if (!requireStudentRoom(code))return;
     if (!pid) {
       const name = getStudentName();
       if (name) return join(code, name);
@@ -568,6 +569,7 @@ ${getStudentName() ? `<div class="hl mint">🙂 ${esc(getStudentName())} 이름 
   el('join').onclick = () => join(el('jCode').value.trim(), getStudentName() || (el('jName')?.value || '').trim());
 }
 async function join(c, name) {
+  if (!requireStudentRoom(c))return;
   if (!/^\d{4}$/.test(c)) return toast('입장 코드 4자리를 써 주세요');
   if (!name) return toast('이름을 써 주세요');
   let snap;

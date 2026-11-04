@@ -219,7 +219,7 @@ button,.btn,.speech,.rule,.title,.card{word-break:keep-all;overflow-wrap:break-w
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getDatabase, ref, set, get, update, onValue, remove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
-import { APPS, getStudentName, saveStudentName, clearStudentName, patchHTML, teacherLogs, removeTeacherLog } from './hub.js';
+import { APPS, getStudentName, saveStudentName, clearStudentName, studentRoomConfirmed, confirmStudentRoom, patchHTML, teacherLogs, removeTeacherLog } from './hub.js';
 
 const firebaseConfig = {
   apiKey: "AIzaSyDiehLZ1aKv8E3N_pD4bNmw0zgMexau99U",
@@ -267,7 +267,7 @@ function render() { (isTeacher ? renderTeacher : renderStudent)(); }
 /* ================= 🧒 학생 ================= */
 let goT = null, goKey = '';
 function renderStudent() {
-  if (document.activeElement && document.activeElement.id === 'studentName') return;
+  if (document.activeElement && ['studentName','confirmRoomCode'].includes(document.activeElement.id)) return;
   const studentName = getStudentName();
   if (!studentName) {
     clearTimeout(goT); goKey = '';
@@ -295,6 +295,29 @@ function renderStudent() {
       <div class="muted">이름은 한 번 저장했어요. 다시 입력할 필요 없어요.</div>
       <button class="btn sm sky" id="changeStudentName">이름 바꾸기</button></div></div>`;
     el('changeStudentName').onclick = () => { clearStudentName(); renderStudent(); };
+    return;
+  }
+  // Explicitly confirm a NEW class code once. Keep saved names, and auto-follow only within this room.
+  if(!studentRoomConfirmed(c.room)){
+    clearTimeout(goT); goKey = '';
+    app.innerHTML = `<div class="s-wrap"><div class="stage" style="min-height:80vh">
+      <div class="bigEmoji">🏫</div><div class="title">새 수업방 <span>입장 확인</span></div>
+      <div class="rule">${esc(studentName)} 학생, 선생님이 새 수업을 열었어요.<br>새 반으로 자동 입장하지 않도록 방 번호를 확인해 주세요.</div>
+      <div class="card" style="width:min(450px,100%);display:grid;gap:12px">
+        <label for="confirmRoomCode">칠판에 적힌 네 자리 방 코드</label>
+        <input class="field" id="confirmRoomCode" type="text" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="방 코드 네 자리" value="">
+        <button class="btn big mint" id="confirmJoinRoom">✅ 이 수업 참여하기</button>
+      </div><div class="muted">이름은 다시 적지 않아도 돼요. 같은 방의 다음 활동은 자동으로 이동해요.</div>
+    </div></div>`;
+    const accept=()=>{
+      const typed=(el('confirmRoomCode')?.value||'').trim();
+      const current=hub.current;
+      if(!fresh(current)||typed!==String(current.room))return toast('방 코드가 달라요. 선생님께 이번 수업 코드를 확인해 주세요.');
+      if(!confirmStudentRoom(typed))return toast('방 확인을 저장하지 못했어요. 브라우저 저장을 허용해 주세요.');
+      renderStudent();
+    };
+    el('confirmJoinRoom').onclick=accept;
+    el('confirmRoomCode').onkeydown=e=>{if(e.key==='Enter')accept();};
     return;
   }
   const a = APPS[c.app], url = `${a.file}?room=${encodeURIComponent(c.room)}${a.q || ''}`, key = c.app + c.room;

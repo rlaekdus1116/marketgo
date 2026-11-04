@@ -55,7 +55,7 @@ table{font-size:17px}thead th{background:#FFF5CC}
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {getDatabase,ref,get,set,update,onValue,remove} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
-import {hubSeen,hubFollow,hubLog,getStudentName,saveStudentName} from "./hub.js";
+import {hubSeen,hubFollow,hubLog,getStudentName,saveStudentName,requireStudentRoom} from "./hub.js";
 import {getAuth,signInAnonymously} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {getFunctions,httpsCallable} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-functions.js";
 import {initializeAppCheck,ReCaptchaV3Provider} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app-check.js";
@@ -366,6 +366,7 @@ const sig=JSON.stringify(logRows);if(sig!==lastLog){lastLog=sig;hubLog("priceLab
 }
 async function openTeacher(c){code=c;localStorage.setItem("marketgo_lesson_room",c);const s=await get(R());if(!s.exists())await set(R(),{createdAt:stamp(),state:{phase:"open"},students:{}});location.href="price-lab.html?t=1&room="+encodeURIComponent(c);}
 async function joinStudent(c,n){
+if(!requireStudentRoom(c))return;
 code=c;const s=await get(R());if(!s.exists())throw Error("선생님이 아직 이 학습방을 열지 않았어요.");
 if(val(s.val(),"state.phase")==="closed")throw Error("마감된 학습방이에요.");
 name=saveStudentName(n);myId=idFor(name);localStorage.setItem("marketgo_lesson_room",code);
@@ -523,6 +524,7 @@ try{
 
 if(isTeacher&&!code){teacherHome();return;}
 if(!code){studentEntry();return;}
+if(!isTeacher&&!requireStudentRoom(code))return;
 const s=await get(R());if(!s.exists()){if(isTeacher){teacherHome();return;}studentEntry();screenError="학습방이 아직 열리지 않았어요.";return;}
 if(isTeacher){room=s.val();hubSeen("priceLab",code);onValue(R(),snap=>{room=snap.val()||{};render();});return;}
 const n=getStudentName();if(!n){studentEntry();return;}await joinStudent(code,n);
