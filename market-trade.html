@@ -684,7 +684,7 @@ function chartHTML(rs) {
     <div class="hl lemon center" style="font-size:24px">👑 가장 많이 거래된 가격: <b>${topBins.join(', ')}</b> (${maxN}건)</div>`;
 }
 
-/* 30명의 수업용 가상 시장: 실제 거래 데이터와 별도입니다. */
+/* 수업용 가상 수요·공급 사례: 실제 거래 및 학급 인원과는 별도입니다. */
 function scenarioHTML(){
  const cases={9000:{d:15,s:15},15000:{d:10,s:20},3000:{d:20,s:10}};
  const v=cases[scenarioPrice],eq=v.d===v.s,diff=Math.abs(v.d-v.s);
@@ -695,7 +695,7 @@ function scenarioHTML(){
  const question=eq?'사려는 양과 팔려는 양이 같으면 어떤 상태일까요?':v.d>v.s?
    '사려는 사람이 더 많아요. 가격은 어느 방향으로 움직일까요?':
    '팔려는 사람이 더 많아요. 가격은 어느 방향으로 움직일까요?';
- return '<div class="card" id="priceChangeLesson"><h3>가격을 바꿔 보면?</h3>'+
+ return '<div class="card" id="priceChangeLesson"><h3>가격을 바꿔 보면?</h3><div class="muted" style="font-size:17px">별도의 가상 시장 자료</div>'+
    '<div class="chips" style="margin:12px 0">'+[9000,15000,3000].map(p=>
      '<button class="btn '+(scenarioPrice===p?'lemon':'sky')+'" data-scenario="'+p+'">'+won(p)+'</button>').join('')+'</div>'+
    '<div class="hl lemon center" style="font-size:22px;margin-bottom:14px">모찌 가격 <b>'+won(scenarioPrice)+'</b>'+(scenarioPrice===9000?' · 현재 판매가':'')+'</div>'+
@@ -744,8 +744,8 @@ function questionsHTML(cols) {
      '시장 가격보다 훨씬 싸게 사려 하거나 비싸게 팔려 하면 상대를 찾기 어려워요. 시장 가격에서 사고팔 의사가 있는 사람끼리만 거래가 이루어져요.'],
     [`${ROUNDS}회차 동안 거래를 하지 않은 경우가 <b>${noTrade}번</b> 있었어요. 거래를 못 한 친구는 손해를 본 걸까요?`,
      '이익은 0원이지만 손해는 아니에요. 나에게 손해가 되는 거래를 하지 않은 것도 <b>합리적 선택</b>이에요.'],
-    ['만약 학교 앞에 고@바 모찌 가게가 잔뜩 새로 생겨서 공급자가 훨씬 많아진다면, 거래 가격은 어떻게 될까요?',
-     '팔려는 사람이 많아지면 공급자끼리 경쟁해서 가격이 내려가요 → 공급 증가 시 가격 하락.']
+    ['가장 많이 거래된 가격대가 수요·공급 곡선이 만나는 균형 가격대와 같았나요?',
+     '같을 수도 다를 수도 있어요. 실제 거래 횟수와 학생들의 협상 결과를 함께 확인해 보세요.']
   ];
   return `<div class="card"><h3>📋 결과표 보며 이야기해 봐요</h3>${Q.map(([q, h], i) => `
     <div class="q">
