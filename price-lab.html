@@ -50,8 +50,40 @@ table{font-size:17px}thead th{background:#FFF5CC}
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {getDatabase,ref,get,set,update,onValue,remove} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import {hubSeen,hubFollow,hubLog,getStudentName,saveStudentName} from "./hub.js";
+import {getAuth,signInAnonymously} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import {getFunctions,httpsCallable} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-functions.js";
+import {initializeAppCheck,ReCaptchaV3Provider} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app-check.js";
+import {APP_CHECK_SITE_KEY} from "./ai-config.js";
 const firebaseConfig={apiKey:"AIzaSyDiehLZ1aKv8E3N_pD4bNmw0zgMexau99U",authDomain:"marketgo-80ab5.firebaseapp.com",databaseURL:"https://marketgo-80ab5-default-rtdb.firebaseio.com",projectId:"marketgo-80ab5",storageBucket:"marketgo-80ab5.firebasestorage.app",messagingSenderId:"666715038541",appId:"1:666715038541:web:b0f84a9703aa70aeca4d04"};
-const db=getDatabase(initializeApp(firebaseConfig)),P=new URLSearchParams(location.search),isTeacher=P.get("t")==="1",app=document.getElementById("app");
+const firebaseApp=initializeApp(firebaseConfig),db=getDatabase(firebaseApp),P=new URLSearchParams(location.search),isTeacher=P.get("t")==="1",app=document.getElementById("app");
+const aiConfigured=typeof APP_CHECK_SITE_KEY==="string"&&APP_CHECK_SITE_KEY.length>12;
+let aiPromise=null,aiLoading=false,aiError="";
+async function prepareAI(){
+ if(!aiConfigured)throw Error("AI 피드백 서버 설정이 아직 완료되지 않았어요.");
+ if(!aiPromise)aiPromise=(async()=>{
+   initializeAppCheck(firebaseApp,{provider:new ReCaptchaV3Provider(APP_CHECK_SITE_KEY),isTokenAutoRefreshEnabled:true});
+   const auth=getAuth(firebaseApp);
+   const user=auth.currentUser||(await signInAnonymously(auth)).user;
+   const evaluate=httpsCallable(getFunctions(firebaseApp,"asia-northeast3"),"assessMarketEssay",{timeout:60000});
+   return {uid:user.uid,evaluate};
+ })().catch(e=>{aiPromise=null;throw e});
+ return aiPromise;
+}
+async function requestAIFeedback(){
+ if(aiLoading)return;
+ aiError="";aiLoading=true;render(true);
+ try{
+   const client=await prepareAI();
+   const identity=await get(R(studentPath()+"/authUid"));
+   if(identity.exists()&&identity.val()!==client.uid)throw Error("이 학생 기록은 다른 기기 로그인에 연결되어 있어요. 선생님께 확인해 주세요.");
+   if(!identity.exists())await set(R(studentPath()+"/authUid"),client.uid);
+   const result=await client.evaluate({room:code,studentId:myId});
+   if(result.data?.status!=="ready")throw Error("AI 피드백을 확인하지 못했어요.");
+ }catch(e){
+   const code=e?.code||"";
+   aiError=/app-check|unauthenticated/i.test(code)?"AI 인증 설정을 확인해 주세요.":(e?.message||"AI 피드백을 불러오지 못했어요.");
+ }finally{aiLoading=false;render(true);}
+}
 const prices=[3000,6000,9000,12000,15000],demand=[20,18,15,12,10],supply=[10,12,15,18,20];
 const BASE=[
 {id:"m1",q:"시장에서는 사람들이 직접 만나야만 거래할 수 있다.",opts:["맞다","아니다"],a:1,tag:"시장 개념"},
@@ -166,17 +198,24 @@ function finalPage(){
   (screenError?'<p class="errorText">'+esc(screenError)+'</p>':'') ,'hero');
 }
 function revisionPage(){
- const first=val(me,"baseline.why")||"",f=me.final||{},guide=val(f,"feedback")||{};
+ const first=val(me,"baseline.why")||"",f=me.final||{},hasAI=f.aiFeedback?.status==="ready";
+ const guide=hasAI?(f.aiFeedback.content||{}):(f.feedback||{});
+ const aiStatus=hasAI?'<div class="feedback"><b>AI 피드백</b><div>'+esc(f.aiFeedback.content?.summary||"")+'</div></div>':
+  '<div class="feedback"><b>개념 점검</b><div>서술 답안을 바탕으로 확인할 부분을 표시했어요.</div></div>'+
+  (aiConfigured?(aiLoading?'<div class="status">AI가 답안을 확인하고 있어요…</div>':
+     btn("AI 피드백 받기","requestAI","mint")):'');
+
  const explain=['low','high','eq','term'].map((k,i)=>{
   const labels=['① 초과 수요 상황','② 초과 공급 상황','③ 균형 가격과 균형 거래량','④ 용어 구별'];
   const inputId={low:'revLow',high:'revHigh',eq:'revEq',term:'revTerm'}[k];
   return '<div class="panel" style="background:#FFF9F4"><h3>'+labels[i]+'</h3>'+
    '<div class="quote"><b>내 답변</b>\n'+esc(f[k]||"")+'</div>'+
-   '<div class="feedback"><b>확인할 부분</b><div>'+esc(guide[k]||'가격과 수요량·공급량의 인과관계를 확인해 보세요.')+'</div></div>'+
+   '<div class="feedback"><b>'+(hasAI?'AI 피드백':'확인할 부분')+'</b><div>'+esc(guide[k]||'가격과 수요량·공급량의 인과관계를 확인해 보세요.')+'</div></div>'+
    '<label class="label">수정한 답변</label><textarea id="'+inputId+'" maxlength="700" placeholder="빠진 이유를 추가하고 설명을 고쳐 보세요."></textarea></div>';
  }).join("");
  return card(nav()+steps(4)+'<div class="eyebrow">피드백</div><h2>내 설명을 더 정확하게!</h2>'+
  '<div class="cols"><div><h3>처음 생각</h3><div class="quote">'+esc(first)+'</div></div><div><h3>서술한 내용</h3><div class="quote">'+esc(f.low||'')+'</div></div></div>'+
+ aiStatus+(aiError?'<p class="errorText">'+esc(aiError)+'</p>':'')+
  explain+'<label class="label">어떤 부분을 수정했나요?</label><textarea id="revWhy" maxlength="600" placeholder="내 생각에서 달라진 점을 설명해 보세요."></textarea>'+
  btn("수정본 제출하기","revisionSubmit","primary")+
  (screenError?'<p class="errorText">'+esc(screenError)+'</p>':'') ,'hero');
@@ -218,6 +257,7 @@ code=c;const s=await get(R());if(!s.exists())throw Error("선생님이 아직 �
 if(val(s.val(),"state.phase")==="closed")throw Error("마감된 학습방이에요.");
 name=saveStudentName(n);myId=idFor(name);localStorage.setItem("marketgo_lesson_room",code);
 const existing=await get(R(studentPath()));if(!existing.exists())await set(R(studentPath()),{name,joinedAt:stamp(),baseline:{answers:{}},practice:{answers:{}},lab:{}});
+ if(aiConfigured){try{const client=await prepareAI();const identity=await get(R(studentPath()+"/authUid"));if(!identity.exists())await set(R(studentPath()+"/authUid"),client.uid);}catch(e){aiError="AI 피드백 준비를 확인해 주세요.";}}
 const u=new URL(location.href);u.searchParams.set("room",code);history.replaceState(null,"",u);
 hubFollow("priceLab",code);
 onValue(R("state"),s=>{state=s.val()||{};render();},e=>alertMsg("연결이 끊겼어요. 인터넷을 확인해 주세요."));
@@ -307,8 +347,11 @@ if(act==="finalSubmit"){
  const generated={low:explainFeedback('low',low),high:explainFeedback('high',high),
   eq:explainFeedback('eq',eq),term:explainFeedback('term',term)};
  await set(R(studentPath()+"/final"),{low,high,eq,term,feedback:generated,feedbackType:"rule-based",submittedAt:stamp()});
- document.activeElement?.blur();render(true);return;
+ document.activeElement?.blur();render(true);
+ if(aiConfigured)await requestAIFeedback();
+ return;
 }
+if(act==="requestAI"){await requestAIFeedback();return;}
 if(act==="revisionSubmit"){
  const low=document.getElementById("revLow").value.trim(),high=document.getElementById("revHigh").value.trim(),
  eq=document.getElementById("revEq").value.trim(),term=document.getElementById("revTerm").value.trim(),
