@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>떡볶이 시장 🥵</title>
+<title>고@바 모찌 시장 🍡</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -159,8 +159,8 @@ onValue(ref(db, '.info/serverTimeOffset'), s => { offset = s.val() || 0; });
 const now = () => Date.now() + offset;   // 모든 기기가 같은 시계를 보도록 서버 시간 기준
 
 /* ========== 설정 ========== */
-const BUYER_VALUES  = [2500, 3000, 3500, 4000, 4500, 5000, 5500];   // 교과서 활동 길잡이 표를 떡볶이 가격으로 ×5
-const SELLER_VALUES = [3000, 3500, 4000, 4500, 5000, 5500, 6000];
+const BUYER_VALUES  = [3000, 4500, 6000, 7500, 9000, 10500, 12000, 13500, 15000]; // 9,000원 전후로 협상할 수 있는 가상 카드
+const SELLER_VALUES = [3000, 4500, 6000, 7500, 9000, 10500, 12000, 13500, 15000];
 const ROUNDS = 3;
 const DEFAULT_SEC = 180;   // 회차당 기본 3분
 const lessonCode=()=>localStorage.getItem('marketgo_lesson_room')||'';
@@ -198,7 +198,7 @@ function announce(big, sub = '', emo = '🌈', ms = 3200) {
   document.querySelectorAll('.ann').forEach(a => a.remove());
   const a = document.createElement('div');
   a.className = 'ann';
-  const floaters = ['☁️','🌈','✨','⭐','🥵','💖','☁️','🌟','🍢','🫧','✨','🌈'];
+  const floaters = ['☁️','🌈','✨','⭐','🍡','💖','☁️','🌟','🍢','🫧','✨','🌈'];
   a.innerHTML = floaters.map((f, i) => `<span class="fl" style="left:${(i * 83) % 92}%;top:${(i * 47) % 85}%;animation-delay:${(i % 5) * .3}s">${f}</span>`).join('')
     + `<div class="emo">${emo}</div><span class="rb">${big}</span>${sub ? `<div class="sub">${sub}</div>` : ''}<div class="tap">화면을 누르면 닫혀요</div>`;
   a.onclick = () => a.remove();
@@ -263,9 +263,9 @@ function start() {
 function teacherHome() {
   const saved = localStorage.getItem('trade_teacher_room');
   app.innerHTML = `<div class="wrap"><div class="stage" style="min-height:80vh">
-    <div class="bigEmoji bounce">🥵</div>
-    <div class="title">떡볶이 <span>시장</span></div>
-    <p class="muted" style="font-size:22px">수요자와 공급자가 되어 가격을 정해 봐요</p>
+    <div class="bigEmoji bounce">🍡</div>
+    <div class="title">고@바 모찌 <span>시장</span></div>
+    <p class="muted" style="font-size:22px">현재 판매 가격 9,000원 · 거래 가격은 학생들이 직접 정해요.</p>
     <button class="btn big mint" id="newRoom">새 시장 열기 ✨</button>
     ${saved ? `<button class="btn sky" id="resume">이어서 하기 (방 ${esc(saved)})</button>` : ''}
   </div></div>`;
@@ -290,8 +290,8 @@ async function newRoom() {
 
 function studentForm(prefillCode) {
   app.innerHTML = `<div class="s-wrap"><div class="stage" style="min-height:80vh">
-    <div class="bigEmoji bounce">🥵</div>
-    <div class="title">떡볶이 <span>시장</span></div>
+    <div class="bigEmoji bounce">🍡</div>
+    <div class="title">고@바 모찌 <span>시장</span></div>
     <div class="card" style="width:min(460px,100%);display:grid;gap:4px">
       <input class="field" id="jCode" inputmode="numeric" maxlength="4" placeholder="입장 코드 4자리" value="${esc(prefillCode)}">
 ${getStudentName() ? `<div class="hl mint">🙂 ${esc(getStudentName())} 이름 저장 완료</div>` : `<input class="field" id="jName" maxlength="8" placeholder="내 이름">`}
@@ -392,7 +392,7 @@ function renderTeacher() {
   const isEnd = st.phase === 'closed' && st.round >= ROUNDS;
 
   // 안내문
-  if (st.phase === 'trading') maybeAnnounce(`start-${st.round}`, () => announce(`${st.round}회차 시작!!`, '카드가 새로 섞였어요~ 🎲 흥정 시작!', '🥵'));
+  if (st.phase === 'trading') maybeAnnounce(`start-${st.round}`, () => announce(`${st.round}회차 시작!!`, '카드가 새로 섞였어요~ 🎲 흥정 시작!', '🍡'));
   else if (st.phase === 'closed') maybeAnnounce(`close-${st.round}`, () => isEnd
     ? announce('시장 끝~!!', `${ROUNDS}회차 끝! 다들 수고했어 💖`, '🎉', 4000)
     : announce('그만~~!!', `${st.round}회차 거래 끝! ⏰`, '🛑'));
@@ -400,7 +400,7 @@ function renderTeacher() {
 
   const durCtl = `<span class="dur">⏱ 회차 시간 <button class="btn sm" data-dur="-30">−30초</button><b>${fmt(dur)}</b><button class="btn sm" data-dur="30">+30초</button><input id="durInput" type="number" min="10" max="1800" step="10" value="${dur}" style="width:84px">초 <button class="btn sm mint" id="durSave">설정</button></span>`;
   const topbar = `<div class="topbar">
-    <span class="logo">🥵 떡볶이 시장</span>
+    <span class="logo">🍡 고@바 모찌 시장</span>
     ${st.round ? `<span class="pill">${st.round} / ${ROUNDS}회차</span>` : ''}
     <span class="pill">🙋 ${pids.length}명</span>
     <span class="pill">${demoMode ? '가상 데이터 · 실제 기록 아님' : '방 ' + esc(code)}</span>
@@ -438,7 +438,7 @@ function renderTeacher() {
     const matched = new Set(pairsOf(st.round).flatMap(x => [x.a, x.b]));
     const unmatched = Object.keys(subs).filter(id => subs[id].partner !== 'none' && !matched.has(id));
     main = `<div class="card stage" style="min-height:0">
-        <span class="roundBadge">🥵 ${st.round}회차 거래 중</span>
+        <span class="roundBadge">🍡 ${st.round}회차 거래 중</span>
         <div class="timer" id="timer"></div>
         <div class="bar" id="tbar"><i></i></div>
         <div class="rule">기록 <b>${Object.keys(subs).length}</b> / ${Object.keys(cardsOf(st.round)).length}명 · 🤝 성사 <b>${pairsOf(st.round).length}</b>건</div>
@@ -523,7 +523,7 @@ function renderTeacher() {
   app.querySelectorAll('[data-hint]').forEach(b => b.onclick = () => { const k = b.dataset.hint; hintOpen.has(k) ? hintOpen.delete(k) : hintOpen.add(k); render(); });
 }
 
-// 교과서 분포 ×5 (수요자 2,500~5,500원 / 공급자 3,000~6,000원)대로 카드를 만들고 학생에게 무작위로 나눠 줌
+// 모찌 가상 카드(3,000~15,000원)를 학생에게 무작위로 나눠 줌
 // 회차마다 새로 호출 → 역할(수요자/공급자)과 금액이 매번 다시 섞임
 function makeCards(ids) {
   const order = shuffle(ids);
@@ -554,7 +554,7 @@ function sdHTML(rs) {
   const Sp = cs.filter(c => c.role === 'seller').map(c => c.limit).sort((a, b) => a - b);
   if (!D.length || !Sp.length) return `<div class="stage" style="min-height:220px"><div class="rule muted">카드가 나오면 그래프가 그려져요</div></div>`;
   const deals = rs.flatMap(r => pairsOf(r));
-  const pMin = Math.min(2000, ...deals.map(d => d.price - 500)), pMax = Math.max(6500, ...deals.map(d => d.price + 500));
+  const pMin = Math.min(2000, BUYER_VALUES[0], ...deals.map(d => d.price - 500)), pMax = Math.max(16000, SELLER_VALUES[SELLER_VALUES.length-1], ...deals.map(d => d.price + 500));
   const qMax = Math.max(D.length, Sp.length);
   const W = 1000, H = 470, L = 86, Rr = 120, Tp = 24, B = 64;
   const pw = W - L - Rr, ph = H - Tp - B;
@@ -634,7 +634,7 @@ function sdHTML(rs) {
 /* ========== 거래 가격 그래프 (가격별 거래 건수, 회차별로 쌓기) ========== */
 function chartHTML(rs) {
   const deals = rs.flatMap(r => pairsOf(r).map(x => ({ r, price: x.price })));
-  if (!deals.length) return `<div class="stage" style="min-height:220px"><div class="bigEmoji">🥵</div><div class="rule muted">아직 성사된 거래가 없어요</div></div>`;
+  if (!deals.length) return `<div class="stage" style="min-height:220px"><div class="bigEmoji">🍡</div><div class="rule muted">아직 성사된 거래가 없어요</div></div>`;
   const STEP = 500;
   const lo = Math.min(BUYER_VALUES[0], ...deals.map(d => Math.floor(d.price / STEP) * STEP));
   const hi = Math.max(SELLER_VALUES[SELLER_VALUES.length - 1], ...deals.map(d => Math.floor(d.price / STEP) * STEP));
@@ -717,7 +717,7 @@ function questionsHTML(cols) {
      '시장 가격보다 훨씬 싸게 사려 하거나 비싸게 팔려 하면 상대를 찾기 어려워요. 시장 가격에서 사고팔 의사가 있는 사람끼리만 거래가 이루어져요.'],
     [`${ROUNDS}회차 동안 거래를 하지 않은 경우가 <b>${noTrade}번</b> 있었어요. 거래를 못 한 친구는 손해를 본 걸까요?`,
      '이익은 0원이지만 손해는 아니에요. 나에게 손해가 되는 거래를 하지 않은 것도 <b>합리적 선택</b>이에요.'],
-    ['만약 학교 앞에 떡볶이 가게가 잔뜩 새로 생겨서 공급자가 훨씬 많아진다면, 거래 가격은 어떻게 될까요?',
+    ['만약 학교 앞에 고@바 모찌 가게가 잔뜩 새로 생겨서 공급자가 훨씬 많아진다면, 거래 가격은 어떻게 될까요?',
      '팔려는 사람이 많아지면 공급자끼리 경쟁해서 가격이 내려가요 → 공급 증가 시 가격 하락.']
   ];
   return `<div class="card"><h3>📋 결과표 보며 이야기해 봐요</h3>${Q.map(([q, h], i) => `
@@ -766,7 +766,7 @@ function renderStudent() {
   const head = `<div class="s-top"><span class="me">🙂 ${esc(name)}</span><span class="pill">⭐ 총 손익 ${signed(totalProfit(st))}</span></div>`;
 
   if (!card && !isEnd) {
-    app.innerHTML = `<div class="s-wrap">${head}<div class="stage" style="min-height:60vh"><div class="bigEmoji bounce">🥵</div><div class="rule">${st.phase === 'lobby'
+    app.innerHTML = `<div class="s-wrap">${head}<div class="stage" style="min-height:60vh"><div class="bigEmoji bounce">🍡</div><div class="rule">${st.phase === 'lobby'
       ? '선생님이 시작하면<br>카드가 나와요 ⏳'
       : '이번 회차가 끝나면<br>다음 회차부터 카드를 받아요 ⏳'}</div></div></div>`;
     return;
@@ -775,10 +775,10 @@ function renderStudent() {
   const cardHTML = !card ? '' : card.role === 'buyer'
     ? `<div class="tcard buyer"><span class="rn">${st.round}회차 내 카드</span>
         <div class="role">🛒 수요자 카드</div><div class="amt">${won(card.limit)}</div>
-        <div class="desc">떡볶이 1인분을 최대한 <b>낮은 가격</b>으로 사세요.<br>떡볶이는 나에게 ${won(card.limit)}만큼의 만족을 줘요.<br>이보다 비싸게 사면 손해!</div></div>`
+        <div class="desc">고@바 모찌 1개을 최대한 <b>낮은 가격</b>으로 사세요.<br>고@바 모찌는 나에게 ${won(card.limit)}만큼의 만족을 줘요.<br>이보다 비싸게 사면 손해!</div></div>`
     : `<div class="tcard seller"><span class="rn">${st.round}회차 내 카드</span>
         <div class="role">🏷️ 공급자 카드</div><div class="amt">${won(card.limit)}</div>
-        <div class="desc">떡볶이 1인분을 최대한 <b>높은 가격</b>으로 파세요.<br>떡볶이 1인분 만드는 데 ${won(card.limit)}의 비용이 들었어요.<br>이보다 싸게 팔면 손해!</div></div>`;
+        <div class="desc">고@바 모찌 1개을 최대한 <b>높은 가격</b>으로 파세요.<br>고@바 모찌 1개 만드는 데 ${won(card.limit)}의 비용이 들었어요.<br>이보다 싸게 팔면 손해!</div></div>`;
 
   let body = '';
   const roster = ['buyer','seller'].map(role=>{
@@ -828,7 +828,7 @@ function renderStudent() {
         <div class="lab">누구랑 거래했나요?</div>
         <div class="opts">${opp.map(id => `<button class="opt${sel.partner === id ? ' sel' : ''}" data-partner="${id}">${nameOf(id)}</button>`).join('') || '<span class="muted">거래할 친구가 없어요</span>'}</div>
         <div class="lab">얼마에 거래했나요? <span class="muted" style="font-size:16px">(100원 단위)</span></div>
-        <input class="field" id="price" type="number" inputmode="numeric" min="100" step="100" placeholder="예: 4000" value="${sel.price || ''}">
+        <input class="field" id="price" type="number" inputmode="numeric" min="100" step="100" placeholder="예: 9000" value="${sel.price || ''}">
         <div id="pl" class="muted center" style="font-size:20px;min-height:28px"></div>
         <button class="btn big mint" id="submit" style="width:100%">거래 기록하기 ✅</button>
         <p class="muted center" style="font-size:15px">상대와 기록이 맞으면 거래 성사! 성사되면 더 못 고쳐요.</p>
@@ -851,9 +851,9 @@ function renderStudent() {
       <div class="doneBox">내 총 손익<br><span style="font-size:56px">${signed(totalProfit(st))}</span></div></div>${lastResult()}
       <div class="card"><h3>🧠 다음 시장의 가격을 제안해 보세요!</h3>
       <p class="muted">우리 반 거래 결과를 살펴보고 다음 시장의 가격을 제안해 보세요.</p>
-      <label for="recPrice">새로 제안할 가격 (원)</label><input class="field" type="number" id="recPrice" inputmode="numeric" min="100" max="100000" step="100" value="${rec.price||''}" placeholder="예: 4500">
+      <label for="recPrice">새로 제안할 가격 (원)</label><input class="field" type="number" id="recPrice" inputmode="numeric" min="100" max="100000" step="100" value="${rec.price||''}" placeholder="예: 9000">
       <label for="recReason">왜 그 가격을 제안하나요? 실제 거래 결과를 근거로 적어 보세요.</label>
-      <textarea class="field" id="recReason" rows="3" maxlength="400" placeholder="예: 4,500원에 거래가 많이 이루어졌기 때문이에요.">${esc(rec.reason||'')}</textarea>
+      <textarea class="field" id="recReason" rows="3" maxlength="400" placeholder="예: 9,000원에 거래가 많이 이루어졌기 때문이에요.">${esc(rec.reason||'')}</textarea>
       <button class="btn mint" id="saveRec">📩 가격과 근거 제출</button>
       ${rec.price?'<div class="hl mint">✅ 제출했어요. 수정할 수 있어요.</div>':''}</div>`;
   } else {
@@ -878,7 +878,7 @@ function renderStudent() {
   if (el('submit')) el('submit').onclick = () => {
     const v = Number(el('price').value);
     if (!sel.partner) return toast('누구랑 거래했는지 골라 주세요 👆');
-    if (!v || v < 100 || v % 100) return toast('가격을 100원 단위로 써 주세요 (예: 4000)');
+    if (!v || v < 100 || v % 100) return toast('가격을 100원 단위로 써 주세요 (예: 9000)');
     if (v > 100000) return toast('가격이 너무 커요! 다시 확인해 주세요');
     submit(sel.partner, v);
   };
@@ -922,9 +922,9 @@ async function submit(partner, price) {
 
 /* 가상 데이터 미리보기: 서버에 방/학생/거래 기록을 생성하지 않음. */
 function renderDemo(){
-  const buyerLimits=[6500,6000,5500,5000,5000,5000,4500,4500,4000,3500];
-  const sellerLimits=[2500,3000,3500,4000,4000,4000,4500,4500,5000,5500];
-  const samplePrices=[5000,4800,4000,4300,4500,4500,4500,4500];
+  const buyerLimits=[18000,16000,15000,13500,12000,10500,9000,8500,7500,6500];
+  const sellerLimits=[3000,4500,5500,6500,7500,8500,9000,10500,12000,13500];
+  const samplePrices=[9500,9700,8500,8800,9000,9000,9000];
   const players={},rounds={};
   for(let i=0;i<20;i++)players['demo'+i]={name:(i<10?'구매자 ':'판매자 ')+(i<10?i+1:i-9),joinedAt:Date.now()-100000};
   for(let r=1;r<=3;r++){
