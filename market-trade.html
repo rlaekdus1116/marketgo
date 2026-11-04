@@ -178,6 +178,7 @@ let editing = false;            // 학생이 기록을 고치는 중
 let chartRound = 0;             // 그래프: 0 = 전체, 1~3 = 회차만
 let chartMode = 'sd';           // 'sd' 수요·공급 그래프 / 'bar' 가격별 건수 / 'table' 표
 let scenarioPrice=9000, revealScenario=false;
+let teachingStage=1, exampleMode=false;
 let showEq = demoMode;             // 균형 가격 표시 (정답이라 기본은 숨김)
 const ROUND_COLORS = ['#3B8FD9', '#E8803E', '#2FA67A'];   // 1·2·3회차 (색각이상 검사 통과, 범례·숫자와 함께 사용)
 const annSeen = new Set();      // 이미 띄운 안내문
@@ -389,6 +390,7 @@ function renderTeacher() {
   const cols = [...Array(ROUNDS)].map((_, i) => i + 1);
   const roundStarted = r => r <= completedRounds(st);
   const isEnd = st.phase === 'closed' && st.round >= ROUNDS;
+  if(isEnd && !demoMode){teachingStage=Number(room.presentation?.stage||1);exampleMode=room.presentation?.source==='example';scenarioPrice=Number(room.presentation?.price||9000);revealScenario=!!room.presentation?.reveal;}
 
   // 안내문
   if (st.phase === 'trading') maybeAnnounce(`start-${st.round}`, () => announce(`${st.round}회차 시작!!`, '카드가 새로 섞였어요~ 🎲 흥정 시작!', '🍡'));
@@ -489,7 +491,10 @@ function renderTeacher() {
     return `<div style="margin:8px 0"><span class="roundBadge" style="font-size:16px;padding:4px 14px">${r}회차</span> <span class="chips" style="display:inline-flex">${ps.length ? ps.map(x => { const s = x.buyer === x.a ? x.b : x.a; return `<span class="chip soft">🛒 ${nm(x.buyer)} ↔ 🏷️ ${nm(s)} · ${won(x.price)}</span>`; }).join('') : '<span class="muted">거래 없음</span>'}</span></div>`;
   }).join('')}</div>` : '';
 
-  patchHTML(app, `<div class="wrap">${topbar}${main}${table}${isEnd ? questionsHTML(cols) + scenarioHTML() + proposalHTML : ''}${logHTML}</div>`);
+  const sourceSwitch='<div class="card center"><div class="chips" style="justify-content:center"><button class="btn '+(!exampleMode?'lemon':'sky')+'" id="sourceActual">우리 반 실제 결과</button><button class="btn '+(exampleMode?'lemon':'sky')+'" id="sourceExample">일반적인 시장 예시</button></div></div>';
+  const resultsView=isEnd ? (teachingStage===1 ? sourceSwitch+(exampleMode?exampleResultsHTML():table)+(!exampleMode?questionsHTML(cols)+proposalHTML:'') : teachingStage===2 ? equilibriumLessonHTML() : scenarioHTML()) : table;
+  const stageNav=isEnd?`<div class="card center"><div class="chips" style="justify-content:center"><button class="btn ${teachingStage===1?'lemon':'sky'}" data-stage="1">① 거래 결과</button><button class="btn ${teachingStage===2?'lemon':'sky'}" data-stage="2">② 균형 가격·거래량</button><button class="btn ${teachingStage===3?'lemon':'sky'}" data-stage="3">③ 가격을 바꿔 보면?</button></div><div class="chips" style="justify-content:center"><button class="btn mint" id="goPriceLab">다음 단계로 넘어가기</button></div></div>`:'';
+  patchHTML(app, `<div class="wrap">${topbar}${main}${isEnd?stageNav:''}${resultsView}${isEnd&&teachingStage===1&&!exampleMode?logHTML:''}</div>`);
   if (st.phase === 'lobby' && window.QRCode && el('qr') && !el('qr').firstChild) new QRCode(el('qr'), { text: link, width: 200, height: 200, colorDark: '#5B4B57', colorLight: '#ffffff' });
 
   const bind = (id, fn) => { const b = el(id); if (b) b.onclick = fn; };
@@ -504,8 +509,19 @@ function renderTeacher() {
     chartRound=0;
   });
   bind('eq', () => { showEq = !showEq; render(); });
-  bind('scenarioReveal',()=>{revealScenario=!revealScenario;render();});
-  app.querySelectorAll('[data-scenario]').forEach(b=>b.onclick=()=>{scenarioPrice=Number(b.dataset.scenario);revealScenario=false;render();});
+  bind('scenarioReveal',async()=>{revealScenario=!revealScenario;if(!demoMode)await update(T(),{'presentation/reveal':revealScenario,'presentation/at':Date.now()});render();});
+  app.querySelectorAll('[data-scenario]').forEach(b=>b.onclick=async()=>{scenarioPrice=Number(b.dataset.scenario);revealScenario=false;if(!demoMode)await update(T(),{'presentation/price':scenarioPrice,'presentation/reveal':false,'presentation/at':Date.now()});render();});
+  app.querySelectorAll('[data-stage]').forEach(b=>b.onclick=async()=>{teachingStage=Number(b.dataset.stage);if(!demoMode)await update(T(),{'presentation/stage':teachingStage,'presentation/at':Date.now()});render();});
+  bind('sourceActual',async()=>{exampleMode=false;if(!demoMode)await update(T(),{'presentation/source':'actual','presentation/at':Date.now()});render();});
+  bind('sourceExample',async()=>{exampleMode=true;if(!demoMode)await update(T(),{'presentation/source':'example','presentation/at':Date.now()});render();});
+  bind('goPriceLab',async()=>{if(demoMode){location.href='price-lab.html?t=1';return;}try{
+    const place=ref(db,'rooms/priceLab_'+code);
+    if(!(await get(place)).exists())await set(place,{createdAt:Date.now(),state:{phase:'open'},students:{}});
+    await update(T(),{'presentation/nextOpenedAt':Date.now()});
+    await hubSeen('priceLab',code);
+    location.href='price-lab.html?t=1&room='+encodeURIComponent(code);
+  }catch(e){toast('다음 활동 연결에 실패했어요. 인터넷과 저장 권한을 확인해 주세요.');}});
+
   app.querySelectorAll('[data-mode]').forEach(b => b.onclick = () => { chartMode = b.dataset.mode; render(); });
   app.querySelectorAll('[data-cr]').forEach(b => b.onclick = () => { chartRound = Number(b.dataset.cr); render(); });
   bind('next', () => {
@@ -680,6 +696,52 @@ function chartHTML(rs) {
   const legend = rs.length > 1 ? `<div class="chips" style="justify-content:center;margin-top:4px">${rs.map(r => `<span class="pill"><span style="display:inline-block;width:14px;height:14px;border-radius:4px;background:${ROUND_COLORS[r - 1]};vertical-align:-1px"></span> ${r}회차</span>`).join('')}</div>` : '';
   return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;font-family:Jua,sans-serif" role="img" aria-label="거래 가격별 거래 건수 그래프">${g}</svg>${legend}
     <div class="hl lemon center" style="font-size:24px">👑 가장 많이 거래된 가격: <b>${topBins.join(', ')}</b> (${maxN}건)</div>`;
+}
+
+/* 교사용 대체 시각화: 실제 기록을 덮어쓰지 않는 일반적인 시장 예시 */
+function exampleResultsHTML(){
+ const hist=[{p:7500,n:1},{p:8000,n:2},{p:8500,n:4},{p:9000,n:12},{p:9500,n:5},{p:10000,n:2},{p:10500,n:1}];
+ const max=Math.max(...hist.map(v=>v.n)),W=930,H=420,L=76,R=35,T=40,B=90;
+ const y=n=>T+(max-n)/max*(H-T-B),slot=(W-L-R)/hist.length;
+ const b=hist.map((d,i)=>{
+   const x=L+i*slot+slot*.22,h=(H-T-B)-(y(d.n)-T);
+   return '<rect x="'+x+'" y="'+y(d.n)+'" width="'+slot*.56+'" height="'+h+'" rx="8" fill="'+(d.p===9000?'#8FD5B5':'#E6DCE3')+'"/>'+
+      '<text x="'+(x+slot*.28)+'" y="'+(y(d.n)-9)+'" font-size="22" fill="#5B4B57" text-anchor="middle">'+d.n+'건</text>'+
+      '<text x="'+(x+slot*.28)+'" y="'+(H-B+31)+'" font-size="19" fill="#5B4B57" text-anchor="middle">'+d.p.toLocaleString('ko-KR')+'</text>';
+ }).join('');
+ return '<div class="card"><h3>일반적인 시장 예시 <span class="pill">가상 자료 · 우리 반 거래 기록 아님</span></h3>'+
+ '<div class="chips"><button class="btn sky" id="sourceActual">우리 반 결과 보기</button><button class="btn lemon" id="sourceExample">일반적인 시장 예시</button></div>'+
+ '<p>실제 거래 결과가 예상과 다를 때 비교해 보는 가상 사례예요.</p>'+
+ '<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="거래 가격대별 성사 건수. 9000원 부근이 가장 많음" style="width:100%;height:auto">'+
+ '<line x1="'+L+'" y1="'+(H-B)+'" x2="'+(W-R)+'" y2="'+(H-B)+'" stroke="#9C8894" stroke-width="2"/>'+
+ b+'<text x="'+L+'" y="'+(T-12)+'" font-size="20" fill="#5B4B57">거래 건수</text><text x="'+(W-R)+'" y="'+(H-8)+'" font-size="19" fill="#5B4B57" text-anchor="end">가격(원)</text></svg>'+
+ '<div class="hl mint center">거래가 주로 9,000원 부근에서 이루어진 가상 시장이에요.</div></div>';
+}
+function equilibriumLessonHTML(){
+ // 단원 개념을 이해하기 위한 모형. 실제 학생 시장의 균형점과 동일하다고 단정하지 않음.
+ const data=[{p:3000,d:20,s:10},{p:9000,d:15,s:15},{p:15000,d:10,s:20}];
+ const W=920,H=420,L=110,R=110,T=30,B=82,xx=q=>L+(q-8)/14*(W-L-R),yy=p=>T+(16000-p)/14000*(H-T-B);
+ const xE=xx(15),yE=yy(9000);
+ const plot=(key)=>data.map(v=>xx(v[key])+','+yy(v.p)).join(' ');
+ const guides='<line x1="'+L+'" y1="'+yE+'" x2="'+xE+'" y2="'+yE+'" stroke="#6B8D82" stroke-width="3" stroke-dasharray="9 7"/>'+
+ '<line x1="'+xE+'" y1="'+yE+'" x2="'+xE+'" y2="'+(H-B)+'" stroke="#6B8D82" stroke-width="3" stroke-dasharray="9 7"/>';
+ const graphic='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="수요곡선과 공급곡선의 교점에서 균형 가격 9000원, 균형 거래량 15개" style="width:100%;height:auto">'+
+ '<line x1="'+L+'" y1="'+T+'" x2="'+L+'" y2="'+(H-B)+'" stroke="#6A5A65" stroke-width="2"/>'+
+ '<line x1="'+L+'" y1="'+(H-B)+'" x2="'+(W-R)+'" y2="'+(H-B)+'" stroke="#6A5A65" stroke-width="2"/>'+
+ '<polyline points="'+plot('d')+'" fill="none" stroke="#3B8FD9" stroke-width="6"/>'+
+ '<polyline points="'+plot('s')+'" fill="none" stroke="#E8803E" stroke-width="6"/>'+
+ guides+'<circle cx="'+xE+'" cy="'+yE+'" r="11" fill="#388A74" stroke="white" stroke-width="4"/>'+
+ '<text x="'+(L-14)+'" y="'+(yE+7)+'" font-size="22" fill="#5B4B57" text-anchor="end">9,000</text>'+
+ '<text x="'+xE+'" y="'+(H-B+32)+'" font-size="22" fill="#5B4B57" text-anchor="middle">15</text>'+
+ '<text x="'+(W-R+10)+'" y="'+(yy(3000)+6)+'" font-size="22" fill="#3B8FD9">수요 D</text>'+
+ '<text x="'+(W-R+10)+'" y="'+(yy(15000)+6)+'" font-size="22" fill="#E8803E">공급 S</text>'+
+ '<text x="'+xE+'" y="'+(yE-19)+'" font-size="22" fill="#287B64">균형점</text>'+
+ '<text x="'+L+'" y="'+(T-10)+'" font-size="20" fill="#5B4B57">가격(원)</text>'+
+ '<text x="'+(W-R)+'" y="'+(H-12)+'" font-size="20" text-anchor="end" fill="#5B4B57">수량(개)</text></svg>';
+ return '<div class="card"><h3>균형 가격과 균형 거래량</h3><span class="pill">일반적인 시장 모형 · 가상 자료</span>'+
+ '<p>수요량과 공급량이 같아지는 가격이 <b>균형 가격</b>, 그때의 거래량이 <b>균형 거래량</b>이에요.</p>'+
+ graphic+'<div class="hl mint center">균형 가격 9,000원 · 균형 거래량 15개</div>'+
+ '<p>점선으로 가격축의 9,000원과 수량축의 15개를 확인해 보세요.</p></div>';
 }
 
 /* 수업용 가상 수요·공급 사례: 실제 거래 및 학급 인원과는 별도입니다. */
