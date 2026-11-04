@@ -469,10 +469,20 @@ function renderTeacher() {
     const subs = (rounds[st.round] || {}).subs || {};
     const matched = new Set(pairsOf(st.round).flatMap(x => [x.a, x.b]));
     const unmatched = Object.keys(subs).filter(id => subs[id].partner !== 'none' && !matched.has(id));
+
+    const roleCards = cardsOf(st.round);
+    const roleRoster = ['buyer','seller'].map(role=>{
+      const ids=Object.keys(roleCards).filter(id=>roleCards[id]?.role===role);
+      const label=role==='buyer'?'🛒 수요자':'🏷️ 공급자',style=role==='buyer'?'sky':'peach';
+      return '<div class="hl '+style+'" style="margin:0;min-width:0;flex:1"><h3 style="margin:0 0 10px">'+label+' <span class="pill">'+ids.length+'명</span></h3>'+
+        '<div class="chips" style="gap:8px">'+(ids.map(id=>'<span class="chip soft" style="font-size:21px;padding:8px 13px">'+nm(id)+'</span>').join('')||'<span class="muted">없음</span>')+'</div></div>';
+    }).join('');
+
     main = `<div class="card stage" style="min-height:0">
         <span class="roundBadge">🍡 ${st.round}회차 거래 중</span>
         <div class="timer" id="timer"></div>
         <div class="bar" id="tbar"><i></i></div>
+        <div style="display:flex;gap:14px;text-align:left;flex-wrap:wrap;margin:16px 0;width:100%">${roleRoster}</div>
         <div class="rule">기록 <b>${Object.keys(subs).length}</b> / ${Object.keys(cardsOf(st.round)).length}명 · 🤝 성사 <b>${pairsOf(st.round).length}</b>건</div>
         <div><button class="btn mint" id="bigT">⛶ 타이머 크게</button><button class="btn lemon" id="minus">−1분</button><button class="btn lemon" id="plus">+1분</button><input id="remainInput" type="number" min="10" max="1800" step="10" style="width:90px" placeholder="남은 초"><button class="btn sm sky" id="remainSave">시간 변경</button><button class="btn" id="close">⏹ 바로 마감</button></div>
       </div>
