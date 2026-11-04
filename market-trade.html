@@ -948,7 +948,7 @@ function renderStudent() {
 
   if (st.phase === 'trading') {
     body += `<div class="card center"><div class="timer s" id="timer"></div><div class="bar" id="tbar"><i></i></div></div>`;
-    body += `<div class="card">${cardHTML}</div><details class="card" open><summary style="cursor:pointer;font-size:23px">👥 이번 회차 수요자·공급자 명단</summary><div style="display:flex;gap:12px;flex-wrap:wrap">${roster}</div></details>`;
+    body += `<details class="card" open><summary style="cursor:pointer;font-size:23px">👥 이번 회차 수요자·공급자 명단</summary><div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:12px">${roster}</div></details><div class="card">${cardHTML}</div>`;
 
     if (myPair) {
       body += `<div class="card"><div class="doneBox">✅ ${nameOf(curSub.partner)} 친구와 거래 성사!<br>${won(myPair.price)} · 손익 <b>${signed(profitOf(card, myPair.price))}</b></div>
