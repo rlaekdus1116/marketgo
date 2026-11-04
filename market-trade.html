@@ -175,8 +175,9 @@ const hintOpen = new Set();     // 결과 질문에서 힌트 펼친 번호
 let sel = { r: 0, partner: '', price: 0 };   // 학생이 고르는 중인 상대·가격
 let editing = false;            // 학생이 기록을 고치는 중
 let chartRound = 0;             // 그래프: 0 = 전체, 1~3 = 회차만
-let chartMode = 'sd';           // 'sd' 수요·공급 그래프 / 'bar' 가격별 건수 / 'table' 표
+let chartMode = 'bar';           // 'sd' 수요·공급 그래프 / 'bar' 가격별 건수 / 'table' 표
 let analysisPrice = null;        // 게임 후 초과수요·초과공급을 살펴볼 가격
+let showImbalance = false;
 let showEq = false;             // 균형 가격 표시 (정답이라 기본은 숨김)
 const ROUND_COLORS = ['#3B8FD9', '#E8803E', '#2FA67A'];   // 1·2·3회차 (색각이상 검사 통과, 범례·숫자와 함께 사용)
 const annSeen = new Set();      // 이미 띄운 안내문
@@ -225,6 +226,8 @@ function matchRound(cards, subs) {
     const b = sa.partner, sb = (subs || {})[b], ca = (cards || {})[a], cb = (cards || {})[b];
     if (!sb || sb.partner !== a || !ca || !cb || ca.role === cb.role) continue;
     if (sa.price !== sb.price) continue;
+    const bc=ca.role==='buyer'?ca:cb,sc=ca.role==='seller'?ca:cb;
+    if(!Number.isFinite(sa.price)||sa.price<=0||sa.price>bc.limit||sa.price<sc.limit)continue;
     const key = [a, b].sort().join('|');
     if (seen.has(key)) continue;
     seen.add(key);
@@ -469,8 +472,8 @@ function renderTeacher() {
     const tabs = `<div class="chips" style="margin-bottom:10px">
       ${[0, ...cols.filter(roundStarted)].map(r => `<button class="btn sm ${chartRound === r ? 'lemon' : 'sky'}" data-cr="${r}">${r ? r + '회차' : '전체'}</button>`).join('')}
       <span style="margin-left:auto"></span>
-      ${[['sd', '📈 수요·공급'], ['bar', '📊 가격별 건수'], ['table', '📋 표']].map(([m, t]) => `<button class="btn sm ${chartMode === m ? 'mint' : ''}" data-mode="${m}">${t}</button>`).join('')}
-      ${chartMode === 'sd' ? `<button class="btn sm ${showEq ? 'lemon' : 'sky'}" id="eq">⚖️ 균형 가격 ${showEq ? '숨기기' : '보이기'}</button>` : ''}</div>`;
+      ${[['bar', '📊 실제 거래 분포'], ['sd', '📈 수요·공급'], ['table', '📋 거래 결과']].map(([m, t]) => `<button class="btn sm ${chartMode === m ? 'mint' : ''}" data-mode="${m}">${t}</button>`).join('')}
+      ${chartMode === 'sd' ? `<button class="btn sm ${showEq ? 'lemon' : 'sky'}" id="eq">⚖️ 균형 가격 ${showEq ? '숨기기' : '보이기'}</button>` : ''}${isEnd ? `<button class="btn sm ${showImbalance ? 'lemon' : 'sky'}" id="imbalanceToggle">${showImbalance ? '초과 수요·공급 숨기기' : '③ 초과 수요·공급 살펴보기'}</button>` : ''}</div>`;
     const rs = chartRound ? [chartRound] : cols.filter(roundStarted);
     const titles = { sd: '📈 수요·공급 그래프 <span class="muted" style="font-size:16px">내 카드들로 그린 수요 곡선과 공급 곡선, 그리고 실제 거래</span>',
       bar: '📊 가격별 거래 건수 <span class="muted" style="font-size:16px">어느 가격에서 거래가 가장 많았을까?</span>', table: '📋 전체 거래 결과표' };
@@ -488,7 +491,7 @@ function renderTeacher() {
     return `<div style="margin:8px 0"><span class="roundBadge" style="font-size:16px;padding:4px 14px">${r}회차</span> <span class="chips" style="display:inline-flex">${ps.length ? ps.map(x => { const s = x.buyer === x.a ? x.b : x.a; return `<span class="chip soft">🛒 ${nm(x.buyer)} ↔ 🏷️ ${nm(s)} · ${won(x.price)}</span>`; }).join('') : '<span class="muted">거래 없음</span>'}</span></div>`;
   }).join('')}</div>` : '';
 
-  patchHTML(app, `<div class="wrap">${topbar}${main}${table}${isEnd ? imbalanceHTML() + questionsHTML(cols) + proposalHTML : ''}${logHTML}</div>`);
+  patchHTML(app, `<div class="wrap">${topbar}${main}${table}${isEnd ? (showImbalance ? imbalanceHTML() : '') + questionsHTML(cols) + proposalHTML : ''}${logHTML}</div>`);
   if (st.phase === 'lobby' && window.QRCode && el('qr') && !el('qr').firstChild) new QRCode(el('qr'), { text: link, width: 200, height: 200, colorDark: '#5B4B57', colorLight: '#ffffff' });
 
   const bind = (id, fn) => { const b = el(id); if (b) b.onclick = fn; };
@@ -503,6 +506,7 @@ function renderTeacher() {
     chartRound=0;
   });
   bind('eq', () => { showEq = !showEq; render(); });
+  bind('imbalanceToggle', () => { showImbalance = !showImbalance; render(); });
   app.querySelectorAll('[data-mode]').forEach(b => b.onclick = () => { chartMode = b.dataset.mode; render(); });
   app.querySelectorAll('[data-cr]').forEach(b => b.onclick = () => { chartRound = Number(b.dataset.cr); render(); });
   bind('next', () => {
@@ -592,7 +596,7 @@ function sdHTML(rs) {
   let note = '<span class="muted">아직 성사된 거래가 없어요</span>';
   if (deals.length) {
     const n = deals.length, avg = Math.round(deals.reduce((s, d) => s + d.price, 0) / n);
-    deals.forEach(d => g += `<circle cx="${x(n)}" cy="${y(d.price)}" r="6" fill="#fff" stroke="${GREEN}" stroke-width="2"><title>거래 ${won(d.price)}</title></circle>`);
+    deals.forEach((d,i) => g += `<circle cx="${x(i+1)}" cy="${y(d.price)}" r="6" fill="#fff" stroke="${GREEN}" stroke-width="2"><title>거래 ${i+1}건째 · ${won(d.price)}</title></circle>`);
     g += `<line x1="${L}" x2="${x(n)}" y1="${y(avg)}" y2="${y(avg)}" stroke="${GREEN}" stroke-width="2" stroke-dasharray="6 6"/>
       <line x1="${x(n)}" x2="${x(n)}" y1="${y(avg)}" y2="${Tp + ph}" stroke="${GREEN}" stroke-width="2" stroke-dasharray="6 6"/>
       <circle cx="${x(n)}" cy="${y(avg)}" r="11" fill="${GREEN}" stroke="#fff" stroke-width="3"><title>실제 거래 ${n}건 · 평균 ${won(avg)}</title></circle>
@@ -727,7 +731,7 @@ function questionsHTML(cols) {
     [`가장 많이 거래된 가격은 <b>${won(top[0])}</b> (${top[1]}건)이에요. 왜 이 가격 근처에서 거래가 많았을까요?`,
      '사려는 사람 수(수요량)와 팔려는 사람 수(공급량)가 비슷한 가격대에서는 서로 조건이 맞는 상대를 찾기 쉬워요. 다음 시간에는 이 관계를 그래프로 살펴봐요.'],
     [`평균 거래 가격: ${cols.map(r => `${r}회차 <b>${avg(r)}</b>`).join(' → ')}. 회차가 거듭될수록 가격은 어떻게 변했나요?`,
-     '거래를 반복하면서 "다른 친구들은 얼마에 사고팔았는지" 정보가 퍼지고, 가격이 균형 가격 쪽으로 모여요.'],
+     '거래하면서 가격 정보를 알 수 있지만 반드시 하나의 가격으로 모이지는 않아요. 실제 결과를 비교해 보세요.'],
     [(() => {
       const parts = [];
       if (ext.b[0]) parts.push(`수요자 ${won(BUYER_VALUES[0])} 카드는 ${ext.b[0]}번 중 <b>${ext.b[1]}번</b>`);
@@ -930,6 +934,12 @@ async function submit(partner, price) {
   const base = `rooms/trade_${code}/rounds/${st.round}`;
   const fresh = (await get(ref(db, base))).val() || {};
   if (matchRound(fresh.cards, fresh.subs).some(x => x.a === pid || x.b === pid)) return toast('이미 성사된 거래라 못 고쳐요 🔒');
+  if(partner !== 'none') {
+    const own=(fresh.cards||{})[pid],other=(fresh.cards||{})[partner];
+    if(!own||!other||own.role===other.role)return toast('거래 상대를 다시 확인해 주세요');
+    if(!Number.isInteger(price)||price<=0)return toast('정확한 가격을 입력해 주세요');
+    if(profitOf(own,price)<0||profitOf(other,price)<0)return toast('서로 손해를 보지 않는 가격으로 거래해 주세요');
+  }
   await set(ref(db, `${base}/subs/${pid}`), { partner, price, at: Date.now() });
   editing = false; sel.partner = '';
   toast(partner === 'none' ? '거래 안 함으로 기록했어요' : '기록했어요 ✅');
