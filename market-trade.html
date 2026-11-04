@@ -276,18 +276,43 @@ function teacherHome() {
 
 async function newRoom() {
   try {
-    let c=localStorage.getItem('marketgo_lesson_room')||'';
-    if(!/^\d{4}$/.test(c)){for(let i=0;i<20;i++){c=String(Math.floor(1000+Math.random()*9000));if(!(await get(T(c))).exists())break;}}
-    if(!(await get(T(c))).exists())await set(T(c),{createdAt:Date.now(),state:{phase:'lobby',round:0,dur:DEFAULT_SEC}});
-    localStorage.setItem('marketgo_lesson_room',c);
+    // 다음 단계로 자동 진입하면 같은 수업 코드를 사용합니다.
+    // '새 시장 열기'는 기존 시장이 있는 경우 반드시 새 수업 코드를 발급합니다.
+    const viaLesson = P.get('auto') === '1';
+    let c = localStorage.getItem('marketgo_lesson_room') || '';
+    const valid = /^\d{4}$/.test(c);
+    const sameRoomExists = valid && (await get(T(c))).exists();
+    if (!valid || (!viaLesson && sameRoomExists)) {
+      let chosen = '';
+      for (let i = 0; i < 60; i++) {
+        const candidate = String(Math.floor(1000 + Math.random() * 9000));
+        const checks = await Promise.all([
+          ...['auction', 'auctionS', 'poll', 'trade', 'priceLab', 'curve'].map(p => get(ref(db, 'rooms/' + p + '_' + candidate))),
+          get(ref(db, 'rooms/' + candidate))
+        ]);
+        if (checks.every(s => !s.exists())) { chosen = candidate; break; }
+      }
+      if (!chosen) throw new Error('사용하지 않은 새 방 코드를 발급하지 못했습니다.');
+      const old = valid ? c : '';
+      if (old && old !== chosen) {
+        let history = [];
+        try { history = JSON.parse(localStorage.getItem('marketgo_lesson_room_history') || '[]'); }
+        catch (e) { history = []; }
+        localStorage.setItem('marketgo_lesson_room_history', JSON.stringify([...new Set([old, ...history])].slice(0, 40)));
+      }
+      c = chosen;
+    }
+    if (!(await get(T(c))).exists()) {
+      await set(T(c), { createdAt: Date.now(), state: { phase: 'lobby', round: 0, dur: DEFAULT_SEC } });
+    }
+    localStorage.setItem('marketgo_lesson_room', c);
     localStorage.setItem('trade_teacher_room', c);
-    location.href = `?t=1&room=${c}`;
+    location.href = '?t=1&room=' + encodeURIComponent(c);
   } catch (e) {
     console.error(e);
-    toast('시장을 못 열었어요 😢 ' + (String(e.message || e).includes('ermission') ? 'Firebase 권한(규칙) 문제예요' : '인터넷 연결을 확인해 주세요'));
+    toast('새 시장을 열지 못했어요. 인터넷과 Firebase 권한을 확인해 주세요.');
   }
 }
-
 function studentForm(prefillCode) {
   app.innerHTML = `<div class="s-wrap"><div class="stage" style="min-height:80vh">
     <div class="bigEmoji bounce">🍡</div>

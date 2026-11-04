@@ -310,6 +310,42 @@ function renderStudent() {
 }
 
 /* ================= 👩‍🏫 선생님 ================= */
+/* 새 코드: 지난 수업 서버 데이터는 삭제하지 않고, 모든 단계를 빈 방으로 시작합니다. */
+async function newLessonRoom() {
+  const button=el('newLessonRoom');
+  if(button)button.disabled=true;
+  try {
+    let candidate='';
+    for(let i=0;i<60;i++){
+      const code=String(Math.floor(1000+Math.random()*9000));
+      const results=await Promise.all([
+        ...['auction','auctionS','poll','trade','priceLab','curve'].map(p=>get(ref(db,'rooms/'+p+'_'+code))),
+        get(ref(db,'rooms/'+code))
+      ]);
+      if(results.every(s=>!s.exists())){candidate=code;break;}
+    }
+    if(!candidate)throw new Error('새 코드를 발급하지 못했습니다.');
+    const old=localStorage.getItem('marketgo_lesson_room')||'';
+    if(/^\d{4}$/.test(old)&&old!==candidate){
+      let history=[];
+      try{history=JSON.parse(localStorage.getItem('marketgo_lesson_room_history')||'[]');}
+      catch(e){history=[];}
+      localStorage.setItem('marketgo_lesson_room_history',JSON.stringify([...new Set([old,...history])].slice(0,40)));
+    }
+    localStorage.setItem('marketgo_lesson_room',candidate);
+    // 기존 방과 기록은 유지하되, 종전 학급으로 자동 이동하는 허브 안내만 종료합니다.
+    const cur=(await get(H('current'))).val();
+    if(cur&&cur.room===old)await remove(H('current'));
+    toast('새 수업방 '+candidate+' 발급! 이전 기록은 그대로 남아 있어요.');
+    renderTeacher();
+  } catch(e) {
+    console.error(e);
+    toast('새 코드 발급에 실패했어요. 네트워크 또는 Firebase 연결을 확인해 주세요.');
+  } finally {
+    const b=el('newLessonRoom');if(b)b.disabled=false;
+  }
+}
+
 let qrDone = false;
 function renderTeacher() {
   if (document.activeElement && ['sheetUrl','classCode','growthRoom'].includes(document.activeElement.id)) return;
@@ -333,6 +369,9 @@ function renderTeacher() {
       <label for="growthRoom">전체 활동에서 사용할 네 자리 방 코드</label>
       <input id="growthRoom" class="field" maxlength="4" inputmode="numeric" value="${esc(sessionRoom)}" style="width:130px">
       <button class="btn sky" id="setRoom">방 코드 저장</button>
+      <button class="btn mint" id="newLessonRoom">✨ 새 수업 시작 · 새 코드 발급</button>
+      <p class="muted" style="font-size:15px">새 코드에서는 모든 활동이 처음부터 시작돼요. 이전 방의 기록은 삭제하지 않아요.</p>
+      <div class="muted" style="font-size:15px">이전 수업 코드: ${(() => { try { return (JSON.parse(localStorage.getItem('marketgo_lesson_room_history')||'[]')||[]).map(esc).join(' · ')||'없음'; } catch(e) { return '없음'; } })()}</div>
       <button class="btn mint" id="growthExport">⬇️ 학생별 사고 성장 기록 CSV 다운로드</button>
       <p class="muted">예언 → 이유 → 그래프 비교 → 모찌 거래 가격과 근거를 합친 기록입니다. 학급과 방 번호는 교사 브라우저에만 저장돼요. 학생 이름이 중복되면 서로 다른 학생의 기록이 합쳐질 수 있으니 주의하세요.</p>
     </div>
@@ -374,6 +413,7 @@ function renderTeacher() {
   wire(logs);
   el('saveClass').onclick=()=>{const v=el('classCode').value.trim();if(!/^\d{3,4}$/.test(v))return toast('201처럼 학급 코드를 입력해 주세요');localStorage.setItem('marketgo_class_code',v);toast('학급 '+v+' 저장');};
   el('setRoom').onclick=()=>{const v=el('growthRoom').value.trim();if(!/^\d{4}$/.test(v))return toast('방 코드 네 자리를 입력하세요');localStorage.setItem('marketgo_lesson_room',v);toast('방 코드 '+v+' 저장');};
+  el('newLessonRoom').onclick=newLessonRoom;
   el('growthExport').onclick=downloadGrowthCSV;
   el('eraseRoom').onclick=eraseLessonRoom;
 }
