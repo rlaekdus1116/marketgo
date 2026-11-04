@@ -44,15 +44,10 @@ table{font-size:17px}thead th{background:#FFF5CC}
 .chart{background:#fff}
 @media(max-width:720px){.panel{padding:16px}.btn{font-size:19px}body{font-size:18px}.label{font-size:20px}h1{font-size:34px}.opt{font-size:20px}}
 
-.builder-drop{border:3px dashed #9FCDBA;min-height:120px;border-radius:20px;padding:15px;background:#F0FCF5}
-.builder-arranged,.builder-bank{display:flex;gap:9px;align-items:flex-start;flex-wrap:wrap;padding:10px 0}
-.builder-bank{margin-top:10px;border-top:2px solid #F2E6EC}
-.builder-piece{font:20px/1.4 Jua,'Malgun Gothic',sans-serif;color:#5B4B57;border:2px solid #E6D8E5;background:#FFEFF5;padding:12px 14px;border-radius:16px;cursor:grab;max-width:100%;word-break:keep-all;text-align:left}
-.builder-piece.arranged{background:#CDEFE1;border-color:#A1D8C1}
-.builder-piece:focus-visible{outline:3px solid #558DDD}
-.builder-piece:active{cursor:grabbing}
-.builder-drop.over{background:#D9F6E6;border-color:#3FB88C}
-@media(max-width:720px){.builder-piece{font-size:17px;padding:11px}}
+.blank-sentence{font-family:'Jua','Malgun Gothic',sans-serif;font-size:clamp(19px,3.4vw,25px);line-height:2.7;word-break:keep-all;background:#FFF9F4;border-radius:17px;padding:14px 18px}
+.blank-select{display:inline-block;min-width:126px;width:auto;max-width:100%;font-family:inherit;font-size:inherit;border:2px solid #B8DCC7;background:#E2F5EB;color:#514456;border-radius:12px;padding:6px 9px;margin:0 5px;vertical-align:baseline;cursor:pointer}
+.blank-select:focus-visible{outline:3px solid #6786D0;outline-offset:2px}
+@media(max-width:650px){.blank-sentence{line-height:2.4;padding:12px}.blank-select{font-size:18px;min-width:110px}}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
 </head>
@@ -117,22 +112,32 @@ const PRACT=[
 {id:"a9",q:"'가격이 올라서 수요가 감소했다'를 이번 시간에 더 정확히 표현하면?",opts:["수요량이 감소했다","수요 곡선이 이동했다"],a:0,why:"상품 자체의 가격 변화만 생각할 때는 수요·공급이 아니라 수요량·공급량 변화로 말해요.",tag:"개념 구분"},
 {id:"a10",q:"가격이 변해도 그대로라고 가정한 조건은?",opts:["소득·취향·생산비 등 다른 조건","상품 자체의 가격"],a:0,why:"이번 시간에는 다른 조건이 같다고 가정하고 가격만 변하게 했어요.",tag:"개념 구분"}];
 let code=P.get("room")||"",room=null,me=null,myId="",name="",state={},selected=null,feedback=null,priceChoice=9000,screenError="",lastLog="";
-let viewingQuiz={baseline:null,practice:null},sentenceSelections={},submitBusy=false;
-const sentenceOrder=['low','high','eq','term'];
-const SENTENCES={
-low:{title:"① 가격이 3,000원이라면?",context:"사려는 사람 20명 · 팔려는 사람 10명",bits:[
-"사려는 양이 팔려는 양보다 많아서","물건이 부족한 초과 수요가 발생하고","가격이 상승하면서 수요량은 감소하고 공급량은 증가하여","결국 두 수량이 같아지는 균형 가격에 가까워진다."],
-extras:["가격이 하락하면서 공급량만 늘어난다.","가격 외 조건이 달라졌기 때문에"]},
-high:{title:"② 가격이 15,000원이라면?",context:"사려는 사람 10명 · 팔려는 사람 20명",bits:[
-"팔려는 양이 사려는 양보다 많아서","물건이 남는 초과 공급이 발생하고","가격이 하락하면서 수요량은 증가하고 공급량은 감소하여","결국 두 수량이 같아지는 균형 가격에 가까워진다."],
-extras:["가격이 올라가면서 수요량이 증가한다.","공급 자체가 무조건 감소한다."]},
-eq:{title:"③ 균형 가격과 균형 거래량",context:"모찌 시장의 수요량과 공급량이 각각 15개가 되는 가격은 9,000원",bits:[
-"수요량과 공급량이 서로 같아지는 가격을","균형 가격이라고 하며","그 균형 가격에서 실제로 거래되는 상품의 수량을","균형 거래량이라고 한다."],
-extras:["가격 자체를 균형 거래량이라고 하며","공급량만을 균형 가격이라고 한다."]},
-term:{title:"④ 가격이 변할 때 달라지는 것",context:"가격 외 다른 조건은 일정함",bits:[
-"다른 조건이 일정한 상황에서","상품 자체의 가격이 변화하면","수요와 공급 자체가 이동하는 것이 아니라","수요량과 공급량이 변한다."],
-extras:["수요 곡선과 공급 곡선이 반드시 이동한다.","가격은 변하지 않는다."]}
+let viewingQuiz={baseline:null,practice:null},blankSelections={},submitBusy=false;
+const blankOrder=['low','high','eq','term'];
+// 문장마다 빈칸 2개만 선택하면 완료됩니다.
+const BLANKS={
+ low:{
+  title:"① 3,000원이라면?",context:"수요량 20개 · 공급량 10개",
+  parts:["사려는 양이 팔려는 양보다 많아 ","가 발생해요. 그래서 가격이 "," 수요량은 감소하고 공급량은 증가해 균형 가격에 가까워져요."],
+  options:[["초과 수요","초과 공급","균형"],["오르면","내려가면","변하지 않으면"]]
+ },
+ high:{
+  title:"② 15,000원이라면?",context:"수요량 10개 · 공급량 20개",
+  parts:["팔려는 양이 사려는 양보다 많아 ","이 발생해요. 그래서 가격이 "," 수요량은 증가하고 공급량은 감소해 균형 가격에 가까워져요."],
+  options:[["초과 공급","초과 수요","균형"],["내려가면","오르면","변하지 않으면"]]
+ },
+ eq:{
+  title:"③ 균형 가격과 균형 거래량",context:"9,000원에서 수요량 15개 · 공급량 15개",
+  parts:["수요량과 공급량이 같아지는 가격을 ","이라고 하고, 그 가격에서 거래되는 상품의 수량을 ","이라고 해요."],
+  options:[["균형 가격","균형 거래량","초과 공급"],["균형 거래량","균형 가격","초과 수요"]]
+ },
+ term:{
+  title:"④ 가격이 변하면?",context:"다른 조건은 일정하다고 가정해요.",
+  parts:["다른 조건이 같을 때 상품의 가격이 변하면 수요와 공급 곡선은 "," . 이때 변화하는 것은 ","이에요."],
+  options:[["그대로이고","이동하고","사라지고"],["수요량과 공급량","수요와 공급 자체","거래되는 상품의 종류"]]
+ }
 };
+
 const R=p=>ref(db,"rooms/priceLab_"+code+(p?"/"+p:""));
 const val=(obj,path)=>path.split(".").reduce((a,k)=>a&&a[k],obj);
 const esc=v=>String(v==null?"":v).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -264,43 +269,39 @@ const i=prices.indexOf(priceChoice),delta=demand[i]-supply[i],kind=delta>0?"초�
 return card(nav()+steps(2)+'<div class="eyebrow">3단계 · 자료 분석</div><h2>📈 가격을 직접 바꿔 보세요</h2><p>다른 조건을 그대로 두고 <b>상품의 가격만</b> 바꿉니다. 선택한 가격에서 수요량과 공급량을 비교해 보세요.</p><div class="choiceGrid">'+prices.map(p=>'<button class="btn '+(priceChoice===p?"mint":"")+'" data-act="price" data-v="'+p+'">'+comma(p)+'원</button>').join("")+'</div><div class="cols" style="margin-top:15px"><div>'+chart(priceChoice)+'</div><div><div class="tri" style="grid-template-columns:1fr 1fr"><div class="stat"><strong>'+demand[i]+'</strong><span>수요량 (개)</span></div><div class="stat"><strong>'+supply[i]+'</strong><span>공급량 (개)</span></div></div><div class="feedback"><b>'+kind+'</b><div>'+(delta===0?"사려는 양과 팔려는 양이 같아 더 이상 가격이 움직일 이유가 없어요.":"수요량과 공급량의 차이 "+Math.abs(delta)+"개. 균형 가격을 향한 가격 "+change+".")+'</div></div></div></div>'+tablePrice(priceChoice)+'<div class="row" style="margin-top:16px">'+btn("다음 단계로 넘어가기","labFinish","primary")+'</div>','hero');
 }
 
-function draftKey(){return "marketgo_priceDraft_"+code+"_"+myId;}
-function loadSentenceDrafts(){
- let recovered={};
- try{recovered=JSON.parse(localStorage.getItem(draftKey())||"{}");}catch{}
- const remote=val(me,"drafts.finalBuilder")||{};
- for(const k of sentenceOrder){
-  const arr=Array.isArray(remote[k])?remote[k]:Array.isArray(recovered[k])?recovered[k]:[];
-  if(!Array.isArray(sentenceSelections[k]))sentenceSelections[k]=arr.filter(i=>Number.isInteger(i)&&i>=0&&i<6).slice(0,4);
+function blankDraftKey(){return "marketgo_blankDraft_"+code+"_"+myId;}
+function loadBlankDrafts(){
+ let local={};try{local=JSON.parse(localStorage.getItem(blankDraftKey())||"{}")||{};}catch{}
+ const remote=val(me,"drafts.finalBlanks")||{};
+ for(const k of blankOrder){
+  if(Array.isArray(blankSelections[k]))continue;
+  const from=Array.isArray(local[k])?local[k]:Array.isArray(remote[k])?remote[k]:[];
+  blankSelections[k]=[0,1].map(i=>Number.isInteger(from[i])&&from[i]>=0&&from[i]<BLANKS[k].options[i].length?from[i]:null);
  }
 }
-async function saveSentenceDraft(k){
- // Local copy first, remote copy second: pending work survives accidental navigation.
- const list=sentenceSelections[k].slice();
- localStorage.setItem(draftKey(),JSON.stringify(sentenceSelections));
- await set(R(studentPath()+"/drafts/finalBuilder/"+k),list);
+async function saveBlankDraft(key){
+ // 먼저 같은 기기에 보존하고, Firebase 저장은 따로 확인합니다.
+ localStorage.setItem(blankDraftKey(),JSON.stringify(blankSelections));
+ await set(R(studentPath()+"/drafts/finalBlanks/"+key),blankSelections[key]);
 }
-function sentenceBuilder(k){
- const problem=SENTENCES[k],current=sentenceSelections[k]||[];
- const all=problem.bits.concat(problem.extras),order=[2,4,0,5,3,1];
- const text=current.map((n,i)=>'<button type="button" class="builder-piece arranged" draggable="true" data-sentence="'+k+'" data-index="'+n+'" data-position="'+i+'" data-act="sentenceRemove" title="누르면 답안에서 제거">'+esc(all[n])+' <span aria-hidden="true">×</span></button>').join("");
- const bank=order.filter(n=>!current.includes(n)).map(n=>'<button type="button" class="builder-piece" draggable="true" data-sentence="'+k+'" data-index="'+n+'" data-act="sentenceAdd">'+esc(all[n])+'</button>').join("");
- return '<section class="panel" style="background:#fff"><div class="eyebrow">4단계 · 문장 완성하기</div><h3>'+esc(problem.title)+'</h3>'+
- '<p class="muted">'+esc(problem.context)+'</p>'+
- '<div class="builder-drop" data-drop="'+k+'" role="group" aria-label="문장 조각을 놓을 곳"><div class="small">이곳에 문장 조각 4개를 순서대로 놓으세요. (누르거나 끌어다 놓기)</div>'+
- '<div class="builder-arranged">'+(text||'<p class="muted">아래 조각을 골라 문장을 완성하세요.</p>')+'</div></div>'+
- '<div class="builder-bank">'+bank+'</div>'+
- '<div class="row between" style="margin-top:12px"><span class="pill">'+current.length+' / 4개 선택</span>'+
- btn("다시 만들기","sentenceClear","lav")+'</div></section>';
+function buildAnswer(key){
+ const p=BLANKS[key],v=blankSelections[key]||[];
+ return p.parts[0]+p.options[0][v[0]]+p.parts[1]+p.options[1][v[1]]+p.parts[2];
+}
+function blankCard(key){
+ const p=BLANKS[key],v=blankSelections[key]||[];
+ const select=i=>'<select class="blank-select" data-blank="'+key+'" data-slot="'+i+'" aria-label="'+(i+1)+'번째 빈칸">'+
+  '<option value="">선택</option>'+p.options[i].map((word,n)=>'<option value="'+n+'" '+(v[i]===n?'selected':'')+'>'+esc(word)+'</option>').join('')+'</select>';
+ return '<section class="panel" style="background:white"><h3>'+esc(p.title)+'</h3><p class="muted">'+esc(p.context)+'</p>'+
+  '<div class="blank-sentence">'+esc(p.parts[0])+select(0)+esc(p.parts[1])+select(1)+esc(p.parts[2])+'</div></section>';
 }
 function finalPage(){
- loadSentenceDrafts();
- return card(nav()+steps(3)+'<h2>문장을 완성하세요</h2>'+
- '<p class="muted">주어진 문장 조각을 옮겨서 가격이 변하는 과정을 완성하세요.</p>'+
- sentenceOrder.map(sentenceBuilder).join("")+
- '<div class="row">'+btn(submitBusy?'저장 중…':'제출하고 다음 단계로 넘어가기',"finalSubmit","primary")+'</div>'+
- '<p class="small" id="draftStatus">선택한 조각은 자동으로 저장됩니다.</p>'+
- (screenError?'<p class="errorText">'+esc(screenError)+'</p>':'') ,'hero');
+ loadBlankDrafts();
+ return card(nav()+steps(3)+'<h2>빈칸을 완성해 보세요!</h2><p class="muted">각 문장의 빈칸 두 곳을 선택하면 돼요.</p>'+
+  blankOrder.map(blankCard).join("")+
+  '<div class="row">'+btn(submitBusy?'저장 중…':'제출하기',"finalSubmit","primary")+'</div>'+
+  '<p class="small" id="draftStatus">선택한 답은 자동 저장돼요.</p>'+
+  (screenError?'<p class="errorText">'+esc(screenError)+'</p>':'') ,'hero');
 }
 
 function revisionPage(){
@@ -413,24 +414,6 @@ const checkWritten=(v,min)=>{const msg=validWriting(v,min);if(msg)throw Error(ms
 let detailId="";
 // 서술형 입력 영역의 일반적인 복사·붙여넣기 및 드롭 제한 (완전한 부정행위 차단은 아님).
 
-let draggingPart=null;
-app.addEventListener('dragstart',e=>{
- const node=e.target.closest('.builder-piece');if(!node)return;
- draggingPart={key:node.dataset.sentence,index:Number(node.dataset.index),position:node.dataset.position};
- e.dataTransfer?.setData('text/plain',JSON.stringify(draggingPart));
- if(e.dataTransfer)e.dataTransfer.effectAllowed='move';
-});
-app.addEventListener('dragover',e=>{const zone=e.target.closest('[data-drop]');if(!zone)return;e.preventDefault();zone.classList.add('over');});
-app.addEventListener('dragleave',e=>{const zone=e.target.closest('[data-drop]');if(zone&&!zone.contains(e.relatedTarget))zone.classList.remove('over');});
-app.addEventListener('drop',async e=>{
- const zone=e.target.closest('[data-drop]');if(!zone)return;e.preventDefault();zone.classList.remove('over');
- const d=draggingPart;draggingPart=null;if(!d||d.key!==zone.dataset.drop)return;
- const arr=sentenceSelections[d.key]||[];
- if(!arr.includes(d.index)&&arr.length>=4)return;
- sentenceSelections[d.key]=arr.filter(i=>i!==d.index).concat([d.index]).slice(0,4);
- try{await saveSentenceDraft(d.key);render(true);}catch(err){screenError='선택 내용을 서버에 저장하지 못했어요. 현재 선택은 이 기기에 남아 있어요.';render(true);}
-});
-
 const writingField=t=>t&&t.tagName==='TEXTAREA'&&app.contains(t);
 ['paste','copy','cut','drop'].forEach(type=>app.addEventListener(type,e=>{
  if(writingField(e.target)){e.preventDefault();}
@@ -439,23 +422,22 @@ app.addEventListener('keydown',e=>{
  if(writingField(e.target)&&(e.ctrlKey||e.metaKey)&&['v','c','x'].includes(e.key.toLowerCase()))e.preventDefault();
 });
 
+app.addEventListener("change",async e=>{
+ const el=e.target;if(!el.matches?.('select[data-blank]'))return;
+ const key=el.dataset.blank,slot=Number(el.dataset.slot);
+ if(!BLANKS[key]||!Number.isInteger(slot)||slot<0||slot>1)return;
+ const n=el.value===""?null:Number(el.value);
+ if(n!==null&&(!Number.isInteger(n)||n<0||n>=BLANKS[key].options[slot].length))return;
+ if(!Array.isArray(blankSelections[key]))blankSelections[key]=[null,null];
+ blankSelections[key][slot]=n;
+ const status=app.querySelector("#draftStatus");
+ try{await saveBlankDraft(key);if(status)status.textContent="선택한 답이 저장됐어요.";}
+ catch(err){if(status)status.textContent="인터넷 연결을 확인해 주세요. 이 기기에는 선택이 보관되어 있어요.";}
+});
 app.addEventListener("click",async e=>{
 const t=e.target.closest("[data-act]");if(!t)return;const act=t.dataset.act;screenError="";
 try{
 
-if(act==="sentenceAdd"||act==="sentenceRemove"||act==="sentenceClear"){
- const k=act==="sentenceClear"?t.closest('[data-sentence]')?.dataset.sentence || sentenceOrder.find(x=>(sentenceSelections[x]||[]).length<4) : t.dataset.sentence;
- // Clear is attached inside each sentence section.
- const key=act==="sentenceClear"?t.closest('section')?.querySelector('[data-drop]')?.dataset.drop:k;
- if(!SENTENCES[key])return;
- const arr=(sentenceSelections[key]||[]).slice(),idx=Number(t.dataset.index);
- if(act==="sentenceClear")sentenceSelections[key]=[];
- else if(act==="sentenceRemove")sentenceSelections[key]=arr.filter(v=>v!==idx);
- else if(arr.length<4&&!arr.includes(idx))sentenceSelections[key]=arr.concat(idx);
- try{await saveSentenceDraft(key);render(true);}catch(err){
-   screenError="답안을 서버에 저장하지 못했어요. 이 기기에는 선택 내용이 남아 있어요.";render(true);
- }return;
-}
 if(act==="quizBack"||act==="quizForward"){
  const base=progress()===0,key=base?"baseline":"practice",items=base?BASE:PRACT,answers=base?(val(me,"baseline.answers")||{}):(val(me,"practice.answers")||{});
  const next=items.findIndex(q=>base?!Object.prototype.hasOwnProperty.call(answers,q.id):!answers[q.id]?.done);
@@ -494,27 +476,25 @@ if(act==="price"){priceChoice=Number(t.dataset.v);render(true);return;}
 if(act==="labFinish"){await update(R(studentPath()+"/lab"),{completedAt:stamp(),lastPrice:priceChoice});return;}
 if(act==="finalSubmit"){
  if(submitBusy)return;
- const missing=sentenceOrder.filter(k=>(sentenceSelections[k]||[]).length!==4);
- if(missing.length)throw Error("네 문장을 모두 4개 조각으로 완성해 주세요.");
+ const incomplete=blankOrder.some(k=>!Array.isArray(blankSelections[k])||blankSelections[k].some(v=>!Number.isInteger(v)));
+ if(incomplete)throw Error("모든 빈칸을 선택해 주세요.");
  submitBusy=true;
  const submitBtn=app.querySelector('[data-act="finalSubmit"]');
  if(submitBtn){submitBtn.disabled=true;submitBtn.textContent="저장 중…";}
- const answers={};for(const key of sentenceOrder){
-    const all=SENTENCES[key].bits.concat(SENTENCES[key].extras);
-    answers[key]=sentenceSelections[key].map(i=>all[i]).join(' ');
- }
- const generated=Object.fromEntries(sentenceOrder.map(k=>[k,explainFeedback(k,answers[k])]));
- const savedAt=stamp(),payload={...answers,feedback:generated,feedbackType:"rule-based",sentenceSelections:structuredClone(sentenceSelections),submittedAt:savedAt};
+ const answers=Object.fromEntries(blankOrder.map(key=>[key,buildAnswer(key)]));
+ const generated=Object.fromEntries(blankOrder.map(k=>[k,explainFeedback(k,answers[k])]));
+ const savedAt=stamp(),payload={...answers,feedback:generated,feedbackType:"rule-based",
+  blankSelections:JSON.parse(JSON.stringify(blankSelections)),format:"fill-in-blanks",submittedAt:savedAt};
  try{
    await set(R(studentPath()+"/final"),payload);
    const confirmed=await get(R(studentPath()+"/final"));
-   if(!confirmed.exists()||confirmed.val().submittedAt!==savedAt)throw Error("저장 확인에 실패했습니다. 다시 제출해 주세요.");
+   if(!confirmed.exists()||confirmed.val().submittedAt!==savedAt)throw Error("저장을 확인하지 못했어요. 다시 제출해 주세요.");
    me={...me,final:confirmed.val()};submitBusy=false;screenError="";render(true);
    if(aiConfigured)await requestAIFeedback();
  }catch(err){
    submitBusy=false;
    if(submitBtn){submitBtn.disabled=false;submitBtn.textContent="다시 제출하기";}
-   screenError=err.message||"저장이 완료되지 않았어요. 답안은 보존돼 있습니다.";
+   screenError=err.message||"저장이 완료되지 않았어요. 빈칸 선택은 보존되어 있어요.";
    const node=app.querySelector(".errorText")||document.createElement("p");
    node.className="errorText";node.textContent=screenError;
    if(!node.parentNode)app.querySelector(".panel")?.appendChild(node);
