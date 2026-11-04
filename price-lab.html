@@ -43,6 +43,16 @@ textarea{min-height:135px}
 table{font-size:17px}thead th{background:#FFF5CC}
 .chart{background:#fff}
 @media(max-width:720px){.panel{padding:16px}.btn{font-size:19px}body{font-size:18px}.label{font-size:20px}h1{font-size:34px}.opt{font-size:20px}}
+
+.builder-drop{border:3px dashed #9FCDBA;min-height:120px;border-radius:20px;padding:15px;background:#F0FCF5}
+.builder-arranged,.builder-bank{display:flex;gap:9px;align-items:flex-start;flex-wrap:wrap;padding:10px 0}
+.builder-bank{margin-top:10px;border-top:2px solid #F2E6EC}
+.builder-piece{font:20px/1.4 Jua,'Malgun Gothic',sans-serif;color:#5B4B57;border:2px solid #E6D8E5;background:#FFEFF5;padding:12px 14px;border-radius:16px;cursor:grab;max-width:100%;word-break:keep-all;text-align:left}
+.builder-piece.arranged{background:#CDEFE1;border-color:#A1D8C1}
+.builder-piece:focus-visible{outline:3px solid #558DDD}
+.builder-piece:active{cursor:grabbing}
+.builder-drop.over{background:#D9F6E6;border-color:#3FB88C}
+@media(max-width:720px){.builder-piece{font-size:17px;padding:11px}}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
 </head>
@@ -213,20 +223,46 @@ if(screenError)body+='<p class="errorText">'+esc(screenError)+'</p>';return card
 const i=prices.indexOf(priceChoice),delta=demand[i]-supply[i],kind=delta>0?"초과 수요":delta<0?"초과 공급":"균형",change=delta>0?"상승":delta<0?"하락":"변화 없음";
 return card(nav()+steps(2)+'<div class="eyebrow">가격 실험 · 자료 분석</div><h2>📈 가격을 직접 바꿔 보세요</h2><p>다른 조건을 그대로 두고 <b>상품의 가격만</b> 바꿉니다. 선택한 가격에서 수요량과 공급량을 비교해 보세요.</p><div class="choiceGrid">'+prices.map(p=>'<button class="btn '+(priceChoice===p?"mint":"")+'" data-act="price" data-v="'+p+'">'+comma(p)+'원</button>').join("")+'</div><div class="cols" style="margin-top:15px"><div>'+chart(priceChoice)+'</div><div><div class="tri" style="grid-template-columns:1fr 1fr"><div class="stat"><strong>'+demand[i]+'</strong><span>수요량 (개)</span></div><div class="stat"><strong>'+supply[i]+'</strong><span>공급량 (개)</span></div></div><div class="feedback"><b>'+kind+'</b><div>'+(delta===0?"사려는 양과 팔려는 양이 같아 더 이상 가격이 움직일 이유가 없어요.":"수요량과 공급량의 차이 "+Math.abs(delta)+"개. 균형 가격을 향한 가격 "+change+".")+'</div></div></div></div>'+tablePrice(priceChoice)+'<div class="row" style="margin-top:16px">'+btn("다음 단계로 넘어가기","labFinish","primary")+'</div>','hero');
 }
-function finalPage(){
- return card(nav()+steps(3)+'<div class="eyebrow">서술형 문제</div><h2>모찌 시장을 설명해 보세요!</h2>'+
-  '<div class="note">우리 반 거래 가격과 이 문제의 가상 시장 자료는 구분해서 생각해 보세요.</div>'+
-  '<label class="label">① 모찌가 3,000원일 때 (수요량 20개, 공급량 10개)</label>'+
-  '<textarea id="finalLow" maxlength="700" placeholder="가격이 어떻게 달라지고 수요량과 공급량은 어떻게 변할까요?"></textarea>'+
-  '<label class="label">② 모찌가 15,000원일 때 (수요량 10개, 공급량 20개)</label>'+
-  '<textarea id="finalHigh" maxlength="700" placeholder="가격이 어떤 방향으로 조정되는지 설명해 보세요."></textarea>'+
-  '<label class="label">③ 균형 가격과 균형 거래량은 무엇인지, 둘의 차이를 설명해 보세요.</label>'+
-  '<textarea id="finalEq" maxlength="700" placeholder="균형 가격은 무엇이고, 균형 거래량은 무엇인가요?"></textarea>'+
-  '<label class="label">④ 이번 활동에서 바뀐 것은 수요·공급인가요, 수요량·공급량인가요?</label>'+
-  '<textarea id="finalTerm" maxlength="350" placeholder="가격이 변할 때 정확한 용어를 사용해 보세요."></textarea>'+
-  '<div class="row" style="margin-top:18px">'+btn("제출하고 피드백 확인하기","finalSubmit","primary")+'</div>'+
-  (screenError?'<p class="errorText">'+esc(screenError)+'</p>':'') ,'hero');
+
+function draftKey(){return "marketgo_priceDraft_"+code+"_"+myId;}
+function loadSentenceDrafts(){
+ let recovered={};
+ try{recovered=JSON.parse(localStorage.getItem(draftKey())||"{}");}catch{}
+ const remote=val(me,"drafts.finalBuilder")||{};
+ for(const k of sentenceOrder){
+  const arr=Array.isArray(remote[k])?remote[k]:Array.isArray(recovered[k])?recovered[k]:[];
+  if(!Array.isArray(sentenceSelections[k]))sentenceSelections[k]=arr.filter(i=>Number.isInteger(i)&&i>=0&&i<6).slice(0,4);
+ }
 }
+async function saveSentenceDraft(k){
+ // Local copy first, remote copy second: pending work survives accidental navigation.
+ const list=sentenceSelections[k].slice();
+ localStorage.setItem(draftKey(),JSON.stringify(sentenceSelections));
+ await set(R(studentPath()+"/drafts/finalBuilder/"+k),list);
+}
+function sentenceBuilder(k){
+ const problem=SENTENCES[k],current=sentenceSelections[k]||[];
+ const all=problem.bits.concat(problem.extras),order=[2,4,0,5,3,1];
+ const text=current.map((n,i)=>'<button type="button" class="builder-piece arranged" draggable="true" data-sentence="'+k+'" data-index="'+n+'" data-position="'+i+'" data-act="sentenceRemove" title="누르면 답안에서 제거">'+esc(all[n])+' <span aria-hidden="true">×</span></button>').join("");
+ const bank=order.filter(n=>!current.includes(n)).map(n=>'<button type="button" class="builder-piece" draggable="true" data-sentence="'+k+'" data-index="'+n+'" data-act="sentenceAdd">'+esc(all[n])+'</button>').join("");
+ return '<section class="panel" style="background:#fff"><div class="eyebrow">4단계 · 문장 완성하기</div><h3>'+esc(problem.title)+'</h3>'+
+ '<p class="muted">'+esc(problem.context)+'</p>'+
+ '<div class="builder-drop" data-drop="'+k+'" role="group" aria-label="문장 조각을 놓을 곳"><div class="small">이곳에 문장 조각 4개를 순서대로 놓으세요. (누르거나 끌어다 놓기)</div>'+
+ '<div class="builder-arranged">'+(text||'<p class="muted">아래 조각을 골라 문장을 완성하세요.</p>')+'</div></div>'+
+ '<div class="builder-bank">'+bank+'</div>'+
+ '<div class="row between" style="margin-top:12px"><span class="pill">'+current.length+' / 4개 선택</span>'+
+ btn("다시 만들기","sentenceClear","lav")+'</div></section>';
+}
+function finalPage(){
+ loadSentenceDrafts();
+ return card(nav()+steps(3)+'<h2>문장을 완성하세요</h2>'+
+ '<p class="muted">주어진 문장 조각을 옮겨서 가격이 변하는 과정을 완성하세요.</p>'+
+ sentenceOrder.map(sentenceBuilder).join("")+
+ '<div class="row">'+btn(submitBusy?'저장 중…':'제출하고 다음 단계로 넘어가기',"finalSubmit","primary")+'</div>'+
+ '<p class="small" id="draftStatus">선택한 조각은 자동으로 저장됩니다.</p>'+
+ (screenError?'<p class="errorText">'+esc(screenError)+'</p>':'') ,'hero');
+}
+
 function revisionPage(){
  const first=val(me,"baseline.why")||"",f=me.final||{},hasAI=f.aiFeedback?.status==="ready";
  const guide=hasAI?(f.aiFeedback.content||{}):(f.feedback||{});
@@ -336,6 +372,25 @@ const checkWritten=(v,min)=>{const msg=validWriting(v,min);if(msg)throw Error(ms
 
 let detailId="";
 // 서술형 입력 영역의 일반적인 복사·붙여넣기 및 드롭 제한 (완전한 부정행위 차단은 아님).
+
+let draggingPart=null;
+app.addEventListener('dragstart',e=>{
+ const node=e.target.closest('.builder-piece');if(!node)return;
+ draggingPart={key:node.dataset.sentence,index:Number(node.dataset.index),position:node.dataset.position};
+ e.dataTransfer?.setData('text/plain',JSON.stringify(draggingPart));
+ if(e.dataTransfer)e.dataTransfer.effectAllowed='move';
+});
+app.addEventListener('dragover',e=>{const zone=e.target.closest('[data-drop]');if(!zone)return;e.preventDefault();zone.classList.add('over');});
+app.addEventListener('dragleave',e=>{const zone=e.target.closest('[data-drop]');if(zone&&!zone.contains(e.relatedTarget))zone.classList.remove('over');});
+app.addEventListener('drop',async e=>{
+ const zone=e.target.closest('[data-drop]');if(!zone)return;e.preventDefault();zone.classList.remove('over');
+ const d=draggingPart;draggingPart=null;if(!d||d.key!==zone.dataset.drop)return;
+ const arr=sentenceSelections[d.key]||[];
+ if(!arr.includes(d.index)&&arr.length>=4)return;
+ sentenceSelections[d.key]=arr.filter(i=>i!==d.index).concat([d.index]).slice(0,4);
+ try{await saveSentenceDraft(d.key);render(true);}catch(err){screenError='선택 내용을 서버에 저장하지 못했어요. 현재 선택은 이 기기에 남아 있어요.';render(true);}
+});
+
 const writingField=t=>t&&t.tagName==='TEXTAREA'&&app.contains(t);
 ['paste','copy','cut','drop'].forEach(type=>app.addEventListener(type,e=>{
  if(writingField(e.target)){e.preventDefault();}
@@ -347,6 +402,27 @@ app.addEventListener('keydown',e=>{
 app.addEventListener("click",async e=>{
 const t=e.target.closest("[data-act]");if(!t)return;const act=t.dataset.act;screenError="";
 try{
+
+if(act==="sentenceAdd"||act==="sentenceRemove"||act==="sentenceClear"){
+ const k=act==="sentenceClear"?t.closest('[data-sentence]')?.dataset.sentence || sentenceOrder.find(x=>(sentenceSelections[x]||[]).length<4) : t.dataset.sentence;
+ // Clear is attached inside each sentence section.
+ const key=act==="sentenceClear"?t.closest('section')?.querySelector('[data-drop]')?.dataset.drop:k;
+ if(!SENTENCES[key])return;
+ const arr=(sentenceSelections[key]||[]).slice(),idx=Number(t.dataset.index);
+ if(act==="sentenceClear")sentenceSelections[key]=[];
+ else if(act==="sentenceRemove")sentenceSelections[key]=arr.filter(v=>v!==idx);
+ else if(arr.length<4&&!arr.includes(idx))sentenceSelections[key]=arr.concat(idx);
+ try{await saveSentenceDraft(key);render(true);}catch(err){
+   screenError="답안을 서버에 저장하지 못했어요. 이 기기에는 선택 내용이 남아 있어요.";render(true);
+ }return;
+}
+if(act==="quizBack"||act==="quizForward"){
+ const base=progress()===0,key=base?"baseline":"practice",items=base?BASE:PRACT,answers=base?(val(me,"baseline.answers")||{}):(val(me,"practice.answers")||{});
+ const next=items.findIndex(q=>base?!Object.prototype.hasOwnProperty.call(answers,q.id):!answers[q.id]?.done);
+ if(next<0)return;
+ const ix=viewingQuiz[key]===null?next:viewingQuiz[key],going=act==="quizBack"?Math.max(0,ix-1):Math.min(next,ix+1);
+ viewingQuiz[key]=going===next?null:going;selected=null;feedback=null;render(true);return;
+}
 if(act==="teacherOpen"){const c=(document.getElementById("teacherRoom").value||"").trim();if(!/^\d{4}$/.test(c))throw Error("4자리 방 코드를 입력해 주세요.");await openTeacher(c);return;}
 if(act==="teacherNew"){for(let i=0;i<30;i++){let c=String(Math.floor(1000+Math.random()*9000));code=c;if(!(await get(R())).exists()){await openTeacher(c);return;}}throw Error("새 코드 생성에 실패했어요.");}
 if(act==="studentJoin"){const c=(document.getElementById("joinCode").value||"").trim(),n=(document.getElementById("joinName").value||"").trim();if(!/^\d{4}$/.test(c)||!n||n.length>8)throw Error("방 코드 4자리와 이름/별명(8자 이내)을 확인하세요.");await joinStudent(c,n);return;}
@@ -377,14 +453,32 @@ await set(R(studentPath()+"/lab/"+k),{state:s,direction:d,correct:ok,at:stamp()}
 if(act==="price"){priceChoice=Number(t.dataset.v);render(true);return;}
 if(act==="labFinish"){await update(R(studentPath()+"/lab"),{completedAt:stamp(),lastPrice:priceChoice});return;}
 if(act==="finalSubmit"){
- const low=document.getElementById("finalLow").value.trim(),high=document.getElementById("finalHigh").value.trim(),
- eq=document.getElementById("finalEq").value.trim(),term=document.getElementById("finalTerm").value.trim();
- [low,high,eq].forEach(v=>checkWritten(v,35));checkWritten(term,25);
- const generated={low:explainFeedback('low',low),high:explainFeedback('high',high),
-  eq:explainFeedback('eq',eq),term:explainFeedback('term',term)};
- await set(R(studentPath()+"/final"),{low,high,eq,term,feedback:generated,feedbackType:"rule-based",submittedAt:stamp()});
- document.activeElement?.blur();render(true);
- if(aiConfigured)await requestAIFeedback();
+ if(submitBusy)return;
+ const missing=sentenceOrder.filter(k=>(sentenceSelections[k]||[]).length!==4);
+ if(missing.length)throw Error("네 문장을 모두 4개 조각으로 완성해 주세요.");
+ submitBusy=true;
+ const submitBtn=app.querySelector('[data-act="finalSubmit"]');
+ if(submitBtn){submitBtn.disabled=true;submitBtn.textContent="저장 중…";}
+ const answers={};for(const key of sentenceOrder){
+    const all=SENTENCES[key].bits.concat(SENTENCES[key].extras);
+    answers[key]=sentenceSelections[key].map(i=>all[i]).join(' ');
+ }
+ const generated=Object.fromEntries(sentenceOrder.map(k=>[k,explainFeedback(k,answers[k])]));
+ const savedAt=stamp(),payload={...answers,feedback:generated,feedbackType:"rule-based",sentenceSelections:structuredClone(sentenceSelections),submittedAt:savedAt};
+ try{
+   await set(R(studentPath()+"/final"),payload);
+   const confirmed=await get(R(studentPath()+"/final"));
+   if(!confirmed.exists()||confirmed.val().submittedAt!==savedAt)throw Error("저장 확인에 실패했습니다. 다시 제출해 주세요.");
+   me={...me,final:confirmed.val()};submitBusy=false;screenError="";render(true);
+   if(aiConfigured)await requestAIFeedback();
+ }catch(err){
+   submitBusy=false;
+   if(submitBtn){submitBtn.disabled=false;submitBtn.textContent="다시 제출하기";}
+   screenError=err.message||"저장이 완료되지 않았어요. 답안은 보존돼 있습니다.";
+   const node=app.querySelector(".errorText")||document.createElement("p");
+   node.className="errorText";node.textContent=screenError;
+   if(!node.parentNode)app.querySelector(".panel")?.appendChild(node);
+ }
  return;
 }
 if(act==="requestAI"){await requestAIFeedback();return;}
