@@ -241,6 +241,26 @@ button,.btn,.speech,.rule,.title,.card{word-break:keep-all;overflow-wrap:break-w
 .reviewAction{display:flex;justify-content:center;gap:12px;align-items:center;flex-wrap:wrap;margin:12px 0}
 .reviewPage{max-width:1480px;margin:auto;padding:12px;display:flex;flex-direction:column;gap:12px}
 @media(max-width:760px){.reviewQuestionGrid{grid-template-columns:1fr}.reviewTradeTable{font-size:12px;border-spacing:2px}.reviewTradeTable th,.reviewTradeTable td{padding:5px 2px}.reviewPage{padding:6px}}
+
+/* 시소 정리 표: 교사·학생 공통, 표의 가격을 누르면 시소·그래프가 함께 바뀝니다. */
+.seesawDataTableWrap{flex-shrink:0;border:2px solid #d9c4e5;background:#fff;border-radius:16px;padding:5px 10px}
+.seesawDataTable{width:100%;border-collapse:separate;border-spacing:3px;table-layout:fixed;color:#2d2832;font-size:clamp(14px,1.55vw,21px)}
+.seesawDataTable th,.seesawDataTable td{border:1px solid #c9bccf;background:#fff;border-radius:8px;text-align:center;padding:5px 3px;line-height:1.15;color:#302a34!important;font-weight:750}
+.seesawDataTable th{width:17%;font-weight:900;background:#efe3fa}
+.seesawData-demand th{background:#e0f0ff;color:#246ba9!important}
+.seesawData-supply th{background:#ffe7d8;color:#a95022!important}
+.seesawDataTable .is-current{background:#fce8a6!important;box-shadow:inset 0 0 0 2px #bb8a2b}
+.seesawDataTable button{width:100%;background:transparent;border:0;cursor:pointer;font-size:inherit;font-weight:900;padding:2px 0;color:#2d2832}
+.seesawDataTable button:focus-visible{outline:3px solid #743bab;outline-offset:1px}
+.seesawComparison .seesawPriceButtons{display:none}
+.seesawComparison{gap:7px}
+@media(max-width:760px){
+ .seesawDataTableWrap{padding:3px;border-radius:10px}
+ .seesawDataTable{border-spacing:2px;font-size:clamp(11px,2.85vw,16px)}
+ .seesawDataTable th{width:20%}
+ .seesawDataTable th,.seesawDataTable td{padding:5px 1px}
+}
+@media(max-height:650px) and (min-width:761px){.seesawDataTable th,.seesawDataTable td{padding:3px 2px}}
 </style>
 </head>
 <body>
@@ -727,7 +747,7 @@ function seesawHTML(price=9000){
   const d=PRACTICE_D[j],sp=PRACTICE_S[j],tilt=-(d-sp)*2.0;
   const state=d===sp?'⚖️ 수요량과 공급량이 같아서 시소가 수평이에요. 이 가격은 균형가격이에요.':d>sp?'🛒 사려는 양이 더 많아 수요자 쪽이 아래로! 가격이 올라갈 압력이 생겨요.':'🏷️ 팔려는 양이 더 많아 공급자 쪽이 아래로! 가격이 내려갈 압력이 생겨요.';
   const human=(x,color,label)=>`<g transform="translate(${x} 150)"><circle cx="0" cy="0" r="28" fill="#FBD6B5" stroke="#805C58" stroke-width="3"/><path d="M-31 49 Q0 12 31 49 L34 68 L-34 68 Z" fill="${color}" stroke="#805C58" stroke-width="3"/><circle cx="-9" cy="-3" r="3.5" fill="#493D36"/><circle cx="9" cy="-3" r="3.5" fill="#493D36"/><path d="M-7 13 Q0 20 7 13" fill="none" stroke="#493D36" stroke-width="3"/><text x="0" y="-51" font-size="22" text-anchor="middle" fill="#5B4B57" font-weight="bold">${label}</text></g>`;
-  return `<div class="card" style="text-align:center"><h3>🎢 수요자와 공급자가 타는 시소</h3><p class="muted">가격을 누르면 시소가 움직여요. 아래로 기울어진 쪽의 수량이 더 많아요.</p><div class="chips" style="justify-content:center">${PRACTICE_PRICES.map(p=>`<button type="button" class="btn sm ${p===PRACTICE_PRICES[j]?'lemon':'sky'}" data-seesaw-price="${p}">${won(p)}</button>`).join('')}</div>
+  return `<div class="card" style="text-align:center"><h3>🎢 수요자와 공급자가 타는 시소</h3><p class="muted">위의 표에서 가격을 누르면 시소가 움직여요. 아래로 기울어진 쪽의 수량이 더 많아요.</p><div class="chips seesawPriceButtons" style="justify-content:center">${PRACTICE_PRICES.map(p=>`<button type="button" class="btn sm ${p===PRACTICE_PRICES[j]?'lemon':'sky'}" data-seesaw-price="${p}">${won(p)}</button>`).join('')}</div>
     <svg class="seesawScene" viewBox="0 0 840 390" role="img" aria-label="가격 ${won(PRACTICE_PRICES[j])}, 수요량 ${d}개, 공급량 ${sp}개. 시소 기울기 ${tilt}도">
       <line x1="90" x2="750" y1="351" y2="351" stroke="#D3C5B7" stroke-width="9" stroke-linecap="round"/>
       <polygon points="420,226 356,347 484,347" fill="#F4C77B" stroke="#98672F" stroke-width="5"/>
@@ -743,12 +763,27 @@ function seesawHTML(price=9000){
     <div class="hl ${d===sp?'mint':d>sp?'sky':'peach'}" style="font-size:clamp(17px,2.5vw,22px)">${state}</div></div>`;
 }
 /* 모찌 시장과 구별되는 연습용 가상 시장: 시소 + 두 곡선의 대응점을 나란히 표시 */
+/* 시소·그래프 공통 가격별 수요량과 공급량 표. 실제 거래 자료와 분리된 가상 자료입니다. */
+function seesawQuantityTable(price){
+  const rows=[
+    {label:'가격(원)',values:PRACTICE_PRICES,type:'price'},
+    {label:'수요량(개)',values:PRACTICE_D,type:'demand'},
+    {label:'공급량(개)',values:PRACTICE_S,type:'supply'}
+  ];
+  return '<div class="seesawDataTableWrap"><table class="seesawDataTable" aria-label="가격별 수요량과 공급량 표"><tbody>'+
+    rows.map((row,ri)=>'<tr class="seesawData-'+row.type+'"><th scope="row">'+row.label+'</th>'+
+      row.values.map((n,i)=>{
+        const selected=PRACTICE_PRICES[i]===Number(price),className=selected?' class="is-current"':'';
+        return '<td'+className+'>'+(ri===0?'<button type="button" data-seesaw-price="'+PRACTICE_PRICES[i]+'" aria-pressed="'+selected+'" aria-label="'+won(PRACTICE_PRICES[i])+' 선택">'+n.toLocaleString('ko-KR')+'</button>':n)+'</td>';
+      }).join('')+'</tr>').join('')+'</tbody></table></div>';
+}
 function seesawComparisonHTML(price=9000){
   const chosen=PRACTICE_PRICES.includes(Number(price))?Number(price):9000;
   const ix=PRACTICE_PRICES.indexOf(chosen),d=PRACTICE_D[ix],sp=PRACTICE_S[ix];
   const word=d===sp?'균형 · 수요량과 공급량이 같아요':d>sp?'초과수요 '+(d-sp)+'개':'초과공급 '+(sp-d)+'개';
   return '<div class="seesawComparison">'+
     '<div class="seesawIntro"><strong>⚖️ 시소로 확인하는 시장 가격</strong><span>가상 시장 자료 · 실제 모찌 거래 결과 아님</span></div>'+
+    seesawQuantityTable(chosen)+
     '<div class="seesawColumns"><section class="seesawHalf">'+seesawHTML(chosen)+'</section>'+
     '<section class="seesawHalf card"><h3>📈 그래프에서는 어디일까?</h3>'+
     '<p class="muted" style="font-size:clamp(15px,1.5vw,19px);margin:2px 0 8px">시소에서 선택한 가격이 두 곡선에서 어디인지 확인해 봐요.</p>'+
