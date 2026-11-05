@@ -448,7 +448,7 @@ function renderTeacher() {
   };
   patchHTML(app, `<div class="wrap">
     <div class="hubTop"><div class="bigEmoji" style="font-size:54px;margin:0">🧺</div><div class="title">3단원 <span>시장 경제</span></div></div>
-    <div class="card"><h3>🏫 학급별 수업 기록 · 공모전 성장 자료</h3>
+    <div class="card"><h3>🏫 학급별 수업 기록</h3>
       <label for="classCode">학급 코드 (201 = 2학년 1반)</label>
       <input id="classCode" class="field" maxlength="4" inputmode="numeric" value="${esc(classCode)}" style="width:130px">
       <button class="btn mint" id="saveClass">학급 저장</button>
@@ -459,7 +459,7 @@ function renderTeacher() {
       <button class="btn mint" id="newLessonRoom">✨ 새 수업 시작 · 새 코드 발급</button>
       <p class="muted" style="font-size:15px">새 코드에서는 모든 활동이 처음부터 시작돼요. 이전 방의 기록은 삭제하지 않아요.</p>
       <p class="muted" style="font-size:15px">예전 반을 잘못 저장했다면 아래 기록 표의 <b>학급 수정</b>으로 정정할 수 있어요.</p><div class="muted" style="font-size:15px">이전 수업 코드: ${(() => { try { return (JSON.parse(localStorage.getItem('marketgo_lesson_room_history')||'[]')||[]).map(esc).join(' · ')||'없음'; } catch(e) { return '없음'; } })()}</div>
-      <button class="btn mint" id="growthExport">⬇️ 학생별 사고 성장 기록 CSV 다운로드</button>
+      <button class="btn mint" id="growthExport">⬇️ 학생별 활동 기록 CSV 다운로드</button>
       <p class="muted">예언 → 이유 → 그래프 비교 → 모찌 거래 가격과 근거를 합친 기록입니다. 학급과 방 번호는 교사 브라우저에만 저장돼요. 학생 이름이 중복되면 서로 다른 학생의 기록이 합쳐질 수 있으니 주의하세요.</p>
     </div>
     <div class="card"><div class="nowGrid">
@@ -621,8 +621,8 @@ async function downloadGrowthCSV(){
     ]);
     if(!rows.length)return toast('해당 방에 학생 기록이 없어요.');
     const quote=v=>{const t=String(v??'');const safe=/^[=+\-@]/.test(t)?"'"+t:t;return '"'+safe.replace(/"/g,'""')+'"';};
-    download(klass+'_시장경제_성장기록_'+c+'.csv','\uFEFF'+[header,...rows].map(row=>row.map(quote).join(',')).join('\r\n'));
-    toast(rows.length+'명 성장 기록을 내려받았어요.');
+    download(klass+'_시장경제_활동기록_'+c+'.csv','\uFEFF'+[header,...rows].map(row=>row.map(quote).join(',')).join('\r\n'));
+    toast(rows.length+'명 활동 기록을 내려받았어요.');
   }catch(e){console.error(e);toast('기록을 읽지 못했어요. 인터넷과 Firebase 권한을 확인하세요.');}
 }
 async function eraseLessonRoom(){
