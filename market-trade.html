@@ -544,7 +544,7 @@ function practiceGraph(demand={},supply={},activeKind='',activeRow=0){
 }
 function seesawHTML(price=9000){
   const idx=PRACTICE_PRICES.indexOf(+price),j=Math.max(0,idx);
-  const d=PRACTICE_D[j],sp=PRACTICE_S[j],tilt=(d-sp)*2.0;
+  const d=PRACTICE_D[j],sp=PRACTICE_S[j],tilt=-(d-sp)*2.0;
   const state=d===sp?'⚖️ 수요량과 공급량이 같아서 시소가 수평이에요. 이 가격은 균형가격이에요.':d>sp?'🛒 사려는 양이 더 많아 수요자 쪽이 아래로! 가격이 올라갈 압력이 생겨요.':'🏷️ 팔려는 양이 더 많아 공급자 쪽이 아래로! 가격이 내려갈 압력이 생겨요.';
   const human=(x,color,label)=>`<g transform="translate(${x} 150)"><circle cx="0" cy="0" r="28" fill="#FBD6B5" stroke="#805C58" stroke-width="3"/><path d="M-31 49 Q0 12 31 49 L34 68 L-34 68 Z" fill="${color}" stroke="#805C58" stroke-width="3"/><circle cx="-9" cy="-3" r="3.5" fill="#493D36"/><circle cx="9" cy="-3" r="3.5" fill="#493D36"/><path d="M-7 13 Q0 20 7 13" fill="none" stroke="#493D36" stroke-width="3"/><text x="0" y="-51" font-size="22" text-anchor="middle" fill="#5B4B57" font-weight="bold">${label}</text></g>`;
   return `<div class="card" style="text-align:center"><h3>🎢 수요자와 공급자가 타는 시소</h3><p class="muted">가격을 누르면 시소가 움직여요. 아래로 기울어진 쪽의 수량이 더 많아요.</p><div class="chips" style="justify-content:center">${PRACTICE_PRICES.map(p=>`<button type="button" class="btn sm ${p===PRACTICE_PRICES[j]?'lemon':'sky'}" data-seesaw-price="${p}">${won(p)}</button>`).join('')}</div>
