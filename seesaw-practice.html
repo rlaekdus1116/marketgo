@@ -175,14 +175,26 @@ function graph(valuesD,valuesS,selected=null,editing=false){
  }
  return '<svg viewBox="0 0 790 540" id="learning-graph" role="img" aria-label="수량 가로축, 가격 세로축 수요 공급 그래프">'+a+'</svg>';
 }
+
+function reviewTable(){
+  const rows=[
+    ['가격(원)',PRICES.map(p=>p.toLocaleString('ko-KR'))],
+    ['수요량(개)',D],
+    ['공급량(개)',S]
+  ];
+  return '<div class="review-table-box"><table class="review-table" aria-label="가상 시장의 가격별 수요량과 공급량 표"><tbody>'+
+    rows.map((row,ri)=>'<tr class="'+(ri===1?'review-demand':ri===2?'review-supply':'')+'"><th scope="row">'+row[0]+'</th>'+
+      row[1].map((v,i)=>'<td class="'+(PRICES[i]===price?'review-selected':'')+'">'+
+        (ri===0?'<button type="button" data-price="'+PRICES[i]+'" aria-label="'+won(PRICES[i])+' 선택">'+v+'</button>':v)+'</td>').join('')+
+    '</tr>').join('')+'</tbody></table></div>';
+}
 function demo(){
  const i=PRICES.indexOf(price),d=D[i],s=S[i],diff=Math.abs(d-s);
  const description=d===s?'균형가격 · 수요량과 공급량이 같아요.':d>s?'초과수요 '+diff+'개 · 사려는 사람이 더 많아요.':'초과공급 '+diff+'개 · 팔려는 사람이 더 많아요.';
- let buttons=PRICES.map(p=>'<button type="button" data-price="'+p+'" class="'+(p===price?'on':'')+'">'+won(p)+'</button>').join('');
- return '<div class="layout">'+
- '<section class="panel"><h2>🎢 수요자와 공급자의 시소</h2><p class="note">가격을 누르면 수량이 많은 쪽이 아래로 기울어요.</p><div class="pricebuttons">'+buttons+'</div><div class="seesaw-figure">'+figure()+'</div>'+
+ return reviewTable()+'<div class="layout">'+
+ '<section class="panel"><h2>🎢 수요자와 공급자의 시소</h2><p class="note">표에서 가격을 누르면 수량이 많은 쪽이 아래로 기울어요.</p><div class="seesaw-figure">'+figure()+'</div>'+
  '<div class="detail"><span class="num p">'+won(price)+'</span><span class="num d">수요량 '+d+'개</span><span class="num s">공급량 '+s+'개</span></div><div class="result '+(d===s?'bal':'')+'">'+description+'</div></section>'+
- '<section class="panel"><h2>📈 같은 가격에서 그래프는 어디일까?</h2><p class="note">보라색 <strong>↔ 화살표</strong>가 수요량과 공급량의 차이를 표시해요.</p><div class="graph-area">'+graph(D,S,price)+'</div><div class="legend"><span class="d">● 수요곡선 D</span><span class="s">● 공급곡선 S</span><span class="flag">'+(d===s?'⚖ 균형':d>s?'↔ 초과수요 '+diff+'개':'↔ 초과공급 '+diff+'개')+'</span></div></section></div>';
+ '<section class="panel"><h2>📈 같은 가격에서 그래프는 어디일까?</h2><p class="note">보라색 <strong>↔ 화살표</strong>가 수요량과 공급량의 차이를 표시해요.</p><div class="graph-area">'+graph(D,S,price)+'</div><div class="legend"><span class="d">● 수요곡선</span><span class="s">● 공급곡선</span><span class="flag">'+(d===s?'⚖ 균형':d>s?'↔ 초과수요 '+diff+'개':'↔ 초과공급 '+diff+'개')+'</span></div></section></div>';
 }
 function dataTable(kind){
  const vals=kind==='demand'?D:S,head=kind==='demand'?'수요량':'공급량';
