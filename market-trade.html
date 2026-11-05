@@ -685,14 +685,16 @@ function teacherPracticeHTML(){
   const statuses=ids.map(id=>({id,name:players[id].name||'학생',d:!!room.graphWork?.[id]?.demand?.passed,s:!!room.graphWork?.[id]?.supply?.passed}));
   const dc=statuses.filter(x=>x.d).length,sc=statuses.filter(x=>x.s).length;
   const showD=graphTeacherReveal>=1,showS=graphTeacherReveal>=2;
-  return `<div class="card center"><h2>📈 표로 수요·공급곡선 그리기</h2><div class="hl lemon">연습용 가상 시장 자료 · 실제 모찌 거래 데이터 아님</div>
-
-    <div class="chips" style="justify-content:center"><span class="pill">수요 완료 ${dc}/${ids.length}명</span><span class="pill">공급 완료 ${sc}/${ids.length}명</span></div>
-    ${practiceTable('both')}
-    <div class="chips" style="justify-content:center"><button class="btn ${graphTeacherReveal===0?'lemon':'sky'}" data-graph-reveal="0">빈 좌표평면</button><button class="btn ${graphTeacherReveal===1?'lemon':'sky'}" data-graph-reveal="1">수요곡선 보기</button><button class="btn ${graphTeacherReveal===2?'lemon':'sky'}" data-graph-reveal="2">수요 + 공급 보기</button></div>
-    ${practiceGraph(showD?PRACTICE_D:{},showS?PRACTICE_S:{})}
-    <div class="chips" style="justify-content:center">${statuses.map(x=>`<span class="chip soft">${esc(x.name)} · 수요 ${x.d?'✅':'○'} / 공급 ${x.s?'✅':'○'}</span>`).join('')}</div></div>
-    ${showS?seesawComparisonHTML(seesawPrice):''}`;
+  return '<div class="card center"><h2>📈 표로 수요·공급곡선 그리기</h2>'+
+    '<div class="hl lemon">연습용 가상 시장 자료 · 실제 모찌 거래 데이터 아님</div>'+
+    '<div class="chips" style="justify-content:center"><span class="pill">수요 완료 '+dc+'/'+ids.length+'명</span><span class="pill">공급 완료 '+sc+'/'+ids.length+'명</span></div>'+
+    practiceTable('both')+
+    '<div class="chips" style="justify-content:center;margin:12px 0">'+
+    '<button class="btn '+(graphTeacherReveal===0?'lemon':'sky')+'" data-graph-reveal="0">빈 좌표평면</button>'+
+    '<button class="btn '+(graphTeacherReveal===1?'lemon':'sky')+'" data-graph-reveal="1">수요곡선 보기</button>'+
+    '<button class="btn '+(graphTeacherReveal===2?'lemon':'sky')+'" data-graph-reveal="2">수요 + 공급 · 시소 보기</button></div>'+
+    (showS?seesawComparisonHTML(seesawPrice):practiceGraph(showD?PRACTICE_D:{},{}))+
+    '<div class="chips" style="justify-content:center;margin-top:12px">'+statuses.map(x=>'<span class="chip soft">'+esc(x.name)+' · 수요 '+(x.d?'✅':'○')+' / 공급 '+(x.s?'✅':'○')+'</span>').join('')+'</div></div>';
 }
 function bindSeeSaw(){
   app.querySelectorAll('[data-seesaw-price]').forEach(b=>b.onclick=()=>{seesawPrice=Number(b.dataset.seesawPrice);if(isTeacher)renderTeacher();else{lastSig='';renderStudent();}});
@@ -1348,7 +1350,7 @@ function renderStudent() {
     `${st.round}회차 내 카드: ${card.role === 'buyer' ? '🛒' : '🏷️'} ${won(card.limit)}`,
     card.role === 'buyer' ? '🛒' : '🏷️'));
   else if (st.phase === 'closed') maybeAnnounce(`close-${st.round}`, () => isEnd
-    ? announce('시장 끝~!!', `내 총 손익 ${signed(totalProfit(st))} 💖`, '🎉', 4000)
+    ? announce('그래프 활동 시작!', '표를 보고 수요곡선부터 그려 보세요.', '📈', 1800)
     : announce('그만~~!!', `${st.round}회차 끝! 결과를 확인해 봐`, '🛑'));
   else maybeAnnounce(`${st.phase}-${st.round}`, () => {});
   if (myPair) maybeAnnounce(`deal-${st.round}`, () => announce('거래 성사!!', '🪑 이제 자리에 가서 앉아요!', '🤝', 6000));
