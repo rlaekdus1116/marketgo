@@ -1,7 +1,7 @@
 /* 3단원 허브 연결: 지금 열린 활동 알리기 · 학생 이동 버튼 · 기록 저장(Firebase + 구글 시트)
    모든 데이터는 rooms/hub_main 아래 (기존 보안 규칙 그대로 통과) */
 import { getApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getDatabase, ref, get, set, update, onValue, onDisconnect, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import { getDatabase, ref, get, set, update, onValue, onDisconnect, serverTimestamp, runTransaction } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
 const db = () => getDatabase(getApp());
 const H = p => ref(db(), 'rooms/hub_main' + (p ? '/' + p : ''));
@@ -131,7 +131,7 @@ export function hubSeen(app, room) {
 const PRESENCE_GRACE_MS = 20000;
 const presenceKey=(app,room)=>String(app)+'_'+String(room);
 const presenceRef=(app,room,id)=>H('presence/'+presenceKey(app,room)+'/'+id);
-function registerStudentPresence(app,room) {
+function registerStudentPresence(app,room,participantId='') {
   const name=getStudentName();
   if(!name||!app||!room)return;
   let id;
@@ -140,14 +140,47 @@ function registerStudentPresence(app,room) {
     if(!id){id='p'+Math.random().toString(36).slice(2,12);localStorage.setItem('marketgo_presence_id',id);}
   }catch(e){id='p'+Math.random().toString(36).slice(2,12);}
   const r=presenceRef(app,room,id);
-  const record=(state)=>update(r,{name,state,at:serverTimestamp()}).catch(()=>{});
-  // An old tab must not keep overriding a new tab's active status.
-  const alive=()=>record(document.visibilityState==='hidden'?'hidden':'active');
+  const who=()=>getStudentName()||name;
+  const attrs=()=>({name:who(),...(participantId?{participantId:String(participantId)}:{})});
+  let stopped=false, activeSaving=false, activeAgain=false;
+  // 같은 앱에서 20초 이상 화면을 벗어났다가 복귀한 경우만 1회로 셉니다.
+  // Firebase 트랜잭션으로 누적해 새로고침·재접속 후에도 횟수가 유지됩니다.
+  async function markActive(){
+    if(stopped)return;
+    if(activeSaving){activeAgain=true;return;}
+    activeSaving=true;
+    try {
+      await runTransaction(r,old=>{
+        const x=old||{},t=Date.now();
+        const away=Number(x.awaySince)||((x.state==='hidden'||x.state==='offline')?Number(x.at)||0:0);
+        const genuine=(x.state==='hidden'||x.state==='offline')&&away>0&&t-away>=PRESENCE_GRACE_MS;
+        return {...x,...attrs(),state:'active',at:t,awaySince:null,
+          returnCount:(Number(x.returnCount)||0)+(genuine?1:0),
+          lastReturnAt:genuine?t:(x.lastReturnAt||null)};
+      },{applyLocally:false});
+    }catch(e){console.warn('복귀 횟수 저장 실패',e);}
+    finally{
+      activeSaving=false;
+      if(activeAgain){activeAgain=false;if(document.visibilityState==='visible')markActive();}
+    }
+  }
+  function markAway(state){
+    if(stopped)return;
+    // 마지막 활성 시각과 처음 떠난 시각을 보존합니다.
+    update(r,{...attrs(),state,at:serverTimestamp(),awaySince:Date.now()}).catch(()=>{});
+  }
   onDisconnect(r).update({state:'offline',at:serverTimestamp()}).catch(()=>{});
-  alive();
-  const interval=setInterval(()=>{if(document.visibilityState==='visible')alive();},15000);
-  document.addEventListener('visibilitychange',alive);
-  window.addEventListener('pagehide',()=>{clearInterval(interval);record('offline');},{once:true});
+  if(document.visibilityState==='visible')markActive();else markAway('hidden');
+  const interval=setInterval(()=>{
+    if(document.visibilityState==='visible'&&!activeSaving)update(r,{...attrs(),state:'active',at:serverTimestamp()}).catch(()=>{});
+  },15000);
+  document.addEventListener('visibilitychange',()=>{
+    if(document.visibilityState==='hidden')markAway('hidden');
+    else markActive();
+  });
+  window.addEventListener('pagehide',()=>{
+    stopped=true;clearInterval(interval);markAway('offline');
+  },{once:true});
 }
 let teacherPresenceStop=null, teacherPresenceTimer=null, teacherPresenceKey='';
 function monitorStudentPresence(app,room) {
@@ -156,7 +189,7 @@ function monitorStudentPresence(app,room) {
   if(teacherPresenceStop)teacherPresenceStop();
   if(teacherPresenceTimer)clearInterval(teacherPresenceTimer);
   teacherPresenceKey=key;
-  const seenIds=new Set(),alerted=new Set();
+  const seenIds=new Set(),alerted=new Set(),lastCount=new Map();
   let data={},initialized=false;
   const statusLabel={hidden:'다른 화면으로 이동한 것으로 보여요',offline:'연결이 끊기거나 화면을 떠났어요'};
   const fmt=t=>new Date(t).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false});
@@ -174,26 +207,31 @@ function monitorStudentPresence(app,room) {
     const close=document.createElement('button');close.textContent='✕';close.title='알림 닫기';close.style.cssText='border:0;background:none;cursor:pointer;font-size:17px;color:inherit';close.onclick=()=>item.remove();
     item.append(strong,content,close);wrap.prepend(item);
     while(wrap.children.length>5)wrap.lastChild.remove();
-    setTimeout(()=>item.remove(),20000);
+    setTimeout(()=>{item.remove();if(wrap.childElementCount===0)wrap.remove();},1000);
   }
   function inspect(){
     const now=Date.now();
     for(const [id,p] of Object.entries(data)){
       if(!p||!p.name)continue;
       const status=p.state||'offline',at=Number(p.at)||0;
+      const returns=Math.max(0,Number(p.returnCount)||0),previous=lastCount.get(id)??returns;
       if(status==='active'){
-        if(alerted.has(id)){showNotice(p.name,'✅ 다시 수업 화면으로 돌아왔어요');alerted.delete(id);}
+        if(alerted.has(id)||returns>previous){
+          showNotice(p.name,'✅ 돌아왔어요 · 누적 '+returns+'회 (20초 이상 이탈)');
+          alerted.delete(id);
+        }
         seenIds.add(id);
       }else if(seenIds.has(id)&&!alerted.has(id)&&at>0&&now-at>=PRESENCE_GRACE_MS){
-        showNotice(p.name,'⚠️ '+(statusLabel[status]||'수업 화면을 벗어난 것으로 보여요'));
+        showNotice(p.name,'⚠️ '+(statusLabel[status]||'수업 화면을 벗어난 것으로 보여요')+' · '+(returns+1)+'번째');
         alerted.add(id);
       }
+      lastCount.set(id,returns);
     }
   }
   teacherPresenceStop=onValue(H('presence/'+key),snap=>{
     data=snap.val()||{};
     if(!initialized){
-      for(const [id,p] of Object.entries(data))if(p&&p.state==='active')seenIds.add(id);
+      for(const [id,p] of Object.entries(data)){if(p&&p.state==='active')seenIds.add(id);lastCount.set(id,Math.max(0,Number(p?.returnCount)||0));}
       initialized=true;
     }
     inspect();
@@ -216,9 +254,9 @@ export async function hubLog(app,room,cols,rows,extra=''){
 }
 
 /* 🧒 학생: 선생님이 다른 활동을 열면 → 화면 아래에 '이동' 버튼 */
-export function hubFollow(app, room) {
+export function hubFollow(app, room, participantId='') {
   if (window.__hubFollow) return; window.__hubFollow = true;
-  registerStudentPresence(app, room);
+  registerStudentPresence(app, room, participantId);
   let expireTimer = null;
   const st = document.createElement('style');
   st.textContent = `.hubGo{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:9999;background:#FFE58F;color:#5B4B57;border:3px solid #5B4B57;border-radius:999px;padding:14px 26px;font-family:Jua,sans-serif;font-size:22px;box-shadow:0 6px 0 #5B4B57;text-decoration:none;animation:hubB 1s infinite alternate;white-space:nowrap}@keyframes hubB{to{transform:translateX(-50%) translateY(-6px)}}`;
