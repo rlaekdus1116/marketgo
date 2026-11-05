@@ -212,6 +212,19 @@ button,.btn,.speech,.rule,.title,.card{word-break:keep-all;overflow-wrap:break-w
  .seesawHalf .seesawScene{max-height:240px}
  .seesawGraphArea .practiceChart{max-height:340px}
 }
+
+/* 학생과 교사의 시소/그래프 비교 화면에 같은 레이아웃을 사용합니다. */
+.teacherSeesawMode{width:100%;max-width:1480px;margin:auto;padding:8px 14px 24px;display:flex;flex-direction:column;gap:10px}
+.teacherSeesawMode>.topbar{margin-bottom:2px}
+.teacherSeesawMode>.seesawComparison{min-height:min(600px,calc(100dvh - 160px));}
+.teacherSeesawMode .seesawColumns{min-height:490px}
+.teacherSeesawMode>.teacherExtras{margin-top:12px}
+.teacherExtras summary{font-size:21px;cursor:pointer;padding:8px 0}
+.teacherExtras .teacherOverview{padding:10px 0}
+.teacherExtras .teacherOverview .chip{font-size:16px}
+.teacherSeesawMode .seesawLegend strong{background:#752FC5;color:#fff;border-radius:12px;padding:8px 14px;font-size:clamp(18px,1.8vw,26px)}
+.graphFinishedScreen .seesawLegend strong{background:#752FC5;color:#fff;border-radius:12px;padding:8px 14px;font-size:clamp(18px,1.8vw,26px)}
+@media(max-width:760px){.teacherSeesawMode .seesawColumns{min-height:0}}
 </style>
 </head>
 <body>
@@ -605,17 +618,35 @@ function practiceGraph(demand={},supply={},activeKind='',activeRow=0,highlightPr
     const index=PRACTICE_PRICES.indexOf(Number(highlightPrice));
     const d=PRACTICE_D[index],sp=PRACTICE_S[index],yp=y(PRACTICE_PRICES[index]);
     const xD=x(d),xS=x(sp),xMin=Math.min(xD,xS),xMax=Math.max(xD,xS);
-    // 현재 가격선과 두 곡선의 수요량/공급량 위치를 함께 읽을 수 있게 합니다.
-    body+='<rect x="100" y="'+(yp-13)+'" width="600" height="26" rx="8" fill="#F6E49C" opacity=".42" pointer-events="none"/>';
-    body+='<line x1="100" y1="'+yp+'" x2="'+(xMax+10)+'" y2="'+yp+'" stroke="#7845AB" stroke-width="4" stroke-dasharray="8 7" pointer-events="none"/>';
-    body+='<line x1="'+xD+'" y1="'+yp+'" x2="'+xD+'" y2="458" stroke="#2F72B7" stroke-width="3" stroke-dasharray="5 6" pointer-events="none"/>';
-    body+='<line x1="'+xS+'" y1="'+yp+'" x2="'+xS+'" y2="458" stroke="#BF6230" stroke-width="3" stroke-dasharray="5 6" pointer-events="none"/>';
-    if(d!==sp)body+='<line x1="'+xMin+'" y1="'+yp+'" x2="'+xMax+'" y2="'+yp+'" stroke="#7845AB" stroke-width="8" stroke-linecap="round" pointer-events="none"/>';
-    if(d===sp)body+='<circle cx="'+xD+'" cy="'+yp+'" r="20" fill="#F2DFFF" stroke="#75439F" stroke-width="5" pointer-events="none"/>';
-    else body+='<circle cx="'+xD+'" cy="'+yp+'" r="16" fill="#D6EDFF" stroke="#2F72B7" stroke-width="5" pointer-events="none"/><circle cx="'+xS+'" cy="'+yp+'" r="16" fill="#FFE4CF" stroke="#BF6230" stroke-width="5" pointer-events="none"/>';
-    body+='<text x="'+(d===sp?xD:xD)+'" y="'+(yp-22)+'" text-anchor="middle" fill="#2F72B7" stroke="#fff" stroke-width="5" paint-order="stroke" font-size="25" font-weight="bold" pointer-events="none">'+(d===sp?'수요=공급': '수요 '+d)+'</text>';
-    if(d!==sp)body+='<text x="'+xS+'" y="'+(yp+43)+'" text-anchor="middle" fill="#BF6230" stroke="#fff" stroke-width="5" paint-order="stroke" font-size="25" font-weight="bold" pointer-events="none">공급 '+sp+'</text>';
-    body+='<text x="700" y="'+(Math.max(105,yp-20))+'" text-anchor="end" fill="#7845AB" font-size="23" font-weight="bold" stroke="white" stroke-width="4" paint-order="stroke" pointer-events="none">선택 가격</text>';
+    const excess=d>sp?'초과수요':sp>d?'초과공급':'균형';
+    const diff=Math.abs(d-sp),mid=(xMin+xMax)/2;
+    // 선택 가격의 가로선, 각 수량의 위치, 그 사이의 초과수요/초과공급을 나타냅니다.
+    body+='<rect x="100" y="'+(yp-11)+'" width="600" height="22" rx="8" fill="#EBDDFC" opacity=".55" pointer-events="none"/>';
+    body+='<line x1="100" y1="'+yp+'" x2="700" y2="'+yp+'" stroke="#7140A7" stroke-width="3.5" stroke-dasharray="8 8" pointer-events="none"/>';
+    body+='<line x1="'+xD+'" y1="'+yp+'" x2="'+xD+'" y2="458" stroke="#2F72B7" stroke-width="3.5" stroke-dasharray="6 7" pointer-events="none"/>';
+    body+='<line x1="'+xS+'" y1="'+yp+'" x2="'+xS+'" y2="458" stroke="#BF6230" stroke-width="3.5" stroke-dasharray="6 7" pointer-events="none"/>';
+    if(d!==sp){
+      // 선 끝의 삼각형 두 개가 좌우를 가리키는 두 화살표 머리입니다.
+      body+='<line x1="'+(xMin+22)+'" y1="'+yp+'" x2="'+(xMax-22)+'" y2="'+yp+'" stroke="white" stroke-width="16" pointer-events="none"/>';
+      body+='<line x1="'+(xMin+22)+'" y1="'+yp+'" x2="'+(xMax-22)+'" y2="'+yp+'" stroke="#752FC5" stroke-width="9" stroke-linecap="round" pointer-events="none"/>';
+      body+='<path d="M'+(xMin+16)+','+yp+' L'+(xMin+38)+','+(yp-16)+' L'+(xMin+38)+','+(yp+16)+' Z" fill="#752FC5" stroke="#fff" stroke-width="2" pointer-events="none"/>';
+      body+='<path d="M'+(xMax-16)+','+yp+' L'+(xMax-38)+','+(yp-16)+' L'+(xMax-38)+','+(yp+16)+' Z" fill="#752FC5" stroke="#fff" stroke-width="2" pointer-events="none"/>';
+      body+='<rect x="'+(mid-112)+'" y="'+(yp-79)+'" width="224" height="45" rx="15" fill="#752FC5" stroke="#fff" stroke-width="3" pointer-events="none"/>';
+      body+='<text x="'+mid+'" y="'+(yp-48)+'" text-anchor="middle" fill="#fff" font-size="26" font-weight="bold" pointer-events="none">↔ '+excess+' '+diff+'개</text>';
+    }else{
+      body+='<circle cx="'+xD+'" cy="'+yp+'" r="23" fill="#ECD9FF" stroke="#752FC5" stroke-width="5" pointer-events="none"/>';
+      body+='<rect x="'+(xD-92)+'" y="'+(yp-79)+'" width="184" height="44" rx="15" fill="#397B5C" stroke="#fff" stroke-width="3" pointer-events="none"/>';
+      body+='<text x="'+xD+'" y="'+(yp-49)+'" fill="#fff" text-anchor="middle" font-size="25" font-weight="bold" pointer-events="none">⚖ 수요 = 공급</text>';
+    }
+    body+='<circle cx="'+xD+'" cy="'+yp+'" r="13" fill="#2F72B7" stroke="#fff" stroke-width="3" pointer-events="none"/>';
+    body+='<circle cx="'+xS+'" cy="'+yp+'" r="9" fill="#BF6230" stroke="#fff" stroke-width="3" pointer-events="none"/>';
+    if(d!==sp){
+      body+='<text x="'+xD+'" y="'+(yp+38)+'" text-anchor="middle" fill="#2F72B7" font-size="23" font-weight="bold" stroke="white" stroke-width="5" paint-order="stroke" pointer-events="none">D '+d+'</text>';
+      body+='<text x="'+xS+'" y="'+(yp+38)+'" text-anchor="middle" fill="#BF6230" font-size="23" font-weight="bold" stroke="white" stroke-width="5" paint-order="stroke" pointer-events="none">S '+sp+'</text>';
+    }else{
+      body+='<text x="'+xD+'" y="'+(yp+39)+'" text-anchor="middle" fill="#397B5C" font-size="24" font-weight="bold" stroke="white" stroke-width="5" paint-order="stroke" pointer-events="none">6개</text>';
+    }
+    body+='<text x="700" y="'+Math.max(105,yp-18)+'" text-anchor="end" fill="#7140A7" font-size="21" font-weight="bold" stroke="white" stroke-width="4" paint-order="stroke" pointer-events="none">선택 가격</text>';
   }
   if(activeKind){
     // 모든 가격 행은 직접 탭/드래그하여 점을 찍거나 수정할 수 있습니다.
@@ -660,7 +691,7 @@ function seesawComparisonHTML(price=9000){
     '<p class="muted" style="font-size:clamp(15px,1.5vw,19px);margin:2px 0 8px">시소에서 선택한 가격이 두 곡선에서 어디인지 확인해 봐요.</p>'+
     '<div class="seesawStat">가격 <b>'+won(chosen)+'</b> · <span style="color:#2F72B7">수요량 <b>'+d+'개</b></span> · <span style="color:#BF6230">공급량 <b>'+sp+'개</b></span></div>'+
     '<div class="seesawGraphArea">'+practiceGraph(PRACTICE_D,PRACTICE_S,'',0,chosen)+'</div>'+
-    '<div class="seesawLegend"><span>🔵 수요곡선 D</span><span>🟠 공급곡선 S</span><strong>'+word+'</strong></div></section></div></div>';
+    '<div class="seesawLegend"><span>🔵 수요곡선 D</span><span>🟠 공급곡선 S</span><strong>'+(d===sp?'⚖ 수요량 = 공급량':'↔ '+word)+'</strong></div></section></div></div>';
 }
 
 function studentPracticeHTML(){
@@ -684,17 +715,10 @@ function teacherPracticeHTML(){
   const players=room.players||{},ids=Object.keys(players);
   const statuses=ids.map(id=>({id,name:players[id].name||'학생',d:!!room.graphWork?.[id]?.demand?.passed,s:!!room.graphWork?.[id]?.supply?.passed}));
   const dc=statuses.filter(x=>x.d).length,sc=statuses.filter(x=>x.s).length;
-  const showD=graphTeacherReveal>=1,showS=graphTeacherReveal>=2;
-  return '<div class="card center"><h2>📈 표로 수요·공급곡선 그리기</h2>'+
-    '<div class="hl lemon">연습용 가상 시장 자료 · 실제 모찌 거래 데이터 아님</div>'+
-    '<div class="chips" style="justify-content:center"><span class="pill">수요 완료 '+dc+'/'+ids.length+'명</span><span class="pill">공급 완료 '+sc+'/'+ids.length+'명</span></div>'+
-    practiceTable('both')+
-    '<div class="chips" style="justify-content:center;margin:12px 0">'+
-    '<button class="btn '+(graphTeacherReveal===0?'lemon':'sky')+'" data-graph-reveal="0">빈 좌표평면</button>'+
-    '<button class="btn '+(graphTeacherReveal===1?'lemon':'sky')+'" data-graph-reveal="1">수요곡선 보기</button>'+
-    '<button class="btn '+(graphTeacherReveal===2?'lemon':'sky')+'" data-graph-reveal="2">수요 + 공급 · 시소 보기</button></div>'+
-    (showS?seesawComparisonHTML(seesawPrice):practiceGraph(showD?PRACTICE_D:{},{}))+
-    '<div class="chips" style="justify-content:center;margin-top:12px">'+statuses.map(x=>'<span class="chip soft">'+esc(x.name)+' · 수요 '+(x.d?'✅':'○')+' / 공급 '+(x.s?'✅':'○')+'</span>').join('')+'</div></div>';
+  return '<div class="teacherOverview"><h3>학생별 곡선 제출 현황</h3>'+
+    '<div class="chips"><span class="pill">수요 완료 '+dc+'/'+ids.length+'명</span><span class="pill">공급 완료 '+sc+'/'+ids.length+'명</span></div>'+
+    '<div class="chips" style="margin-top:10px">'+statuses.map(x=>'<span class="chip soft">'+esc(x.name)+' · 수요 '+(x.d?'✅':'○')+' / 공급 '+(x.s?'✅':'○')+'</span>').join('')+'</div>'+
+    '<h3 style="margin-top:14px">가상 자료의 가격·수량 표</h3>'+practiceTable('both')+'</div>';
 }
 function bindSeeSaw(){
   app.querySelectorAll('[data-seesaw-price]').forEach(b=>b.onclick=()=>{seesawPrice=Number(b.dataset.seesawPrice);if(isTeacher)renderTeacher();else{lastSig='';renderStudent();}});
