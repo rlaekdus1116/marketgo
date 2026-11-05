@@ -704,8 +704,8 @@ function practiceGraph(demand={},supply={},activeKind='',activeRow=0,highlightPr
     body+='<circle cx="'+xD+'" cy="'+yp+'" r="13" fill="#2F72B7" stroke="#fff" stroke-width="3" pointer-events="none"/>';
     body+='<circle cx="'+xS+'" cy="'+yp+'" r="9" fill="#BF6230" stroke="#fff" stroke-width="3" pointer-events="none"/>';
     if(d!==sp){
-      body+='<text x="'+xD+'" y="'+(yp+38)+'" text-anchor="middle" fill="#2F72B7" font-size="23" font-weight="bold" stroke="white" stroke-width="5" paint-order="stroke" pointer-events="none">D '+d+'</text>';
-      body+='<text x="'+xS+'" y="'+(yp+38)+'" text-anchor="middle" fill="#BF6230" font-size="23" font-weight="bold" stroke="white" stroke-width="5" paint-order="stroke" pointer-events="none">S '+sp+'</text>';
+      body+='<text x="'+xD+'" y="'+(yp+38)+'" text-anchor="middle" fill="#2F72B7" font-size="23" font-weight="bold" stroke="white" stroke-width="5" paint-order="stroke" pointer-events="none">수요 '+d+'개</text>';
+      body+='<text x="'+xS+'" y="'+(yp+38)+'" text-anchor="middle" fill="#BF6230" font-size="23" font-weight="bold" stroke="white" stroke-width="5" paint-order="stroke" pointer-events="none">공급 '+sp+'개</text>';
     }else{
       body+='<text x="'+xD+'" y="'+(yp+39)+'" text-anchor="middle" fill="#397B5C" font-size="24" font-weight="bold" stroke="white" stroke-width="5" paint-order="stroke" pointer-events="none">6개</text>';
     }
@@ -754,7 +754,7 @@ function seesawComparisonHTML(price=9000){
     '<p class="muted" style="font-size:clamp(15px,1.5vw,19px);margin:2px 0 8px">시소에서 선택한 가격이 두 곡선에서 어디인지 확인해 봐요.</p>'+
     '<div class="seesawStat">가격 <b>'+won(chosen)+'</b> · <span style="color:#2F72B7">수요량 <b>'+d+'개</b></span> · <span style="color:#BF6230">공급량 <b>'+sp+'개</b></span></div>'+
     '<div class="seesawGraphArea">'+practiceGraph(PRACTICE_D,PRACTICE_S,'',0,chosen)+'</div>'+
-    '<div class="seesawLegend"><span>🔵 수요곡선 D</span><span>🟠 공급곡선 S</span><strong>'+(d===sp?'⚖ 수요량 = 공급량':'↔ '+word)+'</strong></div></section></div></div>';
+    '<div class="seesawLegend"><span>🔵 수요 '+d+'개</span><span>🟠 공급 '+sp+'개</span><strong>'+(d===sp?'⚖ 수요량 = 공급량':'↔ '+word)+'</strong></div></section></div></div>';
 }
 
 function studentPracticeHTML(){
@@ -1157,8 +1157,8 @@ function sdHTML(rs) {
   // 학생용 그래프는 꺾임 없이 곧은 수요선·공급선으로 표현.
   g += `<line x1="${x(0)}" y1="${y(dAt(0))}" x2="${x(qMax)}" y2="${y(dAt(qMax))}" stroke="${BLUE}" stroke-width="5" stroke-linecap="round"/>`;
   g += `<line x1="${x(0)}" y1="${y(sAt(0))}" x2="${x(qMax)}" y2="${y(sAt(qMax))}" stroke="${ORANGE}" stroke-width="5" stroke-linecap="round"/>`;
-  g += `<text x="${x(qMax)+10}" y="${y(dAt(qMax))+6}" font-size="21" fill="${BLUE}">수요 D</text>`;
-  g += `<text x="${x(qMax)+10}" y="${y(sAt(qMax))+6}" font-size="21" fill="${ORANGE}">공급 S</text>`;
+  g += `<text x="${x(qMax)+10}" y="${y(dAt(qMax))+6}" font-size="21" fill="${BLUE}">수요곡선</text>`;
+  g += `<text x="${x(qMax)+10}" y="${y(sAt(qMax))+6}" font-size="21" fill="${ORANGE}">공급곡선</text>`;
   if(showEq){
     g += `<line x1="${L}" x2="${x(qE)}" y1="${y(eqP)}" y2="${y(eqP)}" stroke="#9470B8" stroke-width="2.5" stroke-dasharray="7 6"/>`;
     g += `<line x1="${x(qE)}" x2="${x(qE)}" y1="${y(eqP)}" y2="${Tp+ph}" stroke="#9470B8" stroke-width="2.5" stroke-dasharray="7 6"/>`;
@@ -1272,8 +1272,8 @@ function equilibriumLessonHTML(){
  guides+'<circle cx="'+xE+'" cy="'+yE+'" r="11" fill="#388A74" stroke="white" stroke-width="4"/>'+
  '<text x="'+(L-14)+'" y="'+(yE+7)+'" font-size="22" fill="#5B4B57" text-anchor="end">9,000</text>'+
  '<text x="'+xE+'" y="'+(H-B+32)+'" font-size="22" fill="#5B4B57" text-anchor="middle">15</text>'+
- '<text x="'+(W-R+10)+'" y="'+(yy(3000)+6)+'" font-size="22" fill="#3B8FD9">수요 D</text>'+
- '<text x="'+(W-R+10)+'" y="'+(yy(15000)+6)+'" font-size="22" fill="#E8803E">공급 S</text>'+
+ '<text x="'+(W-R+10)+'" y="'+(yy(3000)+6)+'" font-size="22" fill="#3B8FD9">수요곡선</text>'+
+ '<text x="'+(W-R+10)+'" y="'+(yy(15000)+6)+'" font-size="22" fill="#E8803E">공급곡선</text>'+
  '<text x="'+xE+'" y="'+(yE-19)+'" font-size="22" fill="#287B64">균형점</text>'+
  '<text x="'+L+'" y="'+(T-10)+'" font-size="20" fill="#5B4B57">가격(원)</text>'+
  '<text x="'+(W-R)+'" y="'+(H-12)+'" font-size="20" text-anchor="end" fill="#5B4B57">수량(개)</text></svg>';
@@ -1302,8 +1302,8 @@ function scenarioChart(price){
  '<polyline points="'+line('d')+'" fill="none" stroke="#3B8FD9" stroke-width="5" stroke-linecap="round"/>'+
  '<polyline points="'+line('s')+'" fill="none" stroke="#E8803E" stroke-width="5" stroke-linecap="round"/>'+dots+
  '<text x="'+(L-14)+'" y="'+(level+7)+'" text-anchor="end" font-size="22" fill="#72548B">'+price.toLocaleString('ko-KR')+'</text>'+
- '<text x="'+(W-R+12)+'" y="'+(y(3000)+6)+'" fill="#3B8FD9" font-size="23">수요 D</text>'+
- '<text x="'+(W-R+12)+'" y="'+(y(15000)+6)+'" fill="#E8803E" font-size="23">공급 S</text>'+
+ '<text x="'+(W-R+12)+'" y="'+(y(3000)+6)+'" fill="#3B8FD9" font-size="23">수요곡선</text>'+
+ '<text x="'+(W-R+12)+'" y="'+(y(15000)+6)+'" fill="#E8803E" font-size="23">공급곡선</text>'+
  '<text x="'+L+'" y="'+(T-11)+'" fill="#5B4B57" font-size="19">가격(원)</text>'+
  '<text x="'+(W-R)+'" y="'+(H-10)+'" fill="#5B4B57" text-anchor="end" font-size="19">수량(개)</text></svg>';
 }
