@@ -128,7 +128,7 @@ export function hubSeen(app, room) {
 
 /* 학생 이탈 감지: 앱이 백그라운드에 있을 때는 20초 유예.
    브라우저 종료·네트워크 단절은 onDisconnect를 사용. 이탈 '의심'일 뿐 고의 탈출의 증거는 아닙니다. */
-const PRESENCE_GRACE_MS = 20000;
+const PRESENCE_GRACE_MS = 10000;
 const presenceKey=(app,room)=>String(app)+'_'+String(room);
 const presenceRef=(app,room,id)=>H('presence/'+presenceKey(app,room)+'/'+id);
 function registerStudentPresence(app,room,participantId='') {
@@ -207,7 +207,7 @@ function monitorStudentPresence(app,room) {
     const close=document.createElement('button');close.textContent='✕';close.title='알림 닫기';close.style.cssText='border:0;background:none;cursor:pointer;font-size:17px;color:inherit';close.onclick=()=>item.remove();
     item.append(strong,content,close);wrap.prepend(item);
     while(wrap.children.length>5)wrap.lastChild.remove();
-    setTimeout(()=>{item.remove();if(wrap.childElementCount===0)wrap.remove();},1000);
+    setTimeout(()=>{item.remove();if(wrap.childElementCount===0)wrap.remove();},3000);
   }
   function inspect(){
     const now=Date.now();
