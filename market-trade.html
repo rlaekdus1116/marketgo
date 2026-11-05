@@ -936,8 +936,12 @@ function renderTeacher() {
   const sourceSwitch='<div class="card center"><div class="chips" style="justify-content:center"><button class="btn '+(!exampleMode?'lemon':'sky')+'" id="sourceActual">우리 반 실제 결과</button><button class="btn '+(exampleMode?'lemon':'sky')+'" id="sourceExample">일반적인 시장 예시</button></div></div>';
   const resultsView=isEnd ? (teachingStage===1 ? sourceSwitch+(exampleMode?exampleResultsHTML():table+rankingHTML(st,showNames))+(!exampleMode?questionsHTML(cols)+proposalHTML:'') : teachingStage===2 ? equilibriumLessonHTML() : scenarioHTML()) : table;
   const stageNav=isEnd?`<div class="card center"><div class="chips" style="justify-content:center"><button class="btn ${teachingStage===1?'lemon':'sky'}" data-stage="1">① 거래 결과</button><button class="btn ${teachingStage===2?'lemon':'sky'}" data-stage="2">② 균형 가격·거래량</button><button class="btn ${teachingStage===3?'lemon':'sky'}" data-stage="3">③ 가격을 바꿔 보면?</button></div><div class="chips" style="justify-content:center"><button class="btn mint" id="goPriceLab">다음 단계로 넘어가기</button></div></div>`:'';
+  // 학급 교사용도 학생과 같은 시소+그래프를 첫 화면으로 보여주고, 상세 기록만 접습니다.
   const exerciseView=isEnd?teacherPracticeHTML():'';
-  patchHTML(app, `<div class="wrap">${topbar}${main}${exerciseView}${isEnd?stageNav:''}${resultsView}${isEnd&&teachingStage===1&&!exampleMode?logHTML:''}${presenceHTML}</div>`);
+  const teacherEndDetails=isEnd?`<details class="card teacherExtras"><summary>📚 수업 자료 · 거래 결과 · 학생 제출 현황 펼치기</summary>
+    ${exerciseView}${stageNav}${resultsView}${teachingStage===1&&!exampleMode?logHTML:''}${presenceHTML}</details>`:'';
+  const teacherEndBody=isEnd?`<div class="teacherSeesawMode">${topbar}${seesawComparisonHTML(seesawPrice)}${teacherEndDetails}</div>`:null;
+  patchHTML(app, teacherEndBody||`<div class="wrap">${topbar}${main}${resultsView}${presenceHTML}</div>`);
   if (st.phase === 'lobby' && window.QRCode && el('qr') && !el('qr').firstChild) new QRCode(el('qr'), { text: link, width: 200, height: 200, colorDark: '#5B4B57', colorLight: '#ffffff' });
 
   const bind = (id, fn) => { const b = el(id); if (b) b.onclick = fn; };
