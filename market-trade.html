@@ -261,6 +261,20 @@ button,.btn,.speech,.rule,.title,.card{word-break:keep-all;overflow-wrap:break-w
  .seesawDataTable th,.seesawDataTable td{padding:5px 1px}
 }
 @media(max-height:650px) and (min-width:761px){.seesawDataTable th,.seesawDataTable td{padding:3px 2px}}
+
+/* 발표 수업: 표에서 균형가격 찾기 → 정답 → 시소 → 그래프 */
+.stagedSeesawTable{display:flex;flex-direction:column;align-items:stretch;justify-content:flex-start;gap:16px}
+.stagedSeesawTable .seesawDataTableWrap{width:100%;padding:10px 12px}
+.stagedSeesawTable .seesawDataTable th,.stagedSeesawTable .seesawDataTable td{font-size:clamp(16px,2.1vw,30px);padding:12px 7px}
+.stagedSeesawTable .seesawPrompt{font-size:clamp(23px,3vw,40px);font-weight:900;text-align:center;background:#fff1cb;color:#4d3d45;border-radius:18px;padding:18px}
+.stagedSeesawTable .seesawPrompt span{display:block;font-size:clamp(16px,1.8vw,23px);font-weight:500}
+.stagedSeesawTable .seesawAnswer{background:#dcf2e7;border-radius:18px;text-align:center;font-size:clamp(22px,2.4vw,34px);padding:15px}
+.stagedSeesawTable .seesawAnswer strong{color:#276a4b}
+.stagedSeesawOnly{max-width:900px;width:100%;align-self:center;min-height:0}
+.stagedSeesawOnly .card{margin:0}
+.stagedSeesawOnly .seesawPriceButtons{display:none}
+.stagedSeesawOnly .seesawScene{max-height:34vh}
+@media(max-width:760px){.stagedSeesawTable .seesawDataTable th,.stagedSeesawTable .seesawDataTable td{padding:7px 2px;font-size:clamp(12px,2.8vw,18px)}.stagedSeesawTable .seesawDataTableWrap{padding:4px}}
 </style>
 </head>
 <body>
@@ -621,10 +635,26 @@ function rankingHTML(st,showNames){
 
 
 /* 수업 흐름: 3회차 실제 거래 정리 → 시소·그래프 → 곡선 그리기 */
-let demoFlowStep='recap';
+let demoFlowStep='recap',demoSeesawReveal=0;
 function currentFlowStep(){
   const p=demoMode?demoFlowStep:room?.presentation?.flowStep;
   return ['recap','seesaw','drawing'].includes(p)?p:'recap';
+}
+/* 공개 단계 0=표, 1=균형가격, 2=시소, 3=시소와 그래프 */
+function currentSeesawReveal(){
+  const n=Number(demoMode?demoSeesawReveal:room?.presentation?.seesawReveal);
+  return Number.isInteger(n)&&n>=0&&n<=3?n:0;
+}
+function classroomSeesawPrice(){
+  const p=Number(demoMode?seesawPrice:room?.presentation?.seesawPrice);
+  return PRACTICE_PRICES.includes(p)?p:9000;
+}
+async function setSeesawReveal(next){
+  const n=Number(next);
+  if(!Number.isInteger(n)||n<0||n>3)return;
+  if(demoMode){demoSeesawReveal=n;seesawPrice=9000;renderTeacher();return;}
+  try{await update(T(),{'presentation/seesawReveal':n,'presentation/seesawPrice':9000,'presentation/seesawRevealAt':Date.now()});}
+  catch(e){console.error(e);toast('설명 단계 전환에 실패했어요.');}
 }
 function actualTradeRecap(){
   const rounds=[],high={attempts:0,success:0},low={attempts:0,success:0};let count=0,priceSum=0;
@@ -661,8 +691,17 @@ function tradeRecapHTML(){
 }
 async function switchTradeFlow(next){
   if(!['recap','seesaw','drawing'].includes(next))return;
-  if(demoMode){demoFlowStep=next;renderTeacher();return;}
-  try{await update(T(),{'presentation/flowStep':next,'presentation/flowChangedAt':Date.now()});}
+  const freshSeesaw=next==='seesaw'&&currentFlowStep()==='recap';
+  if(demoMode){
+    demoFlowStep=next;
+    if(freshSeesaw){demoSeesawReveal=0;seesawPrice=9000;}
+    renderTeacher();return;
+  }
+  try{
+    const changes={'presentation/flowStep':next,'presentation/flowChangedAt':Date.now()};
+    if(freshSeesaw){changes['presentation/seesawReveal']=0;changes['presentation/seesawPrice']=9000;}
+    await update(T(),changes);
+  }
   catch(e){console.error(e);toast('화면 전환 실패. 인터넷 연결을 확인해 주세요.');}
 }
 
@@ -764,7 +803,7 @@ function seesawHTML(price=9000){
 }
 /* 모찌 시장과 구별되는 연습용 가상 시장: 시소 + 두 곡선의 대응점을 나란히 표시 */
 /* 시소·그래프 공통 가격별 수요량과 공급량 표. 실제 거래 자료와 분리된 가상 자료입니다. */
-function seesawQuantityTable(price){
+function seesawQuantityTable(price,highlight=true,interactive=true){
   const rows=[
     {label:'가격(원)',values:PRACTICE_PRICES,type:'price'},
     {label:'수요량(개)',values:PRACTICE_D,type:'demand'},
@@ -773,17 +812,17 @@ function seesawQuantityTable(price){
   return '<div class="seesawDataTableWrap"><table class="seesawDataTable" aria-label="가격별 수요량과 공급량 표"><tbody>'+
     rows.map((row,ri)=>'<tr class="seesawData-'+row.type+'"><th scope="row">'+row.label+'</th>'+
       row.values.map((n,i)=>{
-        const selected=PRACTICE_PRICES[i]===Number(price),className=selected?' class="is-current"':'';
-        return '<td'+className+'>'+(ri===0?'<button type="button" data-seesaw-price="'+PRACTICE_PRICES[i]+'" aria-pressed="'+selected+'" aria-label="'+won(PRACTICE_PRICES[i])+' 선택">'+n.toLocaleString('ko-KR')+'</button>':n)+'</td>';
+        const selected=highlight&&PRACTICE_PRICES[i]===Number(price),className=selected?' class="is-current"':'';
+        return '<td'+className+'>'+(ri===0&&interactive?'<button type="button" data-seesaw-price="'+PRACTICE_PRICES[i]+'" aria-pressed="'+selected+'" aria-label="'+won(PRACTICE_PRICES[i])+' 선택">'+n.toLocaleString('ko-KR')+'</button>':n.toLocaleString('ko-KR'))+'</td>';
       }).join('')+'</tr>').join('')+'</tbody></table></div>';
 }
-function seesawComparisonHTML(price=9000){
+function seesawComparisonHTML(price=9000,allowPriceClicks=true){
   const chosen=PRACTICE_PRICES.includes(Number(price))?Number(price):9000;
   const ix=PRACTICE_PRICES.indexOf(chosen),d=PRACTICE_D[ix],sp=PRACTICE_S[ix];
   const word=d===sp?'균형 · 수요량과 공급량이 같아요':d>sp?'초과수요 '+(d-sp)+'개':'초과공급 '+(sp-d)+'개';
   return '<div class="seesawComparison">'+
     '<div class="seesawIntro"><strong>⚖️ 시소로 확인하는 시장 가격</strong><span>가상 시장 자료 · 실제 모찌 거래 결과 아님</span></div>'+
-    seesawQuantityTable(chosen)+
+    seesawQuantityTable(chosen,true,allowPriceClicks)+
     '<div class="seesawColumns"><section class="seesawHalf">'+seesawHTML(chosen)+'</section>'+
     '<section class="seesawHalf card"><h3>📈 그래프에서는 어디일까?</h3>'+
     '<p class="muted" style="font-size:clamp(15px,1.5vw,19px);margin:2px 0 8px">시소에서 선택한 가격이 두 곡선에서 어디인지 확인해 봐요.</p>'+
@@ -792,6 +831,19 @@ function seesawComparisonHTML(price=9000){
     '<div class="seesawLegend"><span>🔵 수요 '+d+'개</span><span>🟠 공급 '+sp+'개</span><strong>'+(d===sp?'⚖ 수요량 = 공급량':'↔ '+word)+'</strong></div></section></div></div>';
 }
 
+/* 공개 순서: 가상 시장 표만 → 균형가격 정답 → 시소 → 시소와 그래프. */
+function stagedSeesawHTML(){
+  const stage=currentSeesawReveal(),selected=classroomSeesawPrice();
+  if(stage===3)return seesawComparisonHTML(selected,isTeacher||demoMode);
+  const intro='<div class="seesawIntro"><strong>⚖️ 표로 시장 가격 알아보기</strong><span>가상 시장 자료 · 실제 모찌 거래 결과 아님</span></div>';
+  const table=seesawQuantityTable(9000,stage>=1,false);
+  if(stage===0)return '<div class="seesawComparison stagedSeesawTable">'+intro+
+    '<div class="seesawPrompt">사려는 양과 팔려는 양이 같아지는 가격은 얼마일까? <span>표에서 직접 찾아보세요.</span></div>'+table+'</div>';
+  const answer='<div class="seesawAnswer"><strong>9,000원</strong> · 수요량 <b>6개</b> = 공급량 <b>6개</b> · <strong>균형가격</strong></div>';
+  if(stage===1)return '<div class="seesawComparison stagedSeesawTable">'+intro+table+answer+'</div>';
+  return '<div class="seesawComparison stagedSeesawTable">'+intro+table+answer+
+    '<div class="stagedSeesawOnly">'+seesawHTML(9000)+'</div></div>';
+}
 function studentPracticeHTML(){
   const completed=room.graphWork?.[pid]||{},kind=completed.demand?.passed?'supply':'demand';
   const draft=room.graphDraft?.[pid]?.[kind]||{};
@@ -819,7 +871,19 @@ function teacherPracticeHTML(){
     '<h3 style="margin-top:14px">가상 자료의 가격·수량 표</h3>'+practiceTable('both')+'</div>';
 }
 function bindSeeSaw(){
-  app.querySelectorAll('[data-seesaw-price]').forEach(b=>b.onclick=()=>{seesawPrice=Number(b.dataset.seesawPrice);if(isTeacher)renderTeacher();else{lastSig='';renderStudent();}});
+  app.querySelectorAll('[data-seesaw-price]').forEach(b=>b.onclick=async()=>{
+    const chosen=Number(b.dataset.seesawPrice);
+    if(!PRACTICE_PRICES.includes(chosen))return;
+    if(currentFlowStep()==='seesaw'){
+      if(!isTeacher||currentSeesawReveal()<3)return;
+      if(demoMode){seesawPrice=chosen;renderTeacher();return;}
+      try{await update(T(),{'presentation/seesawPrice':chosen,'presentation/seesawPriceAt':Date.now()});}
+      catch(e){console.error(e);toast('가격 변경에 실패했어요.');}
+      return;
+    }
+    seesawPrice=chosen;
+    if(isTeacher)renderTeacher();else{lastSig='';renderStudent();}
+  });
 }
 function bindStudentPractice(kind){
   const svg=app.querySelector('.graphStudentScreen svg.practiceChart');
