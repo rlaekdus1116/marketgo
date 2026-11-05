@@ -83,6 +83,18 @@ button{font:inherit;color:inherit;cursor:pointer;touch-action:manipulation}
  .result{padding:6px}.num{padding:4px}
  .data-table th,.data-table td{padding:6px 3px}
 }
+
+.review-table-box{flex:none;background:#fff;border:2px solid var(--line);border-radius:18px;padding:7px 12px;box-shadow:0 3px 0 #eadfe9}
+.review-table{border-collapse:separate;border-spacing:3px;width:100%;table-layout:fixed;color:#302930}
+.review-table th,.review-table td{padding:6px 3px;text-align:center;border:1px solid #c8bcca;border-radius:9px;background:#fff;font-weight:900;font-size:clamp(13px,1.45vw,20px);line-height:1.2}
+.review-table th{width:16%;background:#f6edfb;color:#42324c}
+.review-table .review-demand th{background:#e3f1ff;color:#165d96}
+.review-table .review-supply th{background:#ffecdd;color:#a95221}
+.review-table .review-selected{background:#fae6ac!important;box-shadow:inset 0 0 0 2px #bd8930;color:#2c2630!important}
+.review-table [data-price]{width:100%;border:0;background:transparent;font-weight:900;color:#29242c;font-size:inherit;padding:3px 0}
+.review-table [data-price]:focus-visible{outline:3px solid #7744a5;outline-offset:2px}
+@media(max-width:760px){.review-table-box{padding:5px 3px}.review-table{border-spacing:2px}.review-table th,.review-table td{font-size:clamp(11px,2.75vw,15px);padding:7px 0}.review-table th{width:18%}}
+@media(max-height:650px) and (min-width:761px){.review-table th,.review-table td{padding:3px 2px}.review-table-box{padding:4px 8px}}
 </style>
 </head>
 <body>
