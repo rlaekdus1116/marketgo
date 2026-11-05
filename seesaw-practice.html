@@ -159,8 +159,8 @@ function graph(valuesD,valuesS,selected=null,editing=false){
      a+='<rect x="'+(mid-120)+'" y="'+(y-76)+'" width="240" height="44" rx="15" fill="#7435ba" stroke="#fff" stroke-width="3"/>';
      a+='<text x="'+mid+'" y="'+(y-47)+'" text-anchor="middle" fill="white" font-size="25" font-weight="900">↔ '+label+'</text>';
      a+='<circle cx="'+wx(d)+'" cy="'+y+'" r="13" fill="#2679bd" stroke="white" stroke-width="3"/><circle cx="'+wx(s)+'" cy="'+y+'" r="11" fill="#ce6b30" stroke="white" stroke-width="3"/>';
-     a+='<text x="'+wx(d)+'" y="'+(y+39)+'" font-size="23" font-weight="900" fill="#2679bd" stroke="white" stroke-width="5" paint-order="stroke" text-anchor="middle">D '+d+'</text>';
-     a+='<text x="'+wx(s)+'" y="'+(y+39)+'" font-size="23" font-weight="900" fill="#ce6b30" stroke="white" stroke-width="5" paint-order="stroke" text-anchor="middle">S '+s+'</text>';
+     a+='<text x="'+wx(d)+'" y="'+(y+39)+'" font-size="23" font-weight="900" fill="#2679bd" stroke="white" stroke-width="5" paint-order="stroke" text-anchor="middle">수요 '+d+'개</text>';
+     a+='<text x="'+wx(s)+'" y="'+(y+39)+'" font-size="23" font-weight="900" fill="#ce6b30" stroke="white" stroke-width="5" paint-order="stroke" text-anchor="middle">공급 '+s+'개</text>';
    }else{
      a+='<circle cx="'+wx(d)+'" cy="'+y+'" r="21" fill="#ddf2e5" stroke="#287851" stroke-width="5"/>';
      a+='<rect x="'+(wx(d)-102)+'" y="'+(y-75)+'" width="204" height="44" rx="13" fill="#287851" stroke="white" stroke-width="3"/>';
