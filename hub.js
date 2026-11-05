@@ -179,7 +179,7 @@ function registerStudentPresence(app,room,participantId='') {
     else markActive();
   });
   window.addEventListener('pagehide',()=>{
-    stopped=true;clearInterval(interval);markAway('offline');
+    markAway('offline');stopped=true;clearInterval(interval);
   },{once:true});
 }
 let teacherPresenceStop=null, teacherPresenceTimer=null, teacherPresenceKey='';
