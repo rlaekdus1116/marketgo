@@ -1003,12 +1003,24 @@ function renderTeacher() {
   const exerciseView=isEnd?teacherPracticeHTML():'';
   const teacherEndDetails=isEnd?`<details class="card teacherExtras"><summary>📚 수업 자료 · 거래 결과 · 학생 제출 현황 펼치기</summary>
     ${exerciseView}${stageNav}${resultsView}${teachingStage===1&&!exampleMode?logHTML:''}${presenceHTML}</details>`:'';
-  const teacherEndBody=isEnd?`<div class="teacherSeesawMode">${topbar}${seesawComparisonHTML(seesawPrice)}${teacherEndDetails}</div>`:null;
+  const step=currentFlowStep();
+  const flowControls=isEnd?'<div class="reviewAction">'+
+    (step==='recap'?'<button type="button" class="btn big mint" id="flowToSeesaw">⚖️ 거래 정리 끝 · 시소로 가격 결정 알아보기</button>':
+     step==='seesaw'?'<button type="button" class="btn big mint" id="flowToDrawing">📈 시소 정리 끝 · 수요곡선부터 그리기</button><button type="button" class="btn sky" id="flowBackRecap">◀ 실제 거래 정리 다시 보기</button>':
+     '<button type="button" class="btn sky" id="flowBackSeesaw">◀ 시소 다시 보기</button>')+'</div>':'';
+  const teacherEndBody=isEnd?'<div class="teacherSeesawMode">'+topbar+
+    (step==='recap'?tradeRecapHTML():seesawComparisonHTML(seesawPrice))+
+    flowControls+
+    teacherEndDetails+'</div>':null;
   patchHTML(app, teacherEndBody||`<div class="wrap">${topbar}${main}${resultsView}${presenceHTML}</div>`);
   if (st.phase === 'lobby' && window.QRCode && el('qr') && !el('qr').firstChild) new QRCode(el('qr'), { text: link, width: 200, height: 200, colorDark: '#5B4B57', colorLight: '#ffffff' });
 
   const bind = (id, fn) => { const b = el(id); if (b) b.onclick = fn; };
   bind('names', () => { showNames = !showNames; render(); });
+  bind('flowToSeesaw',()=>switchTradeFlow('seesaw'));
+  bind('flowToDrawing',()=>switchTradeFlow('drawing'));
+  bind('flowBackRecap',()=>switchTradeFlow('recap'));
+  bind('flowBackSeesaw',()=>switchTradeFlow('seesaw'));
   app.querySelectorAll('[data-graph-reveal]').forEach(b=>b.onclick=()=>{graphTeacherReveal=Number(b.dataset.graphReveal);renderTeacher();});
   bindSeeSaw();
   bind('auditCsv',downloadTradeAudit);
@@ -1441,13 +1453,13 @@ function renderStudent() {
     `${st.round}회차 내 카드: ${card.role === 'buyer' ? '🛒' : '🏷️'} ${won(card.limit)}`,
     card.role === 'buyer' ? '🛒' : '🏷️'));
   else if (st.phase === 'closed') maybeAnnounce(`close-${st.round}`, () => isEnd
-    ? announce('그래프 활동 시작!', '표를 보고 수요곡선부터 그려 보세요.', '📈', 1800)
+    ? announce('거래 정리 시간!', '3회차 실제 거래 결과를 먼저 살펴보세요.', '🍡', 1800)
     : announce('그만~~!!', `${st.round}회차 끝! 결과를 확인해 봐`, '🛑'));
   else maybeAnnounce(`${st.phase}-${st.round}`, () => {});
   if (myPair) maybeAnnounce(`deal-${st.round}`, () => announce('거래 성사!!', '🪑 이제 자리에 가서 앉아요!', '🤝', 6000));
 
   // 같은 상태면 다시 그리지 않음 (입력 중인 내용이 날아가지 않게)
-  const sig = JSON.stringify([st.phase, st.round, card, Object.entries(players).map(([id, p]) => [id, p?.name || '']), nameEditorOpen, curSub, !!myPair, partnerSub, claims, editing, isEnd ? (room.recommendations||{})[pid]||null : null, isEnd?room.graphDraft?.[pid]||null:null, isEnd?room.graphWork?.[pid]||null:null]);
+  const sig = JSON.stringify([st.phase, st.round, card, Object.entries(players).map(([id, p]) => [id, p?.name || '']), nameEditorOpen, curSub, !!myPair, partnerSub, claims, editing, isEnd ? (room.recommendations||{})[pid]||null : null, isEnd?room.graphDraft?.[pid]||null:null, isEnd?room.graphWork?.[pid]||null:null, isEnd?currentFlowStep():null]);
   if (sig === lastSig) return;
   lastSig = sig;
   if (sel.r !== st.round) { sel = { r: st.round, partner: '', price: 0 }; editing = false; }
@@ -1466,11 +1478,20 @@ function renderStudent() {
     return;
   }
 
-  if(isEnd && !graphFinished){
+  if(isEnd && currentFlowStep()==='recap'){
+    app.innerHTML='<div class="reviewPage">'+head+tradeRecapHTML()+
+      '<div class="hl lemon center">선생님과 거래 결과를 정리해 보세요. 다음 화면은 선생님이 열어 줘요.</div></div>';
+    bindNameEditor();return;
+  }
+  if(isEnd && currentFlowStep()==='seesaw'){
+    app.innerHTML='<div class="graphFinishedScreen">'+head+seesawComparisonHTML(seesawPrice)+'</div>';
+    bindNameEditor();bindSeeSaw();return;
+  }
+  if(isEnd && currentFlowStep()==='drawing' && !graphFinished){
     app.innerHTML=`<div class="graphStudentScreen">${head}${studentPracticeHTML()}</div>`;
     bindNameEditor();bindStudentPractice(room.graphWork?.[pid]?.demand?.passed?'supply':'demand');return;
   }
-  if(isEnd && graphFinished){
+  if(isEnd && currentFlowStep()==='drawing' && graphFinished){
     app.innerHTML=`<div class="graphFinishedScreen">${head}${seesawComparisonHTML(seesawPrice)}</div>`;
     bindNameEditor();bindSeeSaw();return;
   }
