@@ -162,7 +162,7 @@ button,.btn,.speech,.rule,.title,.card{word-break:keep-all;overflow-wrap:break-w
 .graphFeedback{padding:8px 12px;background:#FFE9DA;border-radius:12px;font-size:clamp(14px,1.2vw,17px)}
 .graphTableHorizontal{display:none}
 .seesawScene{width:100%;max-width:850px;display:block;margin:4px auto;overflow:visible}
-.seesawArm{transform-origin:420px 222px;animation:seesawMove 900ms cubic-bezier(.2,.7,.2,1) both}
+.seesawArm{transform-origin:420px 222px;transform:rotate(var(--tilt));transition:transform 800ms cubic-bezier(.2,.7,.2,1)}
 @keyframes seesawMove{0%{transform:rotate(0deg)}65%{transform:rotate(var(--tilt))}82%{transform:rotate(calc(var(--tilt)*.93))}100%{transform:rotate(var(--tilt))}}
 @media(max-width:700px){
  .graphStudentScreen{padding:5px 7px;gap:4px;min-height:0}
@@ -184,7 +184,7 @@ button,.btn,.speech,.rule,.title,.card{word-break:keep-all;overflow-wrap:break-w
  .graphStudentScreen .card{padding:8px}
  .practiceTable th,.practiceTable td{padding:5px 4px;font-size:15px}
 }
-@media(prefers-reduced-motion:reduce){.seesawArm{animation:none;transform:rotate(var(--tilt))}}
+@media(prefers-reduced-motion:reduce){.seesawArm{transition:none}}
 /* 결과 화면에서는 시소와 그래프를 나란히 보여주며, 이전 손익·가격 제안 화면은 숨깁니다. */
 .seesawComparison{width:100%;max-width:1440px;margin:0 auto;display:flex;flex-direction:column;gap:10px;min-height:0;flex:1}
 .seesawIntro{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:clamp(19px,2.3vw,30px);padding:2px 6px}
@@ -1103,7 +1103,7 @@ function renderTeacher() {
   const teacherEndDetails=isEnd?`<details class="card teacherExtras"><summary>📚 수업 자료 · 거래 결과 · 학생 제출 현황 펼치기</summary>
     ${exerciseView}${stageNav}${resultsView}${teachingStage===1&&!exampleMode?logHTML:''}${presenceHTML}</details>`:'';
   const step=currentFlowStep(),reveal=currentSeesawReveal();
-  const nextText=['정답 공개하기 (9,000원)','시소 공개하기','그래프와 가격 변화 공개하기'];
+  const nextText=['정답 공개하기','시소 공개하기','그래프와 가격 변화 공개하기'];
   const flowControls=isEnd?'<div class="reviewAction">'+
     (step==='recap'?'<button type="button" class="btn big mint" id="flowToSeesaw">📋 거래 정리 끝 · 가상 시장 표 보기</button>':
      step==='seesaw'?(
