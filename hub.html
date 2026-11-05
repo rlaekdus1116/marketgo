@@ -237,6 +237,12 @@ const app = document.getElementById('app'), el = id => document.getElementById(i
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const toast = m => { document.querySelectorAll('.toast').forEach(t => t.remove()); const t = document.createElement('div'); t.className = 'toast pop'; t.textContent = m; document.body.appendChild(t); setTimeout(() => t.remove(), 2400); };
 const base = location.origin + location.pathname.replace(/[^/]*$/, '');
+const classHistoryKey='marketgo_room_class_map_v1';
+const roomClassMap=()=>{try{return JSON.parse(localStorage.getItem(classHistoryKey)||'{}')||{};}catch(e){return {};}};
+const savedRoomClass=c=>roomClassMap()[String(c)]||'';
+const labelForLog=l=>savedRoomClass(l.room)||l.classCode||'미지정';
+function saveRoomClass(room,klass){const m=roomClassMap();m[String(room)]=klass;localStorage.setItem(classHistoryKey,JSON.stringify(m));}
+
 
 /* ===== 3단원 차시 구성 ===== */
 const LESSONS = [
@@ -356,6 +362,7 @@ async function newLessonRoom() {
       localStorage.setItem('marketgo_lesson_room_history',JSON.stringify([...new Set([old,...history])].slice(0,40)));
     }
     localStorage.setItem('marketgo_lesson_room',candidate);
+    saveRoomClass(candidate,localStorage.getItem('marketgo_class_code')||'201');
     // 기존 방과 기록은 유지하되, 종전 학급으로 자동 이동하는 허브 안내만 종료합니다.
     const cur=(await get(H('current'))).val();
     if(cur&&cur.room===old)await remove(H('current'));
@@ -374,8 +381,8 @@ function renderTeacher() {
   if (document.activeElement && ['sheetUrl','classCode','growthRoom'].includes(document.activeElement.id)) return;
   const c = fresh(hub.current) ? hub.current : null;
   const logs = Object.values({...hub.logs,...teacherLogs()}).sort((a,b)=>(b.at||0)-(a.at||0));
-  const classCode=localStorage.getItem('marketgo_class_code')||'201';
   const sessionRoom=localStorage.getItem('marketgo_lesson_room')||c?.room||'';
+  const classCode=savedRoomClass(sessionRoom)||localStorage.getItem('marketgo_class_code')||'201';
   const card = x => {
     if (x.ext) return `<div class="appc"><div class="ae">${x.emoji}</div><div class="an">${esc(x.title)}</div><div class="ad">${esc(x.desc)}</div><a class="btn sky" href="${x.ext}" target="_blank" rel="noopener">열기 ↗</a></div>`;
     const a = APPS[x.id], now = c && c.app === x.id;
@@ -394,7 +401,7 @@ function renderTeacher() {
       <button class="btn sky" id="setRoom">방 코드 저장</button>
       <button class="btn mint" id="newLessonRoom">✨ 새 수업 시작 · 새 코드 발급</button>
       <p class="muted" style="font-size:15px">새 코드에서는 모든 활동이 처음부터 시작돼요. 이전 방의 기록은 삭제하지 않아요.</p>
-      <div class="muted" style="font-size:15px">이전 수업 코드: ${(() => { try { return (JSON.parse(localStorage.getItem('marketgo_lesson_room_history')||'[]')||[]).map(esc).join(' · ')||'없음'; } catch(e) { return '없음'; } })()}</div>
+      <p class="muted" style="font-size:15px">예전 반을 잘못 저장했다면 아래 기록 표의 <b>학급 수정</b>으로 정정할 수 있어요.</p><div class="muted" style="font-size:15px">이전 수업 코드: ${(() => { try { return (JSON.parse(localStorage.getItem('marketgo_lesson_room_history')||'[]')||[]).map(esc).join(' · ')||'없음'; } catch(e) { return '없음'; } })()}</div>
       <button class="btn mint" id="growthExport">⬇️ 학생별 사고 성장 기록 CSV 다운로드</button>
       <p class="muted">예언 → 이유 → 그래프 비교 → 모찌 거래 가격과 근거를 합친 기록입니다. 학급과 방 번호는 교사 브라우저에만 저장돼요. 학생 이름이 중복되면 서로 다른 학생의 기록이 합쳐질 수 있으니 주의하세요.</p>
     </div>
@@ -408,8 +415,8 @@ function renderTeacher() {
     <div class="lessons">${LESSONS.map(L => `<div class="lesson"><h3><span class="lnum">${L.n}</span>${esc(L.name)}</h3><div class="apps">${L.apps.map(card).join('')}</div></div>`).join('')}</div>
     <div class="card" style="margin-top:16px"><h3>📊 기록 <span class="muted" style="font-size:16px">활동이 끝나면(최종 결과 화면) 자동으로 쌓여요</span></h3>
       ${logs.length ? `<table class="logs"><tr><th>날짜</th><th>학급</th><th>활동</th><th>방</th><th>학생</th><th>저장 위치</th><th></th></tr>
-        ${logs.map(l => `<tr><td>${esc(l.date)}</td><td>${esc(l.classCode||'미지정')}</td><td>${(APPS[l.app] || {}).emoji || ''} ${esc(l.title)}${l.extra ? ` <span class="muted">${esc(l.extra)}</span>` : ''}</td><td>${esc(l.room)}</td><td>${(l.rows || []).length}명</td><td>${l.sent ? '외부 시트' : l.classCode ? '이 브라우저' : '기존 서버 기록'}</td>
-          <td style="white-space:nowrap"><button class="btn sm sky" data-view="${esc(l.key)}">보기</button><button class="btn sm lemon" data-csv="${esc(l.key)}">엑셀(CSV)</button><button class="btn sm peach" data-remove-log="${esc(l.key)}">삭제</button>${hub.sheetUrl ? `<button class="btn sm" data-send="${esc(l.key)}">시트로 다시 보내기</button>` : ''}</td></tr>`).join('')}</table>
+        ${logs.map(l => `<tr><td>${esc(l.date)}</td><td>${esc(labelForLog(l))}</td><td>${(APPS[l.app] || {}).emoji || ''} ${esc(l.title)}${l.extra ? ` <span class="muted">${esc(l.extra)}</span>` : ''}</td><td>${esc(l.room)}</td><td>${(l.rows || []).length}명</td><td>${l.sent ? '외부 시트' : l.classCode ? '이 브라우저' : '기존 서버 기록'}</td>
+          <td style="white-space:nowrap"><button class="btn sm sky" data-edit-class="${esc(l.room)}">학급 수정</button><button class="btn sm sky" data-view="${esc(l.key)}">보기</button><button class="btn sm lemon" data-csv="${esc(l.key)}">엑셀(CSV)</button><button class="btn sm peach" data-remove-log="${esc(l.key)}">삭제</button>${hub.sheetUrl ? `<button class="btn sm" data-send="${esc(l.key)}">시트로 다시 보내기</button>` : ''}</td></tr>`).join('')}</table>
         <button class="btn mint" id="csvAll">⬇️ 전체 기록 엑셀(CSV)로 받기</button><button class="btn peach" id="clearLogs">전체 기록 삭제</button>` : '<div class="muted">아직 기록이 없어요</div>'}
     </div>
     <div class="card"><h3>🔐 서버 기록 삭제</h3>
@@ -434,8 +441,8 @@ function renderTeacher() {
   el('gsCode').textContent = GS_CODE;
   if (window.QRCode && el('qr') && !el('qr').firstChild) new QRCode(el('qr'), { text: base + 'hub.html', width: 190, height: 190, colorDark: '#5B4B57', colorLight: '#ffffff' });
   wire(logs);
-  el('saveClass').onclick=()=>{const v=el('classCode').value.trim();if(!/^\d{3,4}$/.test(v))return toast('201처럼 학급 코드를 입력해 주세요');localStorage.setItem('marketgo_class_code',v);toast('학급 '+v+' 저장');};
-  el('setRoom').onclick=()=>{const v=el('growthRoom').value.trim();if(!/^\d{4}$/.test(v))return toast('방 코드 네 자리를 입력하세요');localStorage.setItem('marketgo_lesson_room',v);toast('방 코드 '+v+' 저장');};
+  el('saveClass').onclick=()=>{const v=el('classCode').value.trim();if(!/^\d{3,4}$/.test(v))return toast('201처럼 학급 코드를 입력해 주세요');localStorage.setItem('marketgo_class_code',v);const room=(el('growthRoom').value||sessionRoom).trim();if(/^\d{4}$/.test(room))saveRoomClass(room,v);toast('학급 '+v+' 저장');renderTeacher();};
+  el('setRoom').onclick=()=>{const v=el('growthRoom').value.trim();if(!/^\d{4}$/.test(v))return toast('방 코드 네 자리를 입력하세요');localStorage.setItem('marketgo_lesson_room',v);if(!savedRoomClass(v))saveRoomClass(v,el('classCode').value.trim()||'201');toast('방 코드 '+v+' 저장');renderTeacher();};
   el('newLessonRoom').onclick=newLessonRoom;
   el('growthExport').onclick=downloadGrowthCSV;
   el('eraseRoom').onclick=eraseLessonRoom;
@@ -454,14 +461,14 @@ function doPost(e) {
 const csvOf = list => {
   const q = v => { const s = String(v ?? ''); return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
   const lines = [];
-  list.forEach(l => { lines.push(['날짜', '학급', '활동', '방 코드', ...(l.cols || [])].map(q).join(',')); (l.rows || []).forEach(r => lines.push([l.date, l.classCode||'미지정', l.title + (l.extra ? ' ' + l.extra : ''), l.room, ...r].map(q).join(','))); lines.push(''); });
+  list.forEach(l => { lines.push(['날짜', '학급', '활동', '방 코드', ...(l.cols || [])].map(q).join(',')); (l.rows || []).forEach(r => lines.push([l.date, labelForLog(l), l.title + (l.extra ? ' ' + l.extra : ''), l.room, ...r].map(q).join(','))); lines.push(''); });
   return '﻿' + lines.join('\r\n');
 };
 const download = (name, text) => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], { type: 'text/csv;charset=utf-8' })); a.download = name; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500); };
 const post = (url, l) => fetch(url, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ key: l.key, sheet: l.title, date: l.date, room: l.room, cols: l.cols || [], rows: l.rows || [] }) });
 async function downloadGrowthCSV(){
   const c=(document.getElementById('growthRoom')?.value||localStorage.getItem('marketgo_lesson_room')||'').trim();
-  const klass=(document.getElementById('classCode')?.value||localStorage.getItem('marketgo_class_code')||'201').trim();
+  const klass=(savedRoomClass(c)||document.getElementById('classCode')?.value||localStorage.getItem('marketgo_class_code')||'201').trim();
   if(!/^\d{4}$/.test(c))return toast('네 자리 방 코드를 입력해 주세요.');
   if(!/^\d{3,4}$/.test(klass))return toast('201처럼 학급 코드를 입력해 주세요.');
   localStorage.setItem('marketgo_lesson_room',c);
@@ -559,6 +566,15 @@ async function eraseLessonRoom(){
 }
 function wire(logs) {
   const byKey = k => logs.find(l => l.key === k);
+  document.querySelectorAll('[data-edit-class]').forEach(b=>b.onclick=()=>{
+    const room=b.dataset.editClass,old=savedRoomClass(room)||logs.find(l=>String(l.room)===room)?.classCode||'201';
+    const next=prompt('방 '+room+'의 학급 (예: 201 = 2학년 1반)',old);
+    if(next===null)return;
+    const klass=next.trim();if(!/^\d{3,4}$/.test(klass))return toast('201처럼 3~4자리 학급 코드를 입력해 주세요.');
+    saveRoomClass(room,klass);
+    if(room===localStorage.getItem('marketgo_lesson_room'))localStorage.setItem('marketgo_class_code',klass);
+    toast('방 '+room+'을 '+klass+'반으로 정정했어요. 기존 학생 기록은 유지돼요.');renderTeacher();
+  });
   document.querySelectorAll('[data-csv]').forEach(b => b.onclick = () => { const l = byKey(b.dataset.csv); download(`${l.date.slice(0, 10)}_${l.title}_${l.room}.csv`, csvOf([l])); });
   if (el('csvAll')) el('csvAll').onclick = () => download(`3단원_전체기록_${new Date().toISOString().slice(0, 10)}.csv`, csvOf(logs.slice().reverse()));
   document.querySelectorAll('[data-remove-log]').forEach(b=>b.onclick=async()=>{
