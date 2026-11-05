@@ -510,10 +510,9 @@ function rankingHTML(st,showNames){
 const PRACTICE_PRICES=[3000,6000,9000,12000,15000];
 const PRACTICE_D=[10,8,6,4,2];
 const PRACTICE_S=[2,4,6,8,10];
-let graphTeacherMode=true, graphTeacherReveal=0, seesawPrice=9000;
+let graphTeacherReveal=0, seesawPrice=9000;
 const graphSelectedRow={demand:0,supply:0};
 const graphVals=k=>k==='demand'?PRACTICE_D:PRACTICE_S;
-const graphDb=(id,path='')=>ref(db,'rooms/trade_'+code+'/graph'+(path?'': '')+(path?'/'+path:''));
 // 숫자 표를 읽고 수량(가로축)과 가격(세로축)을 직접 대응시키도록 설계합니다.
 function practiceTable(kind='both',selectRow=-1){
   return `<div style="overflow-x:auto"><table class="practiceTable"><thead><tr><th>가격</th>${kind!=='supply'?'<th>수요량</th>':''}${kind!=='demand'?'<th>공급량</th>':''}</tr></thead><tbody>${PRACTICE_PRICES.map((p,i)=>`<tr class="${selectRow===i?'selected':''}"><td>${selectRow>=0?`<button type="button" data-selectrow="${i}" title="이 가격에 점 찍기">${won(p)}</button>`:won(p)}</td>${kind!=='supply'?`<td>${PRACTICE_D[i]}개</td>`:''}${kind!=='demand'?`<td>${PRACTICE_S[i]}개</td>`:''}</tr>`).join('')}</tbody></table></div>`;
@@ -545,7 +544,7 @@ function practiceGraph(demand={},supply={},activeKind='',activeRow=0){
 }
 function seesawHTML(price=9000){
   const idx=PRACTICE_PRICES.indexOf(+price),j=Math.max(0,idx);
-  const d=PRACTICE_D[j],sp=PRACTICE_S[j],tilt=-(d-sp)*2.0;
+  const d=PRACTICE_D[j],sp=PRACTICE_S[j],tilt=(d-sp)*2.0;
   const state=d===sp?'⚖️ 수요량과 공급량이 같아서 시소가 수평이에요. 이 가격은 균형가격이에요.':d>sp?'🛒 사려는 양이 더 많아 수요자 쪽이 아래로! 가격이 올라갈 압력이 생겨요.':'🏷️ 팔려는 양이 더 많아 공급자 쪽이 아래로! 가격이 내려갈 압력이 생겨요.';
   const human=(x,color,label)=>`<g transform="translate(${x} 150)"><circle cx="0" cy="0" r="28" fill="#FBD6B5" stroke="#805C58" stroke-width="3"/><path d="M-31 49 Q0 12 31 49 L34 68 L-34 68 Z" fill="${color}" stroke="#805C58" stroke-width="3"/><circle cx="-9" cy="-3" r="3.5" fill="#493D36"/><circle cx="9" cy="-3" r="3.5" fill="#493D36"/><path d="M-7 13 Q0 20 7 13" fill="none" stroke="#493D36" stroke-width="3"/><text x="0" y="-51" font-size="22" text-anchor="middle" fill="#5B4B57" font-weight="bold">${label}</text></g>`;
   return `<div class="card" style="text-align:center"><h3>🎢 수요자와 공급자가 타는 시소</h3><p class="muted">가격을 누르면 시소가 움직여요. 아래로 기울어진 쪽의 수량이 더 많아요.</p><div class="chips" style="justify-content:center">${PRACTICE_PRICES.map(p=>`<button type="button" class="btn sm ${p===PRACTICE_PRICES[j]?'lemon':'sky'}" data-seesaw-price="${p}">${won(p)}</button>`).join('')}</div>
@@ -755,11 +754,14 @@ function renderTeacher() {
   const sourceSwitch='<div class="card center"><div class="chips" style="justify-content:center"><button class="btn '+(!exampleMode?'lemon':'sky')+'" id="sourceActual">우리 반 실제 결과</button><button class="btn '+(exampleMode?'lemon':'sky')+'" id="sourceExample">일반적인 시장 예시</button></div></div>';
   const resultsView=isEnd ? (teachingStage===1 ? sourceSwitch+(exampleMode?exampleResultsHTML():table+rankingHTML(st,showNames))+(!exampleMode?questionsHTML(cols)+proposalHTML:'') : teachingStage===2 ? equilibriumLessonHTML() : scenarioHTML()) : table;
   const stageNav=isEnd?`<div class="card center"><div class="chips" style="justify-content:center"><button class="btn ${teachingStage===1?'lemon':'sky'}" data-stage="1">① 거래 결과</button><button class="btn ${teachingStage===2?'lemon':'sky'}" data-stage="2">② 균형 가격·거래량</button><button class="btn ${teachingStage===3?'lemon':'sky'}" data-stage="3">③ 가격을 바꿔 보면?</button></div><div class="chips" style="justify-content:center"><button class="btn mint" id="goPriceLab">다음 단계로 넘어가기</button></div></div>`:'';
-  patchHTML(app, `<div class="wrap">${topbar}${main}${isEnd?stageNav:''}${resultsView}${isEnd&&teachingStage===1&&!exampleMode?logHTML:''}${presenceHTML}</div>`);
+  const exerciseView=isEnd?teacherPracticeHTML():'';
+  patchHTML(app, `<div class="wrap">${topbar}${main}${exerciseView}${isEnd?stageNav:''}${resultsView}${isEnd&&teachingStage===1&&!exampleMode?logHTML:''}${presenceHTML}</div>`);
   if (st.phase === 'lobby' && window.QRCode && el('qr') && !el('qr').firstChild) new QRCode(el('qr'), { text: link, width: 200, height: 200, colorDark: '#5B4B57', colorLight: '#ffffff' });
 
   const bind = (id, fn) => { const b = el(id); if (b) b.onclick = fn; };
   bind('names', () => { showNames = !showNames; render(); });
+  app.querySelectorAll('[data-graph-reveal]').forEach(b=>b.onclick=()=>{graphTeacherReveal=Number(b.dataset.graphReveal);renderTeacher();});
+  bindSeeSaw();
   bind('auditCsv',downloadTradeAudit);
   bind('backStep', async()=>{
     if(st.phase==='lobby'){location.href='hub.html?t=1';return;}
@@ -1181,6 +1183,7 @@ function renderStudent() {
   const claims = card ? Object.entries(subs).filter(([id, s]) => s.partner === pid && cards[id] && cards[id].role !== card.role
     && !(curSub && curSub.partner === id)) : [];   // 이미 내가 고른 친구는 위 '가격이 달라요'에서 보여 줌
   const isEnd = st.phase === 'closed' && st.round >= ROUNDS;
+  const graphFinished=!!room.graphWork?.[pid]?.demand?.passed&&!!room.graphWork?.[pid]?.supply?.passed;
   if (myPair) editing = false;   // 성사되면 잠금
 
   // 안내문
@@ -1195,7 +1198,7 @@ function renderStudent() {
   if (myPair) maybeAnnounce(`deal-${st.round}`, () => announce('거래 성사!!', '🪑 이제 자리에 가서 앉아요!', '🤝', 6000));
 
   // 같은 상태면 다시 그리지 않음 (입력 중인 내용이 날아가지 않게)
-  const sig = JSON.stringify([st.phase, st.round, card, Object.entries(players).map(([id, p]) => [id, p?.name || '']), nameEditorOpen, curSub, !!myPair, partnerSub, claims, editing, isEnd ? (room.recommendations||{})[pid]||null : null]);
+  const sig = JSON.stringify([st.phase, st.round, card, Object.entries(players).map(([id, p]) => [id, p?.name || '']), nameEditorOpen, curSub, !!myPair, partnerSub, claims, editing, isEnd ? (room.recommendations||{})[pid]||null : null, isEnd?room.graphDraft?.[pid]||null:null, isEnd?room.graphWork?.[pid]||null:null]);
   if (sig === lastSig) return;
   lastSig = sig;
   if (sel.r !== st.round) { sel = { r: st.round, partner: '', price: 0 }; editing = false; }
@@ -1212,6 +1215,11 @@ function renderStudent() {
       : '이번 회차가 끝나면<br>다음 회차부터 카드를 받아요 ⏳'}</div></div></div>`;
     bindNameEditor();
     return;
+  }
+
+  if(isEnd && !graphFinished){
+    app.innerHTML=`<div class="s-wrap">${head}${studentPracticeHTML()}</div>`;
+    bindNameEditor();bindStudentPractice(room.graphWork?.[pid]?.demand?.passed?'supply':'demand');return;
   }
 
   const cardHTML = !card ? '' : card.role === 'buyer'
@@ -1289,6 +1297,7 @@ function renderStudent() {
 
     body += lastResult();
   } else if (isEnd) {
+    body += seesawHTML(seesawPrice);
     const rec=(room.recommendations||{})[pid]||{};
     body += `<div class="stage"><div class="bigEmoji bounce">🎉</div><div class="title">수고했어요!</div>
       <div class="doneBox">내 총 손익<br><span style="font-size:56px">${signed(totalProfit(st))}</span><br><span style="font-size:22px">성사된 거래 ${tradeRanking(st).rows.find(x=>x.id===pid)?.deals||0}건</span></div></div>${lastResult()}
@@ -1305,6 +1314,7 @@ function renderStudent() {
 
   app.innerHTML = `<div class="s-wrap">${head}${body}</div>`;
   bindNameEditor();
+  if(isEnd)bindSeeSaw();
 
   // 가격 입력하면 손익 미리 보기
   const showPL = () => {
