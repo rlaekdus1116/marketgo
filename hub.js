@@ -126,7 +126,7 @@ export function hubSeen(app, room) {
 }
 
 
-/* 학생 이탈 감지: 앱이 백그라운드에 있을 때는 20초 유예.
+/* 학생 이탈 감지: 앱이 백그라운드에 있을 때는 10초 유예.
    브라우저 종료·네트워크 단절은 onDisconnect를 사용. 이탈 '의심'일 뿐 고의 탈출의 증거는 아닙니다. */
 const PRESENCE_GRACE_MS = 10000;
 const presenceKey=(app,room)=>String(app)+'_'+String(room);
@@ -143,7 +143,7 @@ function registerStudentPresence(app,room,participantId='') {
   const who=()=>getStudentName()||name;
   const attrs=()=>({name:who(),...(participantId?{participantId:String(participantId)}:{})});
   let stopped=false, activeSaving=false, activeAgain=false;
-  // 같은 앱에서 20초 이상 화면을 벗어났다가 복귀한 경우만 1회로 셉니다.
+  // 같은 앱에서 10초 이상 화면을 벗어났다가 복귀한 경우만 1회로 셉니다.
   // Firebase 트랜잭션으로 누적해 새로고침·재접속 후에도 횟수가 유지됩니다.
   async function markActive(){
     if(stopped)return;
@@ -217,7 +217,7 @@ function monitorStudentPresence(app,room) {
       const returns=Math.max(0,Number(p.returnCount)||0),previous=lastCount.get(id)??returns;
       if(status==='active'){
         if(alerted.has(id)||returns>previous){
-          showNotice(p.name,'✅ 돌아왔어요 · 누적 '+returns+'회 (20초 이상 이탈)');
+          showNotice(p.name,'✅ 돌아왔어요 · 누적 '+returns+'회 (10초 이상 이탈)');
           alerted.delete(id);
         }
         seenIds.add(id);
