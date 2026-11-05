@@ -181,7 +181,7 @@ let nameSaving = false;
 let chartRound = 0;             // 그래프: 0 = 전체, 1~3 = 회차만
 let resultChartRoom='';
 let chartMode = 'sd';           // 'sd' 수요·공급 그래프 / 'bar' 가격별 건수 / 'table' 표
-let scenarioPrice=9000, revealScenario=false;
+let scenarioPrice=9000, revealScenario=false, scenarioStep=0;
 let teachingStage=1, exampleMode=false;
 let showEq = demoMode;             // 균형 가격 표시 (정답이라 기본은 숨김)
 const ROUND_COLORS = ['#3B8FD9', '#E8803E', '#2FA67A'];   // 1·2·3회차 (색각이상 검사 통과, 범례·숫자와 함께 사용)
@@ -620,7 +620,9 @@ function renderTeacher() {
   });
   bind('eq', () => { showEq = !showEq; render(); });
   bind('scenarioReveal',async()=>{revealScenario=!revealScenario;if(!demoMode)await update(T(),{'presentation/reveal':revealScenario,'presentation/at':Date.now()});render();});
-  app.querySelectorAll('[data-scenario]').forEach(b=>b.onclick=async()=>{scenarioPrice=Number(b.dataset.scenario);revealScenario=false;if(!demoMode)await update(T(),{'presentation/price':scenarioPrice,'presentation/reveal':false,'presentation/at':Date.now()});render();});
+  bind('scenarioNext',()=>{scenarioStep=Math.min(4,scenarioStep+1);revealScenario=false;render();});
+  bind('scenarioPrev',()=>{scenarioStep=Math.max(0,scenarioStep-1);revealScenario=false;render();});
+  app.querySelectorAll('[data-scenario]').forEach(b=>b.onclick=async()=>{scenarioPrice=Number(b.dataset.scenario);revealScenario=false;scenarioStep=0;if(!demoMode)await update(T(),{'presentation/price':scenarioPrice,'presentation/reveal':false,'presentation/at':Date.now()});render();});
   app.querySelectorAll('[data-stage]').forEach(b=>b.onclick=async()=>{teachingStage=Number(b.dataset.stage);if(!demoMode)await update(T(),{'presentation/stage':teachingStage,'presentation/at':Date.now()});render();});
   bind('sourceActual',async()=>{exampleMode=false;if(!demoMode)await update(T(),{'presentation/source':'actual','presentation/at':Date.now()});render();});
   bind('sourceExample',async()=>{exampleMode=true;if(!demoMode)await update(T(),{'presentation/source':'example','presentation/at':Date.now()});render();});
@@ -891,28 +893,30 @@ function scenarioChart(price){
  '<text x="'+(W-R)+'" y="'+(H-10)+'" fill="#5B4B57" text-anchor="end" font-size="19">수량(개)</text></svg>';
 }
 function scenarioHTML(){
- const cases={9000:{d:15,s:15},15000:{d:10,s:20},3000:{d:20,s:10}};
- const v=cases[scenarioPrice],eq=v.d===v.s,diff=Math.abs(v.d-v.s);
- const label=eq?'수요량과 공급량이 같아요':v.d>v.s?'초과 수요':'초과 공급';
- const explain=eq?'사려는 양과 팔려는 양이 같아요.':v.d>v.s?
-   '사려는 사람이 더 많아 상품이 부족해요. 가격이 올라가면 수요량은 감소하고 공급량은 증가해요.':
-   '팔려는 사람이 더 많아 상품이 남아요. 가격이 내려가면 수요량은 증가하고 공급량은 감소해요.';
- const question=eq?'사려는 양과 팔려는 양이 같으면 어떤 상태일까요?':v.d>v.s?
-   '사려는 사람이 더 많아요. 가격은 어느 방향으로 움직일까요?':
-   '팔려는 사람이 더 많아요. 가격은 어느 방향으로 움직일까요?';
- return '<div class="card" id="priceChangeLesson"><h3>가격을 바꿔 보면?</h3><div class="muted" style="font-size:17px">별도의 가상 시장 자료</div>'+
-   '<div class="chips" style="margin:12px 0">'+[9000,15000,3000].map(p=>
-     '<button class="btn '+(scenarioPrice===p?'lemon':'sky')+'" data-scenario="'+p+'">'+won(p)+'</button>').join('')+'</div>'+
-   '<div class="hl lemon center" style="font-size:22px;margin-bottom:14px">모찌 가격 <b>'+won(scenarioPrice)+'</b>'+(scenarioPrice===9000?' · 현재 판매가':'')+'</div>'+
-   '<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px">'+
-   '<div class="hl sky center" style="margin:0"><div style="font-size:40px">'+v.d+'명</div>이 가격이면 사려는 사람</div>'+
-   '<div class="hl peach center" style="margin:0"><div style="font-size:40px">'+v.s+'명</div>이 가격이면 팔려는 사람</div></div>'+
-   scenarioChart(scenarioPrice)+'<div class="q"><p>'+question+'</p></div>'+
-   '<button class="btn mint" id="scenarioReveal">'+(revealScenario?'설명 숨기기':'정답 확인')+'</button>'+
-   (revealScenario?'<div class="hl mint" style="font-size:22px"><b>'+label+'</b>'+(eq?'':' · '+diff+'개 차이')+
-     '<div style="margin-top:6px">'+explain+'</div></div>':'')+
-   '</div>';
+  const cases={9000:{d:15,s:15},15000:{d:10,s:20},3000:{d:20,s:10}};
+  const v=cases[scenarioPrice],eq=v.d===v.s,diff=Math.abs(v.d-v.s);
+  const label=eq?'수요량과 공급량이 같아요':v.d>v.s?'초과수요':'초과공급';
+  const questionSteps=[
+    {q:'① 이 가격이라면 사려고 하는 사람은 몇 명일까요?',a:v.d+'명 (수요량 '+v.d+'개)'},
+    {q:'② 이 가격이라면 팔려고 하는 사람은 몇 명일까요?',a:v.s+'명 (공급량 '+v.s+'개)'},
+    {q:'③ 사려는 양과 팔려는 양의 차이는 얼마일까요?',a:diff+'개 차이'},
+    {q:'④ 그러면 못 팔거나 못 사는 사람은 몇 명일까요?',a:eq?'0명 · 모두 거래할 수 있어요':v.s>v.d?diff+'명은 팔 상대를 찾기 어려워요 (1인 1개 가정)':diff+'명은 사고 싶어도 물건이 부족해요 (1인 1개 가정)'},
+    {q:eq?'⑤ 균형 상태에서는 가격을 꼭 바꿔야 할까요?':v.s>v.d?'⑤ 물건을 팔고 돈을 벌려면 판매자는 가격을 어떻게 해야 할까요?':'⑤ 물건이 부족하다면 가격은 어떻게 변하려 할까요?',
+     a:eq?'수요량과 공급량이 같으므로 가격을 바꿀 압력이 작아요.':v.s>v.d?'가격을 낮춰야 해요. 가격이 내려가면 수요량이 늘고 공급량은 줄어들어 남는 물건이 줄어들 수 있어요.':'가격이 올라갈 압력이 생겨요. 가격이 오르면 수요량이 줄고 공급량이 늘어 부족한 물건이 줄어들 수 있어요.'}
+  ];
+  const item=questionSteps[scenarioStep]||questionSteps[0];
+  return '<div class="card" id="priceChangeLesson"><h3>가격이 너무 높다면 왜 못 팔까?</h3><div class="muted" style="font-size:17px">학급 실제 거래가 아닌 별도 가상 시장 · 한 사람당 한 개씩 거래한다고 가정</div>'+
+    '<div class="chips" style="margin:12px 0">'+[15000,9000,3000].map(p=>
+      '<button class="btn '+(scenarioPrice===p?'lemon':'sky')+'" data-scenario="'+p+'">'+won(p)+'</button>').join('')+'</div>'+
+    '<div class="hl lemon center" style="font-size:24px;margin-bottom:14px">모찌 가격 <b>'+won(scenarioPrice)+'</b> · '+label+'</div>'+
+    scenarioChart(scenarioPrice)+
+    '<div class="q" style="margin:16px 0"><p>'+item.q+'</p></div>'+
+    '<div class="center"><button class="btn mint" id="scenarioReveal">'+(revealScenario?'정답 숨기기':'정답 확인')+'</button></div>'+
+    (revealScenario?'<div class="hl mint" style="font-size:23px;text-align:center;margin:12px 0"><b>'+item.a+'</b></div>':'')+
+    '<div class="center" style="gap:10px;display:flex;justify-content:center;flex-wrap:wrap"><button class="btn sky" id="scenarioPrev" '+(scenarioStep===0?'disabled':'')+'>◀ 이전 질문</button><span class="pill">질문 '+(scenarioStep+1)+' / 5</span><button class="btn peach" id="scenarioNext" '+(scenarioStep===4?'disabled':'')+'>다음 질문 ▶</button></div>'+
+    '<div class="muted center" style="margin-top:10px">가격이 높을수록 공급량은 많고 수요량은 적어져 팔지 못하는 물건이 생길 수 있어요. 실제 거래량은 수요량과 공급량 중 작은 값 이하예요.</div></div>';
 }
+
 /* ========== 결과표 정리 질문 (마지막 회차 후 선생님 화면) ========== */
 function questionsHTML(cols) {
   const all = cols.flatMap(r => pairsOf(r));
