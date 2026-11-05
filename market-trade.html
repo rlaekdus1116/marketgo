@@ -413,7 +413,7 @@ function tick() {
   }
 }
 
-/* 다른 화면으로 20초 이상 이동했다 돌아온 누적 횟수 */
+/* 다른 화면으로 10초 이상 이동했다 돌아온 누적 횟수 */
 function tradeReturnCounts(){
   const byId={};
   for(const p of Object.values(tradePresence||{})){
@@ -425,7 +425,7 @@ function tradeReturnCounts(){
 }
 /* 선생님 다운로드: 학생별 실제 거래 실패 사유를 포함한 현장 진단 CSV */
 function downloadTradeAudit(){
- const data=[['회차','학생','역할','카드 가격','상대','입력 거래 가격','결과','실패 원인','총 이익(해당 회차)','마지막 제출 시각','수업 화면 이탈·복귀 횟수(20초 이상)']];
+ const data=[['회차','학생','역할','카드 가격','상대','입력 거래 가격','결과','실패 원인','총 이익(해당 회차)','마지막 제출 시각','수업 화면 이탈·복귀 횟수(10초 이상)']];
  const returnCounts=tradeReturnCounts();
  for(let r=1;r<=ROUNDS;r++){
    const pack=(room.rounds||{})[r]||{},cards=pack.cards||{},subs=pack.subs||{};
@@ -513,7 +513,7 @@ function renderTeacher() {
 
   const durCtl = `<span class="dur">⏱ 회차 시간 <button class="btn sm" data-dur="-30">−30초</button><b>${fmt(dur)}</b><button class="btn sm" data-dur="30">+30초</button><input id="durInput" type="number" min="10" max="1800" step="10" value="${dur}" style="width:84px">초 <button class="btn sm mint" id="durSave">설정</button></span>`;
   const returnCounts=tradeReturnCounts();
-  const presenceHTML='<div class="card"><h3>🚪 수업 화면 이탈·복귀 기록</h3><p class="muted">20초 이상 화면을 떠났다가 돌아온 누적 횟수예요. 새로고침이나 일시적인 연결 문제도 포함될 수 있어요.</p>'+
+  const presenceHTML='<div class="card"><h3>🚪 수업 화면 이탈·복귀 기록</h3><p class="muted">10초 이상 화면을 떠났다가 돌아온 누적 횟수예요. 새로고침이나 일시적인 연결 문제도 포함될 수 있어요.</p>'+
     '<div class="chips">'+(pids.map(id=>'<span class="chip soft">'+nm(id)+' · '+(returnCounts[id]||0)+'회</span>').join('')||'<span class="muted">학생 없음</span>')+'</div></div>';
   const topbar = `<div class="topbar">
     <span class="logo">🍡 고@바 모찌 시장</span>
