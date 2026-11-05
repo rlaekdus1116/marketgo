@@ -453,7 +453,7 @@ function renderTeacher() {
       <input id="classCode" class="field" maxlength="4" inputmode="numeric" value="${esc(classCode)}" style="width:130px">
       <button class="btn mint" id="saveClass">학급 저장</button>
       <label for="growthRoom">전체 활동에서 사용할 네 자리 방 코드</label>
-      <input id="growthRoom" class="field" maxlength="4" inputmode="numeric" value="${esc(sessionRoom)}" style="width:130px">
+      <input id="growthRoom" class="field" maxlength="4" inputmode="numeric" value="${esc(roomChoice?.room||sessionRoom)}" style="width:130px">
       <button class="btn sky" id="setRoom">🔎 코드 확인 · 사용하기</button>
       ${roomChoice ? `<div class="hl peach" id="roomResetPanel" style="margin:12px 0"><b>⚠️ 이전에 사용한 ${esc(roomChoice.room)}번 방입니다.</b><p>이전 수업 데이터가 남아 있어요. 같은 코드를 새로 쓰려면 초기화하세요.</p><button class="btn peach" id="resetChosenRoom">🔄 초기화하고 이 코드로 새 수업 시작</button><button class="btn mint" id="resumeChosenRoom">▶ 기존 수업 이어하기</button><button class="btn" id="cancelChosenRoom">취소</button><p class="muted">초기화하면 해당 코드의 실시간 학생 답안·거래·진도·이탈 기록이 지워집니다. 허브에 저장된 교사 로그는 유지됩니다. 중요한 기록은 CSV로 미리 받아 두세요.</p></div>` : ''}
       <button class="btn mint" id="newLessonRoom">✨ 새 수업 시작 · 새 코드 발급</button>
