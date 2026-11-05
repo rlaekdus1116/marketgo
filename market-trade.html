@@ -225,6 +225,22 @@ button,.btn,.speech,.rule,.title,.card{word-break:keep-all;overflow-wrap:break-w
 .teacherSeesawMode .seesawLegend strong{background:#752FC5;color:#fff;border-radius:12px;padding:8px 14px;font-size:clamp(18px,1.8vw,26px)}
 .graphFinishedScreen .seesawLegend strong{background:#752FC5;color:#fff;border-radius:12px;padding:8px 14px;font-size:clamp(18px,1.8vw,26px)}
 @media(max-width:760px){.teacherSeesawMode .seesawColumns{min-height:0}}
+
+.classReview{width:100%;max-width:1370px;margin:auto;display:flex;flex-direction:column;gap:12px}
+.classReview .card{margin:0}
+.classReview h2{font-size:clamp(24px,3vw,35px);margin:0}
+.classReview p{font-size:clamp(16px,1.7vw,22px);margin:6px 0}
+.reviewSummary{font-size:clamp(22px,2.5vw,30px);font-weight:bold;background:#eee2f9;padding:12px;border-radius:15px;text-align:center}
+.reviewTradeTable{border-collapse:separate;border-spacing:4px;width:100%;font-size:clamp(15px,1.6vw,22px)}
+.reviewTradeTable th,.reviewTradeTable td{border:1px solid #c4b5c4;padding:9px 6px;border-radius:9px;text-align:center;background:#fff;color:#322b34}
+.reviewTradeTable thead th{background:#fcecc5}
+.reviewQuestionGrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.reviewQuestionGrid h3{font-size:clamp(21px,2.25vw,29px)}
+.reviewEvidence{background:#ece2fa;padding:13px;border-radius:12px;font-size:clamp(18px,1.9vw,26px);font-weight:700}
+.reviewNote{background:#fff0ce;border-radius:12px;padding:11px;font-size:clamp(14px,1.4vw,18px)}
+.reviewAction{display:flex;justify-content:center;gap:12px;align-items:center;flex-wrap:wrap;margin:12px 0}
+.reviewPage{max-width:1480px;margin:auto;padding:12px;display:flex;flex-direction:column;gap:12px}
+@media(max-width:760px){.reviewQuestionGrid{grid-template-columns:1fr}.reviewTradeTable{font-size:12px;border-spacing:2px}.reviewTradeTable th,.reviewTradeTable td{padding:5px 2px}.reviewPage{padding:6px}}
 </style>
 </head>
 <body>
@@ -581,6 +597,53 @@ function rankingHTML(st,showNames){
   '<div class="hl sky center"><div style="font-size:25px">🍀 '+(bottom.length>1?'공동 ':'')+'거래꼴찌</div><div style="font-size:39px">'+bottom[0].deals+'건</div>'+people(bottom)+'</div></div>';
  if(profitLeaders.length)body+='<div class="hl mint center" style="margin-top:12px"><div style="font-size:25px">💰 '+(profitLeaders.length>1?'공동 ':'')+'수익왕</div><div style="font-size:39px">'+signed(profitLeaders[0].profit)+'</div>'+people(profitLeaders)+'</div>';
  return body+'</div>';
+}
+
+
+/* 수업 흐름: 3회차 실제 거래 정리 → 시소·그래프 → 곡선 그리기 */
+let demoFlowStep='recap';
+function currentFlowStep(){
+  const p=demoMode?demoFlowStep:room?.presentation?.flowStep;
+  return ['recap','seesaw','drawing'].includes(p)?p:'recap';
+}
+function actualTradeRecap(){
+  const rounds=[],high={attempts:0,success:0},low={attempts:0,success:0};let count=0,priceSum=0;
+  for(let r=1;r<=ROUNDS;r++){
+    const cards=cardsOf(r),sub=room?.rounds?.[r]?.subs||{},pairs=pairsOf(r);
+    const ids=new Set(pairs.flatMap(p=>[p.a,p.b]));
+    const amounts=pairs.map(p=>Number(p.price)).filter(Number.isFinite);
+    count+=amounts.length;priceSum+=amounts.reduce((a,b)=>a+b,0);
+    rounds.push({r,deals:pairs.length,unmatched:Math.max(0,Object.keys(cards).length-ids.size),
+      avg:amounts.length?Math.round(amounts.reduce((a,b)=>a+b,0)/amounts.length):null,
+      min:amounts.length?Math.min(...amounts):null,max:amounts.length?Math.max(...amounts):null});
+    for(const [id,x] of Object.entries(sub)){
+      const c=cards[id],p=Number(x?.price);
+      if(!c||!x?.partner||x.partner==='none'||!Number.isFinite(p)||p<=0)continue;
+      const group=c.role==='seller'&&p>=12000?high:c.role==='buyer'&&p<=6000?low:null;
+      if(!group)continue;
+      group.attempts++;
+      if(ids.has(id)&&pairs.some(a=>(a.a===id||a.b===id)&&Number(a.price)===p))group.success++;
+    }
+  }
+  return {rounds,high,low,count,avg:count?Math.round(priceSum/count):null};
+}
+function tradeRecapHTML(){
+  const r=actualTradeRecap(),cash=n=>n===null?'—':won(n);
+  const evidence=(x)=>x.attempts?('시도 <b>'+x.attempts+'건</b> / 성사 <b>'+x.success+'건</b> / 미성사 <b>'+(x.attempts-x.success)+'건</b>'):'이번 수업에서 해당 가격에 거래를 시도한 기록이 없어요.';
+  return '<section class="classReview"><div class="card"><h2>🍡 3회차 거래 결과 정리</h2><p>우리 반 실제 거래 결과를 먼저 살펴보자!</p>'+
+    '<div class="reviewSummary">성사된 거래 '+r.count+'건 · 평균 거래가격 '+cash(r.avg)+'</div>'+
+    '<table class="reviewTradeTable"><thead><tr><th>회차</th><th>성사된 거래</th><th>평균 거래가격</th><th>거래가격 범위</th><th>거래 못한 학생</th></tr></thead><tbody>'+
+    r.rounds.map(x=>'<tr><th>'+x.r+'회차</th><td>'+x.deals+'건</td><td>'+cash(x.avg)+'</td><td>'+(x.min===null?'—':cash(x.min)+' ~ '+cash(x.max))+'</td><td>'+x.unmatched+'명</td></tr>').join('')+'</tbody></table></div>'+
+    '<div class="reviewQuestionGrid">'+
+      '<div class="card"><h3>🏷️ 무조건 비싸게 팔면 팔릴까?</h3><p>12,000원 이상에 팔려고 입력한 경우</p><div class="reviewEvidence">'+evidence(r.high)+'</div><p>항상 팔리는지 생각해 보자.</p></div>'+
+      '<div class="card"><h3>🛒 무조건 싸게 사려고 하면 살 수 있을까?</h3><p>6,000원 이하에 사려고 입력한 경우</p><div class="reviewEvidence">'+evidence(r.low)+'</div><p>항상 살 수 있는지 생각해 보자.</p></div>'+
+    '</div><p class="reviewNote">※ 가격대는 실제 기록을 비교하기 위한 예시 기준이야. 거래 실패에는 상대 선택이나 가격 입력 불일치도 영향을 주므로 가격만을 원인으로 단정하지 않아.</p></section>';
+}
+async function switchTradeFlow(next){
+  if(!['recap','seesaw','drawing'].includes(next))return;
+  if(demoMode){demoFlowStep=next;renderTeacher();return;}
+  try{await update(T(),{'presentation/flowStep':next,'presentation/flowChangedAt':Date.now()});}
+  catch(e){console.error(e);toast('화면 전환 실패. 인터넷 연결을 확인해 주세요.');}
 }
 
 /* 교과서 연습용 가상 시장 표. 실제 모찌 거래 기록을 수요량/공급량으로 오인하지 않습니다. */
