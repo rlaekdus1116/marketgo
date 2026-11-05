@@ -836,13 +836,13 @@ function stagedSeesawHTML(){
   const stage=currentSeesawReveal(),selected=classroomSeesawPrice();
   if(stage===3)return seesawComparisonHTML(selected,isTeacher||demoMode);
   const intro='<div class="seesawIntro"><strong>⚖️ 표로 시장 가격 알아보기</strong><span>가상 시장 자료 · 실제 모찌 거래 결과 아님</span></div>';
-  const table=seesawQuantityTable(9000,stage>=1,false);
+  const table=seesawQuantityTable(stage>=2?selected:9000,stage>=1,stage>=2&&isTeacher);
   if(stage===0)return '<div class="seesawComparison stagedSeesawTable">'+intro+
     '<div class="seesawPrompt">사려는 양과 팔려는 양이 같아지는 가격은 얼마일까? <span>표에서 직접 찾아보세요.</span></div>'+table+'</div>';
   const answer='<div class="seesawAnswer"><strong>9,000원</strong> · 수요량 <b>6개</b> = 공급량 <b>6개</b> · <strong>균형가격</strong></div>';
   if(stage===1)return '<div class="seesawComparison stagedSeesawTable">'+intro+table+answer+'</div>';
   return '<div class="seesawComparison stagedSeesawTable">'+intro+table+answer+
-    '<div class="stagedSeesawOnly">'+seesawHTML(9000)+'</div></div>';
+    '<div class="stagedSeesawOnly">'+seesawHTML(selected)+'</div></div>';
 }
 function studentPracticeHTML(){
   const completed=room.graphWork?.[pid]||{},kind=completed.demand?.passed?'supply':'demand';
@@ -875,7 +875,7 @@ function bindSeeSaw(){
     const chosen=Number(b.dataset.seesawPrice);
     if(!PRACTICE_PRICES.includes(chosen))return;
     if(currentFlowStep()==='seesaw'){
-      if(!isTeacher||currentSeesawReveal()<3)return;
+      if(!isTeacher||currentSeesawReveal()<2)return;
       if(demoMode){seesawPrice=chosen;renderTeacher();return;}
       try{await update(T(),{'presentation/seesawPrice':chosen,'presentation/seesawPriceAt':Date.now()});}
       catch(e){console.error(e);toast('가격 변경에 실패했어요.');}
