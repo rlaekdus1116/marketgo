@@ -640,30 +640,86 @@ function bindSeeSaw(){
   app.querySelectorAll('[data-seesaw-price]').forEach(b=>b.onclick=()=>{seesawPrice=Number(b.dataset.seesawPrice);if(isTeacher)renderTeacher();else{lastSig='';renderStudent();}});
 }
 function bindStudentPractice(kind){
-  app.querySelectorAll('[data-selectrow]').forEach(b=>b.onclick=()=>{graphSelectedRow[kind]=+b.dataset.selectrow;lastSig='';renderStudent();});
-  app.querySelectorAll('[data-pickqty]').forEach(b=>{
-    const choose=async()=>{
-      b.style.opacity='.3';
-      const index=graphSelectedRow[kind],q=Number(b.dataset.pickqty);
-      if(!Number.isInteger(q)||q<0||q>12)return;
-      graphSelectedRow[kind]=Math.min(4,index+1);
-      try{await set(ref(db,'rooms/trade_'+code+'/graphDraft/'+pid+'/'+kind+'/'+index),q);}
-      catch(e){console.error(e);toast('점 저장 실패. 인터넷을 확인해 주세요.');}
+  const svg=app.querySelector('.graphStudentScreen svg.practiceChart');
+  if(svg){
+    let dragging=null,dragQuantity=null;
+    const preview=svg.querySelector('#graphDragPreview');
+    const x=q=>100+49*q,y=p=>458-360*p/15000;
+    const pos=e=>{
+      const m=svg.getScreenCTM();
+      if(m&&m.inverse&&svg.createSVGPoint){
+        const p=svg.createSVGPoint();p.x=e.clientX;p.y=e.clientY;
+        return p.matrixTransform(m.inverse());
+      }
+      const r=svg.getBoundingClientRect();
+      return {x:(e.clientX-r.left)*790/r.width,y:(e.clientY-r.top)*535/r.height};
     };
-    b.onclick=choose;
-    b.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();choose();}};
-  });
+    const getQuantity=e=>Math.max(0,Math.min(12,Math.round((pos(e).x-100)/49)));
+    const drawAt=(row,q)=>{
+      if(!preview)return;
+      preview.setAttribute('visibility','visible');
+      preview.setAttribute('cx',String(x(q)));
+      preview.setAttribute('cy',String(y(PRACTICE_PRICES[row])));
+      preview.setAttribute('aria-label','선택한 수량 '+q+'개');
+    };
+    svg.addEventListener('pointerdown',e=>{
+      const hit=e.target.closest('[data-editrow]');
+      if(!hit||e.button>0)return;
+      e.preventDefault();
+      dragging=Number(hit.dataset.editrow);
+      dragQuantity=getQuantity(e);
+      drawAt(dragging,dragQuantity);
+      try{svg.setPointerCapture(e.pointerId);}catch(error){}
+    });
+    svg.addEventListener('pointermove',e=>{
+      if(dragging===null)return;
+      e.preventDefault();
+      dragQuantity=getQuantity(e);
+      drawAt(dragging,dragQuantity);
+    });
+    async function finishDrag(e,save=true){
+      if(dragging===null)return;
+      const row=dragging,q=dragQuantity;
+      dragging=null;dragQuantity=null;
+      if(preview)preview.setAttribute('visibility','hidden');
+      try{if(svg.hasPointerCapture(e.pointerId))svg.releasePointerCapture(e.pointerId);}catch(error){}
+      if(!save||!Number.isInteger(q))return;
+      // 다른 가격의 점은 그대로 두고 현재 가격의 수량 위치만 갱신합니다.
+      try{
+        await set(ref(db,'rooms/trade_'+code+'/graphDraft/'+pid+'/'+kind+'/'+row),q);
+      }catch(error){console.error(error);toast('점 저장에 실패했어요. 다시 시도해 주세요.');}
+    }
+    svg.addEventListener('pointerup',e=>finishDrag(e,true));
+    svg.addEventListener('pointercancel',e=>finishDrag(e,false));
+    svg.querySelectorAll('[data-editrow]').forEach(hit=>{
+      hit.addEventListener('keydown',async e=>{
+        if(!['ArrowRight','ArrowLeft','Enter',' '].includes(e.key))return;
+        e.preventDefault();
+        const row=Number(hit.dataset.editrow),current=Number(room.graphDraft?.[pid]?.[kind]?.[row]??0);
+        const q=e.key==='ArrowRight'?Math.min(12,current+1):e.key==='ArrowLeft'?Math.max(0,current-1):current;
+        try{await set(ref(db,'rooms/trade_'+code+'/graphDraft/'+pid+'/'+kind+'/'+row),q);}catch(error){toast('점 저장 실패');}
+      });
+    });
+  }
+  if(el('clearCurve'))el('clearCurve').onclick=async()=>{
+    if(!confirm('지금 그리고 있는 '+(kind==='demand'?'수요곡선':'공급곡선')+'의 점 5개를 모두 지울까요?'))return;
+    const button=el('clearCurve');button.disabled=true;
+    try{
+      await set(ref(db,'rooms/trade_'+code+'/graphDraft/'+pid+'/'+kind),null);
+      toast('지웠어요. 그래프를 다시 그려 보세요.');
+    }catch(error){console.error(error);toast('다 지우기에 실패했어요. 연결을 확인해 주세요.');button.disabled=false;}
+  };
   if(el('submitCurve'))el('submitCurve').onclick=async()=>{
     const draft=room.graphDraft?.[pid]?.[kind]||{},target=graphVals(kind);
-    if(PRACTICE_PRICES.some((_,i)=>draft[i]===undefined))return toast('표의 다섯 가격을 모두 그래프에 표시해 주세요.');
+    if(PRACTICE_PRICES.some((_,i)=>draft[i]===undefined||draft[i]===null))return toast('표의 다섯 가격을 모두 그래프에 표시해 주세요.');
     const correct=target.filter((v,i)=>Number(draft[i])===v).length;
     const prev=room.graphWork?.[pid]?.[kind]||{},passed=correct===5;
     const btn=el('submitCurve');btn.disabled=true;
     try{
       await set(ref(db,'rooms/trade_'+code+'/graphWork/'+pid+'/'+kind),{passed,correct,tries:(Number(prev.tries)||0)+1,points:target.map((_,i)=>Number(draft[i])),at:Date.now()});
-      if(passed){graphSelectedRow.supply=0;toast(kind==='demand'?'수요곡선 완성! 이제 같은 그래프에 공급곡선을 그려요.':'두 곡선을 완성했어요! 시소로 균형을 확인해 봐요.');}
+      if(passed)toast(kind==='demand'?'수요곡선 완성! 이제 같은 좌표평면에 공급곡선을 그려요.':'두 곡선을 완성했어요! 시소로 균형을 확인해 봐요.');
       else{toast(correct+'개 정답이에요. 틀린 점을 다시 고쳐 보세요.');btn.disabled=false;}
-    }catch(e){console.error(e);toast('제출 실패. 연결을 확인해 주세요.');btn.disabled=false;}
+    }catch(error){console.error(error);toast('제출 실패. 연결을 확인해 주세요.');btn.disabled=false;}
   };
 }
 
@@ -1260,7 +1316,7 @@ function renderStudent() {
   }
 
   if(isEnd && !graphFinished){
-    app.innerHTML=`<div class="s-wrap">${head}${studentPracticeHTML()}</div>`;
+    app.innerHTML=`<div class="graphStudentScreen">${head}${studentPracticeHTML()}</div>`;
     bindNameEditor();bindStudentPractice(room.graphWork?.[pid]?.demand?.passed?'supply':'demand');return;
   }
 
