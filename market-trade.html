@@ -185,6 +185,33 @@ button,.btn,.speech,.rule,.title,.card{word-break:keep-all;overflow-wrap:break-w
  .practiceTable th,.practiceTable td{padding:5px 4px;font-size:15px}
 }
 @media(prefers-reduced-motion:reduce){.seesawArm{animation:none;transform:rotate(var(--tilt))}}
+/* 결과 화면에서는 시소와 그래프를 나란히 보여주며, 이전 손익·가격 제안 화면은 숨깁니다. */
+.seesawComparison{width:100%;max-width:1440px;margin:0 auto;display:flex;flex-direction:column;gap:10px;min-height:0;flex:1}
+.seesawIntro{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:clamp(19px,2.3vw,30px);padding:2px 6px}
+.seesawIntro span{font-size:clamp(13px,1.3vw,17px);color:#645567}
+.seesawColumns{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:12px;min-height:0;flex:1;align-items:stretch}
+.seesawHalf{min-width:0;min-height:0;display:flex;flex-direction:column}
+.seesawHalf>.card{flex:1;min-height:0;margin:0;padding:14px;box-shadow:none}
+.seesawHalf>h3,.seesawHalf>.card>h3{font-size:clamp(21px,2vw,27px)}
+.seesawHalf .seesawScene{max-width:100%;height:auto;max-height:38vh;flex:1;min-height:120px}
+.seesawHalf .btn.sm{font-size:clamp(14px,1.2vw,18px);padding:8px 11px;margin:3px}
+.seesawHalf .hl{margin-top:8px;padding:9px 11px}
+.seesawGraphArea{flex:1;min-height:0;display:flex;justify-content:center;align-items:center}
+.seesawGraphArea .practiceChartWrap{width:100%;min-height:0;height:auto;max-height:100%;padding:2px;display:flex;justify-content:center}
+.seesawGraphArea .practiceChart{height:auto;max-height:53vh}
+.seesawStat{background:#F8F1FF;border-radius:12px;padding:9px;font-size:clamp(14px,1.55vw,21px);display:flex;gap:9px;justify-content:space-around;flex-wrap:wrap}
+.seesawLegend{display:flex;gap:10px;justify-content:center;align-items:center;flex-wrap:wrap;padding:7px 0;font-size:clamp(14px,1.35vw,19px)}
+.seesawLegend strong{color:#7845AB}
+.graphFinishedScreen{height:100vh;height:100dvh;overflow:hidden;display:flex;flex-direction:column;gap:8px;padding:10px 14px;max-width:none}
+.graphFinishedScreen .card{margin:0}
+.graphFinishedScreen .s-top{flex-shrink:0}
+@media(max-width:760px){
+ .seesawIntro{flex-direction:column;align-items:flex-start;gap:1px}
+ .seesawColumns{grid-template-columns:1fr;grid-template-rows:auto auto}
+ .graphFinishedScreen{height:auto;min-height:100dvh;overflow:visible}
+ .seesawHalf .seesawScene{max-height:240px}
+ .seesawGraphArea .practiceChart{max-height:340px}
+}
 </style>
 </head>
 <body>
@@ -558,7 +585,7 @@ function practiceTable(kind='both',selectRow=-1){
     (kind!=='supply'?'<tr><th>수요</th>'+PRACTICE_D.map(v=>'<td>'+v+'</td>').join('')+'</tr>':'')+
     (kind!=='demand'?'<tr><th>공급</th>'+PRACTICE_S.map(v=>'<td>'+v+'</td>').join('')+'</tr>':'')+'</tbody></table></div>';
 }
-function practiceGraph(demand={},supply={},activeKind='',activeRow=0){
+function practiceGraph(demand={},supply={},activeKind='',activeRow=0,highlightPrice=null){
   const x=q=>100+49*q,y=p=>458-360*p/15000,axisX=700;
   let body='';
   for(let q=0;q<=12;q++){
@@ -574,6 +601,22 @@ function practiceGraph(demand={},supply={},activeKind='',activeRow=0){
     return path+pp.map(a=>'<circle class="'+(active?'graphPick':'')+'" data-point-row="'+(active?a.i:'')+'" cx="'+x(+a.q)+'" cy="'+y(a.p)+'" r="13" fill="'+color+'" stroke="white" stroke-width="3"/>').join('');
   };
   body+=plot(demand,'#2F72B7',activeKind==='demand')+plot(supply,'#BF6230',activeKind==='supply');
+  if(highlightPrice!==null && PRACTICE_PRICES.includes(Number(highlightPrice))){
+    const index=PRACTICE_PRICES.indexOf(Number(highlightPrice));
+    const d=PRACTICE_D[index],sp=PRACTICE_S[index],yp=y(PRACTICE_PRICES[index]);
+    const xD=x(d),xS=x(sp),xMin=Math.min(xD,xS),xMax=Math.max(xD,xS);
+    // 현재 가격선과 두 곡선의 수요량/공급량 위치를 함께 읽을 수 있게 합니다.
+    body+='<rect x="100" y="'+(yp-13)+'" width="600" height="26" rx="8" fill="#F6E49C" opacity=".42" pointer-events="none"/>';
+    body+='<line x1="100" y1="'+yp+'" x2="'+(xMax+10)+'" y2="'+yp+'" stroke="#7845AB" stroke-width="4" stroke-dasharray="8 7" pointer-events="none"/>';
+    body+='<line x1="'+xD+'" y1="'+yp+'" x2="'+xD+'" y2="458" stroke="#2F72B7" stroke-width="3" stroke-dasharray="5 6" pointer-events="none"/>';
+    body+='<line x1="'+xS+'" y1="'+yp+'" x2="'+xS+'" y2="458" stroke="#BF6230" stroke-width="3" stroke-dasharray="5 6" pointer-events="none"/>';
+    if(d!==sp)body+='<line x1="'+xMin+'" y1="'+yp+'" x2="'+xMax+'" y2="'+yp+'" stroke="#7845AB" stroke-width="8" stroke-linecap="round" pointer-events="none"/>';
+    if(d===sp)body+='<circle cx="'+xD+'" cy="'+yp+'" r="20" fill="#F2DFFF" stroke="#75439F" stroke-width="5" pointer-events="none"/>';
+    else body+='<circle cx="'+xD+'" cy="'+yp+'" r="16" fill="#D6EDFF" stroke="#2F72B7" stroke-width="5" pointer-events="none"/><circle cx="'+xS+'" cy="'+yp+'" r="16" fill="#FFE4CF" stroke="#BF6230" stroke-width="5" pointer-events="none"/>';
+    body+='<text x="'+(d===sp?xD:xD)+'" y="'+(yp-22)+'" text-anchor="middle" fill="#2F72B7" stroke="#fff" stroke-width="5" paint-order="stroke" font-size="25" font-weight="bold" pointer-events="none">'+(d===sp?'수요=공급': '수요 '+d)+'</text>';
+    if(d!==sp)body+='<text x="'+xS+'" y="'+(yp+43)+'" text-anchor="middle" fill="#BF6230" stroke="#fff" stroke-width="5" paint-order="stroke" font-size="25" font-weight="bold" pointer-events="none">공급 '+sp+'</text>';
+    body+='<text x="700" y="'+(Math.max(105,yp-20))+'" text-anchor="end" fill="#7845AB" font-size="23" font-weight="bold" stroke="white" stroke-width="4" paint-order="stroke" pointer-events="none">선택 가격</text>';
+  }
   if(activeKind){
     // 모든 가격 행은 직접 탭/드래그하여 점을 찍거나 수정할 수 있습니다.
     for(let i=0;i<PRACTICE_PRICES.length;i++){
@@ -605,6 +648,21 @@ function seesawHTML(price=9000){
     <div class="rule" style="font-size:clamp(19px,3vw,27px)">${won(PRACTICE_PRICES[j])} · 🛒 수요량 <b>${d}개</b> / 🏷️ 공급량 <b>${sp}개</b></div>
     <div class="hl ${d===sp?'mint':d>sp?'sky':'peach'}" style="font-size:clamp(17px,2.5vw,22px)">${state}</div></div>`;
 }
+/* 모찌 시장과 구별되는 연습용 가상 시장: 시소 + 두 곡선의 대응점을 나란히 표시 */
+function seesawComparisonHTML(price=9000){
+  const chosen=PRACTICE_PRICES.includes(Number(price))?Number(price):9000;
+  const ix=PRACTICE_PRICES.indexOf(chosen),d=PRACTICE_D[ix],sp=PRACTICE_S[ix];
+  const word=d===sp?'균형 · 수요량과 공급량이 같아요':d>sp?'초과수요 '+(d-sp)+'개':'초과공급 '+(sp-d)+'개';
+  return '<div class="seesawComparison">'+
+    '<div class="seesawIntro"><strong>⚖️ 시소로 확인하는 시장 가격</strong><span>가상 시장 자료 · 실제 모찌 거래 결과 아님</span></div>'+
+    '<div class="seesawColumns"><section class="seesawHalf">'+seesawHTML(chosen)+'</section>'+
+    '<section class="seesawHalf card"><h3>📈 그래프에서는 어디일까?</h3>'+
+    '<p class="muted" style="font-size:clamp(15px,1.5vw,19px);margin:2px 0 8px">시소에서 선택한 가격이 두 곡선에서 어디인지 확인해 봐요.</p>'+
+    '<div class="seesawStat">가격 <b>'+won(chosen)+'</b> · <span style="color:#2F72B7">수요량 <b>'+d+'개</b></span> · <span style="color:#BF6230">공급량 <b>'+sp+'개</b></span></div>'+
+    '<div class="seesawGraphArea">'+practiceGraph(PRACTICE_D,PRACTICE_S,'',0,chosen)+'</div>'+
+    '<div class="seesawLegend"><span>🔵 수요곡선 D</span><span>🟠 공급곡선 S</span><strong>'+word+'</strong></div></section></div></div>';
+}
+
 function studentPracticeHTML(){
   const completed=room.graphWork?.[pid]||{},kind=completed.demand?.passed?'supply':'demand';
   const draft=room.graphDraft?.[pid]?.[kind]||{};
