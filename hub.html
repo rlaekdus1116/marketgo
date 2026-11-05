@@ -561,6 +561,15 @@ async function downloadGrowthCSV(){
     }
     const trade=rooms.trade,tradePlayers=trade.players||{};
     for(const p of Object.values(tradePlayers))find(p.name,'trade');
+    // 별도 가상 표로 작성한 수요·공급곡선 결과를 학생별 활동 기록에 포함합니다.
+    for(const [id,work] of Object.entries(trade.graphWork||{})){
+      const student=find(tradePlayers[id]?.name,'trade');
+      if(!student)continue;
+      student.graphDemand=work?.demand?.passed?'완료':work?.demand?.tries?'재도전 중':'미제출';
+      student.graphSupply=work?.supply?.passed?'완료':work?.supply?.tries?'재도전 중':'미제출';
+      student.graphDemandTries=work?.demand?.tries||0;
+      student.graphSupplyTries=work?.supply?.tries||0;
+    }
     const seenPresence=new Set();
     for(const entry of Object.values(presenceRecords)){
       const person=entry?.participantId?tradePlayers[entry.participantId]:null;
@@ -611,13 +620,13 @@ async function downloadGrowthCSV(){
     for(const [id,data] of Object.entries(poll.votes||{})){
       const p=find(pollPlayers[id]?.name,'poll');if(p)p.vote=data.choice||'';
     }
-    const header=['학급','기록 내려받은 날짜','방 코드','이름','수요 예언값(상품1)','수요 예언 이유(상품1)','수요 그래프 비교(상품1)','수요 예언값(상품2)','수요 예언 이유(상품2)','수요 그래프 비교(상품2)','공급 예언값','공급 예언 이유','공급 그래프 비교','시장 가격 결정 최초 투표','새로 제안한 모찌 가격(원)','가격 제안 근거','모찌 거래 가격(회차별)','모찌 거래 손익(회차별)','모찌 시장 전체 결과','시장 가격 최초 생각','독립서술(초과 수요)','독립서술(초과 공급)','균형 가격·거래량 설명','답안 피드백','수정서술(초과 수요)','수정서술(초과 공급)','균형 가격·거래량 수정','서술 성찰','교사 평가','참여 활동','고디바 모찌 화면 이탈·복귀 횟수(10초 이상)'];
+    const header=['학급','기록 내려받은 날짜','방 코드','이름','수요 예언값(상품1)','수요 예언 이유(상품1)','수요 그래프 비교(상품1)','수요 예언값(상품2)','수요 예언 이유(상품2)','수요 그래프 비교(상품2)','공급 예언값','공급 예언 이유','공급 그래프 비교','시장 가격 결정 최초 투표','새로 제안한 모찌 가격(원)','가격 제안 근거','모찌 거래 가격(회차별)','모찌 거래 손익(회차별)','모찌 시장 전체 결과','시장 가격 최초 생각','독립서술(초과 수요)','독립서술(초과 공급)','균형 가격·거래량 설명','답안 피드백','수정서술(초과 수요)','수정서술(초과 공급)','균형 가격·거래량 수정','서술 성찰','교사 평가','참여 활동','고디바 모찌 화면 이탈·복귀 횟수(10초 이상)','수요곡선 그리기','수요곡선 도전 횟수','공급곡선 그리기','공급곡선 도전 횟수'];
     const date=new Date().toLocaleDateString('sv-SE');
     const rows=Array.from(byName.values()).sort((a,b)=>a.name.localeCompare(b.name,'ko')).map(p=>[
       klass,date,c,p.name,p.dPredict1||'',p.dReason1||'',p.dReflect1||'',
       p.dPredict2||'',p.dReason2||'',p.dReflect2||'',
       p.sPredict1||'',p.sReason1||'',p.sReflect1||'',
-      p.vote||'',p.price||'',p.reason||'',(p.tradePrices||[]).join(' / '),(p.tradeProfits||[]).join(' / '),p.tradeSummary||'',p.labBase||'',p.labFirst||'',p.labFirstHigh||'',p.labEq||'',p.labFeedback||'',p.labRevised||'',p.labRevisedHigh||'',p.labEqRevised||'',p.labReflection||'',p.labScore??'',Array.from(p.stages).join(' / '),p.returnCount||0
+      p.vote||'',p.price||'',p.reason||'',(p.tradePrices||[]).join(' / '),(p.tradeProfits||[]).join(' / '),p.tradeSummary||'',p.labBase||'',p.labFirst||'',p.labFirstHigh||'',p.labEq||'',p.labFeedback||'',p.labRevised||'',p.labRevisedHigh||'',p.labEqRevised||'',p.labReflection||'',p.labScore??'',Array.from(p.stages).join(' / '),p.returnCount||0,p.graphDemand||'미제출',p.graphDemandTries||0,p.graphSupply||'미제출',p.graphSupplyTries||0
     ]);
     if(!rows.length)return toast('해당 방에 학생 기록이 없어요.');
     const quote=v=>{const t=String(v??'');const safe=/^[=+\-@]/.test(t)?"'"+t:t;return '"'+safe.replace(/"/g,'""')+'"';};
