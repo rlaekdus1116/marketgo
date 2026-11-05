@@ -1102,13 +1102,18 @@ function renderTeacher() {
   const exerciseView=isEnd?teacherPracticeHTML():'';
   const teacherEndDetails=isEnd?`<details class="card teacherExtras"><summary>📚 수업 자료 · 거래 결과 · 학생 제출 현황 펼치기</summary>
     ${exerciseView}${stageNav}${resultsView}${teachingStage===1&&!exampleMode?logHTML:''}${presenceHTML}</details>`:'';
-  const step=currentFlowStep();
+  const step=currentFlowStep(),reveal=currentSeesawReveal();
+  const nextText=['정답 공개하기 (9,000원)','시소 공개하기','그래프와 가격 변화 공개하기'];
   const flowControls=isEnd?'<div class="reviewAction">'+
-    (step==='recap'?'<button type="button" class="btn big mint" id="flowToSeesaw">⚖️ 거래 정리 끝 · 시소로 가격 결정 알아보기</button>':
-     step==='seesaw'?'<button type="button" class="btn big mint" id="flowToDrawing">📈 시소 정리 끝 · 수요곡선부터 그리기</button><button type="button" class="btn sky" id="flowBackRecap">◀ 실제 거래 정리 다시 보기</button>':
+    (step==='recap'?'<button type="button" class="btn big mint" id="flowToSeesaw">📋 거래 정리 끝 · 가상 시장 표 보기</button>':
+     step==='seesaw'?(
+       (reveal<3?'<button type="button" class="btn big mint" id="revealSeesawNext">'+nextText[reveal]+' ▶</button>':
+         '<button type="button" class="btn big mint" id="flowToDrawing">📈 이제 수요곡선부터 그리기</button>')+
+       (reveal>0?'<button type="button" class="btn sky" id="revealSeesawPrev">◀ 이전 설명</button>':'')+
+       '<button type="button" class="btn sky" id="flowBackRecap">◀ 실제 거래 정리</button>'):
      '<button type="button" class="btn sky" id="flowBackSeesaw">◀ 시소 다시 보기</button>')+'</div>':'';
   const teacherEndBody=isEnd?'<div class="teacherSeesawMode">'+topbar+
-    (step==='recap'?tradeRecapHTML():seesawComparisonHTML(seesawPrice))+
+    (step==='recap'?tradeRecapHTML():step==='seesaw'?stagedSeesawHTML():seesawComparisonHTML(seesawPrice))+
     flowControls+
     teacherEndDetails+'</div>':null;
   patchHTML(app, teacherEndBody||`<div class="wrap">${topbar}${main}${resultsView}${presenceHTML}</div>`);
@@ -1117,6 +1122,8 @@ function renderTeacher() {
   const bind = (id, fn) => { const b = el(id); if (b) b.onclick = fn; };
   bind('names', () => { showNames = !showNames; render(); });
   bind('flowToSeesaw',()=>switchTradeFlow('seesaw'));
+  bind('revealSeesawNext',()=>setSeesawReveal(currentSeesawReveal()+1));
+  bind('revealSeesawPrev',()=>setSeesawReveal(currentSeesawReveal()-1));
   bind('flowToDrawing',()=>switchTradeFlow('drawing'));
   bind('flowBackRecap',()=>switchTradeFlow('recap'));
   bind('flowBackSeesaw',()=>switchTradeFlow('seesaw'));
@@ -1558,7 +1565,7 @@ function renderStudent() {
   if (myPair) maybeAnnounce(`deal-${st.round}`, () => announce('거래 성사!!', '🪑 이제 자리에 가서 앉아요!', '🤝', 6000));
 
   // 같은 상태면 다시 그리지 않음 (입력 중인 내용이 날아가지 않게)
-  const sig = JSON.stringify([st.phase, st.round, card, Object.entries(players).map(([id, p]) => [id, p?.name || '']), nameEditorOpen, curSub, !!myPair, partnerSub, claims, editing, isEnd ? (room.recommendations||{})[pid]||null : null, isEnd?room.graphDraft?.[pid]||null:null, isEnd?room.graphWork?.[pid]||null:null, isEnd?currentFlowStep():null]);
+  const sig = JSON.stringify([st.phase, st.round, card, Object.entries(players).map(([id, p]) => [id, p?.name || '']), nameEditorOpen, curSub, !!myPair, partnerSub, claims, editing, isEnd ? (room.recommendations||{})[pid]||null : null, isEnd?room.graphDraft?.[pid]||null:null, isEnd?room.graphWork?.[pid]||null:null, isEnd?currentFlowStep():null, isEnd?currentSeesawReveal():null, isEnd?room.presentation?.seesawPrice:null]);
   if (sig === lastSig) return;
   lastSig = sig;
   if (sel.r !== st.round) { sel = { r: st.round, partner: '', price: 0 }; editing = false; }
@@ -1583,7 +1590,7 @@ function renderStudent() {
     bindNameEditor();return;
   }
   if(isEnd && currentFlowStep()==='seesaw'){
-    app.innerHTML='<div class="graphFinishedScreen">'+head+seesawComparisonHTML(seesawPrice)+'</div>';
+    app.innerHTML='<div class="graphFinishedScreen">'+head+stagedSeesawHTML()+'</div>';
     bindNameEditor();bindSeeSaw();return;
   }
   if(isEnd && currentFlowStep()==='drawing' && !graphFinished){
