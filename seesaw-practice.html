@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#fff8f3">
+<title>수요·공급 시소와 그래프 | 독립 복습</title>
+<style>
+:root{--ink:#433a48;--muted:#675d69;--blue:#2679bd;--orange:#ce6b30;--purple:#7339ae;--bg:#fff9f4;--line:#e1d6e4;--mint:#dff5eb;--yellow:#fff2c6}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;font-family:"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",system-ui,sans-serif;color:var(--ink);background:var(--bg)}
+body{background-image:radial-gradient(#f4e5ee 1.2px,transparent 1.2px);background-size:21px 21px}
+button{font:inherit;color:inherit;cursor:pointer;touch-action:manipulation}
+.page{height:100vh;height:100dvh;max-width:1500px;margin:0 auto;padding:11px 14px;display:flex;flex-direction:column;gap:9px;overflow:hidden}
+.top{display:flex;align-items:center;justify-content:space-between;gap:14px;flex:none;min-height:44px}
+.title{font-size:clamp(22px,2.2vw,30px);font-weight:900;line-height:1.12}
+.sub{font-size:clamp(12px,1.1vw,15px);color:var(--muted)}
+.top-right{display:flex;gap:7px;flex-wrap:wrap;align-items:center;justify-content:flex-end}
+.button{border:2px solid #d9cbd9;background:white;border-radius:15px;padding:9px 13px;font-weight:800;box-shadow:0 2px 0 #d9cbd9;white-space:nowrap}
+.button:focus-visible{outline:3px solid var(--purple)}
+.button.active{background:#e7dbf6;border-color:#b49acb}
+.button.primary{background:#dff4e9;border-color:#99d2b6}
+.button.warn{background:#ffefdf;border-color:#e8b494}
+.button:disabled{opacity:.48;cursor:not-allowed}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.07fr);gap:12px;flex:1;min-height:0}
+.panel{background:#fff;border:2px solid var(--line);border-radius:21px;box-shadow:0 3px 0 #eadfe9;padding:13px;min-width:0;min-height:0;display:flex;flex-direction:column;gap:8px;overflow:hidden}
+.panel h2{margin:0;font-size:clamp(19px,1.8vw,25px);line-height:1.16}
+.note{margin:0;color:var(--muted);font-size:clamp(13px,1.3vw,17px)}
+.note strong{color:var(--ink)}
+.pricebuttons{display:flex;flex-wrap:wrap;gap:5px}
+.pricebuttons button{flex:1;border:2px solid #d2bfdf;background:#f8f3ff;border-radius:12px;padding:8px 3px;font-weight:900;font-size:clamp(13px,1.38vw,20px);min-width:60px}
+.pricebuttons button.on{background:#7641ad;border-color:#7641ad;color:white}
+.seesaw-figure{flex:1;min-height:0;display:flex;align-items:center;justify-content:center}
+.seesaw-figure svg{width:100%;height:100%;max-height:390px}
+.seesaw-arm{transform-origin:420px 225px;animation:tilt .78s cubic-bezier(.2,.75,.25,1) both}
+@keyframes tilt{0%{transform:rotate(0deg)}70%{transform:rotate(var(--angle))}85%{transform:rotate(calc(var(--angle)*.96))}100%{transform:rotate(var(--angle))}}
+@media(prefers-reduced-motion:reduce){.seesaw-arm{animation:none;transform:rotate(var(--angle))}}
+.detail{display:flex;gap:8px;align-items:center;justify-content:center;flex-wrap:wrap}
+.num{font-weight:900;font-size:clamp(17px,1.8vw,25px);padding:8px 11px;border-radius:11px}
+.num.d{color:#155f9c;background:#e4f3ff}.num.s{color:#ae4f1c;background:#fff0e5}.num.p{color:#633497;background:#f1e7fa}
+.result{font-weight:900;font-size:clamp(19px,2.05vw,29px);border-radius:14px;background:#ede0fa;color:#623299;padding:11px;text-align:center}
+.result.bal{background:#e2f6e9;color:#266d4b}
+.result.small{font-size:clamp(17px,1.7vw,23px)}
+.graph-area{flex:1;min-height:0;display:flex;justify-content:center;align-items:center}
+.graph-area svg{display:block;height:100%;width:100%;max-width:100%;max-height:100%;touch-action:none;user-select:none;background:#fff;border-radius:12px}
+.legend{display:flex;justify-content:center;gap:16px;flex-wrap:wrap;align-items:center;font-weight:900;font-size:clamp(15px,1.3vw,19px)}
+.legend .d{color:var(--blue)}.legend .s{color:var(--orange)}
+.footer{flex:none;text-align:center;color:var(--muted);font-size:12px}
+.legend-compact{display:flex;gap:5px;justify-content:space-between;flex-wrap:wrap}
+.flag{display:inline-block;border-radius:9px;padding:7px 9px;background:#f6ecfc;font-weight:800}
+.practice-layout{grid-template-columns:minmax(260px,.45fr) minmax(0,1fr)}
+.data-table{width:100%;border-collapse:collapse;font-size:clamp(16px,1.7vw,22px);color:#302930;font-weight:750}
+.data-table td,.data-table th{border:1px solid #bdb1c3;text-align:center;padding:12px 7px;background:#fff;color:#302930}
+.data-table th{background:#fcf1c8}
+.data-table tr:nth-child(even) td{background:#fffaf0}
+.practice-text{font-size:clamp(16px,1.55vw,21px);line-height:1.45}
+.notice{background:#fff4d5;border-radius:13px;padding:11px 12px;font-weight:800}
+.practice-actions{display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.progress{font-size:20px;font-weight:900}
+.worksheet-note{margin:0;font-size:clamp(12px,1.1vw,16px);color:#625669}
+.svg-pick{cursor:crosshair;touch-action:none}
+.svg-pick:focus-visible{outline:3px solid var(--purple)}
+.privacy{font-size:13px;color:#776b77}
+.alert{color:#9b3b2a;font-weight:800;font-size:clamp(15px,1.5vw,19px)}
+.practice-mobile-table{display:none}
+@media(max-width:760px){
+ .page{height:auto;min-height:100dvh;overflow:visible;padding:8px;gap:7px}
+ .top{align-items:flex-start}.top-right{gap:4px}.button{padding:7px;font-size:14px}
+ .layout,.practice-layout{grid-template-columns:1fr;grid-template-rows:auto auto;gap:8px}
+ .panel{padding:10px;overflow:visible}
+ .seesaw-figure{height:230px}
+ .graph-area{height:320px}
+ .data-table td,.data-table th{padding:7px 4px}
+ .practice-table-desktop{display:none}.practice-mobile-table{display:block}
+ .practice-mobile-table td,.practice-mobile-table th{padding:6px 2px;font-size:13px}
+ .practice-mobile-table .data-table{table-layout:fixed}
+ .seesaw-figure svg{max-height:260px}
+}
+@media(max-height:650px) and (min-width:761px){
+ .page{padding:5px 10px;gap:5px}
+ .top{min-height:36px}.title{font-size:20px}
+ .panel{padding:8px;gap:5px}.pricebuttons button{padding:5px}
+ .result{padding:6px}.num{padding:4px}
+ .data-table th,.data-table td{padding:6px 3px}
+}
+</style>
+</head>
+<body>
+<main class="page" id="app"></main>
+<script>
+(function(){
+'use strict';
+const PRICES=[3000,6000,9000,12000,15000],D=[10,8,6,4,2],S=[2,4,6,8,10];
+const STORAGE='marketgo_standalone_curves_v1';
+let saved={};
+try{saved=JSON.parse(localStorage.getItem(STORAGE)||'{}')||{};}catch(e){saved={};}
+const qs=new URLSearchParams(location.search);
+let mode=qs.get('mode')==='practice'?'practice':'show';
+let phase=saved.phase==='supply'||saved.phase==='done'?saved.phase:'demand';
+let drafts={demand:saved.demand&&typeof saved.demand==='object'?saved.demand:{},supply:saved.supply&&typeof saved.supply==='object'?saved.supply:{}};
+let price=PRICES.includes(+saved.lastPrice)?+saved.lastPrice:9000;
+let feedback='';
+const app=document.getElementById('app');
+const wx=q=>100+49*q,wy=p=>465-p/15000*355;
+const won=x=>Number(x).toLocaleString('ko-KR')+'원';
+const clamp=(n,a,b)=>Math.min(b,Math.max(a,n));
+const save=()=>{try{localStorage.setItem(STORAGE,JSON.stringify({phase,demand:drafts.demand,supply:drafts.supply,lastPrice:price}));}catch(e){}};
+const pts=a=>PRICES.map((p,i)=>({p,q:a[i],i})).filter(a=>a.q!==undefined&&a.q!==null&&Number.isInteger(Number(a.q))&&+a.q>=0&&+a.q<=12);
+const btn=(t,action,cls='')=>'<button type="button" class="button '+cls+'" data-action="'+action+'">'+t+'</button>';
+const title=()=>'<header class="top"><div><div class="title">⚖️ 수요·공급 시소와 그래프</div><div class="sub">모찌 시장과 별개인 가상 자료 · 방 코드 없이 바로 열기</div></div><div class="top-right">'+btn('👩‍🏫 시소·그래프 보기','show',mode==='show'?'active':'')+btn('✏️ 직접 그리기','practice',mode==='practice'?'active':'')+'</div></header>';
+const footer=()=>'<div class="footer">이 페이지는 독립 복습용입니다. 인터넷 실시간 수업이나 학생 명단에 연결되지 않아요.</div>';
+function figure(){
+ const i=PRICES.indexOf(price),d=D[i],s=S[i],angle=-(d-s)*2.2;
+ // 시소 중심을 기준으로 수요자가 더 많을 때 왼편이 아래로 기웁니다.
+ const kid=(x,c,name)=>'<g transform="translate('+x+' 146)"><circle r="28" fill="#F9D3B3" stroke="#7C5857" stroke-width="3"/><path d="M-29 48 Q0 13 29 48 L34 74 L-34 74 Z" fill="'+c+'" stroke="#735769" stroke-width="3"/><circle cx="-9" cy="-3" r="3.4"/><circle cx="9" cy="-3" r="3.4"/><path d="M-8 10 Q0 21 8 10" fill="none" stroke="#493A40" stroke-width="3"/><text x="0" y="-50" text-anchor="middle" fill="#443846" font-size="26" font-weight="bold">'+name+'</text></g>';
+ return '<svg viewBox="0 0 840 380" role="img" aria-label="수요자 쪽 '+d+'개, 공급자 쪽 '+s+'개인 시소.">'+
+ '<line x1="65" y1="345" x2="775" y2="345" stroke="#dfd2cc" stroke-width="9" stroke-linecap="round"/>'+
+ '<polygon points="420,226 362,344 478,344" fill="#F3C16C" stroke="#95662F" stroke-width="5"/>'+
+ '<g class="seesaw-arm" style="--angle:'+angle+'deg">'+
+ '<rect x="110" y="212" width="620" height="25" rx="11" fill="#A682D7" stroke="#7C54A9" stroke-width="4"/>'+
+ '<ellipse cx="206" cy="209" rx="70" ry="13" fill="#8FCAE9"/><ellipse cx="634" cy="209" rx="70" ry="13" fill="#F4B189"/>'+
+ kid(206,'#368FD0','수요자')+kid(634,'#D88A57','공급자')+'</g>'+
+ '<circle cx="420" cy="225" r="16" fill="#fff" stroke="#95662F" stroke-width="5"/></svg>';
+}
+function graph(valuesD,valuesS,selected=null,editing=false){
+ let a='';
+ for(let q=0;q<=12;q++)a+='<line x1="'+wx(q)+'" x2="'+wx(q)+'" y1="98" y2="465" stroke="#DBD5DD" stroke-width="1.3"/><text x="'+wx(q)+'" y="491" fill="#3E3542" font-size="21" font-weight="800" text-anchor="middle">'+q+'</text>';
+ for(const p of [0,...PRICES])a+='<line x1="100" y1="'+wy(p)+'" x2="700" y2="'+wy(p)+'" stroke="#DBD5DD" stroke-width="1.4"/><text x="88" y="'+(wy(p)+7)+'" fill="#3E3542" font-size="21" font-weight="800" text-anchor="end">'+p.toLocaleString('ko-KR')+'</text>';
+ a+='<path d="M100 98 V465 H701" stroke="#3F3541" stroke-width="4" fill="none"/><text x="100" y="65" font-size="23" font-weight="900" fill="#332B35">가격(원)</text><text x="685" y="525" font-size="23" font-weight="900" text-anchor="end" fill="#332B35">수량(개)</text>';
+ function plot(raw,color){
+   const arr=pts(raw).sort((a,b)=>a.i-b.i);
+   const path=arr.length>=2?'<path d="'+arr.map((v,i)=>(i?'L':'M')+wx(+v.q)+' '+wy(v.p)).join(' ')+'" stroke="'+color+'" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>':'';
+   return path+arr.map(v=>'<circle cx="'+wx(+v.q)+'" cy="'+wy(v.p)+'" r="12" fill="'+color+'" stroke="white" stroke-width="3"/>').join('');
+ }
+ a+=plot(valuesD,'#2679bd')+plot(valuesS,'#ce6b30');
+ if(selected!==null){
+   const idx=PRICES.indexOf(selected),d=D[idx],s=S[idx],y=wy(selected),x1=wx(Math.min(d,s)),x2=wx(Math.max(d,s)),mid=(x1+x2)/2,dist=Math.abs(d-s);
+   const label=d>s?'초과수요 '+dist+'개':'초과공급 '+dist+'개';
+   a+='<rect x="100" y="'+(y-10)+'" width="600" height="20" rx="8" fill="#eddefa" opacity=".58"/>';
+   a+='<line x1="100" y1="'+y+'" x2="700" y2="'+y+'" stroke="#7440aa" stroke-width="3" stroke-dasharray="7 7"/>';
+   a+='<line x1="'+wx(d)+'" y1="'+y+'" x2="'+wx(d)+'" y2="465" stroke="#2679bd" stroke-width="3" stroke-dasharray="5 7"/>';
+   a+='<line x1="'+wx(s)+'" y1="'+y+'" x2="'+wx(s)+'" y2="465" stroke="#ce6b30" stroke-width="3" stroke-dasharray="5 7"/>';
+   if(d!==s){
+     a+='<line x1="'+(x1+16)+'" y1="'+y+'" x2="'+(x2-16)+'" y2="'+y+'" stroke="#7435ba" stroke-width="8" stroke-linecap="round"/>';
+     a+='<path d="M'+(x1+9)+','+y+' L'+(x1+32)+','+(y-15)+' L'+(x1+32)+','+(y+15)+' Z" fill="#7435ba" stroke="#fff" stroke-width="2"/>';
+     a+='<path d="M'+(x2-9)+','+y+' L'+(x2-32)+','+(y-15)+' L'+(x2-32)+','+(y+15)+' Z" fill="#7435ba" stroke="#fff" stroke-width="2"/>';
+     a+='<rect x="'+(mid-120)+'" y="'+(y-76)+'" width="240" height="44" rx="15" fill="#7435ba" stroke="#fff" stroke-width="3"/>';
+     a+='<text x="'+mid+'" y="'+(y-47)+'" text-anchor="middle" fill="white" font-size="25" font-weight="900">↔ '+label+'</text>';
+     a+='<circle cx="'+wx(d)+'" cy="'+y+'" r="13" fill="#2679bd" stroke="white" stroke-width="3"/><circle cx="'+wx(s)+'" cy="'+y+'" r="11" fill="#ce6b30" stroke="white" stroke-width="3"/>';
+     a+='<text x="'+wx(d)+'" y="'+(y+39)+'" font-size="23" font-weight="900" fill="#2679bd" stroke="white" stroke-width="5" paint-order="stroke" text-anchor="middle">D '+d+'</text>';
+     a+='<text x="'+wx(s)+'" y="'+(y+39)+'" font-size="23" font-weight="900" fill="#ce6b30" stroke="white" stroke-width="5" paint-order="stroke" text-anchor="middle">S '+s+'</text>';
+   }else{
+     a+='<circle cx="'+wx(d)+'" cy="'+y+'" r="21" fill="#ddf2e5" stroke="#287851" stroke-width="5"/>';
+     a+='<rect x="'+(wx(d)-102)+'" y="'+(y-75)+'" width="204" height="44" rx="13" fill="#287851" stroke="white" stroke-width="3"/>';
+     a+='<text x="'+wx(d)+'" y="'+(y-46)+'" fill="white" font-size="25" font-weight="900" text-anchor="middle">수요 = 공급</text>';
+   }
+ }
+ if(editing){
+   PRICES.forEach((p,i)=>{
+     a+='<rect x="103" y="'+(wy(p)-32)+'" width="591" height="64" fill="transparent" class="svg-pick" data-row="'+i+'" tabindex="0" role="slider" aria-label="'+won(p)+'의 수량 위치를 눌러 표시하거나 끌어 옮기기"/>';
+   });
+   a+='<circle id="drag-preview" cx="-100" cy="-100" r="15" fill="#7045ae" stroke="white" stroke-width="3" visibility="hidden" pointer-events="none"/>';
+ }
+ return '<svg viewBox="0 0 790 540" id="learning-graph" role="img" aria-label="수량 가로축, 가격 세로축 수요 공급 그래프">'+a+'</svg>';
+}
+function demo(){
+ const i=PRICES.indexOf(price),d=D[i],s=S[i],diff=Math.abs(d-s);
+ const description=d===s?'균형가격 · 수요량과 공급량이 같아요.':d>s?'초과수요 '+diff+'개 · 사려는 사람이 더 많아요.':'초과공급 '+diff+'개 · 팔려는 사람이 더 많아요.';
+ let buttons=PRICES.map(p=>'<button type="button" data-price="'+p+'" class="'+(p===price?'on':'')+'">'+won(p)+'</button>').join('');
+ return '<div class="layout">'+
+ '<section class="panel"><h2>🎢 수요자와 공급자의 시소</h2><p class="note">가격을 누르면 수량이 많은 쪽이 아래로 기울어요.</p><div class="pricebuttons">'+buttons+'</div><div class="seesaw-figure">'+figure()+'</div>'+
+ '<div class="detail"><span class="num p">'+won(price)+'</span><span class="num d">수요량 '+d+'개</span><span class="num s">공급량 '+s+'개</span></div><div class="result '+(d===s?'bal':'')+'">'+description+'</div></section>'+
+ '<section class="panel"><h2>📈 같은 가격에서 그래프는 어디일까?</h2><p class="note">보라색 <strong>↔ 화살표</strong>가 수요량과 공급량의 차이를 표시해요.</p><div class="graph-area">'+graph(D,S,price)+'</div><div class="legend"><span class="d">● 수요곡선 D</span><span class="s">● 공급곡선 S</span><span class="flag">'+(d===s?'⚖ 균형':d>s?'↔ 초과수요 '+diff+'개':'↔ 초과공급 '+diff+'개')+'</span></div></section></div>';
+}
+function dataTable(kind){
+ const vals=kind==='demand'?D:S,head=kind==='demand'?'수요량':'공급량';
+ return '<div class="practice-table-desktop"><table class="data-table"><thead><tr><th>가격(원)</th><th>'+head+'(개)</th></tr></thead><tbody>'+PRICES.map((p,i)=>'<tr><td>'+p.toLocaleString('ko-KR')+'</td><td>'+vals[i]+'</td></tr>').join('')+'</tbody></table></div>'+
+ '<div class="practice-mobile-table"><table class="data-table"><tbody><tr><th>가격</th>'+PRICES.map(p=>'<th>'+p/1000+'천</th>').join('')+'</tr><tr><th>'+head+'</th>'+vals.map(n=>'<td>'+n+'</td>').join('')+'</tr></tbody></table></div>';
+}
+function practice(){
+ if(phase==='done')return demo();
+ const kind=phase,raw=drafts[kind],current=pts(raw).length;
+ const d=kind==='demand'?raw:D,s=kind==='supply'?raw:{};
+ return '<div class="layout practice-layout">'+
+ '<section class="panel"><h2>'+(kind==='demand'?'① 수요곡선 그리기':'② 공급곡선 그리기')+'</h2><p class="note">이 표는 실제 모찌 거래가 아닌 <strong>가상 연습 자료</strong>예요.</p>'+
+ dataTable(kind)+
+ '<div class="notice">가로축 = 수량<br>세로축 = 가격</div>'+
+ '<div class="practice-text">그래프에서 해당 가격의 가로줄을 누르거나, 점을 좌우로 끌어 옮겨 보세요.</div>'+
+ '<div class="legend-compact"><span class="flag">수요 '+(phase==='supply'?'✅':'✍️')+'</span><span class="flag">공급 '+(phase==='supply'?'✍️':'🔒')+'</span></div></section>'+
+ '<section class="panel"><div class="practice-actions"><h2>'+(kind==='demand'?'🔵 수요곡선':'🟠 공급곡선')+' · '+current+'/5</h2>'+btn('🧽 다 지우기','clear','warn')+'</div>'+
+ '<div class="graph-area">'+graph(d,s,null,true)+'</div>'+
+ (feedback?'<div class="alert">'+feedback+'</div>':'')+
+ '<div class="practice-actions"><p class="worksheet-note">가격별로 점 5개를 완성한 뒤 제출하세요.</p><button class="button primary" id="check-graph" type="button" '+(current===5?'':'disabled')+'>✅ '+(kind==='demand'?'수요':'공급')+' 제출</button></div></section></div>';
+}
+function render(){
+ app.innerHTML=title()+(mode==='show'||phase==='done'?demo():practice())+footer();
+ app.querySelectorAll('[data-action]').forEach(b=>b.addEventListener('click',()=>{
+  const a=b.dataset.action;
+  if(a==='show'){mode='show';render();}
+  if(a==='practice'){mode='practice';if(phase==='done'){phase='demand';drafts={demand:{},supply:{}};save();}feedback='';render();}
+  if(a==='clear'){
+   if(!confirm('지금 그리고 있는 곡선의 점 5개를 모두 지울까요?'))return;
+   drafts[phase]={};feedback='';save();render();
+  }
+ }));
+ app.querySelectorAll('[data-price]').forEach(b=>b.addEventListener('click',()=>{price=+b.dataset.price;save();render();}));
+ const check=app.querySelector('#check-graph');
+ if(check)check.addEventListener('click',()=>{
+  const target=phase==='demand'?D:S,raw=drafts[phase];
+  if(PRICES.some((p,i)=>raw[i]===undefined||raw[i]===null)){feedback='점 5개를 모두 표시해 주세요.';render();return;}
+  const n=target.filter((v,i)=>Number(raw[i])===v).length;
+  if(n===5){
+    phase=phase==='demand'?'supply':'done';
+    feedback='';price=9000;save();render();
+  }else{feedback='5개 중 '+n+'개가 맞았어요. 표와 점의 위치를 비교해 다시 고쳐 보세요.';render();}
+ });
+ bindPointer();
+}
+function bindPointer(){
+ if(mode!=='practice'||phase==='done')return;
+ const svg=app.querySelector('#learning-graph');
+ if(!svg)return;
+ let row=null,q=null;
+ const preview=svg.querySelector('#drag-preview');
+ function svgPoint(e){
+  const m=svg.getScreenCTM();
+  if(m&&svg.createSVGPoint){const v=svg.createSVGPoint();v.x=e.clientX;v.y=e.clientY;return v.matrixTransform(m.inverse());}
+  const r=svg.getBoundingClientRect();return {x:(e.clientX-r.left)*790/r.width,y:(e.clientY-r.top)*540/r.height};
+ }
+ const number=e=>clamp(Math.round((svgPoint(e).x-100)/49),0,12);
+ function mark(i,n){
+   const col=phase==='demand'?'#2679bd':'#ce6b30';
+   preview.setAttribute('fill',col);
+   preview.setAttribute('cx',wx(n));
+   preview.setAttribute('cy',wy(PRICES[i]));
+   preview.setAttribute('visibility','visible');
+ }
+ svg.addEventListener('pointerdown',e=>{
+  const target=e.target.closest('[data-row]');if(!target||e.button>0)return;
+  e.preventDefault();row=+target.dataset.row;q=number(e);mark(row,q);
+  try{svg.setPointerCapture(e.pointerId);}catch(err){}
+ });
+ svg.addEventListener('pointermove',e=>{if(row===null)return;e.preventDefault();q=number(e);mark(row,q);});
+ function end(e,apply){
+   if(row===null)return;
+   const i=row,n=q;row=null;q=null;preview.setAttribute('visibility','hidden');
+   try{if(svg.hasPointerCapture(e.pointerId))svg.releasePointerCapture(e.pointerId);}catch(err){}
+   if(apply&&Number.isInteger(n)){drafts[phase][i]=n;feedback='';save();render();}
+ }
+ svg.addEventListener('pointerup',e=>end(e,true));
+ svg.addEventListener('pointercancel',e=>end(e,false));
+ svg.querySelectorAll('[data-row]').forEach(el=>el.addEventListener('keydown',e=>{
+   if(!['Enter',' ','ArrowLeft','ArrowRight'].includes(e.key))return;
+   e.preventDefault();const i=+el.dataset.row,last=Number(drafts[phase][i]??0),n=e.key==='ArrowRight'?last+1:e.key==='ArrowLeft'?last-1:last;
+   drafts[phase][i]=clamp(n,0,12);feedback='';save();render();
+ }));
+}
+render();
+})();
+</script>
+</body>
+</html>
