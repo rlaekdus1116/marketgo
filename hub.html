@@ -376,6 +376,62 @@ async function newLessonRoom() {
   }
 }
 
+
+/* 직접 지정한 방 코드의 기존 수업 확인 및 명시적인 초기화 */
+const ROOM_PREFIXES=['auction','auctionS','poll','trade','priceLab','curve'];
+let roomChoice=null, roomCheckBusy=false;
+function useRoomCode(room){
+  const before=localStorage.getItem('marketgo_lesson_room')||'';
+  if(/^\d{4}$/.test(before)&&before!==room){
+    let h=[];try{h=JSON.parse(localStorage.getItem('marketgo_lesson_room_history')||'[]');}catch(e){}
+    localStorage.setItem('marketgo_lesson_room_history',JSON.stringify([...new Set([before,...h])].slice(0,40)));
+  }
+  localStorage.setItem('marketgo_lesson_room',room);
+  const klass=(el('classCode')?.value||localStorage.getItem('marketgo_class_code')||'201').trim();
+  if(!savedRoomClass(room))saveRoomClass(room,klass);
+  roomChoice=null;renderTeacher();
+}
+async function checkChosenRoom(){
+  if(roomCheckBusy)return;
+  const room=(el('growthRoom')?.value||'').trim();
+  if(!/^\d{4}$/.test(room))return toast('방 코드를 네 자리 숫자로 입력해 주세요.');
+  roomCheckBusy=true;
+  if(el('setRoom'))el('setRoom').disabled=true;
+  try{
+    const paths=[...ROOM_PREFIXES.map(p=>'rooms/'+p+'_'+room),'rooms/'+room,
+      ...ROOM_PREFIXES.map(p=>'rooms/hub_main/presence/'+p+'_'+room)];
+    const found=await Promise.all(paths.map(p=>get(ref(db,p))));
+    if(found.some(x=>x.exists())){
+      roomChoice={room};renderTeacher();
+      toast('이미 사용된 방 '+room+'입니다. 초기화 또는 이어하기를 선택해 주세요.');
+    }else{
+      useRoomCode(room);
+      toast('새 방 '+room+'을 저장했어요.');
+    }
+  }catch(e){console.error(e);toast('방 번호 확인 실패. 서버 연결을 확인해 주세요.');}
+  finally{roomCheckBusy=false;if(el('setRoom'))el('setRoom').disabled=false;}
+}
+async function resetChosenRoom(){
+  const room=roomChoice?.room;
+  if(!room||roomCheckBusy)return;
+  if((el('growthRoom')?.value||'').trim()!==room)return toast('코드를 변경했어요. 다시 확인해 주세요.');
+  if(!confirm('방 '+room+'의 기존 학생 응답·진도·거래·이탈 기록을 지우고 새로 시작할까요?\n기존 교사 기록(허브에 저장된 로그)은 유지됩니다.'))return;
+  if(!confirm('최종 확인: 방 '+room+'의 서버 학생 수업 데이터는 복구할 수 없어요. 초기화할까요?'))return;
+  roomCheckBusy=true;
+  if(el('resetChosenRoom'))el('resetChosenRoom').disabled=true;
+  try{
+    const updates={};
+    ROOM_PREFIXES.forEach(p=>{updates[p+'_'+room]=null;updates['hub_main/presence/'+p+'_'+room]=null;});
+    updates[room]=null;
+    const current=(await get(H('current'))).val();
+    if(current&&String(current.room)===room)updates['hub_main/current']=null;
+    await update(ref(db,'rooms'),updates);
+    useRoomCode(room);
+    toast('방 '+room+' 초기화 완료! 이 코드로 처음부터 시작하세요.');
+  }catch(e){console.error(e);toast('초기화 실패. 인터넷과 데이터 권한을 확인해 주세요.');}
+  finally{roomCheckBusy=false;if(el('resetChosenRoom'))el('resetChosenRoom').disabled=false;}
+}
+
 let qrDone = false;
 function renderTeacher() {
   if (document.activeElement && ['sheetUrl','classCode','growthRoom'].includes(document.activeElement.id)) return;
@@ -398,7 +454,8 @@ function renderTeacher() {
       <button class="btn mint" id="saveClass">학급 저장</button>
       <label for="growthRoom">전체 활동에서 사용할 네 자리 방 코드</label>
       <input id="growthRoom" class="field" maxlength="4" inputmode="numeric" value="${esc(sessionRoom)}" style="width:130px">
-      <button class="btn sky" id="setRoom">방 코드 저장</button>
+      <button class="btn sky" id="setRoom">🔎 코드 확인 · 사용하기</button>
+      ${roomChoice ? `<div class="hl peach" id="roomResetPanel" style="margin:12px 0"><b>⚠️ 이전에 사용한 ${esc(roomChoice.room)}번 방입니다.</b><p>이전 수업 데이터가 남아 있어요. 같은 코드를 새로 쓰려면 초기화하세요.</p><button class="btn peach" id="resetChosenRoom">🔄 초기화하고 이 코드로 새 수업 시작</button><button class="btn mint" id="resumeChosenRoom">▶ 기존 수업 이어하기</button><button class="btn" id="cancelChosenRoom">취소</button><p class="muted">초기화하면 해당 코드의 실시간 학생 답안·거래·진도·이탈 기록이 지워집니다. 허브에 저장된 교사 로그는 유지됩니다. 중요한 기록은 CSV로 미리 받아 두세요.</p></div>` : ''}
       <button class="btn mint" id="newLessonRoom">✨ 새 수업 시작 · 새 코드 발급</button>
       <p class="muted" style="font-size:15px">새 코드에서는 모든 활동이 처음부터 시작돼요. 이전 방의 기록은 삭제하지 않아요.</p>
       <p class="muted" style="font-size:15px">예전 반을 잘못 저장했다면 아래 기록 표의 <b>학급 수정</b>으로 정정할 수 있어요.</p><div class="muted" style="font-size:15px">이전 수업 코드: ${(() => { try { return (JSON.parse(localStorage.getItem('marketgo_lesson_room_history')||'[]')||[]).map(esc).join(' · ')||'없음'; } catch(e) { return '없음'; } })()}</div>
@@ -442,7 +499,11 @@ function renderTeacher() {
   if (window.QRCode && el('qr') && !el('qr').firstChild) new QRCode(el('qr'), { text: base + 'hub.html', width: 190, height: 190, colorDark: '#5B4B57', colorLight: '#ffffff' });
   wire(logs);
   el('saveClass').onclick=()=>{const v=el('classCode').value.trim();if(!/^\d{3,4}$/.test(v))return toast('201처럼 학급 코드를 입력해 주세요');localStorage.setItem('marketgo_class_code',v);const room=(el('growthRoom').value||sessionRoom).trim();if(/^\d{4}$/.test(room))saveRoomClass(room,v);toast('학급 '+v+' 저장');renderTeacher();};
-  el('setRoom').onclick=()=>{const v=el('growthRoom').value.trim();if(!/^\d{4}$/.test(v))return toast('방 코드 네 자리를 입력하세요');localStorage.setItem('marketgo_lesson_room',v);if(!savedRoomClass(v))saveRoomClass(v,el('classCode').value.trim()||'201');toast('방 코드 '+v+' 저장');renderTeacher();};
+  el('setRoom').onclick=checkChosenRoom;
+  el('growthRoom').oninput=()=>{if(roomChoice&&el('growthRoom').value.trim()!==roomChoice.room){roomChoice=null;el('roomResetPanel')?.remove();}};
+  if(el('resetChosenRoom'))el('resetChosenRoom').onclick=resetChosenRoom;
+  if(el('resumeChosenRoom'))el('resumeChosenRoom').onclick=()=>{if(!roomChoice)return;const c=roomChoice.room;useRoomCode(c);toast('방 '+c+' 기존 수업으로 이어서 진행합니다.');};
+  if(el('cancelChosenRoom'))el('cancelChosenRoom').onclick=()=>{roomChoice=null;renderTeacher();};
   el('newLessonRoom').onclick=newLessonRoom;
   el('growthExport').onclick=downloadGrowthCSV;
   el('eraseRoom').onclick=eraseLessonRoom;
