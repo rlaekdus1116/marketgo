@@ -133,6 +133,21 @@ button,input,textarea,select{font-family:inherit}
 button,.btn,.speech,.rule,.title,.card{word-break:keep-all;overflow-wrap:break-word}
 .stage,.card,.finGrid,.finPop,.s-wrap{min-width:0}
 @media(max-width:700px){.price-big{font-size:clamp(44px,12vw,82px)}.speech{font-size:clamp(22px,6vw,34px);max-width:100%;padding:12px 14px}.title{font-size:clamp(28px,8vw,42px)}.btn{max-width:100%;white-space:normal}.finGrid{height:auto;min-height:0;display:block}.finPop{overflow:visible;min-height:300px}}
+
+/* 교과서형 제1사분면 수요·공급 그래프와 움직이는 시소 */
+.practiceChart{display:block;width:100%;height:auto;max-width:900px;margin:auto;touch-action:manipulation}
+.graphPick{cursor:pointer;touch-action:manipulation}
+.graphPick:focus{outline:3px solid #B44FC9}
+.practiceGrid{stroke:#EBE4E8;stroke-width:1.5}
+.practiceTable{width:100%;border-collapse:collapse;font-size:clamp(15px,2vw,21px)}
+.practiceTable th,.practiceTable td{padding:8px;border-bottom:1px solid var(--line);text-align:center}
+.practiceTable tr.selected{background:var(--lemon)}
+.practiceTable button{padding:5px 10px;border-radius:12px;background:var(--sky);font-size:inherit}
+.practiceChartWrap{border:2px solid var(--line);border-radius:20px;background:#fff;padding:7px}
+.seesawScene{width:100%;max-width:850px;display:block;margin:4px auto;overflow:visible}
+.seesawArm{transform-origin:420px 222px;animation:seesawMove 900ms cubic-bezier(.2,.7,.2,1) both}
+@keyframes seesawMove{0%{transform:rotate(0deg)}65%{transform:rotate(var(--tilt))}82%{transform:rotate(calc(var(--tilt)*.93))}100%{transform:rotate(var(--tilt))}}
+@media(prefers-reduced-motion:reduce){.seesawArm{animation:none;transform:rotate(var(--tilt))}}
 </style>
 </head>
 <body>
@@ -490,6 +505,127 @@ function rankingHTML(st,showNames){
  if(profitLeaders.length)body+='<div class="hl mint center" style="margin-top:12px"><div style="font-size:25px">💰 '+(profitLeaders.length>1?'공동 ':'')+'수익왕</div><div style="font-size:39px">'+signed(profitLeaders[0].profit)+'</div>'+people(profitLeaders)+'</div>';
  return body+'</div>';
 }
+
+/* 교과서 연습용 가상 시장 표. 실제 모찌 거래 기록을 수요량/공급량으로 오인하지 않습니다. */
+const PRACTICE_PRICES=[3000,6000,9000,12000,15000];
+const PRACTICE_D=[10,8,6,4,2];
+const PRACTICE_S=[2,4,6,8,10];
+let graphTeacherMode=true, graphTeacherReveal=0, seesawPrice=9000;
+const graphSelectedRow={demand:0,supply:0};
+const graphVals=k=>k==='demand'?PRACTICE_D:PRACTICE_S;
+const graphDb=(id,path='')=>ref(db,'rooms/trade_'+code+'/graph'+(path?'': '')+(path?'/'+path:''));
+// 숫자 표를 읽고 수량(가로축)과 가격(세로축)을 직접 대응시키도록 설계합니다.
+function practiceTable(kind='both',selectRow=-1){
+  return `<div style="overflow-x:auto"><table class="practiceTable"><thead><tr><th>가격</th>${kind!=='supply'?'<th>수요량</th>':''}${kind!=='demand'?'<th>공급량</th>':''}</tr></thead><tbody>${PRACTICE_PRICES.map((p,i)=>`<tr class="${selectRow===i?'selected':''}"><td>${selectRow>=0?`<button type="button" data-selectrow="${i}" title="이 가격에 점 찍기">${won(p)}</button>`:won(p)}</td>${kind!=='supply'?`<td>${PRACTICE_D[i]}개</td>`:''}${kind!=='demand'?`<td>${PRACTICE_S[i]}개</td>`:''}</tr>`).join('')}</tbody></table></div>`;
+}
+function practiceGraph(demand={},supply={},activeKind='',activeRow=0){
+  const x=q=>100+49*q, y=p=>458-360*p/15000;
+  const axisX=700;
+  let body='';
+  for(let q=0;q<=12;q++){
+    body+=`<line class="practiceGrid" x1="${x(q)}" x2="${x(q)}" y1="98" y2="458"/><text x="${x(q)}" y="484" font-size="19" text-anchor="middle" fill="#716270">${q}</text>`;
+  }
+  for(const p of [0,...PRACTICE_PRICES]){
+    body+=`<line class="practiceGrid" x1="100" x2="${axisX}" y1="${y(p)}" y2="${y(p)}"/><text x="90" y="${y(p)+7}" text-anchor="end" font-size="20" fill="#716270">${p.toLocaleString('ko-KR')}</text>`;
+  }
+  body+=`<line x1="100" y1="98" x2="100" y2="458" stroke="#5B4B57" stroke-width="3"/><line x1="100" y1="458" x2="${axisX+2}" y2="458" stroke="#5B4B57" stroke-width="3"/><text x="101" y="60" font-size="22" fill="#5B4B57">가격(원)</text><text x="${axisX-8}" y="516" text-anchor="middle" font-size="22" fill="#5B4B57">수량(개)</text>`;
+  if(activeKind){
+    body+=`<rect x="100" y="${y(PRACTICE_PRICES[activeRow])-27}" width="600" height="54" rx="14" fill="#FFEDB3" opacity=".5"/>`;
+  }
+  const plot=(points,color)=>{
+    const pp=PRACTICE_PRICES.map((p,i)=>({p,q:points?.[i]})).filter(a=>a.q!==undefined&&a.q!==null&&Number.isFinite(+a.q)&&+a.q>=0&&+a.q<=12);
+    const path=pp.length>=2?`<path d="${pp.map((a,i)=>(i?'L':'M')+x(+a.q)+' '+y(a.p)).join(' ')}" stroke="${color}" fill="none" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>`:'';
+    return path+pp.map(a=>`<circle cx="${x(+a.q)}" cy="${y(a.p)}" r="10" fill="${color}" stroke="#fff" stroke-width="3"/>`).join('');
+  };
+  body+=plot(demand,'#3B8FD9')+plot(supply,'#E8803E');
+  if(activeKind){
+    for(let q=0;q<=12;q++)body+=`<circle tabindex="0" role="button" aria-label="수량 ${q}개, 가격 ${won(PRACTICE_PRICES[activeRow])}에 점 찍기" class="graphPick" data-pickqty="${q}" cx="${x(q)}" cy="${y(PRACTICE_PRICES[activeRow])}" r="21" fill="#D7B3EA" fill-opacity=".18" stroke="#9874B4" stroke-width="1" stroke-dasharray="3 4"/>`;
+  }
+  return `<div class="practiceChartWrap"><svg class="practiceChart" viewBox="0 0 790 535" xmlns="http://www.w3.org/2000/svg" aria-label="가로축 수량, 세로축 가격인 제1사분면 수요 공급 그래프">${body}</svg></div>`;
+}
+function seesawHTML(price=9000){
+  const idx=PRACTICE_PRICES.indexOf(+price),j=Math.max(0,idx);
+  const d=PRACTICE_D[j],sp=PRACTICE_S[j],tilt=-(d-sp)*2.0;
+  const state=d===sp?'⚖️ 수요량과 공급량이 같아서 시소가 수평이에요. 이 가격은 균형가격이에요.':d>sp?'🛒 사려는 양이 더 많아 수요자 쪽이 아래로! 가격이 올라갈 압력이 생겨요.':'🏷️ 팔려는 양이 더 많아 공급자 쪽이 아래로! 가격이 내려갈 압력이 생겨요.';
+  const human=(x,color,label)=>`<g transform="translate(${x} 150)"><circle cx="0" cy="0" r="28" fill="#FBD6B5" stroke="#805C58" stroke-width="3"/><path d="M-31 49 Q0 12 31 49 L34 68 L-34 68 Z" fill="${color}" stroke="#805C58" stroke-width="3"/><circle cx="-9" cy="-3" r="3.5" fill="#493D36"/><circle cx="9" cy="-3" r="3.5" fill="#493D36"/><path d="M-7 13 Q0 20 7 13" fill="none" stroke="#493D36" stroke-width="3"/><text x="0" y="-51" font-size="22" text-anchor="middle" fill="#5B4B57" font-weight="bold">${label}</text></g>`;
+  return `<div class="card" style="text-align:center"><h3>🎢 수요자와 공급자가 타는 시소</h3><p class="muted">가격을 누르면 시소가 움직여요. 아래로 기울어진 쪽의 수량이 더 많아요.</p><div class="chips" style="justify-content:center">${PRACTICE_PRICES.map(p=>`<button type="button" class="btn sm ${p===PRACTICE_PRICES[j]?'lemon':'sky'}" data-seesaw-price="${p}">${won(p)}</button>`).join('')}</div>
+    <svg class="seesawScene" viewBox="0 0 840 390" role="img" aria-label="가격 ${won(PRACTICE_PRICES[j])}, 수요량 ${d}개, 공급량 ${sp}개. 시소 기울기 ${tilt}도">
+      <line x1="90" x2="750" y1="351" y2="351" stroke="#D3C5B7" stroke-width="9" stroke-linecap="round"/>
+      <polygon points="420,226 356,347 484,347" fill="#F4C77B" stroke="#98672F" stroke-width="5"/>
+      <g class="seesawArm" style="--tilt:${tilt}deg">
+        <rect x="139" y="211" width="562" height="23" rx="11" fill="#A87ED6" stroke="#7C55AD" stroke-width="4"/>
+        <ellipse cx="206" cy="207" rx="64" ry="13" fill="#8FC9F3"/>
+        <ellipse cx="634" cy="207" rx="64" ry="13" fill="#F3B588"/>
+        ${human(206,'#4C9ED8','수요자')}${human(634,'#DE895A','공급자')}
+      </g>
+      <circle cx="420" cy="223" r="15" fill="#FFF" stroke="#98672F" stroke-width="5"/>
+    </svg>
+    <div class="rule" style="font-size:clamp(19px,3vw,27px)">${won(PRACTICE_PRICES[j])} · 🛒 수요량 <b>${d}개</b> / 🏷️ 공급량 <b>${sp}개</b></div>
+    <div class="hl ${d===sp?'mint':d>sp?'sky':'peach'}" style="font-size:clamp(17px,2.5vw,22px)">${state}</div></div>`;
+}
+function studentPracticeHTML(){
+  const completed=room.graphWork?.[pid]||{},kind=completed.demand?.passed?'supply':'demand';
+  const draft=room.graphDraft?.[pid]?.[kind]||{};
+  const row=Math.min(4,Math.max(0,graphSelectedRow[kind]||0));
+  const demand=completed.demand?.passed?completed.demand.points:(kind==='demand'?draft:{});
+  const supply=kind==='supply'?draft:{};
+  const done=Object.keys(draft).filter(k=>draft[k]!==null&&draft[k]!==undefined).length;
+  const f=completed[kind]||{};
+  return `<div class="card center"><h2>📈 표를 보고 그래프를 그려 보자!</h2><div class="hl lemon">이 표는 <b>연습용 가상 자료</b>예요. 방금 거래한 모찌 시장의 실제 데이터가 아니에요.</div><div class="chips" style="justify-content:center"><span class="pill">① 수요곡선 ${completed.demand?.passed?'✅':'✍️'}</span><span class="pill">② 공급곡선 ${completed.supply?.passed?'✅':kind==='supply'?'✍️':'🔒'}</span></div>
+    <h3 style="color:${kind==='demand'?'#3B8FD9':'#E8803E'}">${kind==='demand'?'① 수요곡선부터 그리기':'② 같은 좌표평면에 공급곡선 추가하기'}</h3>
+    <p>표에서 <b>가격</b>을 고른 다음, 그 가격에 해당하는 <b>수량</b> 위치에 점을 찍어 보세요. 가로축은 수량, 세로축은 가격이에요.</p>${practiceTable(kind,row)}
+    <p class="hl sky" style="font-size:21px">지금 찍을 가격: <b>${won(PRACTICE_PRICES[row])}</b> · ${kind==='demand'?'수요량':'공급량'}을 찾아주세요.</p>
+    ${practiceGraph(demand,supply,kind,row)}
+    <p class="muted">${done}/5개 가격에 점을 찍었어요. 가격 버튼을 눌러 이전 점도 고칠 수 있어요.</p>
+    ${f.tries&&!f.passed?`<div class="hl peach">현재 ${f.correct||0}/5개 정답! 표와 점의 위치를 다시 비교해 보세요. 가로축과 세로축이 바뀌지는 않았나요?</div>`:''}
+    <button type="button" class="btn big mint" id="submitCurve" ${done<5?'disabled':''}>✅ ${kind==='demand'?'수요곡선':'공급곡선'} 확인하고 제출</button>
+    <p class="muted">정답을 맞히면 저장되고 다음 곡선으로 넘어가요. 두 곡선은 같은 좌표평면에 남아요.</p></div>`;
+}
+function teacherPracticeHTML(){
+  const players=room.players||{},ids=Object.keys(players);
+  const statuses=ids.map(id=>({id,name:players[id].name||'학생',d:!!room.graphWork?.[id]?.demand?.passed,s:!!room.graphWork?.[id]?.supply?.passed}));
+  const dc=statuses.filter(x=>x.d).length,sc=statuses.filter(x=>x.s).length;
+  const showD=graphTeacherReveal>=1,showS=graphTeacherReveal>=2;
+  return `<div class="card center"><h2>📈 표로 수요·공급곡선 그리기</h2><div class="hl lemon">연습용 가상 시장 자료 · 실제 모찌 거래 데이터 아님</div>
+    <p>학생들은 모찌 시장이 끝난 뒤 자동으로 <b>수요 → 공급</b> 순서로, 같은 좌표평면에 점을 찍고 제출해요.</p>
+    <div class="chips" style="justify-content:center"><span class="pill">수요 완료 ${dc}/${ids.length}명</span><span class="pill">공급 완료 ${sc}/${ids.length}명</span></div>
+    ${practiceTable('both')}
+    <div class="chips" style="justify-content:center"><button class="btn ${graphTeacherReveal===0?'lemon':'sky'}" data-graph-reveal="0">빈 좌표평면</button><button class="btn ${graphTeacherReveal===1?'lemon':'sky'}" data-graph-reveal="1">수요곡선 보기</button><button class="btn ${graphTeacherReveal===2?'lemon':'sky'}" data-graph-reveal="2">수요 + 공급 보기</button></div>
+    ${practiceGraph(showD?PRACTICE_D:{},showS?PRACTICE_S:{})}
+    <div class="chips" style="justify-content:center">${statuses.map(x=>`<span class="chip soft">${esc(x.name)} · 수요 ${x.d?'✅':'○'} / 공급 ${x.s?'✅':'○'}</span>`).join('')}</div></div>
+    ${showS?seesawHTML(seesawPrice):'<p class="muted center">두 곡선을 공개하면 가격별 수요·공급 시소도 볼 수 있어요.</p>'}`;
+}
+function bindSeeSaw(){
+  app.querySelectorAll('[data-seesaw-price]').forEach(b=>b.onclick=()=>{seesawPrice=Number(b.dataset.seesawPrice);if(isTeacher)renderTeacher();else{lastSig='';renderStudent();}});
+}
+function bindStudentPractice(kind){
+  app.querySelectorAll('[data-selectrow]').forEach(b=>b.onclick=()=>{graphSelectedRow[kind]=+b.dataset.selectrow;lastSig='';renderStudent();});
+  app.querySelectorAll('[data-pickqty]').forEach(b=>{
+    const choose=async()=>{
+      b.style.opacity='.3';
+      const index=graphSelectedRow[kind],q=Number(b.dataset.pickqty);
+      if(!Number.isInteger(q)||q<0||q>12)return;
+      graphSelectedRow[kind]=Math.min(4,index+1);
+      try{await set(ref(db,'rooms/trade_'+code+'/graphDraft/'+pid+'/'+kind+'/'+index),q);}
+      catch(e){console.error(e);toast('점 저장 실패. 인터넷을 확인해 주세요.');}
+    };
+    b.onclick=choose;
+    b.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();choose();}};
+  });
+  if(el('submitCurve'))el('submitCurve').onclick=async()=>{
+    const draft=room.graphDraft?.[pid]?.[kind]||{},target=graphVals(kind);
+    if(PRACTICE_PRICES.some((_,i)=>draft[i]===undefined))return toast('표의 다섯 가격을 모두 그래프에 표시해 주세요.');
+    const correct=target.filter((v,i)=>Number(draft[i])===v).length;
+    const prev=room.graphWork?.[pid]?.[kind]||{},passed=correct===5;
+    const btn=el('submitCurve');btn.disabled=true;
+    try{
+      await set(ref(db,'rooms/trade_'+code+'/graphWork/'+pid+'/'+kind),{passed,correct,tries:(Number(prev.tries)||0)+1,points:target.map((_,i)=>Number(draft[i])),at:Date.now()});
+      if(passed){graphSelectedRow.supply=0;toast(kind==='demand'?'수요곡선 완성! 이제 같은 그래프에 공급곡선을 그려요.':'두 곡선을 완성했어요! 시소로 균형을 확인해 봐요.');}
+      else{toast(correct+'개 정답이에요. 틀린 점을 다시 고쳐 보세요.');btn.disabled=false;}
+    }catch(e){console.error(e);toast('제출 실패. 연결을 확인해 주세요.');btn.disabled=false;}
+  };
+}
+
 /* ========== 선생님 화면 ========== */
 function renderTeacher() {
   const players = room.players || {}, rounds = room.rounds || {};
