@@ -719,6 +719,16 @@ function sdHTML(rs) {
   const dAt=q=>eqP+dSlope*(qE-q);
   const sAt=q=>eqP+sSlope*(q-qE);
 
+  // 균형가격 근처의 가로 띠만 사선 빗금 처리합니다. 배경 전체를 빗금 처리하지 않습니다.
+  // 실제 거래 가격이 균형대 근처에서 집중되었는지 비교하기 위한 강조 표시입니다.
+  if(showEq && Number.isFinite(eqLo) && Number.isFinite(eqHi) && eqHi>=eqLo){
+    const lower=Math.max(pMin,eqLo-500),upper=Math.min(pMax,eqHi+500);
+    if(upper>lower){
+      const bandTop=y(upper),bandHeight=y(lower)-bandTop;
+      g+=`<defs><pattern id="eqHatch" width="14" height="14" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="14" stroke="#7B55B2" stroke-width="5" opacity=".43"/></pattern></defs>`;
+      g+=`<rect x="${L}" y="${bandTop}" width="${pw}" height="${bandHeight}" fill="#EADFF7" opacity=".22"/><rect x="${L}" y="${bandTop}" width="${pw}" height="${bandHeight}" fill="url(#eqHatch)" opacity=".55"/>`;
+    }
+  }
   // 실제 성사된 거래의 최빈 500원 구간을 곡선과 함께 표시해요.
   // 균형 가격은 별도의 교사 공개 버튼으로만 나타냅니다.
   const binSize=500, bins=new Map();
@@ -757,9 +767,9 @@ function sdHTML(rs) {
     <span class="pill"><span style="display:inline-block;width:22px;height:4px;background:${ORANGE};vertical-align:4px;border-radius:2px"></span> 공급 곡선 (공급자 ${Sp.length}명)</span>
     <span class="pill"><span style="display:inline-block;width:12px;height:12px;background:#CDEBFF;border-radius:3px;vertical-align:-1px"></span> 초과수요</span>
     <span class="pill"><span style="display:inline-block;width:12px;height:12px;background:#D6F2DD;border-radius:3px;vertical-align:-1px"></span> 수요량=공급량</span>
-    <span class="pill"><span style="display:inline-block;width:12px;height:12px;background:#FFE0CA;border-radius:3px;vertical-align:-1px"></span> 초과공급</span></div>`;
+    <span class="pill"><span style="display:inline-block;width:12px;height:12px;background:#FFE0CA;border-radius:3px;vertical-align:-1px"></span> 초과공급</span>${showEq ? '<span class="pill"><span style="display:inline-block;width:22px;height:13px;background:repeating-linear-gradient(45deg,#DAC7F2 0 4px,#fff 4px 9px);border:1px solid #9B79BD;vertical-align:-2px"></span> 균형가격 부근(빗금)</span>' : ''}</div>`;
   return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;font-family:Jua,sans-serif" role="img" aria-label="수요 공급 그래프">${g}</svg>${legend}
-    <p class="muted center" style="font-size:16px;margin:10px 0">배경색은 실제 카드에서 계산한 초과수요·수량 일치·초과공급 영역이에요. 직선은 방향을 이해하기 위한 모식도예요.${rs.length>1?" 여러 회차 합계는 비교용 자료예요.":""}</p>
+    <p class="muted center" style="font-size:16px;margin:10px 0">배경색은 가격별 초과수요·초과공급 영역이에요. 균형가격을 공개하면 그 주변만 사선 빗금으로 표시해요. 직선은 방향을 이해하기 위한 모식도예요.${rs.length>1?" 여러 회차 합계는 비교용 자료예요.":""}</p>
     <div class="hl lemon center" style="font-size:22px">${note}${showEq ? `<br>⚖️ 균형 가격 <b>${eqLo === eqHi ? won(eqLo) : won(eqLo) + ' ~ ' + won(eqHi)}</b> · 균형 거래량 약 <b>${eqQ}개</b>` : ''}</div>`;
 }
 
