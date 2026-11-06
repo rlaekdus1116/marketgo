@@ -275,6 +275,74 @@ button,.btn,.speech,.rule,.title,.card{word-break:keep-all;overflow-wrap:break-w
 .stagedSeesawOnly .seesawPriceButtons{display:none}
 .stagedSeesawOnly .seesawScene{max-height:34vh}
 @media(max-width:760px){.stagedSeesawTable .seesawDataTable th,.stagedSeesawTable .seesawDataTable td{padding:7px 2px;font-size:clamp(12px,2.8vw,18px)}.stagedSeesawTable .seesawDataTableWrap{padding:4px}}
+
+/* 학생 거래·정리·시소·곡선 그리기 화면을 교사용과 같은 너비로 */
+.s-wrap.studentMarketScreen{width:100%;max-width:1480px;margin:0 auto;padding:12px 16px 24px}
+.studentMarketScreen .s-top{margin:0 0 10px;gap:10px}
+.studentMarketScreen .s-top .me{font-size:clamp(19px,1.7vw,26px)}
+.studentMarketBody{display:grid;grid-template-columns:minmax(300px,.85fr) minmax(0,1.15fr);gap:12px;align-items:start}
+.studentMarketBody>.studentTimerPanel,.studentMarketBody>.studentRosterPanel{grid-column:1/-1}
+.studentMarketBody>.studentOwnCard{grid-column:1;grid-row:3/span 3;align-self:start;min-width:0}
+.studentMarketBody>.studentClaimsPanel,.studentMarketBody>.studentActionPanel{grid-column:2;min-width:0}
+.studentMarketBody>.card{margin:0}
+.studentMarketBody .tcard{padding:clamp(13px,1.5vw,24px)}
+.studentMarketBody .tcard .amt{font-size:clamp(36px,4vw,65px)}
+.studentMarketBody .tcard .role{font-size:clamp(23px,2.2vw,34px)}
+.studentMarketBody .tcard .desc{font-size:clamp(17px,1.5vw,22px)}
+.studentMarketBody .opts{grid-template-columns:repeat(auto-fill,minmax(125px,1fr))}
+.studentMarketBody .opt{font-size:clamp(16px,1.5vw,22px)}
+.studentMarketBody .timer.s{font-size:clamp(40px,5vw,65px)}
+.graphFinishedScreen{width:100%;max-width:1480px;margin:0 auto;padding:10px 14px;overflow-x:hidden;overflow-y:auto}
+.graphFinishedScreen .seesawComparison{width:100%;max-width:none;flex:1 0 auto;min-height:0}
+.graphFinishedScreen .seesawColumns{min-height:490px;grid-template-columns:minmax(0,1fr) minmax(0,1.08fr)}
+.graphFinishedScreen .seesawHalf{min-width:0}
+.graphFinishedScreen .seesawHalf>.card{padding:12px 14px}
+.graphFinishedScreen .seesawHalf .seesawScene{height:auto;max-height:min(37vh,345px)}
+.seesawGraphArea{width:100%;flex:1 1 auto;min-height:290px;align-items:stretch}
+.seesawGraphArea .practiceChartWrap{width:100%;height:100%;min-height:290px;max-height:none;display:flex;align-items:stretch;justify-content:center}
+.seesawGraphArea .practiceChart{display:block;width:100%;height:100%;max-height:none;min-height:0}
+.seesawHalf .seesawStat{padding:7px;font-size:clamp(16px,1.5vw,20px)}
+.seesawHalf .seesawLegend{padding:4px 0;font-size:clamp(15px,1.3vw,19px)}
+.seesawHalf h3{margin:0 0 5px}
+.seesawHalf>p{margin:4px 0!important}
+.graphStudentScreen{max-width:1480px;margin:0 auto;width:100%;padding:10px 14px}
+.graphStudentPanel{grid-template-columns:minmax(235px,31%) minmax(0,1fr);gap:12px}
+.graphPlotArea .practiceChartWrap{height:100%;width:100%}
+.graphPlotArea .practiceChart{height:100%;width:100%;max-height:none}
+.reviewPage{max-width:1480px;width:100%;margin:0 auto;padding:12px 16px 28px}
+.reviewPage>.classReview{width:100%;max-width:100%}
+.reviewPage .reviewQuestionGrid{grid-template-columns:repeat(2,minmax(0,1fr))}
+@media(min-width:761px) and (max-width:1150px){
+ .s-wrap.studentMarketScreen{padding:9px 11px}
+ .studentMarketBody{grid-template-columns:minmax(260px,.8fr) minmax(0,1.2fr);gap:8px}
+ .studentMarketBody>.card{padding:12px}
+ .graphFinishedScreen .seesawColumns{min-height:390px}
+ .seesawGraphArea,.seesawGraphArea .practiceChartWrap{min-height:250px}
+ .seesawHalf>.card{padding:10px!important}
+ .seesawHalf .seesawScene{max-height:30vh}
+}
+@media(max-width:760px){
+ .studentMarketBody{display:flex;flex-direction:column;gap:9px}
+ .studentMarketBody>.card{width:100%;margin:0}
+ .studentMarketScreen .s-top{flex-wrap:wrap}
+ .graphFinishedScreen{height:auto;min-height:100dvh;overflow:visible;padding:6px 7px}
+ .graphFinishedScreen .seesawColumns{grid-template-columns:minmax(0,1fr);min-height:0;gap:8px}
+ .graphFinishedScreen .seesawHalf{min-height:0}
+ .seesawGraphArea,.seesawGraphArea .practiceChartWrap{min-height:290px}
+ .seesawGraphArea .practiceChart{height:auto;max-height:none}
+ .graphStudentScreen{height:auto;min-height:100dvh;overflow:visible;padding:6px 7px}
+ .graphStudentPanel{display:flex;flex-direction:column;overflow:visible}
+ .graphDataSide,.graphPlotSide{width:100%;flex:none}
+ .graphPlotArea{min-height:350px}
+ .reviewPage{padding:6px}
+ .reviewPage .reviewQuestionGrid{grid-template-columns:1fr}
+}
+@media(min-width:761px) and (max-height:650px){
+ .graphFinishedScreen{height:auto;min-height:100dvh;overflow:visible}
+ .graphFinishedScreen .seesawColumns{min-height:440px}
+ .graphStudentScreen{height:auto;min-height:100dvh;overflow:visible}
+ .graphPlotArea{min-height:310px}
+}
 </style>
 </head>
 <body>
@@ -1626,19 +1694,19 @@ function renderStudent() {
   };
 
   if (st.phase === 'trading') {
-    body += `<div class="card center"><div class="timer s" id="timer"></div><div class="bar" id="tbar"><i></i></div></div>`;
-    body += `<details class="card" open><summary style="cursor:pointer;font-size:23px">👥 이번 회차 수요자·공급자 명단</summary><div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:12px">${roster}</div></details><div class="card">${cardHTML}</div>`;
+    body += `<div class="card center studentTimerPanel"><div class="timer s" id="timer"></div><div class="bar" id="tbar"><i></i></div></div>`;
+    body += `<details class="card studentRosterPanel" open><summary style="cursor:pointer;font-size:23px">👥 이번 회차 수요자·공급자 명단</summary><div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:12px">${roster}</div></details><div class="card studentOwnCard">${cardHTML}</div>`;
 
     // 나랑 거래했다고 적은 친구가 있으면 한 번에 맞출 수 있게
     if (!myPair && claims.length) {
-      body += `<div class="card"><h3>📨 나에게 온 거래 요청 · 가격 확인 후 확정</h3>${claims.map(([id, s]) =>
+      body += `<div class="card studentClaimsPanel"><h3>📨 나에게 온 거래 요청 · 가격 확인 후 확정</h3>${claims.map(([id, s]) =>
         `<div class="hl sky" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
           <span style="margin-right:auto">${nameOf(id)} · ${won(s.price)}</span>
           <button class="btn sm mint" data-fix="${id}" data-fixprice="${s.price}">✅ 이 가격으로 거래 확정</button></div>`).join('')}</div>`;
     }
 
     if (myPair) {
-      body += `<div class="card"><div class="doneBox">✅ ${nameOf(curSub.partner)} 친구와 거래 성사!<br>${won(myPair.price)} · 손익 <b>${signed(profitOf(card, myPair.price))}</b></div>
+      body += `<div class="card studentActionPanel"><div class="doneBox">✅ ${nameOf(curSub.partner)} 친구와 거래 성사!<br>${won(myPair.price)} · 손익 <b>${signed(profitOf(card, myPair.price))}</b></div>
         <div class="hl peach center pop" style="font-size:30px;margin-top:12px">🪑 자리에 가서 앉아요!<br><span style="font-size:18px">다음 회차를 기다려 주세요</span></div></div>`;
     } else if (curSub && !editing) {
       // 기록은 했는데 아직 짝이 안 맞음 → 무엇이 다른지 보여 주고 바로 고칠 수 있게
@@ -1656,11 +1724,11 @@ function renderStudent() {
           fix = `<button class="btn big mint" style="width:100%" data-fix="${curSub.partner}" data-fixprice="${partnerSub.price}">${who} 친구처럼 ${won(partnerSub.price)}으로 맞추기</button>`;
         }
       }
-      body += `<div class="card">${box}${fix}<button class="btn lemon" id="edit" style="width:100%;margin-top:10px">✏️ 내 기록 고치기</button></div>`;
+      body += `<div class="card studentActionPanel">${box}${fix}<button class="btn lemon" id="edit" style="width:100%;margin-top:10px">✏️ 내 기록 고치기</button></div>`;
     } else {
       const opp = Object.keys(cards).filter(id => id !== pid && cards[id].role !== card.role);
       if (curSub && editing && !sel.partner) sel = { r: st.round, partner: curSub.partner === 'none' ? '' : curSub.partner, price: curSub.price || 0 };
-      body += `<div class="card">
+      body += `<div class="card studentActionPanel">
         <h3>✍️ 거래 기록하기</h3>
         <p class="muted" style="font-size:17px;margin-top:-6px">${card.role === 'buyer' ? '🏷️ 공급자' : '🛒 수요자'} 친구를 찾아 말로 흥정! 둘 다 서로를 고르고 같은 가격을 적어야 성사돼요.</p>
         <div class="lab">누구랑 거래했나요?</div>
@@ -1682,7 +1750,7 @@ function renderStudent() {
     body += lastResult() + `<div class="stage" style="min-height:30vh"><div class="bigEmoji bounce">🎲</div><div class="rule">다음 회차엔 카드가 새로 섞여요!<br><span class="muted">선생님이 시작할 때까지 기다려요 ⏳</span></div></div>`;
   }
 
-  app.innerHTML = `<div class="s-wrap">${head}${body}</div>`;
+  app.innerHTML = `<div class="s-wrap studentMarketScreen">${head}<div class="studentMarketBody">${body}</div></div>`;
   bindNameEditor();
   if(isEnd)bindSeeSaw();
 
