@@ -677,6 +677,43 @@ function downloadTradeAudit(){
  document.body.appendChild(link);link.click();
  setTimeout(()=>{URL.revokeObjectURL(url);link.remove();},500);
 }
+/* 3회차 종료 시 교사 허브에 자동으로 실제 거래 기록을 남깁니다.
+   이미 기록이 있으면 재저장하지 않으며 학생 응답에는 손대지 않습니다. */
+const automaticLogAttempts=new Set();
+async function saveFinishedTradeLog(){
+ if(demoMode||!isTeacher||!room||room.state?.phase!=='closed'||Number(room.state?.round)<ROUNDS)return;
+ const rounds=room.rounds||{},players=room.players||{},records=[],timestamps=[];
+ for(let r=1;r<=ROUNDS;r++){
+  const cards=cardsOf(r),subs=rounds[r]?.subs||{},pairs=pairsOf(r);
+  for(const [id,card] of Object.entries(cards)){
+   const sub=subs[id]||null,pair=pairs.find(p=>p.a===id||p.b===id);
+   const amount=pair?.price??null;
+   const pnl=amount===null?0:profitOf(card,amount);
+   if(Number(sub?.at)>1000000000000)timestamps.push(Number(sub.at));
+   records.push([r,players[id]?.name||'학생',card.role==='buyer'?'수요자':'공급자',
+     card.limit,sub?.partner&&sub.partner!=='none'?(players[sub.partner]?.name||'미확인'):'거래 안 함',
+     sub?.price??'',amount===null?'미성사':'성사',amount??'',pnl]);
+  }
+ }
+ if(!records.length)return;
+ const ts=timestamps.length?Math.max(...timestamps):Number(room.createdAt)||Date.now();
+ const d=new Date(ts),pad=n=>String(n).padStart(2,'0');
+ const day=[d.getFullYear(),pad(d.getMonth()+1),pad(d.getDate())].join('-');
+ const key='trade_'+code+'_'+day.replace(/-/g,'');
+ if(automaticLogAttempts.has(key))return;
+ automaticLogAttempts.add(key);
+ try{
+  const target=ref(db,'rooms/hub_main/logs/'+key);
+  if((await get(target)).exists())return;
+  const klass=(localStorage.getItem('marketgo_class_code')||'201').trim()||'201';
+  await set(target,{
+   key,app:'trade',title:'고@바 모찌 시장',room:String(code),classCode:klass,at:ts,
+   date:day+' '+pad(d.getHours())+':'+pad(d.getMinutes()),
+   cols:['회차','학생','역할','카드 금액','거래 상대','입력 가격','결과','성사 가격','손익'],
+   rows:records,extra:'실제 거래',sent:false
+  });
+ }catch(e){automaticLogAttempts.delete(key);console.warn('모찌 수업 기록 자동 저장 실패',e);}
+}
 /* 성사된 거래만 집계한 순위. 0건도 포함하되 실제 카드를 받은 회차가 있는 학생만 비교. */
 function tradeRanking(st){
   const finished=completedRounds(st),players=room.players||{},counts={};
@@ -1069,6 +1106,7 @@ function renderTeacher() {
   const cols = [...Array(ROUNDS)].map((_, i) => i + 1);
   const roundStarted = r => r <= completedRounds(st);
   const isEnd = st.phase === 'closed' && st.round >= ROUNDS;
+  if(isEnd)saveFinishedTradeLog();
   if(isEnd && resultChartRoom!==code){chartRound=st.round;resultChartRoom=code;}
   if(isEnd && !demoMode){teachingStage=Number(room.presentation?.stage||1);exampleMode=room.presentation?.source==='example';scenarioPrice=Number(room.presentation?.price||9000);revealScenario=!!room.presentation?.reveal;}
 
