@@ -365,6 +365,20 @@ button,.btn,.speech,.rule,.title,.card{word-break:keep-all;overflow-wrap:break-w
 @media(max-width:950px){
  .studentFullscreenBtn{min-height:42px;padding:7px 10px;font-size:17px}
 }
+
+/* 학생에게 내 거래 성사 여부와 손익을 읽기 쉬운 표로 표시 */
+.myTradeRecap{width:100%;max-width:100%;padding:15px;margin:0 0 12px}
+.myTradeRecap h2{font-size:clamp(23px,2.7vw,33px);margin:0 0 8px}
+.myTradeTotals{display:flex;flex-wrap:wrap;gap:10px;align-items:center;font-size:clamp(19px,2vw,27px)}
+.myTradeTotals>span{background:#f4eaff;border-radius:15px;padding:10px 15px;flex:1;min-width:180px}
+.myPnlLoss{color:#bb3f3f!important;font-weight:900}
+.myPnlGain{color:#16764c!important;font-weight:900}
+.myTradeTableWrap{overflow-x:auto;margin-top:9px}
+.myTradeTable{width:100%;border-collapse:collapse;font-size:clamp(15px,1.6vw,22px);color:#3a303d}
+.myTradeTable th,.myTradeTable td{border:1px solid #ccbfcf;text-align:center;padding:9px 7px;white-space:nowrap}
+.myTradeTable thead th{background:#fcebc5}
+.myTradeTable tbody tr:nth-child(even){background:#fff9ee}
+@media(max-width:760px){.myTradeRecap{padding:9px}.myTradeTable th,.myTradeTable td{padding:6px 4px;font-size:13px}.myTradeTotals{font-size:17px}}
 </style>
 </head>
 <body>
@@ -838,6 +852,31 @@ function actualTradeRecap(){
   }
   return {rounds,high,low,count,avg:count?Math.round(priceSum/count):null};
 }
+/* 3회차 종료: 학생이 자기 거래 결과와 각 회차 손익을 우리 반 결과와 나란히 확인 */
+function myTradeRecapHTML(studentId){
+  const st=room.state||{phase:'closed',round:ROUNDS};
+  const rows=[];
+  let deals=0,profit=0;
+  for(let r=1;r<=ROUNDS;r++){
+    const card=cardsOf(r)[studentId],sub=room.rounds?.[r]?.subs?.[studentId]||null;
+    if(!card)continue;
+    const pair=pairsOf(r).find(x=>x.a===studentId||x.b===studentId);
+    const value=pair?profitOf(card,pair.price):0;
+    if(pair)deals++;
+    profit+=value;
+    const role=card.role==='buyer'?'수요자':'공급자';
+    const outcome=pair?'✅ 거래 성사':'— 거래 미성사';
+    const partnerId=pair?(pair.a===studentId?pair.b:pair.a):sub?.partner;
+    const partner=partnerId&&partnerId!=='none'?(room.players?.[partnerId]?.name||'학생'):'없음';
+    rows.push('<tr><th>'+r+'회차</th><td>'+role+'</td><td>'+outcome+'</td><td>'+(pair?won(pair.price):'—')+
+      '</td><td class="'+(value<0?'myPnlLoss':value>0?'myPnlGain':'')+'">'+signed(value)+'</td></tr>');
+  }
+  return '<section class="card myTradeRecap"><h2>🙋 내 3회차 거래 결과</h2>'+
+    '<div class="myTradeTotals"><span>성사된 거래 <b>'+deals+'건</b></span><span>내 총손익 <b class="'+(profit<0?'myPnlLoss':profit>0?'myPnlGain':'')+'">'+signed(profit)+'</b></span></div>'+
+    '<div class="myTradeTableWrap"><table class="myTradeTable"><thead><tr><th>회차</th><th>역할</th><th>결과</th><th>거래 가격</th><th>내 손익</th></tr></thead><tbody>'+
+    (rows.join('')||'<tr><td colspan="5">참여한 거래 기록이 없습니다.</td></tr>')+'</tbody></table></div>'+
+    '<p class="muted">거래하지 못한 회차는 손익이 0원이에요. 내 카드 금액과 거래 가격의 차이로 손익을 계산했어요.</p></section>';
+}
 function tradeRecapHTML(){
   const r=actualTradeRecap(),cash=n=>n===null?'—':won(n);
   const evidence=(x)=>x.attempts?('시도 <b>'+x.attempts+'건</b> / 성사 <b>'+x.success+'건</b> / 미성사 <b>'+(x.attempts-x.success)+'건</b>'):'이번 수업에서 해당 가격에 거래를 시도한 기록이 없어요.';
@@ -1272,9 +1311,9 @@ function renderTeacher() {
   const resultsView=isEnd ? (teachingStage===1 ? sourceSwitch+(exampleMode?exampleResultsHTML():table+rankingHTML(st,showNames))+(!exampleMode?questionsHTML(cols)+proposalHTML:'') : teachingStage===2 ? equilibriumLessonHTML() : scenarioHTML()) : table;
   const stageNav=isEnd?`<div class="card center"><div class="chips" style="justify-content:center"><button class="btn ${teachingStage===1?'lemon':'sky'}" data-stage="1">① 거래 결과</button><button class="btn ${teachingStage===2?'lemon':'sky'}" data-stage="2">② 균형 가격·거래량</button><button class="btn ${teachingStage===3?'lemon':'sky'}" data-stage="3">③ 가격을 바꿔 보면?</button></div><div class="chips" style="justify-content:center"><button class="btn mint" id="goPriceLab">다음 단계로 넘어가기</button></div></div>`:'';
   // 학급 교사용도 학생과 같은 시소+그래프를 첫 화면으로 보여주고, 상세 기록만 접습니다.
-  const exerciseView=isEnd?teacherPracticeHTML():'';
+  const exerciseView=isEnd&&currentFlowStep()==='drawing'?teacherPracticeHTML():'';
   const detailsStillOpen=!!app.querySelector('.teacherExtras')?.open;
-  const teacherEndDetails=isEnd?`<details class="card teacherExtras"${detailsStillOpen?' open':''}><summary>📚 수업 자료 · 거래 결과 · 학생 제출 현황 펼치기</summary>
+  const teacherEndDetails=isEnd?`<details class="card teacherExtras"${detailsStillOpen?' open':''}><summary>📚 거래 내역·추가 자료 펼치기</summary>
     ${exerciseView}${stageNav}${resultsView}${teachingStage===1&&!exampleMode?logHTML:''}${presenceHTML}</details>`:'';
   const step=currentFlowStep(),reveal=currentSeesawReveal();
   const nextText=['정답 공개하기','시소 공개하기','그래프와 가격 변화 공개하기'];
@@ -1761,7 +1800,7 @@ function renderStudent() {
   }
 
   if(isEnd && currentFlowStep()==='recap'){
-    app.innerHTML='<div class="reviewPage">'+head+tradeRecapHTML()+
+    app.innerHTML='<div class="reviewPage">'+head+myTradeRecapHTML(pid)+tradeRecapHTML()+
       '<div class="hl lemon center">선생님과 거래 결과를 정리해 보세요. 다음 화면은 선생님이 열어 줘요.</div></div>';
     bindNameEditor();return;
   }
