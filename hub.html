@@ -461,6 +461,8 @@ function renderTeacher() {
       <p class="muted" style="font-size:15px">새 코드에서는 모든 활동이 처음부터 시작돼요. 이전 방의 기록은 삭제하지 않아요.</p>
       <p class="muted" style="font-size:15px">예전 반을 잘못 저장했다면 아래 기록 표의 <b>학급 수정</b>으로 정정할 수 있어요.</p><div class="muted" style="font-size:15px">이전 수업 코드: ${(() => { try { return (JSON.parse(localStorage.getItem('marketgo_lesson_room_history')||'[]')||[]).map(esc).join(' · ')||'없음'; } catch(e) { return '없음'; } })()}</div>
       <button class="btn mint" id="growthExport">⬇️ 학생별 활동 기록 CSV 다운로드</button>
+      <button class="btn sky" id="recoverTradeLog">↻ 누락된 모찌 시장 기록 불러오기</button>
+      <p class="muted" style="font-size:15px">입력한 방 코드의 서버 거래 데이터를 찾아 수업 기록 목록에 추가합니다. 기존 학생 데이터는 건드리지 않아요.</p>
       <p class="muted">예언 → 이유 → 그래프 비교 → 모찌 거래 가격과 근거를 합친 기록입니다. 학급과 방 번호는 교사 브라우저에만 저장돼요. 학생 이름이 중복되면 서로 다른 학생의 기록이 합쳐질 수 있으니 주의하세요.</p>
     </div>
     <div class="card"><div class="nowGrid">
@@ -507,6 +509,7 @@ function renderTeacher() {
   if(el('cancelChosenRoom'))el('cancelChosenRoom').onclick=()=>{roomChoice=null;renderTeacher();};
   el('newLessonRoom').onclick=newLessonRoom;
   el('growthExport').onclick=downloadGrowthCSV;
+  el('recoverTradeLog').onclick=recoverTradeLog;
   el('eraseRoom').onclick=eraseLessonRoom;
 }
 const GS_CODE = `// 3단원 시장 경제 기록 받기 (다연샘)
@@ -528,6 +531,46 @@ const csvOf = list => {
 };
 const download = (name, text) => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], { type: 'text/csv;charset=utf-8' })); a.download = name; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500); };
 const post = (url, l) => fetch(url, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ key: l.key, sheet: l.title, date: l.date, room: l.room, cols: l.cols || [], rows: l.rows || [] }) });
+
+/* 실시간 거래 기록으로부터 누락된 허브 수업 기록 재구성 */
+async function recoverTradeLog(){
+ const c=(el('growthRoom')?.value||localStorage.getItem('marketgo_lesson_room')||'').trim();
+ if(!/^\d{4}$/.test(c))return toast('네 자리 방 코드를 입력해 주세요.');
+ const b=el('recoverTradeLog');if(b)b.disabled=true;
+ try{
+  const snap=await get(ref(db,'rooms/trade_'+c));
+  if(!snap.exists())return toast('방 '+c+'의 거래 서버 데이터가 없어요.');
+  const data=snap.val()||{},rounds=data.rounds||{},players=data.players||{},rows=[],timestamps=[];
+  for(let r=1;r<=3;r++){
+   const pack=rounds[r]||{},cards=pack.cards||{},subs=pack.subs||{},seen=new Set(),pairs=[];
+   for(const [a,sa] of Object.entries(subs)){
+    const b=sa?.partner,sb=subs[b],ca=cards[a],cb=cards[b];
+    if(!b||b==='none'||!sb||sb.partner!==a||!ca||!cb||ca.role===cb.role||Number(sa.price)!==Number(sb.price))continue;
+    const key=[a,b].sort().join('|');if(seen.has(key))continue;seen.add(key);pairs.push({a,b,price:Number(sa.price)});
+   }
+   for(const [id,card] of Object.entries(cards)){
+    const sub=subs[id],pair=pairs.find(x=>x.a===id||x.b===id),price=pair?.price??null;
+    if(Number(sub?.at)>1000000000000)timestamps.push(Number(sub.at));
+    const profit=price===null?0:card.role==='buyer'?Number(card.limit)-price:price-Number(card.limit);
+    rows.push([r,players[id]?.name||'학생',card.role==='buyer'?'수요자':'공급자',Number(card.limit)||0,
+      sub?.partner&&sub.partner!=='none'?(players[sub.partner]?.name||'미확인'):'거래 안 함',
+      sub?.price??'',price===null?'미성사':'성사',price??'',profit]);
+   }
+  }
+  if(!rows.length)return toast('이 방에서 복원할 카드·거래 기록을 찾지 못했어요.');
+  const ts=timestamps.length?Math.max(...timestamps):Number(data.createdAt)||Date.now();
+  const d=new Date(ts),pad=n=>String(n).padStart(2,'0'),day=[d.getFullYear(),pad(d.getMonth()+1),pad(d.getDate())].join('-');
+  const klass=savedRoomClass(c)||localStorage.getItem('marketgo_class_code')||'201';
+  const key='trade_'+c+'_'+day.replace(/-/g,'');
+  const log={key,app:'trade',title:'고@바 모찌 시장',room:c,classCode:klass,at:ts,
+    date:day+' '+pad(d.getHours())+':'+pad(d.getMinutes()),
+    cols:['회차','학생','역할','카드 금액','거래 상대','입력 가격','결과','성사 가격','손익'],
+    rows,extra:'실제 거래',sent:false};
+  await set(H('logs/'+key),log);
+  toast(c+'번 방의 거래 기록 '+rows.length+'행을 수업 기록에 복원했어요.');
+ }catch(e){console.error(e);toast('기록 복원 실패. 서버 연결 및 권한을 확인해 주세요.');}
+ finally{if(b)b.disabled=false;}
+}
 async function downloadGrowthCSV(){
   const c=(document.getElementById('growthRoom')?.value||localStorage.getItem('marketgo_lesson_room')||'').trim();
   const klass=(savedRoomClass(c)||document.getElementById('classCode')?.value||localStorage.getItem('marketgo_class_code')||'201').trim();
