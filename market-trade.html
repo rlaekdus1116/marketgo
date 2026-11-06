@@ -343,6 +343,16 @@ button,.btn,.speech,.rule,.title,.card{word-break:keep-all;overflow-wrap:break-w
  .graphStudentScreen{height:auto;min-height:100dvh;overflow:visible}
  .graphPlotArea{min-height:310px}
 }
+
+.rankingPanel{margin:6px 0 12px}
+.rankingGrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px}
+.rankingGrid .rankingTile{margin:0;padding:12px 9px;min-width:0}
+.rankingTitle{font-size:clamp(18px,1.7vw,25px)}
+.rankingValue{font-size:clamp(20px,2.3vw,33px);line-height:1.2}
+.rankingGrid .chip{font-size:clamp(14px,1.3vw,18px);padding:6px 9px}
+.rankingFootnote{margin:10px 0 0;font-size:clamp(13px,1.3vw,17px)}
+@media(max-width:950px){.rankingGrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:480px){.rankingGrid{gap:5px}.rankingTitle{font-size:16px}.rankingValue{font-size:20px}}
 </style>
 </head>
 <body>
@@ -682,25 +692,25 @@ function tradeRanking(st){
     }
   }
   const rows=Object.values(counts).sort((a,b)=>b.deals-a.deals||a.name.localeCompare(b.name,'ko'));
-  if(!rows.length)return {rows:[],top:[],bottom:[],same:true,profitLeaders:[]};
+  if(!rows.length)return {rows:[],top:[],bottom:[],same:true,profitLeaders:[],lossLeaders:[]};
   const high=rows[0].deals,low=rows[rows.length-1].deals;
   const bestProfit=Math.max(0,...rows.map(x=>x.profit));
-  return {rows,top:rows.filter(x=>x.deals===high),bottom:rows.filter(x=>x.deals===low),same:high===low,profitLeaders:bestProfit>0?rows.filter(x=>x.profit===bestProfit):[]};
+  const worstProfit=Math.min(0,...rows.map(x=>x.profit));
+  return {rows,top:rows.filter(x=>x.deals===high),bottom:rows.filter(x=>x.deals===low),same:high===low,profitLeaders:bestProfit>0?rows.filter(x=>x.profit===bestProfit):[],lossLeaders:worstProfit<0?rows.filter(x=>x.profit===worstProfit):[]};
 }
 function rankingHTML(st,showNames){
- const {rows,top,bottom,same,profitLeaders}=tradeRanking(st);
- if(!rows.length)return '';
- const people=list=>showNames?'<div class="chips" style="justify-content:center">'+list.map(x=>'<span class="chip">'+esc(x.name)+'</span>').join('')+'</div>':
-  '<p class="muted" style="font-size:17px">이름을 보려면 「이름 보기」를 켜세요.</p>';
- let body='<div class="card"><h3>🏅 우리 반 거래 성과</h3><p class="muted" style="font-size:17px">거래왕은 성사 건수, 수익왕은 카드 기준 총이익으로 선정해요. 카드 조건이 무작위라 수익 1위가 반드시 가장 뛰어난 학생이라는 뜻은 아니에요.</p>';
- if(same)body+='<div class="hl lemon center">모두 '+rows[0].deals+'건씩 거래했어요. 거래왕과 거래꼴찌는 따로 정하지 않아요.</div>';
- else body+='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px">'+
-  '<div class="hl lemon center"><div style="font-size:25px">🏆 '+(top.length>1?'공동 ':'')+'거래왕</div><div style="font-size:39px">'+top[0].deals+'건</div>'+people(top)+'</div>'+
-  '<div class="hl sky center"><div style="font-size:25px">🍀 '+(bottom.length>1?'공동 ':'')+'거래꼴찌</div><div style="font-size:39px">'+bottom[0].deals+'건</div>'+people(bottom)+'</div></div>';
- if(profitLeaders.length)body+='<div class="hl mint center" style="margin-top:12px"><div style="font-size:25px">💰 '+(profitLeaders.length>1?'공동 ':'')+'수익왕</div><div style="font-size:39px">'+signed(profitLeaders[0].profit)+'</div>'+people(profitLeaders)+'</div>';
- return body+'</div>';
+  const {rows,top,bottom,same,profitLeaders,lossLeaders}=tradeRanking(st);
+  if(!rows.length)return '';
+  const people=list=>showNames?'<div class="chips" style="justify-content:center">'+list.map(x=>'<span class="chip">'+esc(x.name)+'</span>').join('')+'</div>':'<div class="muted">이름 보기 기능을 켜면 확인할 수 있어요.</div>';
+  const tile=(label,emoji,list,amount,color)=>'<div class="hl '+color+' center rankingTile"><div class="rankingTitle">'+emoji+' '+(list.length>1?'공동 ':'')+label+'</div><div class="rankingValue">'+amount+'</div>'+people(list)+'</div>';
+  return '<div class="card rankingPanel"><h3>🏅 우리 반 거래 결과</h3><div class="rankingGrid">'+
+    tile('거래왕','🏆',top,top[0].deals+'건','lemon')+
+    tile('거래꼴찌','🍀',bottom,bottom[0].deals+'건','sky')+
+    (profitLeaders.length?tile('수익왕','💰',profitLeaders,signed(profitLeaders[0].profit),'mint'):'<div class="hl mint center rankingTile">💰 수익왕<br>이익 기록 없음</div>')+
+    (lossLeaders.length?tile('가장 큰 손해','📉',lossLeaders,signed(lossLeaders[0].profit),'peach'):'<div class="hl peach center rankingTile">📉 가장 큰 손해<br>손해 기록 없음</div>')+
+    '</div>'+(same?'<p class="muted">거래왕과 거래꼴찌는 거래 건수가 같아 공동 기록이에요.</p>':'')+
+    '<p class="muted rankingFootnote">거래 건수와 손익은 무작위 카드 조건에 따라 달라질 수 있어요. 거래하지 않아 손해를 피하는 것도 합리적 선택이에요.</p></div>';
 }
-
 
 /* 수업 흐름: 3회차 실제 거래 정리 → 시소·그래프 → 곡선 그리기 */
 let demoFlowStep='recap',demoSeesawReveal=0;
@@ -752,6 +762,7 @@ function tradeRecapHTML(){
     '<div class="reviewSummary">성사된 거래 '+r.count+'건 · 평균 거래가격 '+cash(r.avg)+'</div>'+
     '<table class="reviewTradeTable"><thead><tr><th>회차</th><th>성사된 거래</th><th>평균 거래가격</th><th>거래가격 범위</th><th>거래 못한 학생</th></tr></thead><tbody>'+
     r.rounds.map(x=>'<tr><th>'+x.r+'회차</th><td>'+x.deals+'건</td><td>'+cash(x.avg)+'</td><td>'+(x.min===null?'—':cash(x.min)+' ~ '+cash(x.max))+'</td><td>'+x.unmatched+'명</td></tr>').join('')+'</tbody></table></div>'+
+    rankingHTML(room.state||{phase:'closed',round:ROUNDS},true)+
     '<div class="reviewQuestionGrid">'+
       '<div class="card"><h3>🏷️ 무조건 비싸게 팔면 팔릴까?</h3><p>12,000원 이상에 팔려고 입력한 경우</p><div class="reviewEvidence">'+evidence(r.high)+'</div><p>항상 팔리는지 생각해 보자.</p></div>'+
       '<div class="card"><h3>🛒 무조건 싸게 사려고 하면 살 수 있을까?</h3><p>6,000원 이하에 사려고 입력한 경우</p><div class="reviewEvidence">'+evidence(r.low)+'</div><p>항상 살 수 있는지 생각해 보자.</p></div>'+
@@ -1168,7 +1179,8 @@ function renderTeacher() {
   const stageNav=isEnd?`<div class="card center"><div class="chips" style="justify-content:center"><button class="btn ${teachingStage===1?'lemon':'sky'}" data-stage="1">① 거래 결과</button><button class="btn ${teachingStage===2?'lemon':'sky'}" data-stage="2">② 균형 가격·거래량</button><button class="btn ${teachingStage===3?'lemon':'sky'}" data-stage="3">③ 가격을 바꿔 보면?</button></div><div class="chips" style="justify-content:center"><button class="btn mint" id="goPriceLab">다음 단계로 넘어가기</button></div></div>`:'';
   // 학급 교사용도 학생과 같은 시소+그래프를 첫 화면으로 보여주고, 상세 기록만 접습니다.
   const exerciseView=isEnd?teacherPracticeHTML():'';
-  const teacherEndDetails=isEnd?`<details class="card teacherExtras"><summary>📚 수업 자료 · 거래 결과 · 학생 제출 현황 펼치기</summary>
+  const detailsStillOpen=!!app.querySelector('.teacherExtras')?.open;
+  const teacherEndDetails=isEnd?`<details class="card teacherExtras"${detailsStillOpen?' open':''}><summary>📚 수업 자료 · 거래 결과 · 학생 제출 현황 펼치기</summary>
     ${exerciseView}${stageNav}${resultsView}${teachingStage===1&&!exampleMode?logHTML:''}${presenceHTML}</details>`:'';
   const step=currentFlowStep(),reveal=currentSeesawReveal();
   const nextText=['정답 공개하기','시소 공개하기','그래프와 가격 변화 공개하기'];
@@ -1185,6 +1197,7 @@ function renderTeacher() {
     flowControls+
     teacherEndDetails+'</div>':null;
   patchHTML(app, teacherEndBody||`<div class="wrap">${topbar}${main}${resultsView}${presenceHTML}</div>`);
+  if(isEnd&&detailsStillOpen){const d=app.querySelector('.teacherExtras');if(d&&!d.open)d.open=true;}
   if (st.phase === 'lobby' && window.QRCode && el('qr') && !el('qr').firstChild) new QRCode(el('qr'), { text: link, width: 200, height: 200, colorDark: '#5B4B57', colorLight: '#ffffff' });
 
   const bind = (id, fn) => { const b = el(id); if (b) b.onclick = fn; };
