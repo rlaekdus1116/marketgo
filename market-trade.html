@@ -353,6 +353,18 @@ button,.btn,.speech,.rule,.title,.card{word-break:keep-all;overflow-wrap:break-w
 .rankingFootnote{margin:10px 0 0;font-size:clamp(13px,1.3vw,17px)}
 @media(max-width:950px){.rankingGrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:480px){.rankingGrid{gap:5px}.rankingTitle{font-size:16px}.rankingValue{font-size:20px}}
+
+/* 갤럭시탭 S6: 학생용 전체화면 버튼, 누른 뒤엔 화면 전체가 수업 영역 */
+.studentFullscreenBtn{display:inline-flex;align-items:center;justify-content:center;flex:none;min-height:43px;padding:8px 13px;white-space:nowrap;font-size:clamp(16px,1.4vw,21px);background:#fff0b9!important;border:2px solid #d3a951}
+.lessonFullscreen,.lessonFullscreen body{width:100%;height:100%;min-height:100%;overflow-x:hidden}
+.lessonFullscreen .graphFinishedScreen,.lessonFullscreen .graphStudentScreen{height:100dvh;max-height:100dvh;overflow-y:auto}
+.lessonFullscreen .s-wrap.studentMarketScreen{max-width:100%;min-height:100dvh}
+.lessonFullscreen .reviewPage{max-width:100%;min-height:100dvh}
+.lessonFullscreen .seesawGraphArea{min-height:320px}
+.lessonFullscreen .seesawGraphArea .practiceChartWrap{min-height:320px}
+@media(max-width:950px){
+ .studentFullscreenBtn{min-height:42px;padding:7px 10px;font-size:17px}
+}
 </style>
 </head>
 <body>
@@ -377,6 +389,40 @@ const db = getDatabase(initializeApp(firebaseConfig));
 let offset = 0;
 onValue(ref(db, '.info/serverTimeOffset'), s => { offset = s.val() || 0; });
 const now = () => Date.now() + offset;   // 모든 기기가 같은 시계를 보도록 서버 시간 기준
+
+/* 갤럭시탭 크롬: 학생이 직접 탭해 브라우저의 주소·도구 모음을 숨기는 전체화면 모드. */
+function setStudentFullscreenLabel(){
+  const active=!!document.fullscreenElement;
+  document.documentElement.classList.toggle('lessonFullscreen',active);
+  document.querySelectorAll('[data-fullscreen-toggle]').forEach(button=>{
+    button.textContent=active?'↙ 전체화면 종료':'⛶ 전체화면';
+    button.setAttribute('aria-label',active?'전체화면 종료':'수업 화면 전체화면으로 보기');
+    button.setAttribute('aria-pressed',String(active));
+  });
+}
+document.addEventListener('fullscreenchange',setStudentFullscreenLabel);
+document.addEventListener('click',async event=>{
+  const b=event.target.closest?.('[data-fullscreen-toggle]');
+  if(!b||isTeacher)return;
+  event.preventDefault();
+  if(b.disabled)return;
+  b.disabled=true;
+  try{
+    if(document.fullscreenElement){
+      await document.exitFullscreen();
+    }else if(document.documentElement.requestFullscreen){
+      await document.documentElement.requestFullscreen({navigationUI:'hide'});
+    }else{
+      toast('이 브라우저에서는 전체화면 버튼을 지원하지 않아요. 크롬 메뉴에서 전체화면으로 전환해 주세요.');
+    }
+  }catch(error){
+    console.warn('Student fullscreen not available',error);
+    toast('전체화면을 열 수 없어요. 크롬에서 직접 열고 다시 눌러 주세요.');
+  }finally{
+    b.disabled=false;
+    setStudentFullscreenLabel();
+  }
+});
 
 /* ========== 설정 ========== */
 const BUYER_VALUES  = [3000, 4500, 6000, 7500, 9000, 10500, 12000, 13500, 15000]; // 9,000원 전후로 협상할 수 있는 가상 카드
@@ -1700,7 +1746,7 @@ function renderStudent() {
   lastSig = sig;
   if (sel.r !== st.round) { sel = { r: st.round, partner: '', price: 0 }; editing = false; }
 
-  const head = `<div class="s-top" style="flex-wrap:wrap"><span class="me">🙂 ${esc(name)}</span><button type="button" class="btn sm sky" id="editNameBtn">✏️ 이름 수정</button><span class="pill">⭐ 총 손익 ${signed(totalProfit(st))}</span></div>
+  const head = `<div class="s-top" style="flex-wrap:wrap"><span class="me">🙂 ${esc(name)}</span><button type="button" class="btn sm lemon studentFullscreenBtn" data-fullscreen-toggle aria-label="수업 화면 전체화면으로 보기">⛶ 전체화면</button><button type="button" class="btn sm sky" id="editNameBtn">✏️ 이름 수정</button><span class="pill">⭐ 총 손익 ${signed(totalProfit(st))}</span></div>
     ${nameEditorOpen ? `<div class="card" style="margin-bottom:12px"><label for="editNameInput" class="lab">바꿀 이름을 입력하세요 (최대 8자)</label>
       <input class="field" id="editNameInput" maxlength="8" autocomplete="name" value="${esc(nameDraft)}">
       <div class="chips"><button type="button" class="btn sm mint" id="saveNameBtn">✅ 이름 저장</button><button type="button" class="btn sm" id="cancelNameBtn">취소</button></div>
