@@ -1385,7 +1385,8 @@ function renderTeacher() {
   const step=currentFlowStep(),reveal=currentSeesawReveal();
   const nextText=['정답 공개하기','시소 공개하기','그래프와 가격 변화 공개하기'];
   const flowControls=isEnd?'<div class="reviewAction">'+
-    (step==='recap'?'<button type="button" class="btn big mint" id="flowToSeesaw">📋 거래 정리 끝 · 가상 시장 표 보기</button>':
+    (step==='recap'?'<button type="button" class="btn big mint" id="flowToPostSurvey">📝 거래 정리 끝 · 가격 결정 생각 다시 쓰기</button>':
+     step==='postSurvey'?'<button type="button" class="btn big mint" id="flowToSeesaw">📈 서술형 설문 마감 · 가상 시장 표와 그래프 보기</button><button type="button" class="btn sky" id="flowBackRecap">◀ 거래 정리 다시 보기</button>':
      step==='seesaw'?(
        (reveal<3?'<button type="button" class="btn big mint" id="revealSeesawNext">'+nextText[reveal]+' ▶</button>':
          '<button type="button" class="btn big mint" id="flowToDrawing">📈 이제 수요곡선부터 그리기</button>')+
@@ -1393,7 +1394,7 @@ function renderTeacher() {
        '<button type="button" class="btn sky" id="flowBackRecap">◀ 실제 거래 정리</button>'):
      '<button type="button" class="btn sky" id="flowBackSeesaw">◀ 시소 다시 보기</button>')+'</div>':'';
   const teacherEndBody=isEnd?'<div class="teacherSeesawMode">'+topbar+
-    (step==='recap'?tradeRecapHTML():step==='seesaw'?stagedSeesawHTML():seesawComparisonHTML(seesawPrice))+
+    (step==='recap'?tradeRecapHTML():step==='postSurvey'?postSurveyTeacherHTML():step==='seesaw'?stagedSeesawHTML():seesawComparisonHTML(seesawPrice))+
     flowControls+
     teacherEndDetails+'</div>':null;
   patchHTML(app, teacherEndBody||`<div class="wrap">${topbar}${main}${resultsView}${presenceHTML}</div>`);
@@ -1402,6 +1403,7 @@ function renderTeacher() {
 
   const bind = (id, fn) => { const b = el(id); if (b) b.onclick = fn; };
   bind('names', () => { showNames = !showNames; render(); });
+  bind('flowToPostSurvey',()=>switchTradeFlow('postSurvey'));
   bind('flowToSeesaw',()=>switchTradeFlow('seesaw'));
   bind('revealSeesawNext',()=>setSeesawReveal(currentSeesawReveal()+1));
   bind('revealSeesawPrev',()=>setSeesawReveal(currentSeesawReveal()-1));
@@ -1847,7 +1849,7 @@ function renderStudent() {
   if (myPair) maybeAnnounce(`deal-${st.round}`, () => announce('거래 성사!!', '🪑 이제 자리에 가서 앉아요!', '🤝', 6000));
 
   // 같은 상태면 다시 그리지 않음 (입력 중인 내용이 날아가지 않게)
-  const sig = JSON.stringify([st.phase, st.round, card, Object.entries(players).map(([id, p]) => [id, p?.name || '']), nameEditorOpen, curSub, !!myPair, partnerSub, claims, editing, isEnd ? (room.recommendations||{})[pid]||null : null, isEnd?room.graphDraft?.[pid]||null:null, isEnd?room.graphWork?.[pid]||null:null, isEnd?currentFlowStep():null, isEnd?currentSeesawReveal():null, isEnd?room.presentation?.seesawPrice:null]);
+  const sig = JSON.stringify([st.phase, st.round, card, Object.entries(players).map(([id, p]) => [id, p?.name || '']), nameEditorOpen, curSub, !!myPair, partnerSub, claims, editing, isEnd ? (room.recommendations||{})[pid]||null : null, isEnd?room.graphDraft?.[pid]||null:null, isEnd?room.graphWork?.[pid]||null:null, isEnd?currentFlowStep():null, isEnd?currentSeesawReveal():null, isEnd?room.presentation?.seesawPrice:null, isEnd?postSurveyOf()[pid]||null:null]);
   if (sig === lastSig) return;
   lastSig = sig;
   if (sel.r !== st.round) { sel = { r: st.round, partner: '', price: 0 }; editing = false; }
@@ -1870,6 +1872,12 @@ function renderStudent() {
     app.innerHTML='<div class="reviewPage">'+head+myTradeRecapHTML(pid)+tradeRecapHTML()+
       '<div class="hl lemon center">선생님과 거래 결과를 정리해 보세요. 다음 화면은 선생님이 열어 줘요.</div></div>';
     bindNameEditor();return;
+  }
+  if(isEnd && currentFlowStep()==='postSurvey'){
+    const savedAnswer=postSurveyOf()[pid];
+    if(!savedAnswer?.answer&&postSurveyDraftLoadedFor!==code+'_'+pid){postSurveyDraft='';postSurveyDraftLoadedFor=code+'_'+pid;}
+    app.innerHTML='<div class="reviewPage">'+head+postSurveyStudentHTML(pid)+'</div>';
+    bindNameEditor();bindPostSurveyStudent();return;
   }
   if(isEnd && currentFlowStep()==='seesaw'){
     app.innerHTML='<div class="graphFinishedScreen">'+head+stagedSeesawHTML()+'</div>';
