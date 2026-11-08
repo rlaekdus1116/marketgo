@@ -396,6 +396,19 @@ button,.btn,.speech,.rule,.title,.card{word-break:keep-all;overflow-wrap:break-w
 @media(max-width:760px){.postSurveyCard,.postSurveyTeacher{padding:12px!important}.postSurveyCard h2,.postSurveyTeacher h2{font-size:26px}.postSurveyInput{font-size:19px;min-height:160px}.postSurveyActions{justify-content:center}}
 /* 시소: 설명은 한 문장으로 */
 .seesawRule{margin:3px 0;font-size:clamp(18px,1.6vw,23px);color:#5B4B57;font-weight:700}
+
+/* 교사: 학생 재입장 QR을 필요할 때만 크게 표시 */
+#rejoinQrButton{font-size:clamp(14px,1.15vw,17px);white-space:nowrap}
+.rejoinQrBackdrop[hidden]{display:none}
+.rejoinQrBackdrop{position:fixed;inset:0;z-index:150;background:rgba(32,25,39,.68);display:flex;align-items:center;justify-content:center;padding:16px}
+.rejoinQrDialog{position:relative;width:min(440px,100%);max-height:min(95dvh,840px);overflow-y:auto;display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px;background:#fffaf7;border-radius:25px;border:3px solid #DFCBE9;box-shadow:0 18px 60px rgba(20,15,25,.25);padding:18px 20px 22px}
+.rejoinQrDialog h2{margin:8px 0 0;font-size:clamp(23px,2.4vw,32px)}
+.rejoinQrCode{font-size:clamp(26px,3.2vw,40px);font-weight:900;color:#654582}
+.rejoinQrImage{display:flex;align-items:center;justify-content:center;width:286px;height:286px;background:#fff;border-radius:16px;padding:8px}
+.rejoinQrImage img,.rejoinQrImage canvas{width:270px!important;height:270px!important;display:block}
+.rejoinQrHint{font-size:17px;line-height:1.4;margin:0 0 4px}
+.rejoinQrClose{position:absolute;right:12px;top:9px;background:#F2E7FA;border-radius:12px;font-size:24px;padding:2px 11px}
+.rejoinQrBackdrop .btn{margin:4px}
 </style>
 </head>
 <body>
@@ -1250,6 +1263,48 @@ function bindStudentPractice(kind){
 }
 
 /* ========== 선생님 화면 ========== */
+/* 교사 전용: 진행 중인 동일 수업방을 다시 열 수 있도록 QR를 띄웁니다.
+   Firebase 진행 상태 및 학생 거래 기록은 변경하지 않습니다. */
+function showRejoinQr(){
+  if(!isTeacher||demoMode||!/^\d{4}$/.test(String(code)))return;
+  const url=new URL('market-trade.html',location.href);
+  url.search='?room='+encodeURIComponent(code);
+  let modal=document.getElementById('rejoinQrModal');
+  if(modal){modal.hidden=false;modal.querySelector('#rejoinQrClose')?.focus();return;}
+  modal=document.createElement('div');
+  modal.id='rejoinQrModal';
+  modal.className='rejoinQrBackdrop';
+  modal.setAttribute('role','presentation');
+  modal.innerHTML='<section class="rejoinQrDialog" role="dialog" aria-modal="true" aria-labelledby="rejoinQrHeading">'+
+    '<button type="button" id="rejoinQrClose" class="rejoinQrClose" aria-label="QR 닫기">✕</button>'+
+    '<h2 id="rejoinQrHeading">📷 모찌 시장 다시 입장</h2>'+
+    '<div class="rejoinQrCode">방 '+esc(code)+'</div>'+
+    '<div class="rejoinQrImage" id="rejoinQrImage"></div>'+
+    '<p class="rejoinQrHint">같은 태블릿·브라우저에서 QR을 찍으면 기존 기록을 이어서 볼 수 있어요.</p>'+
+    '<button type="button" id="rejoinQrCopy" class="btn sm sky">🔗 입장 링크 복사</button>'+
+    '<button type="button" id="rejoinQrDone" class="btn sm lemon">닫기</button>'+
+    '</section>';
+  document.body.appendChild(modal);
+  const close=()=>modal.remove();
+  modal.querySelector('#rejoinQrClose').onclick=close;
+  modal.querySelector('#rejoinQrDone').onclick=close;
+  modal.addEventListener('click',e=>{if(e.target===modal)close();});
+  const escape=e=>{if(e.key==='Escape'){document.removeEventListener('keydown',escape);close();}};
+  document.addEventListener('keydown',escape,{once:false});
+  const copy=modal.querySelector('#rejoinQrCopy');
+  copy.onclick=async()=>{
+    try{await navigator.clipboard.writeText(url.href);toast('재입장 링크를 복사했어요.');}
+    catch(e){toast('링크를 복사할 수 없어요. QR을 이용해 주세요.');}
+  };
+  const canvas=modal.querySelector('#rejoinQrImage');
+  if(window.QRCode){
+    new QRCode(canvas,{text:url.href,width:270,height:270,colorDark:'#44354A',colorLight:'#FFFFFF',correctLevel:window.QRCode.CorrectLevel?.M});
+  }else{
+    canvas.textContent='QR 이미지를 불러오지 못했어요. 링크 복사 버튼을 이용해 주세요.';
+  }
+  modal.querySelector('#rejoinQrClose').focus();
+}
+
 function renderTeacher() {
   const players = room.players || {}, rounds = room.rounds || {};
   const st = room.state || { phase: 'lobby', round: 0 };
@@ -1280,6 +1335,7 @@ function renderTeacher() {
     ${st.round ? `<span class="pill">${st.round} / ${ROUNDS}회차</span>` : ''}
     <span class="pill">🙋 ${pids.length}명</span>
     <span class="pill">${demoMode ? '가상 데이터 · 실제 기록 아님' : '방 ' + esc(code)}</span>
+    ${!demoMode?'<button type="button" class="btn sm sky" id="rejoinQrButton" aria-haspopup="dialog">📷 QR 재입장</button>':''}
     <button class="btn sm ${showNames ? 'lemon' : 'sky'}" id="names">👀 이름 보기: ${showNames ? '켬' : '끔'}</button><button class="btn sm lemon" id="auditCsv">⬇️ 거래 진단 CSV</button><button class="btn sm" id="backStep">◀ 이전 단계</button><a class="btn sm sky" href="hub.html?t=1">🏠 허브로</a>
   </div>`;
 
@@ -1405,6 +1461,7 @@ function renderTeacher() {
 
   const bind = (id, fn) => { const b = el(id); if (b) b.onclick = fn; };
   bind('names', () => { showNames = !showNames; render(); });
+  bind('rejoinQrButton',showRejoinQr);
   bind('flowToPostSurvey',()=>switchTradeFlow('postSurvey'));
   bind('flowToSeesaw',()=>switchTradeFlow('seesaw'));
   bind('revealSeesawNext',()=>setSeesawReveal(currentSeesawReveal()+1));
