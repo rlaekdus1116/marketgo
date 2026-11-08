@@ -394,6 +394,8 @@ button,.btn,.speech,.rule,.title,.card{word-break:keep-all;overflow-wrap:break-w
 .postSurveyAnswerRow{background:#fff;margin:12px 0;padding:13px;border-radius:12px;border:1px solid #DACCE7;font-size:clamp(17px,1.6vw,22px);white-space:pre-wrap;overflow-wrap:anywhere}
 .postSurveyAnswerRow p{margin:7px 0;line-height:1.5}
 @media(max-width:760px){.postSurveyCard,.postSurveyTeacher{padding:12px!important}.postSurveyCard h2,.postSurveyTeacher h2{font-size:26px}.postSurveyInput{font-size:19px;min-height:160px}.postSurveyActions{justify-content:center}}
+/* 시소: 설명은 한 문장으로 */
+.seesawRule{margin:3px 0;font-size:clamp(18px,1.6vw,23px);color:#5B4B57;font-weight:700}
 </style>
 </head>
 <body>
@@ -821,7 +823,7 @@ function rankingHTML(st,showNames){
     (profitLeaders.length?tile('수익왕','💰',profitLeaders,signed(profitLeaders[0].profit),'mint'):'<div class="hl mint center rankingTile">💰 수익왕<br>이익 기록 없음</div>')+
     (lossLeaders.length?tile('가장 큰 손해','📉',lossLeaders,signed(lossLeaders[0].profit),'peach'):'<div class="hl peach center rankingTile">📉 가장 큰 손해<br>손해 기록 없음</div>')+
     '</div>'+(same?'<p class="muted">거래왕과 거래꼴찌는 거래 건수가 같아 공동 기록이에요.</p>':'')+
-    '<p class="muted rankingFootnote">거래 건수와 손익은 무작위 카드 조건에 따라 달라질 수 있어요. 거래하지 않아 손해를 피하는 것도 합리적 선택이에요.</p></div>';
+    '</div>';
 }
 
 /* 수업 흐름: 3회차 실제 거래 정리 → 사후 서술형 설문 → 시소·그래프 → 곡선 그리기 */
@@ -890,7 +892,7 @@ function myTradeRecapHTML(studentId){
     '<div class="myTradeTotals"><span>성사된 거래 <b>'+deals+'건</b></span><span>내 총손익 <b class="'+(profit<0?'myPnlLoss':profit>0?'myPnlGain':'')+'">'+signed(profit)+'</b></span></div>'+
     '<div class="myTradeTableWrap"><table class="myTradeTable"><thead><tr><th>회차</th><th>역할</th><th>결과</th><th>거래 가격</th><th>내 손익</th></tr></thead><tbody>'+
     (rows.join('')||'<tr><td colspan="5">참여한 거래 기록이 없습니다.</td></tr>')+'</tbody></table></div>'+
-    '<p class="muted">거래하지 못한 회차는 손익이 0원이에요. 내 카드 금액과 거래 가격의 차이로 손익을 계산했어요.</p></section>';
+    '</section>';
 }
 function tradeRecapHTML(){
   const r=actualTradeRecap(),cash=n=>n===null?'—':won(n);
@@ -903,7 +905,7 @@ function tradeRecapHTML(){
     '<div class="reviewQuestionGrid">'+
       '<div class="card"><h3>🏷️ 무조건 비싸게 팔면 팔릴까?</h3><p>12,000원 이상에 팔려고 입력한 경우</p><div class="reviewEvidence">'+evidence(r.high)+'</div><p>항상 팔리는지 생각해 보자.</p></div>'+
       '<div class="card"><h3>🛒 무조건 싸게 사려고 하면 살 수 있을까?</h3><p>6,000원 이하에 사려고 입력한 경우</p><div class="reviewEvidence">'+evidence(r.low)+'</div><p>항상 살 수 있는지 생각해 보자.</p></div>'+
-    '</div><p class="reviewNote">※ 가격대는 실제 기록을 비교하기 위한 예시 기준이야. 거래 실패에는 상대 선택이나 가격 입력 불일치도 영향을 주므로 가격만을 원인으로 단정하지 않아.</p></section>';
+    '</div></section>';
 }
 /* 사후 서술형 설문: 기존 객관식 투표와는 별도로 방 번호/학생 ID로 영구 보존. */
 const POST_SURVEY_QUESTION='시장에서 가격은 누가 결정할까?';
@@ -918,7 +920,7 @@ function postSurveyStudentHTML(studentId){
   return '<section class="card postSurveyCard"><div class="postSurveyTag">📝 거래 후 생각 정리</div>'+
     '<h2>'+POST_SURVEY_QUESTION+'</h2>'+hint+
     '<textarea id="postSurveyAnswer" class="field postSurveyInput" maxlength="500" rows="5" placeholder="거래 경험을 바탕으로 내 생각과 이유를 적어 보세요.">'+esc(postSurveyDraft)+'</textarea>'+
-    '<div class="postSurveyActions"><span class="muted">모범답안을 미리 보여 주지 않아요. 내 생각을 적어 주세요.</span>'+
+    '<div class="postSurveyActions">'+
     '<button type="button" class="btn big mint" id="submitPostSurvey"'+(postSurveySubmitBusy?' disabled':'')+'>✅ 내 생각 제출하기</button></div></section>';
 }
 function postSurveyTeacherHTML(){
@@ -926,13 +928,13 @@ function postSurveyTeacherHTML(){
   const waiting=ids.filter(id=>!entries[id]?.answer);
   return '<section class="card postSurveyTeacher"><div class="postSurveyTag">📝 3회차 거래 후 다시 묻기</div>'+
     '<h2>'+POST_SURVEY_QUESTION+'</h2>'+
-    '<p class="postSurveyHint">학생들은 거래 경험을 근거로 자유롭게 서술해요. 제출 전에는 정답을 공개하지 않아요.</p>'+
+
     '<div class="reviewSummary">제출 <b>'+submitted.length+'/'+ids.length+'명</b></div>'+
     '<div class="chips">'+(submitted.map(id=>'<span class="chip soft">✅ '+esc(players[id].name||'학생')+'</span>').join('')||'<span class="muted">아직 제출한 학생이 없어요.</span>')+'</div>'+
     (waiting.length?'<p class="muted">미제출 '+waiting.length+'명 · '+waiting.map(id=>esc(players[id].name||'학생')).join(', ')+'</p>':'<p class="hl mint">모든 학생이 제출했어요.</p>')+
     '<details class="postSurveyAnswers"><summary>학생별 서술 답변 확인하기 (교사용)</summary>'+
     (submitted.map(id=>'<div class="postSurveyAnswerRow"><b>'+esc(players[id].name||'학생')+'</b><p>'+esc(entries[id].answer)+'</p></div>').join('')||'<p>제출된 답변이 없어요.</p>')+
-    '</details><p class="muted">사전 객관식 투표와 사후 서술 답변은 별도로 보존하며, 허브의 학생별 활동 기록 CSV에서 비교할 수 있어요.</p></section>';
+    '</details></section>';
 }
 function bindPostSurveyStudent(){
   const field=el('postSurveyAnswer'),button=el('submitPostSurvey');
@@ -1053,9 +1055,9 @@ function practiceGraph(demand={},supply={},activeKind='',activeRow=0,highlightPr
 function seesawHTML(price=9000){
   const idx=PRACTICE_PRICES.indexOf(+price),j=Math.max(0,idx);
   const d=PRACTICE_D[j],sp=PRACTICE_S[j],tilt=-(d-sp)*2.0;
-  const state=d===sp?'⚖️ 수요량과 공급량이 같아서 시소가 수평이에요. 이 가격은 균형가격이에요.':d>sp?'🛒 사려는 양이 더 많아 수요자 쪽이 아래로! 가격이 올라갈 압력이 생겨요.':'🏷️ 팔려는 양이 더 많아 공급자 쪽이 아래로! 가격이 내려갈 압력이 생겨요.';
+  const state=d===sp?'⚖️ 수요량 = 공급량 · 물건이 부족하거나 남지 않아요.':d>sp?'🛒 '+(d-sp)+'개 부족해요 → 사고 싶은 사람이 더 많아요 → 가격 상승 ↑':'🏷️ '+(sp-d)+'개 남아요 → 팔려는 사람이 더 많아요 → 가격 하락 ↓';
   const human=(x,color,label)=>`<g transform="translate(${x} 150)"><circle cx="0" cy="0" r="28" fill="#FBD6B5" stroke="#805C58" stroke-width="3"/><path d="M-31 49 Q0 12 31 49 L34 68 L-34 68 Z" fill="${color}" stroke="#805C58" stroke-width="3"/><circle cx="-9" cy="-3" r="3.5" fill="#493D36"/><circle cx="9" cy="-3" r="3.5" fill="#493D36"/><path d="M-7 13 Q0 20 7 13" fill="none" stroke="#493D36" stroke-width="3"/><text x="0" y="-51" font-size="22" text-anchor="middle" fill="#5B4B57" font-weight="bold">${label}</text></g>`;
-  return `<div class="card" style="text-align:center"><h3>🎢 수요자와 공급자가 타는 시소</h3><p class="muted">위의 표에서 가격을 누르면 시소가 움직여요. 아래로 기울어진 쪽의 수량이 더 많아요.</p><div class="chips seesawPriceButtons" style="justify-content:center">${PRACTICE_PRICES.map(p=>`<button type="button" class="btn sm ${p===PRACTICE_PRICES[j]?'lemon':'sky'}" data-seesaw-price="${p}">${won(p)}</button>`).join('')}</div>
+  return `<div class="card" style="text-align:center"><h3>🎢 수요자와 공급자가 타는 시소</h3><p class="seesawRule">수량이 더 많은 쪽이 아래로 내려가요.</p><div class="chips seesawPriceButtons" style="justify-content:center">${PRACTICE_PRICES.map(p=>`<button type="button" class="btn sm ${p===PRACTICE_PRICES[j]?'lemon':'sky'}" data-seesaw-price="${p}">${won(p)}</button>`).join('')}</div>
     <svg class="seesawScene" viewBox="0 0 840 390" role="img" aria-label="가격 ${won(PRACTICE_PRICES[j])}, 수요량 ${d}개, 공급량 ${sp}개. 시소 기울기 ${tilt}도">
       <line x1="90" x2="750" y1="351" y2="351" stroke="#D3C5B7" stroke-width="9" stroke-linecap="round"/>
       <polygon points="420,226 356,347 484,347" fill="#F4C77B" stroke="#98672F" stroke-width="5"/>
@@ -1090,11 +1092,11 @@ function seesawComparisonHTML(price=9000,allowPriceClicks=true){
   const ix=PRACTICE_PRICES.indexOf(chosen),d=PRACTICE_D[ix],sp=PRACTICE_S[ix];
   const word=d===sp?'균형 · 수요량과 공급량이 같아요':d>sp?'초과수요 '+(d-sp)+'개':'초과공급 '+(sp-d)+'개';
   return '<div class="seesawComparison">'+
-    '<div class="seesawIntro"><strong>⚖️ 시소로 확인하는 시장 가격</strong><span>가상 시장 자료 · 실제 모찌 거래 결과 아님</span></div>'+
+    '<div class="seesawIntro"><strong>⚖️ 시소로 확인하는 시장 가격</strong><span>연습용 시장</span></div>'+
     seesawQuantityTable(chosen,true,allowPriceClicks)+
     '<div class="seesawColumns"><section class="seesawHalf">'+seesawHTML(chosen)+'</section>'+
     '<section class="seesawHalf card"><h3>📈 그래프에서는 어디일까?</h3>'+
-    '<p class="muted" style="font-size:clamp(15px,1.5vw,19px);margin:2px 0 8px">시소에서 선택한 가격이 두 곡선에서 어디인지 확인해 봐요.</p>'+
+
     '<div class="seesawStat">가격 <b>'+won(chosen)+'</b> · <span style="color:#2F72B7">수요량 <b>'+d+'개</b></span> · <span style="color:#BF6230">공급량 <b>'+sp+'개</b></span></div>'+
     '<div class="seesawGraphArea">'+practiceGraph(PRACTICE_D,PRACTICE_S,'',0,chosen)+'</div>'+
     '<div class="seesawLegend"><span>🔵 수요 '+d+'개</span><span>🟠 공급 '+sp+'개</span><strong>'+(d===sp?'⚖ 수요량 = 공급량':'↔ '+word)+'</strong></div></section></div></div>';
@@ -1104,11 +1106,11 @@ function seesawComparisonHTML(price=9000,allowPriceClicks=true){
 function stagedSeesawHTML(){
   const stage=currentSeesawReveal(),selected=isTeacher?classroomSeesawPrice():(studentSeesawPrice??classroomSeesawPrice());
   if(stage===3)return seesawComparisonHTML(selected,true);
-  const intro='<div class="seesawIntro"><strong>⚖️ 표로 시장 가격 알아보기</strong><span>가상 시장 자료 · 실제 모찌 거래 결과 아님</span></div>';
+  const intro='<div class="seesawIntro"><strong>⚖️ 표로 시장 가격 알아보기</strong><span>연습용 시장</span></div>';
   const table=seesawQuantityTable(stage>=2?selected:9000,stage>=1,stage>=2);
   if(stage===0)return '<div class="seesawComparison stagedSeesawTable">'+intro+
-    '<div class="seesawPrompt">사려는 양과 팔려는 양이 같아지는 가격은 얼마일까? <span>표에서 직접 찾아보세요.</span></div>'+table+'</div>';
-  const answer='<div class="seesawAnswer"><strong>9,000원</strong> · 수요량 <b>6개</b> = 공급량 <b>6개</b> · <strong>균형가격</strong></div>';
+    '<div class="seesawPrompt">사려는 양과 팔려는 양이 같아지는 가격은 얼마일까?</div>'+table+'</div>';
+  const answer='<div class="seesawAnswer"><strong>균형가격 9,000원</strong> · 수요량 <b>6개</b> = 공급량 <b>6개</b></div>';
   if(stage===1)return '<div class="seesawComparison stagedSeesawTable">'+intro+table+answer+'</div>';
   return '<div class="seesawComparison stagedSeesawTable">'+intro+table+answer+
     '<div class="stagedSeesawOnly">'+seesawHTML(selected)+'</div></div>';
