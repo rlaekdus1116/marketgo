@@ -379,6 +379,21 @@ button,.btn,.speech,.rule,.title,.card{word-break:keep-all;overflow-wrap:break-w
 .myTradeTable thead th{background:#fcebc5}
 .myTradeTable tbody tr:nth-child(even){background:#fff9ee}
 @media(max-width:760px){.myTradeRecap{padding:9px}.myTradeTable th,.myTradeTable td{padding:6px 4px;font-size:13px}.myTradeTotals{font-size:17px}}
+
+/* 거래 정리 후 학생이 직접 생각을 적는 사후 서술형 설문 */
+.postSurveyCard,.postSurveyTeacher{max-width:1160px;width:100%;margin:16px auto;padding:clamp(16px,2.7vw,35px)!important}
+.postSurveyTag{font-size:clamp(17px,1.6vw,23px);font-weight:800;color:#75429D}
+.postSurveyCard h2,.postSurveyTeacher h2{font-size:clamp(28px,3.8vw,45px);margin:12px 0}
+.postSurveyHint{font-size:clamp(18px,2vw,26px);line-height:1.5;margin:12px 0 20px}
+.postSurveyInput{width:100%;display:block;min-height:170px;resize:vertical;font-size:clamp(20px,2.1vw,28px);line-height:1.6;border:2px solid #BDAAC9;border-radius:17px;padding:15px 20px;background:white;color:#302A34}
+.postSurveyActions{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-top:14px}
+.postSurveyMyAnswer{border-radius:17px;background:#F4EDF9;padding:16px 22px;font-size:clamp(20px,2vw,28px);white-space:pre-wrap;overflow-wrap:anywhere}
+.postSurveyMyAnswer p{line-height:1.6}
+.postSurveyAnswers{background:#F7F2FC;border-radius:14px;padding:14px;margin-top:18px}
+.postSurveyAnswers summary{cursor:pointer;font-size:clamp(19px,1.8vw,25px);font-weight:800}
+.postSurveyAnswerRow{background:#fff;margin:12px 0;padding:13px;border-radius:12px;border:1px solid #DACCE7;font-size:clamp(17px,1.6vw,22px);white-space:pre-wrap;overflow-wrap:anywhere}
+.postSurveyAnswerRow p{margin:7px 0;line-height:1.5}
+@media(max-width:760px){.postSurveyCard,.postSurveyTeacher{padding:12px!important}.postSurveyCard h2,.postSurveyTeacher h2{font-size:26px}.postSurveyInput{font-size:19px;min-height:160px}.postSurveyActions{justify-content:center}}
 </style>
 </head>
 <body>
@@ -809,11 +824,11 @@ function rankingHTML(st,showNames){
     '<p class="muted rankingFootnote">거래 건수와 손익은 무작위 카드 조건에 따라 달라질 수 있어요. 거래하지 않아 손해를 피하는 것도 합리적 선택이에요.</p></div>';
 }
 
-/* 수업 흐름: 3회차 실제 거래 정리 → 시소·그래프 → 곡선 그리기 */
+/* 수업 흐름: 3회차 실제 거래 정리 → 사후 서술형 설문 → 시소·그래프 → 곡선 그리기 */
 let demoFlowStep='recap',demoSeesawReveal=0;
 function currentFlowStep(){
   const p=demoMode?demoFlowStep:room?.presentation?.flowStep;
-  return ['recap','seesaw','drawing'].includes(p)?p:'recap';
+  return ['recap','postSurvey','seesaw','drawing'].includes(p)?p:'recap';
 }
 /* 공개 단계 0=표, 1=균형가격, 2=시소, 3=시소와 그래프 */
 function currentSeesawReveal(){
@@ -890,9 +905,61 @@ function tradeRecapHTML(){
       '<div class="card"><h3>🛒 무조건 싸게 사려고 하면 살 수 있을까?</h3><p>6,000원 이하에 사려고 입력한 경우</p><div class="reviewEvidence">'+evidence(r.low)+'</div><p>항상 살 수 있는지 생각해 보자.</p></div>'+
     '</div><p class="reviewNote">※ 가격대는 실제 기록을 비교하기 위한 예시 기준이야. 거래 실패에는 상대 선택이나 가격 입력 불일치도 영향을 주므로 가격만을 원인으로 단정하지 않아.</p></section>';
 }
+/* 사후 서술형 설문: 기존 객관식 투표와는 별도로 방 번호/학생 ID로 영구 보존. */
+const POST_SURVEY_QUESTION='시장에서 가격은 누가 결정할까?';
+let postSurveyDraft='',postSurveySubmitBusy=false,postSurveyDraftLoadedFor='';
+const postSurveyOf=()=>room?.postSurvey||{};
+function postSurveyStudentHTML(studentId){
+  const saved=postSurveyOf()[studentId],count=Object.values(postSurveyOf()).filter(x=>x?.answer).length;
+  const hint='<p class="postSurveyHint">3번의 거래를 떠올리며, 누가 가격을 결정한다고 생각하는지와 그 이유를 자신의 말로 써 보세요.</p>';
+  if(saved?.answer)return '<section class="card postSurveyCard"><div class="postSurveyTag">📝 거래 후 생각 정리</div>'+
+    '<h2>'+POST_SURVEY_QUESTION+'</h2><div class="postSurveyMyAnswer"><b>내가 제출한 생각</b><p>'+esc(saved.answer)+'</p></div>'+
+    '<div class="hl mint center">✅ 답변 저장 완료 · 선생님이 다음 단계로 넘어가면 그래프 활동이 시작돼요.</div></section>';
+  return '<section class="card postSurveyCard"><div class="postSurveyTag">📝 거래 후 생각 정리</div>'+
+    '<h2>'+POST_SURVEY_QUESTION+'</h2>'+hint+
+    '<textarea id="postSurveyAnswer" class="field postSurveyInput" maxlength="500" rows="5" placeholder="거래 경험을 바탕으로 내 생각과 이유를 적어 보세요.">'+esc(postSurveyDraft)+'</textarea>'+
+    '<div class="postSurveyActions"><span class="muted">모범답안을 미리 보여 주지 않아요. 내 생각을 적어 주세요.</span>'+
+    '<button type="button" class="btn big mint" id="submitPostSurvey"'+(postSurveySubmitBusy?' disabled':'')+'>✅ 내 생각 제출하기</button></div></section>';
+}
+function postSurveyTeacherHTML(){
+  const players=room.players||{},entries=postSurveyOf(),ids=Object.keys(players),submitted=ids.filter(id=>!!entries[id]?.answer);
+  const waiting=ids.filter(id=>!entries[id]?.answer);
+  return '<section class="card postSurveyTeacher"><div class="postSurveyTag">📝 3회차 거래 후 다시 묻기</div>'+
+    '<h2>'+POST_SURVEY_QUESTION+'</h2>'+
+    '<p class="postSurveyHint">학생들은 거래 경험을 근거로 자유롭게 서술해요. 제출 전에는 정답을 공개하지 않아요.</p>'+
+    '<div class="reviewSummary">제출 <b>'+submitted.length+'/'+ids.length+'명</b></div>'+
+    '<div class="chips">'+(submitted.map(id=>'<span class="chip soft">✅ '+esc(players[id].name||'학생')+'</span>').join('')||'<span class="muted">아직 제출한 학생이 없어요.</span>')+'</div>'+
+    (waiting.length?'<p class="muted">미제출 '+waiting.length+'명 · '+waiting.map(id=>esc(players[id].name||'학생')).join(', ')+'</p>':'<p class="hl mint">모든 학생이 제출했어요.</p>')+
+    '<details class="postSurveyAnswers"><summary>학생별 서술 답변 확인하기 (교사용)</summary>'+
+    (submitted.map(id=>'<div class="postSurveyAnswerRow"><b>'+esc(players[id].name||'학생')+'</b><p>'+esc(entries[id].answer)+'</p></div>').join('')||'<p>제출된 답변이 없어요.</p>')+
+    '</details><p class="muted">사전 객관식 투표와 사후 서술 답변은 별도로 보존하며, 허브의 학생별 활동 기록 CSV에서 비교할 수 있어요.</p></section>';
+}
+function bindPostSurveyStudent(){
+  const field=el('postSurveyAnswer'),button=el('submitPostSurvey');
+  if(!field||!button)return;
+  // 이미 쓰던 문장은 화면이 다시 그려져도 유지합니다.
+  field.oninput=()=>{postSurveyDraft=field.value;};
+  button.onclick=async()=>{
+    if(postSurveySubmitBusy)return;
+    const answer=field.value.trim();
+    if(answer.replace(/\s/g,'').length<8)return toast('누가 가격을 결정하는지와 이유를 한 문장 이상 써 보세요.');
+    postSurveyDraft=answer;
+    postSurveySubmitBusy=true;button.disabled=true;
+    try{
+      const current=(await get(ref(db,'rooms/trade_'+code+'/presentation/flowStep'))).val();
+      if(current!=='postSurvey')return toast('선생님이 다음 단계로 넘어갔어요. 화면을 확인해 주세요.');
+      const answerPath=ref(db,'rooms/trade_'+code+'/postSurvey/'+pid);
+      if((await get(answerPath)).exists())return toast('이미 제출한 답변이 있어요.');
+      await set(answerPath,{answer,at:Date.now(),question:POST_SURVEY_QUESTION});
+      postSurveyDraft='';toast('내 생각이 저장됐어요.');
+    }catch(e){console.error(e);toast('제출 실패. 인터넷 연결을 확인하고 다시 시도해 주세요.');}
+    finally{postSurveySubmitBusy=false;if(el('submitPostSurvey'))el('submitPostSurvey').disabled=false;}
+  };
+}
+
 async function switchTradeFlow(next){
-  if(!['recap','seesaw','drawing'].includes(next))return;
-  const freshSeesaw=next==='seesaw'&&currentFlowStep()==='recap';
+  if(!['recap','postSurvey','seesaw','drawing'].includes(next))return;
+  const freshSeesaw=next==='seesaw'&&currentFlowStep()!=='seesaw';
   if(demoMode){
     demoFlowStep=next;
     if(freshSeesaw){demoSeesawReveal=0;seesawPrice=9000;}
