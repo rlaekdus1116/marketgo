@@ -409,6 +409,10 @@ button,.btn,.speech,.rule,.title,.card{word-break:keep-all;overflow-wrap:break-w
 .rejoinQrHint{font-size:17px;line-height:1.4;margin:0 0 4px}
 .rejoinQrClose{position:absolute;right:12px;top:9px;background:#F2E7FA;border-radius:12px;font-size:24px;padding:2px 11px}
 .rejoinQrBackdrop .btn{margin:4px}
+/* 0원까지 함께 읽는 가격표, 교사 질문에 따라 화면이 자동 전환됩니다. */
+.seesawDataTableWrap{overflow-x:auto}
+.seesawDataTable{min-width:650px}
+@media(max-width:760px){.seesawDataTable{min-width:600px}}
 </style>
 </head>
 <body>
@@ -840,12 +844,24 @@ function rankingHTML(st,showNames){
 }
 
 /* 수업 흐름: 3회차 실제 거래 정리 → 사후 서술형 설문 → 시소·그래프 → 곡선 그리기 */
-let demoFlowStep='recap',demoSeesawReveal=0;
+let demoFlowStep='recap',demoSeesawReveal=0,demoTableAnalysisStep=0;
 function currentFlowStep(){
   const p=demoMode?demoFlowStep:room?.presentation?.flowStep;
   return ['recap','postSurvey','seesaw','drawing'].includes(p)?p:'recap';
 }
-/* 공개 단계 0=표, 1=균형가격, 2=시소, 3=시소와 그래프 */
+/* 먼저 표의 0원 수요·공급을 살핀 뒤 균형가격을 찾습니다. */
+function currentTableAnalysisStep(){
+  const n=Number(demoMode?demoTableAnalysisStep:room?.presentation?.tableAnalysisStep);
+  return Number.isInteger(n)&&n>=0&&n<=3?n:0;
+}
+async function setTableAnalysisStep(value){
+  const n=Number(value);
+  if(!Number.isInteger(n)||n<0||n>3)return;
+  if(demoMode){demoTableAnalysisStep=n;renderTeacher();return;}
+  try{await update(T(),{'presentation/tableAnalysisStep':n,'presentation/tableAnalysisAt':Date.now()});}
+  catch(e){console.error(e);toast('표 분석 단계 전환에 실패했어요.');}
+}
+/* 공개 단계 0=표 분석, 1=균형가격, 2=시소, 3=시소와 그래프 */
 function currentSeesawReveal(){
   const n=Number(demoMode?demoSeesawReveal:room?.presentation?.seesawReveal);
   return Number.isInteger(n)&&n>=0&&n<=3?n:0;
@@ -977,12 +993,12 @@ async function switchTradeFlow(next){
   const freshSeesaw=next==='seesaw'&&currentFlowStep()!=='seesaw';
   if(demoMode){
     demoFlowStep=next;
-    if(freshSeesaw){demoSeesawReveal=0;seesawPrice=9000;}
+    if(freshSeesaw){demoSeesawReveal=0;demoTableAnalysisStep=0;seesawPrice=9000;}
     renderTeacher();return;
   }
   try{
     const changes={'presentation/flowStep':next,'presentation/flowChangedAt':Date.now()};
-    if(freshSeesaw){changes['presentation/seesawReveal']=0;changes['presentation/seesawPrice']=9000;}
+    if(freshSeesaw){changes['presentation/seesawReveal']=0;changes['presentation/seesawPrice']=9000;changes['presentation/tableAnalysisStep']=0;}
     await update(T(),changes);
   }
   catch(e){console.error(e);toast('화면 전환 실패. 인터넷 연결을 확인해 주세요.');}
@@ -1088,16 +1104,19 @@ function seesawHTML(price=9000){
 /* 모찌 시장과 구별되는 연습용 가상 시장: 시소 + 두 곡선의 대응점을 나란히 표시 */
 /* 시소·그래프 공통 가격별 수요량과 공급량 표. 실제 거래 자료와 분리된 가상 자료입니다. */
 function seesawQuantityTable(price,highlight=true,interactive=true){
+  // 가격 0원은 표 읽기 활동에서만 추가한 가상 사례입니다. 곡선 그리기 문제는 기존 5개 가격 유지.
+  const prices=[0,...PRACTICE_PRICES],demand=[12,...PRACTICE_D],supply=[0,...PRACTICE_S];
   const rows=[
-    {label:'가격(원)',values:PRACTICE_PRICES,type:'price'},
-    {label:'수요량(개)',values:PRACTICE_D,type:'demand'},
-    {label:'공급량(개)',values:PRACTICE_S,type:'supply'}
+    {label:'가격(원)',values:prices,type:'price'},
+    {label:'수요량(개)',values:demand,type:'demand'},
+    {label:'공급량(개)',values:supply,type:'supply'}
   ];
   return '<div class="seesawDataTableWrap"><table class="seesawDataTable" aria-label="가격별 수요량과 공급량 표"><tbody>'+
     rows.map((row,ri)=>'<tr class="seesawData-'+row.type+'"><th scope="row">'+row.label+'</th>'+
       row.values.map((n,i)=>{
-        const selected=highlight&&PRACTICE_PRICES[i]===Number(price),className=selected?' class="is-current"':'';
-        return '<td'+className+'>'+(ri===0&&interactive?'<button type="button" data-seesaw-price="'+PRACTICE_PRICES[i]+'" aria-pressed="'+selected+'" aria-label="'+won(PRACTICE_PRICES[i])+' 선택">'+n.toLocaleString('ko-KR')+'</button>':n.toLocaleString('ko-KR'))+'</td>';
+        const selected=highlight&&i>0&&prices[i]===Number(price),className=selected?' class="is-current"':'';
+        // 0원은 표 해석용이므로 시소 가격 선택 버튼으로 표시하지 않습니다.
+        return '<td'+className+'>'+(ri===0&&interactive&&i>0?'<button type="button" data-seesaw-price="'+prices[i]+'" aria-pressed="'+selected+'" aria-label="'+won(prices[i])+' 선택">'+n.toLocaleString('ko-KR')+'</button>':n.toLocaleString('ko-KR'))+'</td>';
       }).join('')+'</tr>').join('')+'</tbody></table></div>';
 }
 function seesawComparisonHTML(price=9000,allowPriceClicks=true){
@@ -1121,8 +1140,16 @@ function stagedSeesawHTML(){
   if(stage===3)return seesawComparisonHTML(selected,true);
   const intro='<div class="seesawIntro"><strong>⚖️ 표로 시장 가격 알아보기</strong><span>연습용 시장</span></div>';
   const table=seesawQuantityTable(stage>=2?selected:9000,stage>=1,stage>=2);
-  if(stage===0)return '<div class="seesawComparison stagedSeesawTable">'+intro+
-    '<div class="seesawPrompt">사려는 양과 팔려는 양이 같아지는 가격은 얼마일까?</div>'+table+'</div>';
+  if(stage===0){
+    const analysisQuestions=[
+      '가격이 0원이라면, 사려는 양은 몇 개일까?',
+      '가격이 0원이라면, 팔려는 양은 몇 개일까?',
+      '0원일 때, 사겠다는 사람과 팔겠다는 사람 중 어느 쪽이 더 많을까?',
+      '그렇다면 수요량과 공급량이 같아지는 가격은 얼마일까?'
+    ];
+    return '<div class="seesawComparison stagedSeesawTable">'+intro+
+      '<div class="seesawPrompt">'+analysisQuestions[currentTableAnalysisStep()]+'</div>'+table+'</div>';
+  }
   const answer='<div class="seesawAnswer"><strong>균형가격 9,000원</strong> · 수요량 <b>6개</b> = 공급량 <b>6개</b></div>';
   if(stage===1)return '<div class="seesawComparison stagedSeesawTable">'+intro+table+answer+'</div>';
   return '<div class="seesawComparison stagedSeesawTable">'+intro+table+answer+
@@ -1442,13 +1469,17 @@ function renderTeacher() {
     ${exerciseView}${stageNav}${resultsView}${teachingStage===1&&!exampleMode?logHTML:''}${presenceHTML}</details>`:'';
   const step=currentFlowStep(),reveal=currentSeesawReveal();
   const nextText=['정답 공개하기','시소 공개하기','그래프와 가격 변화 공개하기'];
+  const tableStep=currentTableAnalysisStep();
+  const tableStepLabels=['다음 질문 ▶','다음 질문 ▶','균형가격 찾아보기 ▶'];
   const flowControls=isEnd?'<div class="reviewAction">'+
     (step==='recap'?'<button type="button" class="btn big mint" id="flowToPostSurvey">📝 거래 정리 끝 · 가격 결정 생각 다시 쓰기</button>':
      step==='postSurvey'?'<button type="button" class="btn big mint" id="flowToSeesaw">📈 서술형 설문 마감 · 가상 시장 표와 그래프 보기</button><button type="button" class="btn sky" id="flowBackRecap">◀ 거래 정리 다시 보기</button>':
      step==='seesaw'?(
-       (reveal<3?'<button type="button" class="btn big mint" id="revealSeesawNext">'+nextText[reveal]+' ▶</button>':
+       (reveal===0&&tableStep<3?'<button type="button" class="btn big mint" id="tableQuestionNext">'+tableStepLabels[tableStep]+'</button>':
+        reveal<3?'<button type="button" class="btn big mint" id="revealSeesawNext">'+nextText[reveal]+' ▶</button>':
          '<button type="button" class="btn big mint" id="flowToDrawing">📈 이제 수요곡선부터 그리기</button>')+
-       (reveal>0?'<button type="button" class="btn sky" id="revealSeesawPrev">◀ 이전 설명</button>':'')+
+       (reveal>0?'<button type="button" class="btn sky" id="revealSeesawPrev">◀ 이전 설명</button>':
+        tableStep>0?'<button type="button" class="btn sky" id="tableQuestionPrev">◀ 이전 질문</button>':'')+
        '<button type="button" class="btn sky" id="flowBackRecap">◀ 실제 거래 정리</button>'):
      '<button type="button" class="btn sky" id="flowBackSeesaw">◀ 시소 다시 보기</button>')+'</div>':'';
   const teacherEndBody=isEnd?'<div class="teacherSeesawMode">'+topbar+
@@ -1464,6 +1495,8 @@ function renderTeacher() {
   bind('rejoinQrButton',showRejoinQr);
   bind('flowToPostSurvey',()=>switchTradeFlow('postSurvey'));
   bind('flowToSeesaw',()=>switchTradeFlow('seesaw'));
+  bind('tableQuestionNext',()=>setTableAnalysisStep(currentTableAnalysisStep()+1));
+  bind('tableQuestionPrev',()=>setTableAnalysisStep(currentTableAnalysisStep()-1));
   bind('revealSeesawNext',()=>setSeesawReveal(currentSeesawReveal()+1));
   bind('revealSeesawPrev',()=>setSeesawReveal(currentSeesawReveal()-1));
   bind('flowToDrawing',()=>switchTradeFlow('drawing'));
@@ -1908,7 +1941,7 @@ function renderStudent() {
   if (myPair) maybeAnnounce(`deal-${st.round}`, () => announce('거래 성사!!', '🪑 이제 자리에 가서 앉아요!', '🤝', 6000));
 
   // 같은 상태면 다시 그리지 않음 (입력 중인 내용이 날아가지 않게)
-  const sig = JSON.stringify([st.phase, st.round, card, Object.entries(players).map(([id, p]) => [id, p?.name || '']), nameEditorOpen, curSub, !!myPair, partnerSub, claims, editing, isEnd ? (room.recommendations||{})[pid]||null : null, isEnd?room.graphDraft?.[pid]||null:null, isEnd?room.graphWork?.[pid]||null:null, isEnd?currentFlowStep():null, isEnd?currentSeesawReveal():null, isEnd?room.presentation?.seesawPrice:null, isEnd?postSurveyOf()[pid]||null:null]);
+  const sig = JSON.stringify([st.phase, st.round, card, Object.entries(players).map(([id, p]) => [id, p?.name || '']), nameEditorOpen, curSub, !!myPair, partnerSub, claims, editing, isEnd ? (room.recommendations||{})[pid]||null : null, isEnd?room.graphDraft?.[pid]||null:null, isEnd?room.graphWork?.[pid]||null:null, isEnd?currentFlowStep():null, isEnd?currentSeesawReveal():null, isEnd?currentTableAnalysisStep():null, isEnd?room.presentation?.seesawPrice:null, isEnd?postSurveyOf()[pid]||null:null]);
   if (sig === lastSig) return;
   lastSig = sig;
   if (sel.r !== st.round) { sel = { r: st.round, partner: '', price: 0 }; editing = false; }
