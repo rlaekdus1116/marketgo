@@ -254,6 +254,8 @@ const now = () => Date.now() + offset;   // 모든 기기가 같은 시계를 �
 const DEFAULT_ITEMS = [
   { emoji: '🍫', name: '선생님 책상 위 에너지바', pitch: '선생님이 아껴 먹던 바로 그 에너지바!', prices: [100, 300, 500, 1000, 1500], supply: 1, predict: false },
   { emoji: '📄', name: '기말고사 사회 시험지', pitch: '가상의 사회 시험지! 여러분이라면 살까요?', prices: [1000, 50000, 100000, 300000, 1000000, 10000000], supply: 5, predict: true },
+  { emoji: '🧸', name: '한정판 미니 키링', pitch: '3개만 있는 한정판! 얼마까지 살래요?', prices: [1000, 3000, 5000, 7000, 10000], supply: 3, predict: false },
+  { emoji: '🎁', name: '미스터리 선물 상자', pitch: '안에 무엇이 들었을까? 상상하며 결정해요!', prices: [1000, 2000, 3000, 5000, 10000], supply: 2, predict: false },
 ];
 const SECS = [3, 5, 7, 10];
 const CLASS_BUDGET = 100000; // 상품별 가상 예산, 학생당 한 개의 구매 의사
@@ -333,6 +335,49 @@ const Snd = {
   gavel() { this.noise(0, .18, .9, 900); this.tone(110, 0, .25, .5, 'sine'); this.noise(.28, .18, .9, 900); this.tone(110, .28, .25, .5, 'sine'); },
   fanfare() { [523, 659, 784, 1047].forEach((f, i) => this.tone(f, i * .11, .4, .25, 'square')); },
 };
+
+
+/* 교사 기기 전용 창작 8비트 배경음악. 시작은 교사 버튼으로만, 중단 즉시 소리 끄기. */
+const Bgm={
+ playing:false,timer:null,epoch:0,bus:null,
+ notes:[523.25,659.25,783.99,659.25,587.33,698.46,880,783.99,659.25,523.25,587.33,783.99,987.77,880,783.99,1046.5],
+ bass:[130.81,164.81,146.83,196],
+ playBar(){
+  if(!this.playing||document.hidden)return;
+  try{
+   Snd.ensure();
+   const ctx=Snd.ctx,beat=.26,t0=ctx.currentTime+.045;
+   const play=(hz,t,d,volume,shape)=>{
+    const o=ctx.createOscillator(),g=ctx.createGain();o.type=shape;o.frequency.value=hz;
+    g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(volume,t+.012);
+    g.gain.exponentialRampToValueAtTime(.0001,t+d);
+    o.connect(g);g.connect(this.bus);o.start(t);o.stop(t+d+.01);
+   };
+   for(let i=0;i<16;i++){
+    play(this.notes[i],t0+i*beat,beat*.66,.043,'triangle');
+    if(i%4===0)play(this.bass[(i/4+this.epoch)%4],t0+i*beat,beat*2.25,.04,'sine');
+    if(i%2===0)play(104.5,t0+i*beat,beat*.12,.015,'triangle');
+   }
+   this.epoch++;
+  }catch(e){console.warn('BGM failed',e);this.stop();}
+ },
+ updateButton(){const b=el('toggleBgm');if(b){b.textContent=this.playing?'🔊 음악 끄기':'🎵 음악 켜기';b.setAttribute('aria-pressed',String(this.playing));}},
+ start(){
+  if(!isTeacher||this.playing)return;
+  try{Snd.ensure();this.bus||(this.bus=Snd.ctx.createGain(),this.bus.connect(Snd.ctx.destination));
+   this.bus.gain.setValueAtTime(1,Snd.ctx.currentTime);
+   this.playing=true;this.epoch=0;this.playBar();this.timer=setInterval(()=>this.playBar(),4160);this.updateButton();
+  }catch(e){this.stop();toast('음악을 재생할 수 없어요.');}
+ },
+ stop(){
+  this.playing=false;clearInterval(this.timer);this.timer=null;
+  if(this.bus&&Snd.ctx)this.bus.gain.setValueAtTime(0,Snd.ctx.currentTime);
+  this.updateButton();
+ },
+ toggle(){this.playing?this.stop():this.start();}
+};
+document.addEventListener('visibilitychange',()=>{if(document.hidden)Bgm.stop();});
+window.addEventListener('pagehide',()=>Bgm.stop());
 
 /* ========== 🛒 수요 경매(살래요) / 🏷️ 공급 경매(팔래요) ========== */
 const SUP = () => !!(room && room.kind === 'S');
@@ -536,6 +581,7 @@ function topbar(st) {
   return `<div class="topbar"><div class="logo">${KW().logo} ${KW().title} <span class="kindTag">${SUP() ? '🏷️ 공급' : '🛒 수요'}</span></div>
     <span class="pill">방 코드 <b style="color:var(--peachD)">${esc(code)}</b></span>
     ${st.phase !== 'setup' ? `<span class="pill">🙋 ${onlineIds().length}명 접속</span>` : ''}
+    <button type="button" class="btn sm mint" id="toggleBgm" aria-pressed="false">🎵 음악 켜기</button>
     <button class="btn sm lav" id="names">${st.showNames ? '👤 이름 보이기 ON' : '🙈 이름 숨기기'}</button>
     <button class="btn sm" id="backStep">◀ 이전 단계</button><a class="btn sm sky" href="hub.html?t=1">🏠 허브로</a><button class="btn sm" id="home">처음 화면</button></div>`;
 }
@@ -562,6 +608,7 @@ function renderTeacher() {
           <label class="sup"><input data-k="${k}" data-f="predict" type="checkbox" ${x.predict ? 'checked' : ''} style="width:22px;height:22px"> 🔮 경매 전에 예언하기</label></div>
       </div>`).join('')}
       <div class="muted" style="font-size:15px;margin-top:8px">가격은 "1천, 5천, 1만, 10만, 100만, 1억"처럼 써요 · ${SUP() ? '공급 곡선은 가격마다 팔겠다는 학생 수로 그려요. 경매는 진행하지 않아요' : '파는 개수가 0이면 공급선 없이 수요 곡선만 그려요'}</div>
+      ${!SUP()?'<button class="btn sm mint" id="useFourItems">🎁 4개 상품으로 구성</button>':''}
       ${items.length < 5 ? '<button class="btn sm lemon" id="addItem">➕ 상품 추가</button>' : ''}
       <div style="margin-top:12px;font-size:20px">🔮 예언 제한 시간(초) <input id="predSec" type="number" min="10" max="900" value="${st.predSec||60}" style="width:110px"><button class="btn sm mint" id="savePredSec">저장</button></div>
       <div style="margin-top:12px;font-size:20px">⏱ 가격마다 고르는 시간 ${SECS.map(s => `<button class="btn sm ${s === (st.sec || 5) ? 'mint' : 'sky'}" data-sec="${s}">${s}초</button>`).join('')}</div>
@@ -740,6 +787,7 @@ async function teacherBackStep(){
 }
 function wireTeacher(st, items, i, it) {
   const S = o => update(AP('state'), o);
+  const musicButton=el('toggleBgm');if(musicButton){musicButton.onclick=()=>Bgm.toggle();Bgm.updateButton();}
   el('names').onclick = () => S({ showNames: !st.showNames });
   el('backStep').onclick = teacherBackStep;
   el('home').onclick = () => { if (confirm('처음 화면으로 갈까요? (경매소는 그대로 남아요)')) location.href = '?t=1'; };
@@ -767,6 +815,7 @@ function wireTeacher(st, items, i, it) {
     document.querySelectorAll('[data-sec]').forEach(b => b.onclick = () => S({ sec: +b.dataset.sec }));
     el('savePredSec').onclick=()=>S({predSec:Math.max(10,Math.min(900,Math.round(+el('predSec').value)||60))});
     if (el('addItem')) el('addItem').onclick = () => set(AP('items'), [...itemsOf(), { emoji: '🎁', name: '새 상품', pitch: '', prices: [1000, 5000, 10000], supply: 1, predict: false }]);
+    if(el('useFourItems'))el('useFourItems').onclick=async()=>{if(!confirm('경매 상품을 기본 4개 구성으로 바꿀까요? 현재 준비 중인 상품 설정이 대체됩니다.'))return;try{await set(AP('items'),DEFAULT_ITEMS.map(x=>({...x,prices:[...x.prices]})));localStorage.setItem('auction_last_items_D_v4',JSON.stringify(DEFAULT_ITEMS));toast('4개 상품을 준비했어요.');}catch(e){console.error(e);toast('상품을 불러오지 못했어요.');}};
     el('ready').onclick = () => S({ phase: 'lobby' });
   }
   if (st.phase === 'lobby') {
