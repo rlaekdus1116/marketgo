@@ -387,9 +387,10 @@ function ask(msg, yes = '응', no = '아니') {
 }
 
 /* ========== 사례 → 단계·정답·힌트 ========== */
-const casesOf = () => ((room && room.cases) || DEFAULT_CASES).map(c => ({ ...c, type: c.type === 'along' ? 'along' : 'shift', curve: c.curve === 'S' ? 'S' : 'D', dir: c.dir === '-' ? '-' : '+' }));
+const activeSet = () => (!isTeacher && room?.players?.[pid]?.set) || (room && room.set) || 'D';
+const casesOf = (set = activeSet()) => ((room && set === (room.set || 'D') ? room.cases : PRESETS[set]) || DEFAULT_CASES).map(c => ({ ...c, type: c.type === 'along' ? 'along' : 'shift', curve: c.curve === 'S' ? 'S' : 'D', dir: c.dir === '-' ? '-' : '+' }));
 // 수요편·공급편은 답이 뻔해서 '누구 마음?' 단계를 빼고, 총정리에서만 물어
-const stepsOf = c => c.type === 'shift' ? (room && room.set === 'mix' ? ['price', 'move', 'who', 'drag', 'final'] : ['price', 'move', 'drag', 'final']) : ['price', 'move', 'drag', 'final'];
+const stepsOf = (c, set = activeSet()) => c.type === 'shift' ? (set === 'mix' ? ['price', 'move', 'who', 'drag', 'final'] : ['price', 'move', 'drag', 'final']) : ['price', 'move', 'drag', 'final'];
 const STEP_NAME = { price: '가격이 바뀌었어?', move: '어떻게 움직여?', who: '누구 사정이 바뀌었어?', drag: '그래프 움직이기', final: '최종 결과' };
 const curveName = k => k === 'D' ? '수요' : '공급';
 const priceAfter = c => (c.curve === 'D') === (c.dir === '+') ? '+' : '-';                       // 수요↑·공급↓ → 가격↑
@@ -618,12 +619,12 @@ async function join(c, name) {
 
 /* ========== 기록 ========== */
 // ans[학생][사례][단계] = { first: 처음 고른 답, ok: 처음에 맞혔나, done: 결국 맞혔나 }
-const ansOf = id => (((room.ansBySet || {})[room.set || 'D'] || {})[id]) || (!room.ansBySet && (room.set || 'D') === 'D' ? ((room.ans || {})[id]) || {} : {});
-const stepRec = (id, ci, st) => ((ansOf(id)[ci] || {})[st]) || null;
-const caseDone = (id, ci, c) => stepsOf(c).every(st => (stepRec(id, ci, st) || {}).done);
-function scoreOf(id, skip) {
-  const cs = casesOf(); let ok = 0, tot = 0;
-  cs.forEach((c, ci) => stepsOf(c).forEach(st => { if (skip && skip[0] === ci && skip[1] === st) return; const r = stepRec(id, ci, st); if (r) { tot++; if (r.ok) ok++; } }));
+const ansOf = (id, set = activeSet()) => (((room.ansBySet || {})[set] || {})[id]) || (!room.ansBySet && set === 'D' ? ((room.ans || {})[id]) || {} : {});
+const stepRec = (id, ci, st, set = activeSet()) => ((ansOf(id, set)[ci] || {})[st]) || null;
+const caseDone = (id, ci, c, set = activeSet()) => stepsOf(c, set).every(st => (stepRec(id, ci, st, set) || {}).done);
+function scoreOf(id, skip, set = activeSet()) {
+  const cs = casesOf(set); let ok = 0, tot = 0;
+  cs.forEach((c, ci) => stepsOf(c, set).forEach(st => { if (skip && skip[0] === ci && skip[1] === st) return; const r = stepRec(id, ci, st, set); if (r) { tot++; if (r.ok) ok++; } }));
   return { ok, tot };
 }
 
@@ -781,8 +782,9 @@ function renderTeacher() {
     }
   }
   else if (st.phase === 'play' && st.mode === 'solo') {
-    const ids = playerIds(), from = st.soloFrom || 0, total = cs.length - from;
-    const rows = ids.map(id => { const n = cs.filter((c, ci) => ci >= from && caseDone(id, ci, c)).length; return { id, n }; }).sort((a, b) => nameOf(a.id).localeCompare(nameOf(b.id)));
+    const ids = playerIds().filter(id => !((room.players || {})[id] || {}).set || ((room.players || {})[id] || {}).set === 'D'), from = st.soloFrom || 0, total = cs.length - from;
+    const rows = ids.map(id => { const n = cs.filter((c, ci) => ci >= from && caseDone(id, ci, c, 'D')).length; return { id, n }; }).sort((a, b) => nameOf(a.id).localeCompare(nameOf(b.id)));
+    const supplyRows = playerIds().filter(id => (room.players || {})[id]?.set === 'S').map(id => ({id,n:casesOf('S').filter((c,ci)=>caseDone(id,ci,c,'S')).length}));
     const allDone = rows.filter(r => r.n >= total).length;
     const finished = rows.filter(r => r.n >= total).map(r => st.showNames ? esc(nameOf(r.id)) : '👤').join(' · ') || '아직 없어';
     const pending = rows.filter(r => r.n < total).map(r => st.showNames ? esc(nameOf(r.id)) : '👤').join(' · ') || '모두 끝냈어';
@@ -794,6 +796,7 @@ function renderTeacher() {
         <div style="font-size:19px;margin-bottom:8px"><b>끝낸 학생 (${allDone}/${ids.length})</b><br>${st.showNames ? finished : '이름 표시를 켜면 누가 끝냈는지 보여.'}</div>
         <div class="muted" style="font-size:17px;margin-bottom:12px"><b>아직 푸는 중:</b> ${st.showNames ? pending : '이름 표시를 켜면 확인할 수 있어.'}</div>
         <button class="btn big peach" id="goSupply">🏭 공급편으로 넘어가기 · ${allDone}/${ids.length}명 완료</button></div>` : ''}
+      ${room.set === 'D' ? `<div class="card"><h3>🏭 공급편으로 보낸 학생</h3><div class="chips">${supplyRows.map(r=>`<span class="chip soft">${st.showNames?esc(nameOf(r.id)):'👤'} · ${r.n}/${casesOf('S').length} 사례</span>`).join('') || '<span class="muted">아직 없어</span>'}</div><div class="muted" style="margin-top:8px">수요편을 다 푼 학생만 개별로 보낼 수 있어.</div><div class="chips" style="margin-top:10px">${rows.filter(r=>r.n>=total).map(r=>`<button class="btn sm peach" data-send-supply="${r.id}">🏭 ${st.showNames?esc(nameOf(r.id)):'학생'} 공급편 보내기</button>`).join('') || '<span class="muted">수요편 완료 학생이 생기면 여기서 보낼 수 있어.</span>'}</div></div>` : ''}
       ${heatTable(cs, from)}`;
   }
   else if (st.phase === 'end') {
@@ -890,6 +893,7 @@ function wireTeacher(st, cs) {
     document.querySelectorAll('[data-set]').forEach(b => b.onclick = () => { const k = b.dataset.set; if (room.set === k) return; ask(`${SET_NAME[k]} 기본 사례로 바꿀까?<br><small>(고친 내용은 사라져)</small>`).then(y => y && update(A(), { set: k, cases: PRESETS[k] })); });
     el('ready').onclick = () => S({ phase: 'lobby' });
   }
+  document.querySelectorAll('[data-send-supply]').forEach(b => b.onclick = async () => { const id=b.dataset.sendSupply; if (!await ask(`${esc(nameOf(id))}만 공급편으로 보낼까?`, '🏭 보내기')) return; await update(AP(`players/${id}`), {set:'S'}); if (st.mode !== 'solo') await S({mode:'solo',ci:0,step:0,reveal:false,soloFrom:0,auto:false}); toast(`${nameOf(id)} 학생을 공급편으로 보냈어`); });
   if (st.phase === 'lobby') {
     if (el('conceptDemo')) el('conceptDemo').onclick = () => showConceptDemo();
     el('toSetup').onclick = () => S({ phase: 'setup' });
