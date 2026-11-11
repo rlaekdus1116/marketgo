@@ -279,6 +279,7 @@ button,.btn,.speech,.rule,.title,.card{word-break:keep-all;overflow-wrap:break-w
 .conceptCard{width:min(980px,100%);max-height:94vh;overflow:auto;background:var(--bg);border:4px solid #fff;border-radius:30px;padding:22px;box-shadow:0 12px 0 #5B4B57}
 .conceptHead{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.conceptHead h2{margin:0 auto 0 0;font-size:30px;font-weight:normal}
 .conceptTabs{display:flex;gap:8px;margin:12px 0}.conceptTab{border-radius:999px;padding:10px 16px;background:#fff;border:2px solid var(--line);font:inherit;font-size:19px}.conceptTab.on{background:var(--sky);border-color:var(--skyD)}
+.conceptDirection{display:flex;justify-content:center;gap:10px;margin:8px 0 12px;flex-wrap:wrap}.conceptDirection span{display:inline-flex;align-items:center;gap:8px;border-radius:999px;padding:6px 16px;background:#fff;border:2px solid var(--line);font-size:19px}.conceptDirection .priceDir{background:var(--lemon);border-color:var(--lemonD)}.conceptDirection .quantityDir{background:var(--sky);border-color:var(--skyD)}.conceptDirection b{font-size:27px;line-height:1}
 .conceptScene{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:center}.conceptCopy{font-size:21px}.conceptCopy .hl{font-size:20px}
 .conceptGraph{background:#fff;border:3px solid var(--line);border-radius:22px;padding:10px}.conceptGraph svg{width:100%;height:auto;display:block}
 .conceptGraph .demand,.conceptGraph .demandCurve{stroke:#398bd0;stroke-width:6;fill:none;stroke-linecap:round}.conceptGraph .supply,.conceptGraph .supplyCurve{stroke:#e98543;stroke-width:5;fill:none;stroke-linecap:round;opacity:1}
@@ -729,6 +730,7 @@ function showConceptDemo() {
       <button class="conceptTab" data-scene="demandShift">수요 변동</button>
       <button class="conceptTab" data-scene="supplyShift">공급 변동</button>
     </div>
+    <div class="conceptDirection" aria-live="off"><span class="priceDir"><span data-price-label>가격</span><b data-price-dir>↓</b></span><span class="quantityDir"><span data-quantity-label>수요량</span><b data-quantity-dir>↑</b></span></div>
     <div class="conceptGraph"><svg viewBox="0 0 470 300" role="img" aria-label="수요곡선과 공급곡선 이동">
       <line x1="48" y1="24" x2="48" y2="242" stroke="#62515e" stroke-width="3"/><line x1="48" y1="242" x2="405" y2="242" stroke="#62515e" stroke-width="3"/>
       <text x="11" y="38" fill="#413540" font-size="16">가격</text><text x="370" y="271" fill="#413540" font-size="16">수량</text>
@@ -748,6 +750,19 @@ function showConceptDemo() {
   const tabs = [...box.querySelectorAll('[data-scene]')];
   const svg = box.querySelector('svg'), dot = svg.querySelector('.travelDot');
   let raf = 0, started = 0, playing = false, scene = 'demandPrice';
+  const directionMap = {
+    demandPrice: { forward:['가격','↓','수요량','↑'], reverse:['가격','↑','수요량','↓'] },
+    supplyPrice: { forward:['가격','↑','공급량','↑'], reverse:['가격','↓','공급량','↓'] },
+    demandShift: { forward:['시장가격','↑','거래량','↑'], reverse:['시장가격','↓','거래량','↓'] },
+    supplyShift: { forward:['시장가격','↓','거래량','↑'], reverse:['시장가격','↑','거래량','↓'] }
+  };
+  function updateDirections(s, forward) {
+    const d = directionMap[s][forward ? 'forward' : 'reverse'];
+    box.querySelector('[data-price-label]').textContent = d[0];
+    box.querySelector('[data-price-dir]').textContent = d[1];
+    box.querySelector('[data-quantity-label]').textContent = d[2];
+    box.querySelector('[data-quantity-dir]').textContent = d[3];
+  }
   const reset = () => {
     svg.querySelector('.demandCurve').setAttribute('transform','');
     svg.querySelector('.supplyCurve').setAttribute('transform','');
@@ -763,6 +778,7 @@ function showConceptDemo() {
     if (!started) started = now;
     const t = ((now - started) % 2200) / 2200;
     const wave = (1 - Math.cos(t * Math.PI * 2)) / 2;
+    updateDirections(scene, t < 0.5);
     if (scene === 'demandPrice' || scene === 'supplyPrice') {
       const d = scene === 'demandPrice', x = 112 + 158 * wave;
       const y = d ? 77 + 121 * wave : 198 - 121 * wave;
@@ -778,7 +794,7 @@ function showConceptDemo() {
     raf = requestAnimationFrame(frame);
   }
   function selectScene(s) {
-    cancelAnimationFrame(raf); playing = false; started = 0; scene = s; box.dataset.scene = s; reset();
+    cancelAnimationFrame(raf); playing = false; started = 0; scene = s; box.dataset.scene = s; reset(); updateDirections(s, true);
     tabs.forEach(t => t.classList.toggle('on', t.dataset.scene === s));
     if (s === 'demandPrice' || s === 'supplyPrice') {
       const d = s === 'demandPrice';
