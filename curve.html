@@ -464,7 +464,7 @@ function questionOf(c, step) {
   if (step === 'move') return `<b>${esc(c.market)} ${curveName(c.curve)}곡선</b>에서 점만 움직여, 곡선 전체가 움직여?`;
   if (step === 'who') return '<b>가격은 그대로야.</b> 사는 쪽과 파는 쪽 중 누구의 사정이 바뀌었어?';
   if (step === 'drag') return c.type === 'shift' ? `<b>${esc(c.market)} ${curveName(c.curve)}곡선</b>을 왼쪽이나 오른쪽으로 옮겨 봐.` : `<b>${esc(c.market)} ${curveName(c.curve)}곡선 위에서</b> 점을 움직여 봐.`;
-  if (c.type === 'shift') return `💭 아직 안 배웠지만 예측해 보자!<br>이 변화 뒤 <b>${esc(c.market)} 시장가격</b>은 오를까, 내릴까?`;
+  if (c.type === 'shift') return `이 변화 뒤 <b>${esc(c.market)} 시장가격</b>은 오를까, 내릴까?`;
   return c.curve === 'D' ? '그럼 <b>사려는 양(수요량)</b>은?' : '그럼 <b>팔려는 양(공급량)</b>은?';
 }
 function hintOf(c, step) {
