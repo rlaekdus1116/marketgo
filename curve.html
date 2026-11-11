@@ -271,7 +271,7 @@ button,.btn,.speech,.rule,.title,.card{word-break:keep-all;overflow-wrap:break-w
 .conceptTabs{display:flex;gap:8px;margin:12px 0}.conceptTab{border-radius:999px;padding:10px 16px;background:#fff;border:2px solid var(--line);font:inherit;font-size:19px}.conceptTab.on{background:var(--sky);border-color:var(--skyD)}
 .conceptScene{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:center}.conceptCopy{font-size:21px}.conceptCopy .hl{font-size:20px}
 .conceptGraph{background:#fff;border:3px solid var(--line);border-radius:22px;padding:10px}.conceptGraph svg{width:100%;height:auto;display:block}
-.conceptGraph .demand{stroke:#398bd0;stroke-width:6;fill:none}.conceptGraph .supply{stroke:#e98543;stroke-width:5;fill:none;opacity:0}
+.conceptGraph .demand,.conceptGraph .demandCurve{stroke:#398bd0;stroke-width:6;fill:none;stroke-linecap:round}.conceptGraph .supply,.conceptGraph .supplyCurve{stroke:#e98543;stroke-width:5;fill:none;stroke-linecap:round;opacity:1}
 .conceptGraph .old{stroke:#a9cce8;stroke-width:4;stroke-dasharray:8 7;fill:none;opacity:0}
 .conceptGraph .moving{transform:translateX(0);transform-box:fill-box;transform-origin:center}
 .conceptGraph .dot{fill:#ee8b45;stroke:#fff;stroke-width:4}
@@ -301,14 +301,6 @@ button,.btn,.speech,.rule,.title,.card{word-break:keep-all;overflow-wrap:break-w
 
 @media(max-width:760px){.conceptScene{grid-template-columns:1fr}.conceptCard{padding:14px}.conceptHead h2{font-size:24px}}
 
-/* 단정한 원색 무지개 궁서체 알림 */
-.ann{gap:8px;background:rgba(255,255,255,.96);animation:annIn .25s ease-out}
-.ann::before,.ann::after{display:none}
-.ann .rb{font-family:'궁서체','Gungsuh','Batang',serif;font-size:min(13vw,112px);line-height:1.1;
-  background:linear-gradient(90deg,#f00,#ff7a00,#e6b800,#008a28,#06c,#4b0082,#8b00ff);background-size:100% 100%;
-  -webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-stroke:2px #fff;
-  filter:drop-shadow(3px 4px 0 #222);animation:none}
-.ann .sub{font-family:'궁서체','Gungsuh','Batang',serif;font-size:32px;color:#111}
 .conceptCard{border:4px solid #222;box-shadow:8px 8px 0 #222}
 .conceptTabs{justify-content:center;flex-wrap:wrap}
 .conceptTab{font-family:'궁서체','Gungsuh','Batang',serif;font-weight:bold;color:#111;border:3px solid #111}
@@ -316,6 +308,11 @@ button,.btn,.speech,.rule,.title,.card{word-break:keep-all;overflow-wrap:break-w
 .conceptGraph .curveWord{font-family:'궁서체','Gungsuh','Batang',serif;font-weight:bold;paint-order:stroke;stroke:#fff;stroke-width:5px}
 .conceptGraph .endDot{fill:#fff;stroke:#e60012;stroke-width:4}
 .conceptGraph .travelDot{fill:#ffdf00;stroke:#111;stroke-width:3}
+
+.conceptGraph .demandCurve{stroke:#1678c5;stroke-width:6;fill:none;stroke-linecap:round}
+.conceptGraph .supplyCurve{stroke:#e87525;stroke-width:6;fill:none;stroke-linecap:round}
+.conceptGraph .demandOld,.conceptGraph .supplyOld{fill:none;stroke-width:4;stroke-dasharray:9 7;opacity:.35}
+.conceptGraph .demandOld{stroke:#1678c5}.conceptGraph .supplyOld{stroke:#e87525}
 </style>
 <style>
 [data-cooldown]{display:block;margin-top:10px;color:#b00020;font-size:22px}
@@ -408,10 +405,12 @@ const toast = msg => { document.querySelectorAll('.toast').forEach(t => t.remove
 
 /* ========== 🌈 병맛 안내 화면 ========== */
 let annT;
-function announce(big, sub = '', emo = '', ms = 1800) {
+function announce(big, sub = '', emo = '🌈', ms = 3000) {
   document.querySelectorAll('.ann').forEach(a => a.remove());
   const a = document.createElement('div'); a.className = 'ann';
-  a.innerHTML = `<div class="rb">${emo ? emo+' ' : ''}${big}</div>${sub ? `<div class="sub">${sub}</div>` : ''}`;
+  const floaters = ['📈','🔍','✨','⭐','📈','💖','📉','🌟','🧾','🫧','✨','🔎'];
+  a.innerHTML = floaters.map((f, i) => `<span class="fl" style="left:${(i * 83) % 92}%;top:${(i * 47) % 85}%;animation-delay:${(i % 5) * .3}s">${f}</span>`).join('')
+    + `<div class="emo">${emo}</div><span class="rb">${big}</span>${sub ? `<div class="sub">${sub}</div>` : ''}<div class="tap">화면을 누르면 닫혀</div>`;
   a.onclick = () => a.remove(); document.body.appendChild(a);
   clearTimeout(annT); annT = setTimeout(() => a.remove(), ms);
 }
