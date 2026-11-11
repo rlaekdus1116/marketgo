@@ -819,7 +819,7 @@ function showConceptDemo() {
       svg.querySelector('.demandCurve').style.opacity = '1';
       svg.querySelector('.supplyCurve').style.opacity = '1';
     }
-    play();
+    // 장면을 고르기만 해서는 움직이지 않아. 재생 버튼을 눌렀을 때만 시작해.
   }
   function play(){ cancelAnimationFrame(raf); playing=true; started=0; raf=requestAnimationFrame(frame); }
   tabs.forEach(t => t.onclick = () => selectScene(t.dataset.scene));
