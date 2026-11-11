@@ -300,6 +300,22 @@ button,.btn,.speech,.rule,.title,.card{word-break:keep-all;overflow-wrap:break-w
 @keyframes pointTravel{from{cx:112;cy:72}to{cx:270;cy:195}}
 
 @media(max-width:760px){.conceptScene{grid-template-columns:1fr}.conceptCard{padding:14px}.conceptHead h2{font-size:24px}}
+
+/* 단정한 원색 무지개 궁서체 알림 */
+.ann{gap:8px;background:rgba(255,255,255,.96);animation:annIn .25s ease-out}
+.ann::before,.ann::after{display:none}
+.ann .rb{font-family:'궁서체','Gungsuh','Batang',serif;font-size:min(13vw,112px);line-height:1.1;
+  background:linear-gradient(90deg,#f00,#ff7a00,#e6b800,#008a28,#06c,#4b0082,#8b00ff);background-size:100% 100%;
+  -webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-stroke:2px #fff;
+  filter:drop-shadow(3px 4px 0 #222);animation:none}
+.ann .sub{font-family:'궁서체','Gungsuh','Batang',serif;font-size:32px;color:#111}
+.conceptCard{border:4px solid #222;box-shadow:8px 8px 0 #222}
+.conceptTabs{justify-content:center;flex-wrap:wrap}
+.conceptTab{font-family:'궁서체','Gungsuh','Batang',serif;font-weight:bold;color:#111;border:3px solid #111}
+.conceptTab.on{background:#ffec00;border-color:#e60012}
+.conceptGraph .curveWord{font-family:'궁서체','Gungsuh','Batang',serif;font-weight:bold;paint-order:stroke;stroke:#fff;stroke-width:5px}
+.conceptGraph .endDot{fill:#fff;stroke:#e60012;stroke-width:4}
+.conceptGraph .travelDot{fill:#ffdf00;stroke:#111;stroke-width:3}
 </style>
 </head>
 <body>
@@ -361,8 +377,13 @@ const PRESETS = {
     { emoji: '🥬', market: '배추', price: '1포기 5,000원', factor: '토지(임대료)', text: '배추밭 임대료가 내려갔어.', type: 'shift', curve: 'S', dir: '+' },
   ],
 };
+// 앞의 두 사례는 함께 시범 풀이: 가격 변화에 따른 수량 변화 → 가격 외 요인에 따른 곡선 변화
+PRESETS.D = [PRESETS.D[0], PRESETS.D[2], PRESETS.D[1], ...PRESETS.D.slice(3)];
+PRESETS.S = [PRESETS.S[0], PRESETS.S[2], PRESETS.S[1], ...PRESETS.S.slice(3)];
 // 총정리는 여러 요인을 섞어 수요·공급과 시장가격을 함께 살펴봐.
-PRESETS.mix = [PRESETS.D[2], PRESETS.S[2], PRESETS.D[3], PRESETS.S[4], PRESETS.D[4], PRESETS.S[6], PRESETS.D[5], PRESETS.S[7], PRESETS.D[6], PRESETS.S[8], PRESETS.D[7], PRESETS.S[10]];
+const mixD = PRESETS.D.filter(c => c.type === 'shift');
+const mixS = PRESETS.S.filter(c => c.type === 'shift');
+PRESETS.mix = Array.from({length:6}, (_,i) => [mixD[i], mixS[i]]).flat();
 const SET_NAME = { D: '🛒 수요편', S: '🏭 공급편', mix: '🔀 총정리' };
 const DEFAULT_CASES = PRESETS.D;
 
@@ -379,15 +400,11 @@ const toast = msg => { document.querySelectorAll('.toast').forEach(t => t.remove
 
 /* ========== 🌈 병맛 안내 화면 ========== */
 let annT;
-function announce(big, sub = '', emo = '🌈', ms = 3000) {
+function announce(big, sub = '', emo = '', ms = 1800) {
   document.querySelectorAll('.ann').forEach(a => a.remove());
-  const a = document.createElement('div');
-  a.className = 'ann';
-  const floaters = ['📈','🔍','✨','⭐','📈','💖','📉','🌟','🧾','🫧','✨','🔎'];
-  a.innerHTML = floaters.map((f, i) => `<span class="fl" style="left:${(i * 83) % 92}%;top:${(i * 47) % 85}%;animation-delay:${(i % 5) * .3}s">${f}</span>`).join('')
-    + `<div class="emo">${emo}</div><span class="rb">${big}</span>${sub ? `<div class="sub">${sub}</div>` : ''}<div class="tap">화면을 누르면 닫혀</div>`;
-  a.onclick = () => a.remove();
-  document.body.appendChild(a);
+  const a = document.createElement('div'); a.className = 'ann';
+  a.innerHTML = `<div class="rb">${emo ? emo+' ' : ''}${big}</div>${sub ? `<div class="sub">${sub}</div>` : ''}`;
+  a.onclick = () => a.remove(); document.body.appendChild(a);
   clearTimeout(annT); annT = setTimeout(() => a.remove(), ms);
 }
 const annSeen = new Set(); let firstPass = true;
@@ -410,7 +427,7 @@ const activeSet = () => (!isTeacher && room?.players?.[pid]?.set) || (room && ro
 const casesOf = (set = activeSet()) => ((room && set === (room.set || 'D') ? room.cases : PRESETS[set]) || DEFAULT_CASES).map(c => ({ ...c, type: c.type === 'along' ? 'along' : 'shift', curve: c.curve === 'S' ? 'S' : 'D', dir: c.dir === '-' ? '-' : '+' }));
 // 수요편·공급편은 답이 뻔해서 '누구 마음?' 단계를 빼고, 총정리에서만 물어
 const stepsOf = (c, set = activeSet()) => c.type === 'shift' ? (set === 'mix' ? ['price', 'move', 'who', 'drag', 'final'] : ['price', 'move', 'drag', 'final']) : ['price', 'move', 'drag', 'final'];
-const STEP_NAME = { price: '가격이 바뀌었어?', move: '어떻게 움직여?', who: '누구 사정이 바뀌었어?', drag: '그래프 움직이기', final: '최종 결과' };
+const STEP_NAME = { price: '상품 가격 확인', move: '점 이동과 곡선 이동 구분', who: '바뀐 쪽 찾기', drag: '그래프에서 나타내기', final: '결과 확인' };
 const curveName = k => k === 'D' ? '수요' : '공급';
 const priceAfter = c => (c.curve === 'D') === (c.dir === '+') ? '+' : '-';                       // 수요↑·공급↓ → 가격↑
 const qtyAfter = c => c.curve === 'D' ? (c.dir === '+' ? '-' : '+') : c.dir;                         // 가격↑ → 수요량↓, 공급량↑
@@ -432,9 +449,9 @@ function optionsOf(c, step) {
 }
 function questionOf(c, step) {
   if (step === 'price') return `이번에 볼 <b>${esc(c.market)} 가격</b>이 바뀌었어?`;
-  if (step === 'move') return '그래프에서 움직이는 건 뭐야?';
+  if (step === 'move') return `<b>${esc(c.market)} ${curveName(c.curve)}곡선</b>에서 점만 움직여, 곡선 전체가 움직여?`;
   if (step === 'who') return '<b>가격은 그대로야.</b> 사는 쪽과 파는 쪽 중 누구의 사정이 바뀌었어?';
-  if (step === 'drag') return c.type === 'shift' ? `<b>${esc(c.market)} ${curveName(c.curve)}곡선</b>을 옆으로 끌어 봐! 👆` : `<b>${esc(c.market)} ${curveName(c.curve)}곡선 위의 점</b>을 움직여 봐! 👆`;
+  if (step === 'drag') return c.type === 'shift' ? `<b>${esc(c.market)} ${curveName(c.curve)}곡선</b>을 왼쪽이나 오른쪽으로 옮겨 봐.` : `<b>${esc(c.market)} ${curveName(c.curve)}곡선 위에서</b> 점을 움직여 봐.`;
   if (c.type === 'shift') return `이 변화 뒤 <b>${esc(c.market)} 시장가격</b>은 어떻게 될까?`;
   return c.curve === 'D' ? '그럼 <b>사려는 양(수요량)</b>은?' : '그럼 <b>팔려는 양(공급량)</b>은?';
 }
@@ -677,53 +694,82 @@ const stepBar = (c, cur, doneFn) => `<div class="stepbar"><span class="${cur ===
 
 
 function showConceptDemo() {
-  const old = document.querySelector('.conceptPop'); if (old) old.remove();
-  const d = document.createElement('div'); d.className = 'conceptPop playing'; d.dataset.scene = 'price';
-  d.innerHTML = `<div class="conceptCard">
-    <div class="conceptHead"><span class="conceptHint">💞</span><button class="btn sm" data-close>닫기</button></div>
+  document.querySelector('.conceptPop')?.remove();
+  const box = document.createElement('div'); box.className = 'conceptPop'; box.dataset.scene = 'demandPrice';
+  box.innerHTML = `<div class="conceptCard">
+    <div class="conceptHead"><span class="conceptRainbow">✨</span><button class="btn sm" data-close>닫기</button></div>
     <div class="conceptTabs">
-      <button class="conceptTab on" data-scene="price">가격 변화</button>
-      <button class="conceptTab" data-scene="demand">수요 변동</button>
-      <button class="conceptTab" data-scene="supply">공급 변동</button>
+      <button class="conceptTab on" data-scene="demandPrice">수요량 변화</button>
+      <button class="conceptTab" data-scene="supplyPrice">공급량 변화</button>
+      <button class="conceptTab" data-scene="demandShift">수요 변동</button>
+      <button class="conceptTab" data-scene="supplyShift">공급 변동</button>
     </div>
-    <div class="conceptGraph">
-      <svg viewBox="0 0 440 280" role="img" aria-label="수요·공급 곡선 애니메이션">
-        <line x1="48" y1="20" x2="48" y2="232" stroke="#A3919C" stroke-width="3"/><line x1="48" y1="232" x2="400" y2="232" stroke="#A3919C" stroke-width="3"/>
-        <text x="12" y="35" fill="#7b6877" font-size="15">가격</text><text x="365" y="260" fill="#7b6877" font-size="15">수량</text>
-        <path class="oldDemand" d="M90 55 L300 218"/>
-        <path class="oldSupply" d="M90 218 L300 55"/>
-        <path class="supply" d="M90 218 L300 55"/>
-        <path class="demand" d="M90 55 L300 218"/>
-        <circle class="endPoint startPoint" cx="112" cy="72" r="8"/>
-        <circle class="endPoint finishPoint" cx="270" cy="195" r="8"/>
-        <circle id="priceMover" cx="112" cy="72" r="7"/>
-        <text class="pointLabel startLabel" x="82" y="63" fill="#5B4B57" font-size="13">처음</text>
-        <text class="pointLabel finishLabel" x="273" y="213" fill="#5B4B57" font-size="13">나중</text>
-        <text class="curveLabel supplyLabel" x="310" y="58" fill="#e98543" font-size="15">공급곡선</text>
-        <text class="curveLabel demandLabel" x="310" y="222" fill="#398bd0" font-size="15">수요곡선</text>
-      </svg>
-    </div>
+    <div class="conceptGraph"><svg viewBox="0 0 470 300" role="img" aria-label="수요곡선과 공급곡선 이동">
+      <line x1="48" y1="24" x2="48" y2="242" stroke="#62515e" stroke-width="3"/><line x1="48" y1="242" x2="405" y2="242" stroke="#62515e" stroke-width="3"/>
+      <text x="11" y="38" fill="#413540" font-size="16">가격</text><text x="370" y="271" fill="#413540" font-size="16">수량</text>
+      <path class="demandOld" d="M90 60 L300 220"/>
+      <path class="supplyOld" d="M90 220 L300 60"/>
+      <path class="supplyCurve" d="M90 220 L300 60"/>
+      <path class="demandCurve" d="M90 60 L300 220"/>
+      <circle class="endDot" data-point="start" cx="112" cy="77" r="7"/><circle class="endDot" data-point="end" cx="270" cy="198" r="7"/>
+      <circle class="travelDot" cx="112" cy="77" r="9"/>
+      <text class="pointWord" data-point="start" x="80" y="68">처음</text><text class="pointWord" data-point="end" x="274" y="216">나중</text>
+      <text class="curveWord" x="315" y="72" fill="#e87525">공급곡선</text><text class="curveWord" x="315" y="228" fill="#1678c5">수요곡선</text>
+    </svg></div>
     <div style="text-align:center;margin-top:12px"><button class="btn big mint" data-play>▶ 재생</button><button class="btn" data-stop>⏸ 멈춤</button></div>
   </div>`;
-  const tabs = d.querySelectorAll('[data-scene]');
-  const play = () => { d.classList.add('playing'); };
-  const setScene = scene => {
-    d.dataset.scene = scene; d.classList.remove('playing');
-    tabs.forEach(x => x.classList.toggle('on', x.dataset.scene === scene));
-    d.querySelectorAll('.endPoint,.pointLabel').forEach(x => x.style.display = scene === 'price' ? '' : 'none');
-    d.querySelector('#priceMover').style.display = scene === 'price' ? '' : 'none';
-    d.querySelector('.oldDemand').style.display = scene === 'demand' ? '' : 'none';
-    d.querySelector('.oldSupply').style.display = scene === 'supply' ? '' : 'none';
-    d.querySelector('.supply').style.display = scene === 'price' || scene === 'demand' ? '' : 'none';
-    d.querySelector('.demand').style.display = scene === 'price' || scene === 'supply' ? '' : 'none';
-    play();
+  const tabs = [...box.querySelectorAll('[data-scene]')];
+  const svg = box.querySelector('svg'), dot = svg.querySelector('.travelDot');
+  let raf = 0, started = 0, playing = false, scene = 'demandPrice';
+  const reset = () => {
+    svg.querySelector('.demandCurve').setAttribute('transform','');
+    svg.querySelector('.supplyCurve').setAttribute('transform','');
+    svg.querySelector('.demandOld').style.display = 'none';
+    svg.querySelector('.supplyOld').style.display = 'none';
+    svg.querySelectorAll('.endDot,.pointWord').forEach(x => x.style.display = 'none');
+    dot.style.display = 'none';
   };
-  tabs.forEach(b => b.onclick = () => setScene(b.dataset.scene));
-  d.querySelector('[data-play]').onclick = play;
-  d.querySelector('[data-stop]').onclick = () => d.classList.remove('playing');
-  d.querySelector('[data-close]').onclick = () => d.remove();
-  d.onclick = e => { if (e.target === d) d.remove(); };
-  document.body.appendChild(d); setScene('price');
+  function frame(now) {
+    if (!playing) return;
+    if (!started) started = now;
+    const t = ((now - started) % 2200) / 2200;
+    const wave = (1 - Math.cos(t * Math.PI * 2)) / 2;
+    if (scene === 'demandPrice' || scene === 'supplyPrice') {
+      const d = scene === 'demandPrice', x = 112 + 158 * wave;
+      const y = d ? 77 + 121 * wave : 198 - 121 * wave;
+      dot.setAttribute('cx',x); dot.setAttribute('cy',y);
+    } else if (scene === 'demandShift') {
+      svg.querySelector('.demandCurve').setAttribute('transform',`translate(${75*wave} 0)`);
+    } else if (scene === 'supplyShift') {
+      svg.querySelector('.supplyCurve').setAttribute('transform',`translate(${75*wave} 0)`);
+    }
+    raf = requestAnimationFrame(frame);
+  }
+  function selectScene(s) {
+    cancelAnimationFrame(raf); playing = false; started = 0; scene = s; box.dataset.scene = s; reset();
+    tabs.forEach(t => t.classList.toggle('on', t.dataset.scene === s));
+    if (s === 'demandPrice' || s === 'supplyPrice') {
+      const d = s === 'demandPrice';
+      box.querySelectorAll('.endDot,.pointWord').forEach(x => x.style.display = '');
+      dot.style.display = '';
+      dot.setAttribute('cx',d?112:112); dot.setAttribute('cy',d?77:198);
+      svg.querySelector('.demandCurve').style.opacity = d ? '1' : '.35';
+      svg.querySelector('.supplyCurve').style.opacity = d ? '.35' : '1';
+    } else {
+      box.querySelector('.demandOld').style.display = s === 'demandShift' ? '' : 'none';
+      box.querySelector('.supplyOld').style.display = s === 'supplyShift' ? '' : 'none';
+      svg.querySelector('.demandCurve').style.opacity = '1';
+      svg.querySelector('.supplyCurve').style.opacity = '1';
+    }
+    play();
+  }
+  function play(){ cancelAnimationFrame(raf); playing=true; started=0; raf=requestAnimationFrame(frame); }
+  tabs.forEach(t => t.onclick = () => selectScene(t.dataset.scene));
+  box.querySelector('[data-play]').onclick = play;
+  box.querySelector('[data-stop]').onclick = () => { playing=false; cancelAnimationFrame(raf); };
+  box.querySelector('[data-close]').onclick = () => { playing=false; cancelAnimationFrame(raf); box.remove(); };
+  box.onclick = e => { if(e.target===box){playing=false;cancelAnimationFrame(raf);box.remove();} };
+  document.body.appendChild(box); selectScene('demandPrice');
 }
 function renderTeacher() {
   const st = room.state || {}, cs = casesOf();
@@ -772,7 +818,7 @@ function renderTeacher() {
     const ci = st.ci || 0, c = cs[ci], steps = stepsOf(c), k = st.step || 0, stp = steps[k - 1];
     if (!c) body = '<div class="stage"><div class="rule">사례가 없어</div></div>';
     else if (k === 0) {
-      maybeAnnounce('case' + ci, () => announce('🚨 사건 발생!!', `${ci + 1}번째 사례`, '📈', 2600));
+      maybeAnnounce('case' + ci, () => announce(`사례 ${ci + 1} 등장!`, '', '', 1500));
       body = `<div class="stage" style="gap:16px">
         <span class="roundBadge">📈 사례 ${ci + 1} / ${cs.length}</span>
         <div class="case"><div class="ce">${esc(c.emoji)}</div><div class="cm">${esc(c.market)} 시장</div>${curveFocus(c)}${c.factor && c.type === 'shift' ? `<div class="caseFactor">바뀐 요인: ${esc(c.factor)}</div>` : ''}${priceNote(c)}<div class="ct">${esc(c.text)}</div></div>
@@ -792,7 +838,7 @@ function renderTeacher() {
           <div class="dist">${opts.map(([v, lab]) => `<div class="drow ${st.reveal && v === right ? 'right' : ''}"><span>${st.reveal && v === right ? '✅ ' : ''}${lab.replace(/<br>.*$/, '')}</span><div class="dbar"><i style="width:${st.reveal ? counts[v] / max * 100 : 0}%"></i></div><b>${st.reveal ? counts[v] + '명' : '?'}</b></div>`).join('')}</div>
           <div class="muted" style="font-size:19px">✍️ 답한 학생 ${answered} / ${ids.length}명${st.reveal ? ` · 맞힌 학생 ${ids.filter(id => (stepRec(id, ci, stp) || {}).ok).length}명` : ''}</div>
           <div>${!st.reveal ? '<button class="btn big lemon" id="reveal">✅ 정답 공개 <span class="autoCd"></span></button>' : last ? (ci + 1 < cs.length ? '<button class="btn big mint" id="nextCase">🚨 다음 사례 <span class="autoCd"></span></button>' : '<button class="btn big mint" id="toEnd2">🏁 끝! 결과 보기</button>') : '<button class="btn big mint" id="nextStep">▶ 다음 단계 <span class="autoCd"></span></button>'}
-            ${ci + 1 < cs.length ? `<button class="btn sky" id="toSolo">🏃 다음 사례부터 각자 풀기</button>` : ''}</div>
+            ${ci >= 1 && ci + 1 < cs.length ? `<button class="btn big sky" id="toSolo">🏃 이제 각자 풀기</button>` : ''}</div>
         </div>
         <div class="side"><div class="graph">${pastDrag ? solvedGraph(c, last && st.reveal) : graphSVG({ c, mode: 'base' })}</div>
           ${st.reveal ? `<div class="hint">${hintOf(c, stp).replace('🔍 ', '💡 ')}</div>` : ''}
@@ -910,7 +956,7 @@ function wireTeacher(st, cs) {
     document.querySelectorAll('[data-del]').forEach(b => b.onclick = () => { const n = casesOf().filter((_, k) => k !== +b.dataset.del); if (n.length) set(AP('cases'), n); });
     document.querySelectorAll('[data-up]').forEach(b => b.onclick = () => { const n = casesOf(), k = +b.dataset.up; [n[k - 1], n[k]] = [n[k], n[k - 1]]; set(AP('cases'), n); });
     if (el('addCase')) el('addCase').onclick = () => set(AP('cases'), [...casesOf(), { emoji: '🎁', market: '새 상품', price: '1개 1,000원', factor: '', text: '사례를 적어', type: 'shift', curve: 'D', dir: '+' }]);
-    document.querySelectorAll('[data-set]').forEach(b => b.onclick = () => { const k = b.dataset.set; if (room.set === k) return; ask(`${SET_NAME[k]} 기본 사례로 바꿀까?<br><small>(고친 내용은 사라져)</small>`).then(y => y && update(A(), { set: k, cases: PRESETS[k] })); });
+    document.querySelectorAll('[data-set]').forEach(b => b.onclick = () => { const k = b.dataset.set; ask(`${SET_NAME[k]} 기본 사례 순서로 불러올까?<br><small>(현재 수정한 사례는 기본 사례로 바뀌어)</small>`).then(y => y && update(A(), { set: k, cases: PRESETS[k] })); });
     el('ready').onclick = () => S({ phase: 'lobby' });
   }
   document.querySelectorAll('[data-send-supply]').forEach(b => b.onclick = async () => { const id=b.dataset.sendSupply; if (!await ask(`${esc(nameOf(id))}만 공급편으로 보낼까?`, '🏭 보내기')) return; await update(AP(`players/${id}`), {set:'S'}); if (st.mode !== 'solo') await S({mode:'solo',ci:0,step:0,reveal:false,soloFrom:0,auto:false}); toast(`${nameOf(id)} 학생을 공급편으로 보냈어`); });
@@ -1122,7 +1168,7 @@ function renderStudent() {
   if (!(st.mode === 'together' && k === steps.length && st.reveal) && !(hold && k === steps.length)) closeSummary();
   const bar = '';   // 단계 표시줄은 뺌
   if (k === 0) {
-    maybeAnnounce(`case${st.mode}${ci}`, () => announce('🚨 사건 발생!!', `${ci + 1}번째 사례`, '📈', 2600));
+    maybeAnnounce(`case${st.mode}${ci}`, () => announce(`사례 ${ci + 1} 등장!`, '', '', 1500));
     app.innerHTML = `<div class="s-wrap">${top}<div class="stage" style="gap:14px"><span class="roundBadge">🚨 사례 ${ci + 1} 등장!</span><div class="case"><div class="ce">${esc(c.emoji)}</div><div class="cm">${esc(c.market)} 시장</div>${c.price ? `<div class="cp">💰 지금 가격: <b>${esc(c.price)}</b></div>` : ''}<div class="ct">${esc(c.text)}</div></div>${bar}
       ${st.mode === 'solo' ? '<button class="btn big mint" id="startCase">🔍 예측 시작!</button>' : '<div class="rule muted">사례를 잘 읽어 📖 곧 시작돼</div>'}</div></div>`;
     if (el('startCase')) el('startCase').onclick = () => { readSeen[ci] = true; sKey = ''; renderStudent(); };
