@@ -275,6 +275,9 @@ button,.btn,.speech,.rule,.title,.card{word-break:keep-all;overflow-wrap:break-w
 .conceptGraph .old{stroke:#a9cce8;stroke-width:4;stroke-dasharray:8 7;fill:none;opacity:0}
 .conceptGraph .moving{transform:translateX(0);transform-box:fill-box;transform-origin:center}
 .conceptGraph .dot{fill:#ee8b45;stroke:#fff;stroke-width:4}
+.conceptGraph .demandOld{stroke:#a9cce8;stroke-width:4;stroke-dasharray:8 7;fill:none;opacity:.9}
+.conceptGraph .supplyOld{stroke:#f2c7a8;stroke-width:4;stroke-dasharray:8 7;fill:none;opacity:.9}
+.conceptGraph .eqStart text,.conceptGraph .eqEnd text{font-family:inherit;font-size:14px;font-weight:bold;fill:#5B4B57}
 .conceptPop[data-scene="price"].playing .demand{stroke-dasharray:16 10;animation:traceAlong 1.2s linear infinite}
 .conceptPop[data-scene="shift"].playing .moving{animation:shiftRight 2.4s ease-in-out infinite alternate}
 .conceptPop[data-scene="shift"].playing .old{opacity:1}
@@ -727,6 +730,8 @@ function showConceptDemo() {
       <circle class="travelDot" cx="112" cy="77" r="9"/>
       <text class="pointWord" data-point="start" x="80" y="68">처음</text><text class="pointWord" data-point="end" x="274" y="216">나중</text>
       <text class="curveWord" x="315" y="72" fill="#e87525">공급곡선</text><text class="curveWord" x="315" y="228" fill="#1678c5">수요곡선</text>
+      <g class="eqStart" style="display:none"><circle cx="195" cy="140" r="7" fill="#A3919C" stroke="#fff" stroke-width="3"/><text x="166" y="132">처음</text></g>
+      <g class="eqEnd" style="display:none" opacity="0"><circle cx="195" cy="140" r="9" fill="#F5B48C" stroke="#fff" stroke-width="3"/><text x="205" y="134">나중</text></g>
     </svg></div>
     <div style="text-align:center;margin-top:12px"><button class="btn big mint" data-play>▶ 재생</button><button class="btn" data-stop>⏸ 멈춤</button></div>
   </div>`;
@@ -738,7 +743,9 @@ function showConceptDemo() {
     svg.querySelector('.supplyCurve').setAttribute('transform','');
     svg.querySelector('.demandOld').style.display = 'none';
     svg.querySelector('.supplyOld').style.display = 'none';
-    svg.querySelectorAll('.endDot,.pointWord').forEach(x => x.style.display = 'none');
+    svg.querySelectorAll('.endDot,.pointWord,.eqStart,.eqEnd').forEach(x => x.style.display = 'none');
+    svg.querySelector('.eqEnd').setAttribute('transform','translate(0 0)');
+    svg.querySelector('.eqEnd').setAttribute('opacity','0');
     dot.style.display = 'none';
   };
   function frame(now) {
@@ -750,10 +757,13 @@ function showConceptDemo() {
       const d = scene === 'demandPrice', x = 112 + 158 * wave;
       const y = d ? 77 + 121 * wave : 198 - 121 * wave;
       dot.setAttribute('cx',x); dot.setAttribute('cy',y);
-    } else if (scene === 'demandShift') {
-      svg.querySelector('.demandCurve').setAttribute('transform',`translate(${75*wave} 0)`);
-    } else if (scene === 'supplyShift') {
-      svg.querySelector('.supplyCurve').setAttribute('transform',`translate(${75*wave} 0)`);
+    } else if (scene === 'demandShift' || scene === 'supplyShift') {
+      const shift = 75 * wave;
+      const isDemand = scene === 'demandShift';
+      svg.querySelector(isDemand ? '.demandCurve' : '.supplyCurve').setAttribute('transform',`translate(${shift} 0)`);
+      const eqEnd = svg.querySelector('.eqEnd');
+      eqEnd.setAttribute('transform',`translate(${shift/2} ${(isDemand ? -1 : 1) * shift * (160/210/2)})`);
+      eqEnd.setAttribute('opacity',String(Math.min(1,wave*2)));
     }
     raf = requestAnimationFrame(frame);
   }
@@ -770,6 +780,10 @@ function showConceptDemo() {
     } else {
       box.querySelector('.demandOld').style.display = s === 'demandShift' ? '' : 'none';
       box.querySelector('.supplyOld').style.display = s === 'supplyShift' ? '' : 'none';
+      if (s === 'demandShift' || s === 'supplyShift') {
+        box.querySelector('.eqStart').style.display = '';
+        box.querySelector('.eqEnd').style.display = '';
+      }
       svg.querySelector('.demandCurve').style.opacity = '1';
       svg.querySelector('.supplyCurve').style.opacity = '1';
     }
