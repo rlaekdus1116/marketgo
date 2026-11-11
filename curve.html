@@ -317,6 +317,11 @@ button,.btn,.speech,.rule,.title,.card{word-break:keep-all;overflow-wrap:break-w
 .conceptGraph .endDot{fill:#fff;stroke:#e60012;stroke-width:4}
 .conceptGraph .travelDot{fill:#ffdf00;stroke:#111;stroke-width:3}
 </style>
+<style>
+[data-cooldown]{display:block;margin-top:10px;color:#b00020;font-size:22px}
+.rankTable .drow{display:grid;grid-template-columns:70px 1fr 110px 120px;align-items:center;gap:6px}
+.supplyWelcome .sumCard{border:5px solid #e60012;box-shadow:8px 8px 0 #ffdf00}
+</style>
 </head>
 <body>
 <div id="app"></div>
@@ -850,7 +855,8 @@ function renderTeacher() {
   else if (st.phase === 'play' && st.mode === 'solo') {
     const ids = playerIds().filter(id => !((room.players || {})[id] || {}).set || ((room.players || {})[id] || {}).set === 'D'), from = st.soloFrom || 0, total = cs.length - from;
     const rows = ids.map(id => { const n = cs.filter((c, ci) => ci >= from && caseDone(id, ci, c, 'D')).length; return { id, n }; }).sort((a, b) => nameOf(a.id).localeCompare(nameOf(b.id)));
-    const supplyRows = playerIds().filter(id => (room.players || {})[id]?.set === 'S').map(id => ({id,n:casesOf('S').filter((c,ci)=>caseDone(id,ci,c,'S')).length}));
+    const supplyRows = playerIds().filter(id => (room.players || {})[id]?.set === 'S' || (room.set === 'S' && !(room.players || {})[id]?.set)).map(id => ({id,n:casesOf('S').filter((c,ci)=>caseDone(id,ci,c,'S')).length}));
+    const ranks = supplyRankRows();
     const allDone = rows.filter(r => r.n >= total).length;
     const finished = rows.filter(r => r.n >= total).map(r => st.showNames ? esc(nameOf(r.id)) : '👤').join(' · ') || '아직 없어';
     const pending = rows.filter(r => r.n < total).map(r => st.showNames ? esc(nameOf(r.id)) : '👤').join(' · ') || '모두 끝냈어';
@@ -863,6 +869,7 @@ function renderTeacher() {
         <div class="muted" style="font-size:17px;margin-bottom:12px"><b>아직 푸는 중:</b> ${st.showNames ? pending : '이름 표시를 켜면 확인할 수 있어.'}</div>
         <button class="btn big peach" id="goSupply">🏭 공급편으로 넘어가기 · ${allDone}/${ids.length}명 완료</button></div>` : ''}
       ${room.set === 'D' ? `<div class="card"><h3>🏭 공급편으로 보낸 학생</h3><div class="chips">${supplyRows.map(r=>`<span class="chip soft">${st.showNames?esc(nameOf(r.id)):'👤'} · ${r.n}/${casesOf('S').length} 사례</span>`).join('') || '<span class="muted">아직 없어</span>'}</div><div class="muted" style="margin-top:8px">수요편을 다 푼 학생만 개별로 보낼 수 있어.</div><div class="chips" style="margin-top:10px">${rows.filter(r=>r.n>=total).map(r=>`<button class="btn sm peach" data-send-supply="${r.id}">🏭 ${st.showNames?esc(nameOf(r.id)):'학생'} 공급편 보내기</button>`).join('') || '<span class="muted">수요편 완료 학생이 생기면 여기서 보낼 수 있어.</span>'}</div></div>` : ''}
+      ${ranks.length ? `<div class="card"><h3>🏆 공급편 점수·순위</h3><div class="rankTable">${ranks.map((r,n)=>`<div class="drow"><span>${n+1}위</span><b>${st.showNames?esc(nameOf(r.id)):'학생'}</b><span>${r.points}점</span><small>${r.correct}/${r.total} 정답</small></div>`).join('')}</div><button class="btn big ${st.supplyRankVisible?'lemon':'mint'}" id="toggleSupplyRank">${st.supplyRankVisible?'🙈 순위 공개 끄기':'🏆 학생에게 전체 순위 공개'}</button></div>` : ''}
       ${heatTable(cs, from)}`;
   }
   else if (st.phase === 'end') {
@@ -959,7 +966,8 @@ function wireTeacher(st, cs) {
     document.querySelectorAll('[data-set]').forEach(b => b.onclick = () => { const k = b.dataset.set; ask(`${SET_NAME[k]} 기본 사례 순서로 불러올까?<br><small>(현재 수정한 사례는 기본 사례로 바뀌어)</small>`).then(async y => { if (!y) return; await Promise.all(playerIds().map(id => update(AP(`players/${id}`), {set:null}))); await update(A(), { set:k, cases:PRESETS[k] }); }); });
     el('ready').onclick = () => S({ phase: 'lobby' });
   }
-  document.querySelectorAll('[data-send-supply]').forEach(b => b.onclick = async () => { const id=b.dataset.sendSupply; if (!await ask(`${esc(nameOf(id))}만 공급편으로 보낼까?`, '🏭 보내기')) return; await update(AP(`players/${id}`), {set:'S'}); if (st.mode !== 'solo') await S({mode:'solo',ci:0,step:0,reveal:false,soloFrom:0,auto:false}); toast(`${nameOf(id)} 학생을 공급편으로 보냈어`); });
+  document.querySelectorAll('[data-send-supply]').forEach(b => b.onclick = async () => { const id=b.dataset.sendSupply; if (!await ask(`${esc(nameOf(id))}만 공급편으로 보낼까?`, '🏭 보내기')) return; await update(AP(`players/${id}`), {set:'S'}); await S({supplyRankVisible:false}); if (st.mode !== 'solo') await S({mode:'solo',ci:0,step:0,reveal:false,soloFrom:0,auto:false}); toast(`${nameOf(id)} 학생을 공급편으로 보냈어`); });
+  if (el('toggleSupplyRank')) el('toggleSupplyRank').onclick = () => S({supplyRankVisible:!st.supplyRankVisible});
   if (st.phase === 'lobby') {
     if (el('conceptDemo')) el('conceptDemo').onclick = () => showConceptDemo();
     el('toSetup').onclick = () => S({ phase: 'setup' });
@@ -980,7 +988,7 @@ function wireTeacher(st, cs) {
     await update(A(), {
       set: 'S',
       cases: PRESETS.S,
-      state: { ...st, phase: 'play', mode: 'solo', ci: 0, step: 0, reveal: false, soloFrom: 0, auto: false }
+      state: { ...st, phase: 'play', mode: 'solo', ci: 0, step: 0, reveal: false, soloFrom: 0, auto: false, supplyRankVisible: false }
     });
     toast('공급편으로 넘어갔어');
   };
@@ -1124,19 +1132,64 @@ if (isTeacher) setInterval(autoTick, 300);
    🧒 학생 화면
    ========================================================= */
 let readSeen = {}, sKey = '', dragState = null, hold = null;   // hold: 각자 풀기에서 방금 맞힌 단계를 '다음' 누를 때까지 보여 줌
+let questionStartedAt = Date.now(), cooldownInterval = null;
 function record(ci, stp, val, ok) {
-  const r = stepRec(pid, ci, stp);
-  if (room.state.mode === 'together') return r ? null : update(AP(`ansBySet/${room.set || 'D'}/${pid}/${ci}/${stp}`), { first: val, ok, done: true });   // 같이 하기: 한 번만 내고, 정답은 공개 때
+  const set = activeSet(), r = stepRec(pid, ci, stp, set), nowAt = Date.now();
+  if (r && r.wrongAt && nowAt < r.wrongAt + 7000) { toast('잠깐 기다렸다가 다시 골라'); return Promise.resolve(); }
+  const elapsedMs = Math.max(0, nowAt - questionStartedAt);
+  const speedBonus = Math.max(0, 50 - Math.floor(elapsedMs / 1000) * 2);
+  if (room.state.mode === 'together' && set === (room.set || 'D')) {
+    return r ? null : update(AP(`ansBySet/${set}/${pid}/${ci}/${stp}`), { first:val, ok, done:true, resolvedCorrect:ok, points:ok ? 100 + speedBonus : 0, elapsedMs });
+  }
   if (ok && room.state.mode === 'solo') hold = { ci, stp };
-  const upd = r ? { done: r.done || ok } : { first: val, ok, done: ok };
-  return update(AP(`ansBySet/${room.set || 'D'}/${pid}/${ci}/${stp}`), upd);
+  const upd = ok
+    ? { first:r ? r.first : val, ok:r ? r.ok : true, done:true, resolvedCorrect:true, points:(r && r.ok ? 100 : 60) + speedBonus, elapsedMs, solvedAt:nowAt }
+    : { first:r ? r.first : val, ok:r ? r.ok : false, done:false, wrongAt:nowAt, wrongCount:(r && r.wrongCount || 0)+1 };
+  return update(AP(`ansBySet/${set}/${pid}/${ci}/${stp}`), upd);
+}
+function supplyRankRows() {
+  return playerIds().filter(id => (room.players || {})[id]?.set === 'S' || (room.set === 'S' && !(room.players || {})[id]?.set))
+    .map(id => {
+      let points=0, correct=0, total=0, done=0;
+      casesOf('S').forEach((c,ci)=>stepsOf(c,'S').forEach(stp=>{
+        const r=stepRec(id,ci,stp,'S'); total++;
+        if(r?.done) done++;
+        if(r?.resolvedCorrect || (r?.done && r?.ok)) { correct++; points += Number(r.points)||100; }
+      }));
+      return {id,points,correct,total,done};
+    }).sort((a,b)=>b.points-a.points || b.correct-a.correct || nameOf(a.id).localeCompare(nameOf(b.id)));
+}
+function showSupplyWelcome() {
+  document.querySelector('.supplyWelcome')?.remove();
+  const d=document.createElement('div'); d.className='sumPop supplyWelcome';
+  d.innerHTML='<div class="sumCard" style="display:block;width:min(620px,100%);text-align:center"><div style="font-size:64px">🎉🏭🎉</div><div style="font-family:serif;font-size:34px;color:#e60012;margin:8px 0 16px">축하해! 먼저 공급편으로 넘어갑니다~</div><div style="font-size:24px;margin-bottom:20px">다음 시간에 배울 내용을 먼저 살펴볼까?</div><button class="btn big mint" data-close>공급편 시작!</button></div>';
+  d.querySelector('[data-close]').onclick=()=>d.remove();
+  d.onclick=e=>{if(e.target===d)d.remove();};
+  document.body.appendChild(d);
+}
+function scheduleCooldown(until) {
+  clearInterval(cooldownInterval);
+  const tick=()=>{
+    const left=Math.max(0,Math.ceil((until-Date.now())/1000));
+    document.querySelectorAll('[data-cooldown]').forEach(x=>x.textContent=left? `다시 누를 수 있어 (${left}초)`:'');
+    if(!left){clearInterval(cooldownInterval);cooldownInterval=null;sKey='';renderStudent();}
+  };
+  tick(); if(Date.now()<until) cooldownInterval=setInterval(tick,200);
+}
+function renderStudentSupplyRank() {
+  const rows=supplyRankRows();
+  const i=rows.findIndex(r=>r.id===pid), mine=rows[i];
+  app.innerHTML=`<div class="s-wrap"><div class="stage" style="min-height:80vh"><div class="bigEmoji">${i===0?'🥇':i===1?'🥈':i===2?'🥉':'🏆'}</div><div class="title" style="font-size:38px">공급편 순위 공개!</div><div class="rule">${esc(nameOf(pid))} · ${i+1}등 · ${mine?.points||0}점</div><div class="card" style="width:min(620px,100%)"><h3>🏆 공급편 순위</h3>${rows.map((r,n)=>`<div class="drow"><span>${n+1}위</span><b>${esc(nameOf(r.id))}</b><span>${r.points}점</span></div>`).join('')}</div><div class="muted">정답 수와 푼 속도를 함께 반영했어.</div></div></div>`;
 }
 function renderStudent() {
-  const st = room.state || {}, cs = casesOf(), me = (room.players || {})[pid];
+  const st = room.state || {}, set = activeSet(), cs = casesOf(set), me = (room.players || {})[pid];
   if (!me) { localStorage.removeItem('curve_pid_' + code); return studentForm(code); }
+  if (set === 'S' && !localStorage.getItem(`curve_supply_welcome_${code}_${pid}`)) { localStorage.setItem(`curve_supply_welcome_${code}_${pid}`, '1'); setTimeout(showSupplyWelcome, 0); }
+  if (set === 'S' && st.supplyRankVisible) { renderStudentSupplyRank(); return; }
   const tg = st.mode === 'together' && st.phase === 'play' && !st.reveal && (st.step || 0) > 0;
   const sc = tg ? scoreOf(pid, [st.ci || 0, stepsOf(cs[st.ci || 0] || {})[(st.step || 0) - 1]]) : scoreOf(pid);   // 공개 전엔 점수로 정답이 새지 않게
-  const top = `<div class="s-top"><span class="me">🙂 ${esc(me.name)}</span><span class="pill">⭐ ${sc.ok}점</span></div>`;
+  const shownScore = set === 'S' ? ((supplyRankRows().find(x=>x.id===pid)||{}).points||0) : sc.ok;
+  const top = `<div class="s-top"><span class="me">🙂 ${esc(me.name)}</span><span class="pill">⭐ ${shownScore}점</span></div>`;
   const wait = (emo, t, s) => { app.innerHTML = `<div class="s-wrap">${top}<div class="stage" style="min-height:70vh"><div class="bigEmoji bounce">${emo}</div><div class="title" style="font-size:38px">${t}</div><div class="rule">${s}</div></div></div>`; };
   if (dragState) return;   // 끄는 중엔 다시 그리지 않음
   if (st.phase === 'setup' || st.phase === 'lobby') { sKey = ''; return wait('📈', '입장 완료!', '칠판을 봐 👀<br>곧 첫 사례가 나와'); }
@@ -1161,9 +1214,11 @@ function renderStudent() {
   }
   const c = cs[ci]; if (!c) return wait('📈', '잠깐만', '칠판을 봐');
   const steps = stepsOf(c), stp = steps[k - 1], rec = stp ? stepRec(pid, ci, stp) : null;
+  const cooldownUntil = rec && !rec.done && rec.wrongAt ? rec.wrongAt + 7000 : 0;
+  const cooldown = Math.max(0, Math.ceil((cooldownUntil-Date.now())/1000));
   const key = [st.mode, ci, k, rec ? `${rec.first}/${rec.done}` : '-', st.mode === 'together' ? st.reveal : ''].join('|');
   if (key === sKey) return;
-  const prevKey = sKey; sKey = key;
+  const prevKey = sKey; sKey = key; questionStartedAt = Date.now();
   const caseCard = caseRow(c, ci);
   if (!(st.mode === 'together' && k === steps.length && st.reveal) && !(hold && k === steps.length)) closeSummary();
   const bar = '';   // 단계 표시줄은 뺌
@@ -1178,24 +1233,26 @@ function renderStudent() {
   if (st.mode === 'together') return renderTogetherStep(c, ci, k, steps, stp, rec, st, top, caseCard, bar);
   const hasGraph = stp === 'drag' || stp === 'final';
   const head = `<div class="s-wrap">${top}<div class="s-play ${hasGraph ? 'two' : ''}"><div class="col">${caseCard}${bar}<div class="q"><span class="muted" style="font-size:.75em">${k}/${steps.length}</span> ${questionOf(c, stp)}</div>`;
-  const doneBox = rec && rec.done ? `<div class="good">${rec.ok ? '🎯 한 번에 맞혔어! +1점' : '✅ 맞았어!'}</div>
+  const doneBox = rec && rec.done ? `<div class="good">${set === 'S' ? `🎯 맞았어! +${rec.points || 0}점` : rec.ok ? '🎯 한 번에 맞혔어! +1점' : '✅ 맞았어!'}</div>
       ${st.mode === 'together' ? '<div class="rule muted">칠판을 보며 기다려 👀</div>' : `<button class="btn big mint" id="goOn">${k === steps.length ? (cs.findIndex((x, j) => j > ci && !caseDone(pid, j, x)) >= 0 ? '🚨 다음 사례 ▶' : '🎉 끝!') : '▶ 다음 단계'}</button>`}` : '';
-  const hintBox = rec && !rec.done ? `<div class="hint">${hintOf(c, stp)}<br><b>다시 골라 봐!</b></div>` : '';
+  const hintBox = rec && !rec.done ? `<div class="hint">${hintOf(c, stp)}<br><b data-cooldown>${cooldown ? `7초 쉬고 다시 골라 (${cooldown})` : '다시 골라 봐!'}</b></div>` : '';
   if (stp === 'drag') {
     const solved = rec && rec.done;
     app.innerHTML = `${head}${hintBox}${doneBox}</div><div class="col"><div class="graph" id="gwrap">${solved ? solvedGraph(c, false) : graphSVG({ c, mode: c.type, off: 0, pt: 50, hit: true })}</div></div></div></div>`;
-    if (!solved) setupDrag(c, ci);
+    if (!solved && cooldownUntil <= Date.now()) setupDrag(c, ci);
+    if (cooldownUntil > Date.now()) scheduleCooldown(cooldownUntil);
   } else {
     const opts = optionsOf(c, stp), right = answerOf(c, stp);
     const showGraph = stp === 'final';
     app.innerHTML = `${head}
-      <div class="choices">${opts.map(([v, lab]) => `<button class="choice ${rec && rec.done && v === right ? 'right' : ''}" data-v="${v}" ${rec && rec.done ? 'disabled' : ''}>${lab}</button>`).join('')}</div>${hintBox}${doneBox}</div>
+      <div class="choices">${opts.map(([v, lab]) => `<button class="choice ${rec && rec.done && v === right ? 'right' : ''}" data-v="${v}" ${rec && rec.done || cooldown > 0 ? 'disabled' : ''}>${lab}</button>`).join('')}</div>${hintBox}${doneBox}</div>
       ${showGraph ? `<div class="col"><div class="graph">${solvedGraph(c, rec && rec.done)}</div></div>` : ''}</div></div>`;
     document.querySelectorAll('.choice').forEach(b => b.onclick = () => {
       const v = b.dataset.v, ok = v === right;
       if (!ok) { b.classList.add('wrong'); }
       record(ci, stp, v, ok);
     });
+    if (cooldownUntil > Date.now()) scheduleCooldown(cooldownUntil);
     if (justWrong) { const w = document.querySelector(`.choice[data-v="${rec.first}"]`); if (w && !rec.done) w.classList.add('wrong'); }
   }
   if (el('goOn')) el('goOn').onclick = () => { hold = null; closeSummary(); sKey = ''; renderStudent(); };
