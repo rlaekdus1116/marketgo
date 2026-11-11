@@ -356,12 +356,14 @@ const PRESETS = {
     { emoji: '🍗', market: '치킨', price: '1마리 20,000원', factor: '상품 가격', text: '치킨 가격이 20,000원에서 15,000원으로 내렸어.', type: 'along', curve: 'D', dir: '-' },
     { emoji: '🍓', market: '과일모찌', price: '1개 6,000원', factor: '선호(취향)', text: '유명 아이돌이 SNS에 과일모찌 먹방을 올렸어!', type: 'shift', curve: 'D', dir: '+' },
     { emoji: '🍗', market: '치킨', price: '1마리 20,000원', factor: '소비자 소득', text: '학생들의 용돈이 줄어 치킨을 사 먹는 학생이 줄었어.', type: 'shift', curve: 'D', dir: '-' },
+    { emoji: '🍗', market: '치킨', price: '1마리 20,000원', factor: '소비자 소득', text: '학생들의 용돈이 늘어 치킨을 사 먹는 학생이 많아졌어.', type: 'shift', curve: 'D', dir: '+' },
     { emoji: '🥤', market: '콜라', price: '1캔 2,000원', factor: '대체재 가격', text: '사이다 가격이 크게 올랐어. 콜라 시장에서는 어떤 변화가 생길까?', type: 'shift', curve: 'D', dir: '+' },
     { emoji: '🍿', market: '팝콘', price: '1통 6,000원', factor: '보완재 가격', text: '영화관람료가 크게 올랐어. 팝콘 시장에서는 어떤 변화가 생길까?', type: 'shift', curve: 'D', dir: '-' },
     { emoji: '🍼', market: '분유', price: '1통 30,000원', factor: '소비자 수', text: '태어나는 아기 수가 줄어 분유를 찾는 가정도 줄었어.', type: 'shift', curve: 'D', dir: '-' },
     { emoji: '🍿', market: '축제 간식', price: '1개 3,000원', factor: '소비자 수', text: '학교 축제에 방문객이 늘어 간식을 사려는 사람이 많아졌어.', type: 'shift', curve: 'D', dir: '+' },
     { emoji: '🍿', market: '축제 간식', price: '1개 3,000원', factor: '소비자 수', text: '학교 축제 방문객이 줄어 간식을 사려는 사람도 적어졌어.', type: 'shift', curve: 'D', dir: '-' },
     { emoji: '🧻', market: '휴지', price: '1팩 10,000원', factor: '미래 가격 예상', text: '다음 달부터 휴지 가격이 오른다는 소식이 있어.', type: 'shift', curve: 'D', dir: '+' },
+    { emoji: '🧻', market: '휴지', price: '1팩 10,000원', factor: '미래 가격 예상', text: '다음 달 휴지 가격이 내린다는 소식이 있어. 지금 사려는 사람이 줄었어.', type: 'shift', curve: 'D', dir: '-' },
   ],
   S: [
     { emoji: '🥬', market: '배추', price: '1포기 5,000원', factor: '상품 가격', text: '배추 가격이 5,000원에서 8,000원으로 올랐어. 농부들은?', type: 'along', curve: 'S', dir: '+' },
@@ -457,7 +459,7 @@ function questionOf(c, step) {
   if (step === 'move') return `<b>${esc(c.market)} ${curveName(c.curve)}곡선</b>에서 점만 움직여, 곡선 전체가 움직여?`;
   if (step === 'who') return '<b>가격은 그대로야.</b> 사는 쪽과 파는 쪽 중 누구의 사정이 바뀌었어?';
   if (step === 'drag') return c.type === 'shift' ? `<b>${esc(c.market)} ${curveName(c.curve)}곡선</b>을 왼쪽이나 오른쪽으로 옮겨 봐.` : `<b>${esc(c.market)} ${curveName(c.curve)}곡선 위에서</b> 점을 움직여 봐.`;
-  if (c.type === 'shift') return `이 변화 뒤 <b>${esc(c.market)} 시장가격</b>은 어떻게 될까?`;
+  if (c.type === 'shift') return `💭 아직 안 배웠지만 예측해 보자!<br>이 변화 뒤 <b>${esc(c.market)} 시장가격</b>은 오를까, 내릴까?`;
   return c.curve === 'D' ? '그럼 <b>사려는 양(수요량)</b>은?' : '그럼 <b>팔려는 양(공급량)</b>은?';
 }
 function hintOf(c, step) {
