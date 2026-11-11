@@ -264,6 +264,16 @@ button,.btn,.speech,.rule,.title,.card{word-break:keep-all;overflow-wrap:break-w
 .curveFocus.supply{background:var(--peach)}
 .caseFactor{display:inline-block;margin:2px 0 6px;padding:4px 10px;border-radius:999px;background:var(--lemon);font-size:16px;color:var(--ink)}
 
+/* 교사용 사례 시작 화면: 사례와 그래프를 좌우로 배치해 스크롤 없이 보기 */
+.teacherIntroWrap{max-width:1480px;padding:10px 20px 16px}
+.teacherCaseIntro{height:calc(100dvh - 100px);min-height:520px;display:grid;grid-template-columns:minmax(0,1.08fr) minmax(380px,.92fr);grid-template-rows:auto minmax(0,1fr) auto;gap:8px 24px;align-content:center}
+.teacherCaseIntro>.roundBadge{grid-column:1/-1;grid-row:1;justify-self:center}
+.teacherCaseIntro>.case{grid-column:1;grid-row:2;max-width:none;width:100%;margin:0;padding:clamp(18px,2.2vw,30px)}
+.teacherCaseIntro>.graph{grid-column:2;grid-row:2;max-width:none!important;width:100%;margin:0;padding:12px}
+.teacherCaseIntro>#nextStep{grid-column:2;grid-row:3;justify-self:center}
+.teacherCaseIntro .graph svg{max-height:min(54vh,480px)}
+@media(max-width:860px){.teacherIntroWrap{padding:10px 12px 24px}.teacherCaseIntro{height:auto;min-height:0;display:flex;flex-direction:column;gap:12px}.teacherCaseIntro>.case,.teacherCaseIntro>.graph{width:100%}.teacherCaseIntro .case .ce{font-size:56px}.teacherCaseIntro .case .ct{font-size:24px}.teacherCaseIntro .graph svg{max-height:42vh}}
+
 /* 개념 도입 애니메이션 */
 .conceptPop{position:fixed;inset:0;z-index:10000;background:#3b263e99;display:grid;place-items:center;padding:18px}
 .conceptCard{width:min(980px,100%);max-height:94vh;overflow:auto;background:var(--bg);border:4px solid #fff;border-radius:30px;padding:22px;box-shadow:0 12px 0 #5B4B57}
@@ -845,10 +855,10 @@ function renderTeacher() {
     if (!c) body = '<div class="stage"><div class="rule">사례가 없어</div></div>';
     else if (k === 0) {
       maybeAnnounce('case' + ci, () => announce(`사례 ${ci + 1} 등장!`, '', '', 1500));
-      body = `<div class="stage" style="gap:16px">
+      body = `<div class="stage teacherCaseIntro">
         <span class="roundBadge">📈 사례 ${ci + 1} / ${cs.length}</span>
         <div class="case"><div class="ce">${esc(c.emoji)}</div><div class="cm">${esc(c.market)} 시장</div>${curveFocus(c)}${c.factor && c.type === 'shift' ? `<div class="caseFactor">바뀐 요인: ${esc(c.factor)}</div>` : ''}${priceNote(c)}<div class="ct">${esc(c.text)}</div></div>
-        <div class="graph" style="max-width:520px">${graphSVG({ c, mode: 'base' })}</div>
+        <div class="graph">${graphSVG({ c, mode: 'base' })}</div>
         <button class="btn big mint" id="nextStep">▶ 예측 시작! <span class="autoCd"></span></button></div>`;
     } else {
       const ids = playerIds(), opts = optionsOf(c, stp), right = answerOf(c, stp);
@@ -918,7 +928,8 @@ function renderTeacher() {
     }
   }
   if (!body) body = `<div class="stage"><div class="rule">잠깐만… 🔄</div></div>`;
-  app.innerHTML = `<div class="wrap">${topbar(st)}${body}</div>`;
+  const introLayout = isTeacher && st.phase === 'play' && st.mode === 'together' && !(st.step || 0) ? ' teacherIntroWrap' : '';
+  app.innerHTML = `<div class="wrap${introLayout}">${topbar(st)}${body}</div>`;
   if (st.phase === 'lobby' && window.QRCode) new QRCode(el('qr'), { text: location.origin + location.pathname + '?room=' + code, width: 200, height: 200, colorDark: '#5B4B57', colorLight: '#ffffff' });
   wireTeacher(st, cs);
   // 마지막 단계 정답 공개 → 정리 팝업
