@@ -285,6 +285,20 @@ button,.btn,.speech,.rule,.title,.card{word-break:keep-all;overflow-wrap:break-w
 @keyframes showSupply{to{opacity:1}}
 @keyframes showEq{to{opacity:1}}
 .conceptHint{font-size:15px;color:var(--sub);margin-top:8px}
+
+.conceptGraph .supply{opacity:1}
+.conceptGraph .demand{transform:translateX(0);transform-box:fill-box;transform-origin:center}
+.conceptGraph .oldDemand,.conceptGraph .oldSupply{stroke-width:4;stroke-dasharray:8 7;fill:none;opacity:.35}
+.conceptGraph .oldDemand{stroke:#93c4ee}
+.conceptGraph .oldSupply{stroke:#f5b48c}
+.conceptGraph .endPoint{fill:#fff;stroke:#398bd0;stroke-width:4}
+.conceptGraph #priceMover{fill:#ee8b45;stroke:#fff;stroke-width:3}
+.conceptPop[data-scene="price"].playing #priceMover{animation:pointTravel 2.2s ease-in-out infinite alternate}
+.conceptPop[data-scene="demand"].playing .demand{animation:shiftRight 2.4s ease-in-out infinite alternate}
+.conceptPop[data-scene="supply"].playing .supply{animation:shiftRight 2.4s ease-in-out infinite alternate}
+.conceptPop .curveLabel{paint-order:stroke;stroke:#fff;stroke-width:5px;stroke-linejoin:round}
+@keyframes pointTravel{from{cx:112;cy:72}to{cx:270;cy:195}}
+
 @media(max-width:760px){.conceptScene{grid-template-columns:1fr}.conceptCard{padding:14px}.conceptHead h2{font-size:24px}}
 </style>
 </head>
@@ -324,6 +338,8 @@ const PRESETS = {
     { emoji: '🥤', market: '콜라', price: '1캔 2,000원', factor: '대체재 가격', text: '사이다 가격이 크게 올랐어. 콜라 시장에서는 어떤 변화가 생길까?', type: 'shift', curve: 'D', dir: '+' },
     { emoji: '🍿', market: '팝콘', price: '1통 6,000원', factor: '보완재 가격', text: '영화관람료가 크게 올랐어. 팝콘 시장에서는 어떤 변화가 생길까?', type: 'shift', curve: 'D', dir: '-' },
     { emoji: '🍼', market: '분유', price: '1통 30,000원', factor: '소비자 수', text: '태어나는 아기 수가 줄어 분유를 찾는 가정도 줄었어.', type: 'shift', curve: 'D', dir: '-' },
+    { emoji: '🍿', market: '축제 간식', price: '1개 3,000원', factor: '소비자 수', text: '학교 축제에 방문객이 늘어 간식을 사려는 사람이 많아졌어.', type: 'shift', curve: 'D', dir: '+' },
+    { emoji: '🍿', market: '축제 간식', price: '1개 3,000원', factor: '소비자 수', text: '학교 축제 방문객이 줄어 간식을 사려는 사람도 적어졌어.', type: 'shift', curve: 'D', dir: '-' },
     { emoji: '🧻', market: '휴지', price: '1팩 10,000원', factor: '미래 가격 예상', text: '다음 달부터 휴지 가격이 오른다는 소식이 있어.', type: 'shift', curve: 'D', dir: '+' },
   ],
   S: [
@@ -339,6 +355,10 @@ const PRESETS = {
     { emoji: '🥬', market: '배추', price: '1포기 5,000원', factor: '미래 가격 예상', text: '다음 달 배추 가격이 크게 오를 거래. 농부들이 지금은 팔지 않고 저장해 둬.', type: 'shift', curve: 'S', dir: '-' },
     { emoji: '🥬', market: '배추', price: '1포기 5,000원', factor: '미래 가격 예상', text: '다음 달 배추 가격이 내릴 거래. 농부들이 지금 더 많이 내다 팔아.', type: 'shift', curve: 'S', dir: '+' },
     { emoji: '🐟', market: '붕어빵', price: '3개 2,000원', factor: '생산 기술', text: '붕어빵 기계가 고장 나 한 번에 굽는 양이 줄었어.', type: 'shift', curve: 'S', dir: '-' },
+    { emoji: '🍕', market: '피자', price: '1판 20,000원', factor: '노동(임금)', text: '피자 가게 직원들의 임금이 올랐어.', type: 'shift', curve: 'S', dir: '-' },
+    { emoji: '🍕', market: '피자', price: '1판 20,000원', factor: '자본(기계·이자)', text: '피자 굽는 기계 대여료가 내려갔어.', type: 'shift', curve: 'S', dir: '+' },
+    { emoji: '🥬', market: '배추', price: '1포기 5,000원', factor: '토지(임대료)', text: '배추밭 임대료가 올랐어.', type: 'shift', curve: 'S', dir: '-' },
+    { emoji: '🥬', market: '배추', price: '1포기 5,000원', factor: '토지(임대료)', text: '배추밭 임대료가 내려갔어.', type: 'shift', curve: 'S', dir: '+' },
   ],
 };
 // 총정리는 여러 요인을 섞어 수요·공급과 시장가격을 함께 살펴봐.
@@ -661,30 +681,49 @@ function showConceptDemo() {
   const d = document.createElement('div'); d.className = 'conceptPop playing'; d.dataset.scene = 'price';
   d.innerHTML = `<div class="conceptCard">
     <div class="conceptHead"><span class="conceptHint">💞</span><button class="btn sm" data-close>닫기</button></div>
-    <div class="conceptTabs"><button class="conceptTab on" data-scene="price">가격 변화</button><button class="conceptTab" data-scene="shift">주변 요인 변화</button></div>
+    <div class="conceptTabs">
+      <button class="conceptTab on" data-scene="price">가격 변화</button>
+      <button class="conceptTab" data-scene="demand">수요 변동</button>
+      <button class="conceptTab" data-scene="supply">공급 변동</button>
+    </div>
     <div class="conceptGraph">
-      <svg viewBox="0 0 380 280" role="img" aria-label="수요곡선 애니메이션">
-        <line x1="48" y1="20" x2="48" y2="232" stroke="#A3919C" stroke-width="3"/><line x1="48" y1="232" x2="355" y2="232" stroke="#A3919C" stroke-width="3"/>
-        <text x="12" y="35" fill="#7b6877" font-size="15">가격</text><text x="330" y="260" fill="#7b6877" font-size="15">수량</text>
-        <path class="old" d="M90 55 L300 218"/>
-        <path class="supply" d="M85 218 L300 55"/>
-        <g class="moving"><path class="demand" d="M90 55 L300 218"/></g>
-        <text x="290" y="220" fill="#398bd0" font-size="16">수요</text>
+      <svg viewBox="0 0 440 280" role="img" aria-label="수요·공급 곡선 애니메이션">
+        <line x1="48" y1="20" x2="48" y2="232" stroke="#A3919C" stroke-width="3"/><line x1="48" y1="232" x2="400" y2="232" stroke="#A3919C" stroke-width="3"/>
+        <text x="12" y="35" fill="#7b6877" font-size="15">가격</text><text x="365" y="260" fill="#7b6877" font-size="15">수량</text>
+        <path class="oldDemand" d="M90 55 L300 218"/>
+        <path class="oldSupply" d="M90 218 L300 55"/>
+        <path class="supply" d="M90 218 L300 55"/>
+        <path class="demand" d="M90 55 L300 218"/>
+        <circle class="endPoint startPoint" cx="112" cy="72" r="8"/>
+        <circle class="endPoint finishPoint" cx="270" cy="195" r="8"/>
+        <circle id="priceMover" cx="112" cy="72" r="7"/>
+        <text class="pointLabel startLabel" x="82" y="63" fill="#5B4B57" font-size="13">처음</text>
+        <text class="pointLabel finishLabel" x="273" y="213" fill="#5B4B57" font-size="13">나중</text>
+        <text class="curveLabel supplyLabel" x="310" y="58" fill="#e98543" font-size="15">공급곡선</text>
+        <text class="curveLabel demandLabel" x="310" y="222" fill="#398bd0" font-size="15">수요곡선</text>
       </svg>
     </div>
     <div style="text-align:center;margin-top:12px"><button class="btn big mint" data-play>▶ 재생</button><button class="btn" data-stop>⏸ 멈춤</button></div>
   </div>`;
   const tabs = d.querySelectorAll('[data-scene]');
   const play = () => { d.classList.add('playing'); };
-  tabs.forEach(b => b.onclick = () => {
-    d.dataset.scene = b.dataset.scene; d.classList.remove('playing');
-    tabs.forEach(x => x.classList.toggle('on', x === b)); play();
-  });
+  const setScene = scene => {
+    d.dataset.scene = scene; d.classList.remove('playing');
+    tabs.forEach(x => x.classList.toggle('on', x.dataset.scene === scene));
+    d.querySelectorAll('.endPoint,.pointLabel').forEach(x => x.style.display = scene === 'price' ? '' : 'none');
+    d.querySelector('#priceMover').style.display = scene === 'price' ? '' : 'none';
+    d.querySelector('.oldDemand').style.display = scene === 'demand' ? '' : 'none';
+    d.querySelector('.oldSupply').style.display = scene === 'supply' ? '' : 'none';
+    d.querySelector('.supply').style.display = scene === 'price' || scene === 'demand' ? '' : 'none';
+    d.querySelector('.demand').style.display = scene === 'price' || scene === 'supply' ? '' : 'none';
+    play();
+  };
+  tabs.forEach(b => b.onclick = () => setScene(b.dataset.scene));
   d.querySelector('[data-play]').onclick = play;
   d.querySelector('[data-stop]').onclick = () => d.classList.remove('playing');
   d.querySelector('[data-close]').onclick = () => d.remove();
   d.onclick = e => { if (e.target === d) d.remove(); };
-  document.body.appendChild(d);
+  document.body.appendChild(d); setScene('price');
 }
 function renderTeacher() {
   const st = room.state || {}, cs = casesOf();
