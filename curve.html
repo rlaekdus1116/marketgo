@@ -553,7 +553,7 @@ function graphSVG(o) {
     <text x="${GL - 8}" y="${GT + 12}" text-anchor="end" font-size="14" fill="#A3919C">가격</text><text x="${GL + pw}" y="${GH - 8}" text-anchor="end" font-size="14" fill="#A3919C">수량</text>`;
   const moveD = o.mode === 'shift' && c.curve === 'D', moveS = o.mode === 'shift' && c.curve === 'S';
   const sD = moveD ? off : 0, sS = moveS ? off : 0;
-  const showBoth = o.showBoth === true;
+  const showBoth = o.showBoth === true || c.type === 'shift';
   // 원래 곡선 (움직이는 곡선은 흐리게 남겨 둠)
   if (moveD) g += `<path d="${dLine(0)}" stroke="#93C4EE" stroke-width="3" stroke-dasharray="7 6" fill="none" clip-path="url(#cl)"/>`;
   if (moveS) g += `<path d="${sLine(0)}" stroke="#F5B48C" stroke-width="3" stroke-dasharray="7 6" fill="none" clip-path="url(#cl)"/>`;
