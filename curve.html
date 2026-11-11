@@ -562,7 +562,7 @@ function graphSVG(o) {
   if (o.mode === 'shift') {
     const [q0, p0] = eqOf(0, 0);
     g += `<circle cx="${X(q0)}" cy="${Y(p0)}" r="7" fill="#fff" stroke="#A3919C" stroke-width="3"/>`;
-    if (o.done && off) {
+    if (o.done && off && o.showPrice) {
       const [q1, p1] = eqOf(sD, sS);
       g += `<line x1="${GL}" x2="${X(q1)}" y1="${Y(p1)}" y2="${Y(p1)}" stroke="#2FA67A" stroke-width="2" stroke-dasharray="5 5"/><line x1="${GL}" x2="${X(q0)}" y1="${Y(p0)}" y2="${Y(p0)}" stroke="#A3919C" stroke-width="2" stroke-dasharray="5 5"/>
         <text x="${X(q1)}" y="${Y(p1)}" font-size="30" text-anchor="middle" dominant-baseline="central">⭐</text>
@@ -738,10 +738,10 @@ function showConceptDemo() {
       <path class="demandCurve" d="M90 60 L300 220"/>
       <circle class="endDot" data-point="start" cx="112" cy="77" r="7"/><circle class="endDot" data-point="end" cx="270" cy="198" r="7"/>
       <circle class="travelDot" cx="112" cy="77" r="9"/>
-      <text class="pointWord" data-point="start" x="80" y="68">처음</text><text class="pointWord" data-point="end" x="274" y="216">나중</text>
+      <text class="pointWord" data-point="start" x="98" y="56" text-anchor="end">처음</text><text class="pointWord" data-point="end" x="284" y="183" text-anchor="start">나중</text>
       <text class="curveWord" x="315" y="72" fill="#e87525">공급곡선</text><text class="curveWord" x="315" y="228" fill="#1678c5">수요곡선</text>
-      <g class="eqStart" style="display:none"><circle cx="195" cy="140" r="7" fill="#A3919C" stroke="#fff" stroke-width="3"/><text x="166" y="132">처음</text></g>
-      <g class="eqEnd" style="display:none" opacity="0"><circle cx="195" cy="140" r="9" fill="#F5B48C" stroke="#fff" stroke-width="3"/><text x="205" y="134">나중</text></g>
+      <g class="eqStart" style="display:none"><circle cx="195" cy="140" r="7" fill="#A3919C" stroke="#fff" stroke-width="3"/><text x="175" y="124" text-anchor="end">처음</text></g>
+      <g class="eqEnd" style="display:none" opacity="0"><circle cx="195" cy="140" r="9" fill="#F5B48C" stroke="#fff" stroke-width="3"/><text x="208" y="123" text-anchor="start">나중</text></g>
     </svg></div>
     <div style="text-align:center;margin-top:12px"><button class="btn big mint" data-play>▶ 재생</button><button class="btn" data-stop>⏸ 멈춤</button></div>
   </div>`;
@@ -783,8 +783,13 @@ function showConceptDemo() {
     if (s === 'demandPrice' || s === 'supplyPrice') {
       const d = s === 'demandPrice';
       box.querySelectorAll('.endDot,.pointWord').forEach(x => x.style.display = '');
+      const startWord = box.querySelector('.pointWord[data-point="start"]');
+      const endWord = box.querySelector('.pointWord[data-point="end"]');
+      startWord.setAttribute('x', d ? '98' : '123'); startWord.setAttribute('y', d ? '56' : '224');
+      startWord.setAttribute('text-anchor', d ? 'end' : 'start');
+      endWord.setAttribute('x', '284'); endWord.setAttribute('y', d ? '183' : '56'); endWord.setAttribute('text-anchor', 'start');
       dot.style.display = '';
-      dot.setAttribute('cx',d?112:112); dot.setAttribute('cy',d?77:198);
+      dot.setAttribute('cx','112'); dot.setAttribute('cy',d?'77':'198');
       svg.querySelector('.demandCurve').style.opacity = d ? '1' : '.35';
       svg.querySelector('.supplyCurve').style.opacity = d ? '.35' : '1';
     } else {
@@ -793,6 +798,7 @@ function showConceptDemo() {
       if (s === 'demandShift' || s === 'supplyShift') {
         box.querySelector('.eqStart').style.display = '';
         box.querySelector('.eqEnd').style.display = '';
+        box.querySelector('.eqEnd text').setAttribute('y', s === 'demandShift' ? '123' : '165');
       }
       svg.querySelector('.demandCurve').style.opacity = '1';
       svg.querySelector('.supplyCurve').style.opacity = '1';
