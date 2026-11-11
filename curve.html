@@ -1096,7 +1096,7 @@ function raceEnd(teacher) {
   const ids = playerIds();
   let ok = 0, tot = 0; cs.forEach((c, ci) => { if (!qs[ci]) return; const a = raceAns(c); ids.forEach(id => { const r = raceRec(id, ci) || {}; tot += 2; ok += (r.w === a.w) + (r.p === a.p); }); });
   return `<div class="center" style="margin-bottom:10px"><span class="roundBadge">🏆 총정리 최종 순위</span></div>
-    <div class="card" style="max-width:720px;margin:0 auto">${top.slice(0, 5).map((r, i) => `<div class="drow" style="grid-template-columns:70px 1fr 120px;font-size:${i < 3 ? 34 : 26}px"><span>${medal[i]}</span><span>${esc(nameOf(r.id))}</span><b>${r.v}점</b></div>`).join('') || '<div class="muted">아직 기록이 없어</div>'}
+    <div class="card" style="max-width:720px;margin:0 auto">${top.map((r, i) => `<div class="drow" style="grid-template-columns:70px 1fr 120px;font-size:${i < 3 ? 34 : 26}px"><span>${medal[i] || (i + 1) + '등'}</span><span>${esc(nameOf(r.id))}</span><b>${r.v}점</b></div>`).join('') || '<div class="muted">아직 기록이 없어</div>'}
     <div class="muted" style="font-size:18px;margin-top:10px">반 전체 정답률 ${tot ? Math.round(ok / tot * 100) : 0}%</div>${teacher ? '<button class="btn big mint" id="toggleRaceRank">'+(st.raceRankVisible?'🙈 순위 공개 끄기':'🏆 학생에게 전체 순위 공개')+'</button>' : ''} </div>`;
 }
 
@@ -1177,7 +1177,7 @@ function supplyRankRows() {
 }
 
 function demandRankRows() {
-  return playerIds().filter(id => (room.players || {})[id]?.set === 'D' || ((room.set || 'D') === 'D' && !(room.players || {})[id]?.set))
+  return playerIds().filter(id => (room.players || {})[id]?.set === 'D' || ((room.set || 'D') === 'D' && !(room.players || {})[id]?.set) || casesOf('D').some((c,ci)=>stepsOf(c,'D').some(stp=>stepRec(id,ci,stp,'D'))))
     .map(id => {
       let points=0, correct=0, total=0, done=0;
       casesOf('D').forEach((c,ci)=>stepsOf(c,'D').forEach(stp=>{
