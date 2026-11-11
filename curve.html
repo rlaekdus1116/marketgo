@@ -275,13 +275,12 @@ button,.btn,.speech,.rule,.title,.card{word-break:keep-all;overflow-wrap:break-w
 .conceptGraph .old{stroke:#a9cce8;stroke-width:4;stroke-dasharray:8 7;fill:none;opacity:0}
 .conceptGraph .moving{transform:translateX(0);transform-box:fill-box;transform-origin:center}
 .conceptGraph .dot{fill:#ee8b45;stroke:#fff;stroke-width:4}
-.conceptPop[data-scene="price"].playing .dot{animation:moveAlong 2.4s ease-in-out infinite alternate}
+.conceptPop[data-scene="price"].playing .demand{stroke-dasharray:16 10;animation:traceAlong 1.2s linear infinite}
 .conceptPop[data-scene="shift"].playing .moving{animation:shiftRight 2.4s ease-in-out infinite alternate}
 .conceptPop[data-scene="shift"].playing .old{opacity:1}
 .conceptPop[data-scene="shift"].playing .supply{animation:showSupply .2s 2.1s forwards}
-.conceptPop[data-scene="shift"].playing .eqDot{animation:showEq .2s 2.1s forwards}
-.conceptPop[data-scene="shift"].playing .eqLabel{animation:showEq .2s 2.1s forwards}
-@keyframes moveAlong{from{cx:130;cy:93}to{cx:300;cy:225}}
+
+@keyframes traceAlong{to{stroke-dashoffset:-52}}
 @keyframes shiftRight{from{transform:translateX(0)}to{transform:translateX(75px)}}
 @keyframes showSupply{to{opacity:1}}
 @keyframes showEq{to{opacity:1}}
@@ -659,51 +658,33 @@ const stepBar = (c, cur, doneFn) => `<div class="stepbar"><span class="${cur ===
 
 function showConceptDemo() {
   const old = document.querySelector('.conceptPop'); if (old) old.remove();
-  const d = document.createElement('div'); d.className = 'conceptPop'; d.dataset.scene = 'price';
+  const d = document.createElement('div'); d.className = 'conceptPop playing'; d.dataset.scene = 'price';
   d.innerHTML = `<div class="conceptCard">
-    <div class="conceptHead"><h2>💞 가격이랑 수량, 뭐가 먼저 움직일까?</h2><button class="btn sm" data-close>닫기</button></div>
-    <div class="conceptTabs"><button class="conceptTab on" data-scene="price">① 가격이 먼저 변했어</button><button class="conceptTab" data-scene="shift">② 주변 요인이 변했어</button></div>
-    <div class="conceptScene">
-      <div class="conceptCopy" data-copy="price"><div class="roundBadge">가격 변화 → 수요량 변화</div>
-        <p>가격과 수량은 서로 좋아하는 사이야 💕<br><b>과일모찌 가격이 내리면</b> 사려는 수량은 늘어나.</p>
-        <div class="hl sky">가격만 바뀌고, <b>수요곡선은 그대로</b><br>점이 곡선 위에서 움직여.</div>
-        <div class="conceptHint">곡선은 수요곡선 하나만 보여줘.</div></div>
-      <div class="conceptCopy" data-copy="shift" hidden><div class="roundBadge">가격 외 요인 → 수요 변화</div>
-        <p>이번엔 가격과 수량이 가만히 있어.<br>그런데 친구들 사이에 과일모찌 유행이 퍼졌어!</p><div class="conceptHint">비유하면 주변 사람이 둘 사이에 끼어든 것처럼! 경제에서는 유행이 가격 외 요인이야.</div>
-        <div class="hl peach">가격은 그대로인데 <b>수요곡선 자체가 오른쪽</b>으로 움직여.<br>같은 가격에서 사려는 양이 늘어.</div>
-        <div class="hl mint" style="font-size:18px">공급은 그대로라면 새 균형에서 가격과 거래량이 모두 올라가.</div>
-        <div class="conceptHint">끝부분에만 공급곡선을 잠깐 보여줘. 수요 변화와 균형 변화가 이어지는 장면이야.</div></div>
-      <div class="conceptGraph">
-        <svg viewBox="0 0 380 280" role="img" aria-label="가격 변화와 수요 변화 애니메이션">
-          <line x1="48" y1="20" x2="48" y2="232" stroke="#A3919C" stroke-width="3"/><line x1="48" y1="232" x2="355" y2="232" stroke="#A3919C" stroke-width="3"/>
-          <text x="12" y="35" fill="#7b6877" font-size="15">가격</text><text x="330" y="260" fill="#7b6877" font-size="15">수량</text>
-          <path class="old" d="M90 55 L300 218"/>
-          <path class="supply" d="M85 218 L300 55"/>
-          <g class="moving"><path class="demand" d="M90 55 L300 218"/></g>
-          <circle class="dot" cx="130" cy="93" r="10"/>
-          <circle class="eqDot" cx="235" cy="105" r="8" fill="#7352b4" opacity="0"/>
-          <text class="eqLabel" x="245" y="96" fill="#7352b4" font-size="14" opacity="0">새 균형</text>
-          <text x="290" y="220" fill="#398bd0" font-size="16">수요</text>
-        </svg>
-      </div>
+    <div class="conceptHead"><span class="conceptHint">💞</span><button class="btn sm" data-close>닫기</button></div>
+    <div class="conceptTabs"><button class="conceptTab on" data-scene="price">가격 변화</button><button class="conceptTab" data-scene="shift">주변 요인 변화</button></div>
+    <div class="conceptGraph">
+      <svg viewBox="0 0 380 280" role="img" aria-label="수요곡선 애니메이션">
+        <line x1="48" y1="20" x2="48" y2="232" stroke="#A3919C" stroke-width="3"/><line x1="48" y1="232" x2="355" y2="232" stroke="#A3919C" stroke-width="3"/>
+        <text x="12" y="35" fill="#7b6877" font-size="15">가격</text><text x="330" y="260" fill="#7b6877" font-size="15">수량</text>
+        <path class="old" d="M90 55 L300 218"/>
+        <path class="supply" d="M85 218 L300 55"/>
+        <g class="moving"><path class="demand" d="M90 55 L300 218"/></g>
+        <text x="290" y="220" fill="#398bd0" font-size="16">수요</text>
+      </svg>
     </div>
-    <div class="conceptHint">재생 중엔 애니메이션을 잠깐 멈추고 설명해도 돼.</div>
-    <div style="text-align:center;margin-top:12px"><button class="btn big mint" data-play>▶ 애니메이션 재생</button><button class="btn" data-stop>⏸ 멈춤</button></div>
+    <div style="text-align:center;margin-top:12px"><button class="btn big mint" data-play>▶ 재생</button><button class="btn" data-stop>⏸ 멈춤</button></div>
   </div>`;
   const tabs = d.querySelectorAll('[data-scene]');
-  const play = () => { d.classList.add('playing'); d.querySelector('[data-play]').textContent = '↻ 다시 재생'; };
+  const play = () => { d.classList.add('playing'); };
   tabs.forEach(b => b.onclick = () => {
     d.dataset.scene = b.dataset.scene; d.classList.remove('playing');
-    tabs.forEach(x => x.classList.toggle('on', x === b));
-    d.querySelectorAll('[data-copy]').forEach(x => x.hidden = x.dataset.copy !== b.dataset.scene);
-    d.querySelector('.conceptGraph').style.display = '';
+    tabs.forEach(x => x.classList.toggle('on', x === b)); play();
   });
   d.querySelector('[data-play]').onclick = play;
   d.querySelector('[data-stop]').onclick = () => d.classList.remove('playing');
   d.querySelector('[data-close]').onclick = () => d.remove();
   d.onclick = e => { if (e.target === d) d.remove(); };
   document.body.appendChild(d);
-  play();
 }
 function renderTeacher() {
   const st = room.state || {}, cs = casesOf();
