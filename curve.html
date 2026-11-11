@@ -301,18 +301,20 @@ button,.btn,.speech,.rule,.title,.card{word-break:keep-all;overflow-wrap:break-w
 
 @media(max-width:760px){.conceptScene{grid-template-columns:1fr}.conceptCard{padding:14px}.conceptHead h2{font-size:24px}}
 
-.conceptCard{border:4px solid #222;box-shadow:8px 8px 0 #222}
-.conceptTabs{justify-content:center;flex-wrap:wrap}
-.conceptTab{font-family:'궁서체','Gungsuh','Batang',serif;font-weight:bold;color:#111;border:3px solid #111}
-.conceptTab.on{background:#ffec00;border-color:#e60012}
-.conceptGraph .curveWord{font-family:'궁서체','Gungsuh','Batang',serif;font-weight:bold;paint-order:stroke;stroke:#fff;stroke-width:5px}
-.conceptGraph .endDot{fill:#fff;stroke:#e60012;stroke-width:4}
-.conceptGraph .travelDot{fill:#ffdf00;stroke:#111;stroke-width:3}
+/* 개념 애니메이션은 앱의 기본 주아 글꼴과 파스텔 테마로 표시 */
+.conceptCard{border:4px solid #fff;box-shadow:0 12px 0 #5B4B57}
+.conceptTabs{justify-content:flex-start;flex-wrap:wrap}
+.conceptTab{font-family:inherit;font-weight:normal;color:var(--ink);border:2px solid var(--line)}
+.conceptTab.on{background:var(--sky);border-color:var(--skyD)}
+.conceptGraph svg text{font-family:inherit}
+.conceptGraph .curveWord{font-family:inherit;font-weight:700;paint-order:stroke;stroke:#fff;stroke-width:4px}
+.conceptGraph .endDot{fill:#fff;stroke:#398bd0;stroke-width:4}
+.conceptGraph .travelDot{fill:#ee8b45;stroke:#fff;stroke-width:3}
 
-.conceptGraph .demandCurve{stroke:#1678c5;stroke-width:6;fill:none;stroke-linecap:round}
-.conceptGraph .supplyCurve{stroke:#e87525;stroke-width:6;fill:none;stroke-linecap:round}
-.conceptGraph .demandOld,.conceptGraph .supplyOld{fill:none;stroke-width:4;stroke-dasharray:9 7;opacity:.35}
-.conceptGraph .demandOld{stroke:#1678c5}.conceptGraph .supplyOld{stroke:#e87525}
+.conceptGraph .demandCurve{stroke:#398bd0;stroke-width:6;fill:none;stroke-linecap:round}
+.conceptGraph .supplyCurve{stroke:#e98543;stroke-width:5;fill:none;stroke-linecap:round}
+.conceptGraph .demandOld,.conceptGraph .supplyOld{fill:none;stroke-width:4;stroke-dasharray:8 7;opacity:.35}
+.conceptGraph .demandOld{stroke:#a9cce8}.conceptGraph .supplyOld{stroke:#f5b48c}
 </style>
 <style>
 [data-cooldown]{display:block;margin-top:10px;color:#b00020;font-size:22px}
@@ -1200,7 +1202,7 @@ function teacherSetRankPanel(set, st) {
 function showSupplyWelcome() {
   document.querySelector('.supplyWelcome')?.remove();
   const d=document.createElement('div'); d.className='sumPop supplyWelcome';
-  d.innerHTML='<div class="sumCard" style="display:block;width:min(620px,100%);text-align:center"><div style="font-size:64px">🎉🏭🎉</div><div style="font-family:serif;font-size:34px;color:#e60012;margin:8px 0 16px">축하해! 먼저 공급편으로 넘어갑니다~</div><div style="font-size:24px;margin-bottom:20px">다음 시간에 배울 내용을 먼저 살펴볼까?</div><button class="btn big mint" data-close>공급편 시작!</button></div>';
+  d.innerHTML='<div class="sumCard" style="display:block;width:min(620px,100%);text-align:center"><div style="font-size:64px">🎉🏭🎉</div><div style="font-family:inherit;font-size:34px;color:#e60012;margin:8px 0 16px">축하해! 먼저 공급편으로 넘어갑니다~</div><div style="font-size:24px;margin-bottom:20px">다음 시간에 배울 내용을 먼저 살펴볼까?</div><button class="btn big mint" data-close>공급편 시작!</button></div>';
   d.querySelector('[data-close]').onclick=()=>d.remove();
   d.onclick=e=>{if(e.target===d)d.remove();};
   document.body.appendChild(d);
