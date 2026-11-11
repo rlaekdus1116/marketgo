@@ -956,7 +956,7 @@ function wireTeacher(st, cs) {
     document.querySelectorAll('[data-del]').forEach(b => b.onclick = () => { const n = casesOf().filter((_, k) => k !== +b.dataset.del); if (n.length) set(AP('cases'), n); });
     document.querySelectorAll('[data-up]').forEach(b => b.onclick = () => { const n = casesOf(), k = +b.dataset.up; [n[k - 1], n[k]] = [n[k], n[k - 1]]; set(AP('cases'), n); });
     if (el('addCase')) el('addCase').onclick = () => set(AP('cases'), [...casesOf(), { emoji: '🎁', market: '새 상품', price: '1개 1,000원', factor: '', text: '사례를 적어', type: 'shift', curve: 'D', dir: '+' }]);
-    document.querySelectorAll('[data-set]').forEach(b => b.onclick = () => { const k = b.dataset.set; ask(`${SET_NAME[k]} 기본 사례 순서로 불러올까?<br><small>(현재 수정한 사례는 기본 사례로 바뀌어)</small>`).then(y => y && update(A(), { set: k, cases: PRESETS[k] })); });
+    document.querySelectorAll('[data-set]').forEach(b => b.onclick = () => { const k = b.dataset.set; ask(`${SET_NAME[k]} 기본 사례 순서로 불러올까?<br><small>(현재 수정한 사례는 기본 사례로 바뀌어)</small>`).then(async y => { if (!y) return; await Promise.all(playerIds().map(id => update(AP(`players/${id}`), {set:null}))); await update(A(), { set:k, cases:PRESETS[k] }); }); });
     el('ready').onclick = () => S({ phase: 'lobby' });
   }
   document.querySelectorAll('[data-send-supply]').forEach(b => b.onclick = async () => { const id=b.dataset.sendSupply; if (!await ask(`${esc(nameOf(id))}만 공급편으로 보낼까?`, '🏭 보내기')) return; await update(AP(`players/${id}`), {set:'S'}); if (st.mode !== 'solo') await S({mode:'solo',ci:0,step:0,reveal:false,soloFrom:0,auto:false}); toast(`${nameOf(id)} 학생을 공급편으로 보냈어`); });
