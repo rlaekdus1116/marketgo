@@ -479,7 +479,7 @@ function ask(msg, yes = '응', no = '아니') {
 
 /* ========== 사례 → 단계·정답·힌트 ========== */
 const activeSet = () => (!isTeacher && room?.players?.[pid]?.set) || (room && room.set) || 'D';
-const casesOf = (set = activeSet()) => ((room && set === (room.set || 'D') ? room.cases : PRESETS[set]) || DEFAULT_CASES).map(c => ({ ...c, type: c.type === 'along' ? 'along' : 'shift', curve: c.curve === 'S' ? 'S' : 'D', dir: c.dir === '-' ? '-' : '+' }));
+const casesOf = (set = activeSet()) => ((room && set === (room.set || 'D') ? room.cases : room?.casesBySet?.[set] || PRESETS[set]) || DEFAULT_CASES).map(c => ({ ...c, type: c.type === 'along' ? 'along' : 'shift', curve: c.curve === 'S' ? 'S' : 'D', dir: c.dir === '-' ? '-' : '+' }));
 // 수요편·공급편은 답이 뻔해서 '누구 마음?' 단계를 빼고, 총정리에서만 물어
 const stepsOf = (c, set = activeSet()) => c.type === 'shift' ? (set === 'mix' ? ['price', 'move', 'who', 'drag', 'final'] : ['price', 'move', 'drag', 'final']) : ['price', 'move', 'drag', 'final'];
 const STEP_NAME = { price: '상품 가격 확인', move: '점 이동과 곡선 이동 구분', who: '바뀐 쪽 찾기', drag: '그래프에서 나타내기', final: '결과 확인' };
@@ -745,6 +745,17 @@ const priceNote = c => !c.price ? '' : c.type === 'along'
   : `<div class="cp">💰 <b>${esc(c.market)} 가격은 그대로: ${esc(c.price)}</b></div>`;
 const caseRow = (c, ci) => `<div class="case row"><div class="ce">${esc(c.emoji)}</div><div><span class="cm">${esc(c.market)} · 사례 ${ci + 1}</span>${curveFocus(c)}${c.factor && c.type === 'shift' ? `<div class="caseFactor">바뀐 요인: ${esc(c.factor)}</div>` : ''}${priceNote(c)}<div class="ct">${esc(c.text)}</div></div></div>`;
 let tSumm = null;
+let teacherResultSet = null;
+let studentResultSet = null;
+let lastResultRoomSet = null;
+const selectedTeacherResultSet = () => teacherResultSet || room?.set || 'D';
+function teacherResultTabs() {
+  const selected = selectedTeacherResultSet();
+  return `<div class="card center"><h3>📊 편별 결과 보기</h3>
+    <button class="btn big ${selected==='D'?'mint':'sky'}" data-result-set="D" aria-pressed="${selected==='D'}">🛒 수요편 결과</button>
+    <button class="btn big ${selected==='S'?'mint':'peach'}" data-result-set="S" aria-pressed="${selected==='S'}">🏭 공급편 결과</button>
+    ${room?.set==='mix' ? `<button class="btn big ${selected==='mix'?'mint':'lav'}" data-result-set="mix" aria-pressed="${selected==='mix'}">⚡ 총정리 결과</button>` : ''}</div>`;
+}
 const stepBar = (c, cur, doneFn) => `<div class="stepbar"><span class="${cur === 0 ? 'on' : 'ok'}">📰 사례</span>${stepsOf(c).map((s, k) => `<span class="${cur === k + 1 ? 'on' : (doneFn ? doneFn(s) : cur > k + 1) ? 'ok' : ''}">${k + 1}. ${STEP_NAME[s]}</span>`).join('')}</div>`;
 
 
@@ -870,6 +881,7 @@ function showConceptDemo() {
 }
 function renderTeacher() {
   const st = room.state || {}, cs = casesOf();
+  if (lastResultRoomSet !== room.set) { teacherResultSet = null; lastResultRoomSet = room.set; }
   tSumm = null;
   if (st.phase === 'setup' && document.activeElement && document.activeElement.closest && document.activeElement.closest('.cbox')) return;
   let body = '';
@@ -904,7 +916,9 @@ function renderTeacher() {
   }
   else if (st.phase === 'play' && isRace()) body = teacherRace(st);
   else if (st.phase === 'end' && isRace()) {
-    body = raceEnd(true) + reviewListPanel('mix');
+    body = teacherResultTabs() + (selectedTeacherResultSet() === 'mix'
+      ? raceEnd(true) + reviewListPanel('mix')
+      : teacherSetRankPanel(selectedTeacherResultSet(), st) + reviewListPanel(selectedTeacherResultSet()) + heatTable(casesOf(selectedTeacherResultSet()), 0, selectedTeacherResultSet()));
     const tp = raceTop(), rs = raceCases(), qs = st.qStarts || {};
     hubLog('curve', code, ['이름', '총정리 점수', '순위', '맞힌 문항'], tp.map((r, i) => {
       let ok = 0, tot = 0; rs.forEach((c, ci) => { if (!qs[ci]) return; const a = raceAns(c), x = raceRec(r.id, ci) || {}; tot += 2; ok += (x.w === a.w) + (x.p === a.p); });
@@ -961,17 +975,19 @@ function renderTeacher() {
         <div class="muted" style="font-size:17px;margin-bottom:12px"><b>아직 푸는 중:</b> ${st.showNames ? pending : '이름 표시를 켜면 확인할 수 있어.'}</div>
         <button class="btn big peach" id="goSupply">🏭 공급편으로 넘어가기 · ${allDone}/${ids.length}명 완료</button></div>` : ''}
       ${room.set === 'D' ? `<div class="card"><h3>🏭 공급편으로 보낸 학생</h3><div class="chips">${supplyRows.map(r=>`<span class="chip soft">${st.showNames?esc(nameOf(r.id)):'👤'} · ${r.n}/${casesOf('S').length} 사례</span>`).join('') || '<span class="muted">아직 없어</span>'}</div><div class="muted" style="margin-top:8px">수요편을 다 푼 학생만 개별로 보낼 수 있어.</div><div class="chips" style="margin-top:10px">${rows.filter(r=>r.n>=total).map(r=>`<button class="btn sm peach" data-send-supply="${r.id}">🏭 ${st.showNames?esc(nameOf(r.id)):'학생'} 공급편 보내기</button>`).join('') || '<span class="muted">수요편 완료 학생이 생기면 여기서 보낼 수 있어.</span>'}</div></div>` : ''}
-      ${ranks.length ? `<div class="card"><h3>🏆 공급편 점수·순위</h3><div class="rankTable">${ranks.map((r,n)=>`<div class="drow"><span>${n+1}위</span><b>${st.showNames?esc(nameOf(r.id)):'학생'}</b><span>${r.points}점</span><small>완료 ${r.done}/${r.total}단계</small></div>`).join('')}</div><button class="btn big ${st.supplyRankVisible?'lemon':'mint'}" id="toggleSupplyRank">${st.supplyRankVisible?'🙈 순위 공개 끄기':'🏆 학생에게 전체 순위 공개'}</button></div>` : ''}
-      ${reviewListPanel(room.set || 'D')}
-      ${heatTable(cs, from)}`;
+      ${teacherResultTabs()}
+      ${teacherSetRankPanel(selectedTeacherResultSet(), st)}
+      ${reviewListPanel(selectedTeacherResultSet())}
+      ${heatTable(casesOf(selectedTeacherResultSet()), 0, selectedTeacherResultSet())}`;
   }
   else if (st.phase === 'end') {
     hubLog('curve', code, ['이름', '편', '처음에 맞힌 단계', '푼 단계', '첫 시도 정답률(%)'], playerIds().map(id => { const sc = scoreOf(id); return [nameOf(id), SET_NAME[room.set || 'D'].replace(/^\S+ /, ''), sc.ok, sc.tot, sc.tot ? Math.round(sc.ok / sc.tot * 100) : '']; }), SET_NAME[room.set || 'D']);
     maybeAnnounce('end', () => announce('🎉 끝!!', '다들 잘했어 👏', '🏆', 3000));
     body = `<div class="center" style="margin-bottom:10px"><span class="roundBadge">🏁 결과</span></div>
-      ${teacherSetRankPanel(room.set === 'S' ? 'S' : 'D', st)}
-      ${reviewListPanel(room.set || 'D')}
-      ${heatTable(cs, 0)}
+      ${teacherResultTabs()}
+      ${teacherSetRankPanel(selectedTeacherResultSet(), st)}
+      ${reviewListPanel(selectedTeacherResultSet())}
+      ${heatTable(casesOf(selectedTeacherResultSet()), 0, selectedTeacherResultSet())}
       <div class="card"><h3>🧐 한눈에 정리</h3>
         <div class="hl sky" style="font-size:22px"><b>가격 상승 ↑</b> → 수요량 감소 ↓ · 공급량 증가 ↑</div>
         <div class="hl sky" style="font-size:22px"><b>가격 하락 ↓</b> → 수요량 증가 ↑ · 공급량 감소 ↓</div>
@@ -1005,20 +1021,21 @@ function renderTeacher() {
     });
   } else if (!tSumm) closeSummary();
   if (el('openSum')) el('openSum').onclick = () => { popClosed.delete(`t${st.ci || 0}`); renderTeacher(); };
+  document.querySelectorAll('[data-result-set]').forEach(b => b.onclick = () => { teacherResultSet = b.dataset.resultSet; renderTeacher(); });
   document.querySelectorAll('[data-review]').forEach(b => b.onclick = () => openReview(b.dataset.reviewSet || room.set || 'D', Number(b.dataset.reviewCi), b.dataset.reviewStep));
   if (el('reviewBack')) el('reviewBack').onclick = () => update(AP('state'), { review: null });
   if (el('reviewReveal')) el('reviewReveal').onclick = () => update(AP('state/review'), { reveal: true });
   if (el('reviewHide')) el('reviewHide').onclick = () => update(AP('state/review'), { reveal: false });
 }
 // 사례 × 단계별 "처음에 맞힌 비율" — 어디서 많이 헷갈렸는지 한눈에
-function heatTable(cs, from) {
+function heatTable(cs, from, set = room.set || 'D') {
   const ids = playerIds(), all = ['price', 'move', 'who', 'drag', 'final'];
   const cell = (ci, s, c) => {
-    if (!stepsOf(c).includes(s)) return '<td style="background:var(--line);border-color:var(--line)">-</td>';
-    const rs = ids.map(id => stepRec(id, ci, s)).filter(Boolean);
+    if (!stepsOf(c, set).includes(s)) return '<td style="background:var(--line);border-color:var(--line)">-</td>';
+    const rs = ids.map(id => stepRec(id, ci, s, set)).filter(Boolean);
     if (!rs.length) return '<td class="muted">·</td>';
     const r = rs.filter(x => x.ok).length / rs.length, bg = r >= .8 ? 'var(--mint)' : r >= .5 ? 'var(--lemon)' : 'var(--red)';
-    return `<td style="background:${bg}" data-review data-review-set="${room.set || 'D'}" data-review-ci="${ci}" data-review-step="${s}" title="이 문제 함께 보기">${Math.round(r * 100)}%</td>`;
+    return `<td style="background:${bg}" data-review data-review-set="${set}" data-review-ci="${ci}" data-review-step="${s}" title="이 문제 함께 보기">${Math.round(r * 100)}%</td>`;
   };
   return `<div class="card"><h3>📊 처음에 맞힌 비율 <span class="muted" style="font-size:16px">빨간 칸 = 많이 헷갈린 곳</span></h3>
     <table class="heat"><tr><th>사례</th>${all.map(s => `<th>${STEP_NAME[s]}</th>`).join('')}</tr>
@@ -1067,6 +1084,7 @@ function reviewListPanel(set) {
 }
 function openReview(set, ci, step) {
   if (!Number.isInteger(ci)) return;
+  if (set === 'D' || set === 'S') teacherResultSet = set;
   update(AP('state'), { review: { set, ci, step, reveal: false } });
 }
 function reviewDetails(v) {
@@ -1159,7 +1177,7 @@ function wireTeacher(st, cs) {
     document.querySelectorAll('[data-del]').forEach(b => b.onclick = () => { const n = casesOf().filter((_, k) => k !== +b.dataset.del); if (n.length) set(AP('cases'), n); });
     document.querySelectorAll('[data-up]').forEach(b => b.onclick = () => { const n = casesOf(), k = +b.dataset.up; [n[k - 1], n[k]] = [n[k], n[k - 1]]; set(AP('cases'), n); });
     if (el('addCase')) el('addCase').onclick = () => set(AP('cases'), [...casesOf(), { emoji: '🎁', market: '새 상품', price: '1개 1,000원', factor: '', text: '사례를 적어', type: 'shift', curve: 'D', dir: '+' }]);
-    document.querySelectorAll('[data-set]').forEach(b => b.onclick = () => { const k = b.dataset.set; ask(`${SET_NAME[k]} 기본 사례 순서로 불러올까?<br><small>(현재 수정한 사례는 기본 사례로 바뀌어)</small>`).then(async y => { if (!y) return; await Promise.all(playerIds().map(id => update(AP(`players/${id}`), {set:null}))); await update(A(), { set:k, cases:PRESETS[k] }); }); });
+    document.querySelectorAll('[data-set]').forEach(b => b.onclick = () => { const k = b.dataset.set; ask(`${SET_NAME[k]} 기본 사례 순서로 불러올까?<br><small>(현재 수정한 사례는 기본 사례로 바뀌어)</small>`).then(async y => { if (!y) return; await Promise.all(playerIds().map(id => update(AP(`players/${id}`), {set:null}))); await update(A(), { [`casesBySet/${room.set || 'D'}`]: casesOf(room.set || 'D'), [`casesBySet/${k}`]: PRESETS[k], set:k, cases:PRESETS[k] }); }); });
     el('ready').onclick = () => S({ phase: 'lobby' });
   }
   document.querySelectorAll('[data-send-supply]').forEach(b => b.onclick = async () => { const id=b.dataset.sendSupply; if (!await ask(`${esc(nameOf(id))}만 공급편으로 보낼까?`, '🏭 보내기')) return; await update(AP(`players/${id}`), {set:'S'}); await S({supplyRankVisible:false}); if (st.mode !== 'solo') await S({mode:'solo',ci:0,step:0,reveal:false,soloFrom:0,auto:false}); toast(`${nameOf(id)} 학생을 공급편으로 보냈어`); });
@@ -1184,6 +1202,8 @@ function wireTeacher(st, cs) {
       : `모든 학생이 수요편을 끝냈어.<br>공급편을 시작할까?`;
     if (!await ask(msg, '🏭 공급편 시작')) return;
     await update(A(), {
+      'casesBySet/D': casesOf('D'),
+      'casesBySet/S': PRESETS.S,
       set: 'S',
       cases: PRESETS.S,
       state: { ...st, phase: 'play', mode: 'solo', ci: 0, step: 0, reveal: false, soloFrom: 0, auto: false, supplyRankVisible: false, review: null }
@@ -1411,11 +1431,45 @@ function renderStudentSupplyRank() {
   const i=rows.findIndex(r=>r.id===pid), mine=rows[i];
   app.innerHTML=`<div class="s-wrap"><div class="stage" style="min-height:80vh"><div class="bigEmoji">${i===0?'🥇':i===1?'🥈':i===2?'🥉':'🏆'}</div><div class="title" style="font-size:38px">공급편 순위 공개!</div><div class="rule">${esc(nameOf(pid))} · ${i+1}등 · ${mine?.points||0}점</div><div class="card" style="width:min(620px,100%)"><h3>🏆 공급편 순위</h3>${rows.map((r,n)=>`<div class="drow"><span>${n+1}위</span><b>${esc(nameOf(r.id))}</b><span>${r.points}점</span></div>`).join('')}</div><div class="muted">정답 수와 푼 속도를 함께 반영했어.</div></div></div>`;
 }
+
+function renderStudentSetResults(st) {
+  const selected = studentResultSet || (activeSet() === 'S' ? 'S' : 'D');
+  const summary = set => {
+    const rows = set === 'S' ? supplyRankRows() : demandRankRows();
+    const mine = rows.find(r => r.id === pid);
+    const first = scoreOf(pid, null, set);
+    const total = casesOf(set).reduce((n,item)=>n+stepsOf(item,set).length,0);
+    return {rows,mine,first,total};
+  };
+  const d = summary('D'), s = summary('S'), current = selected === 'S' ? s : d;
+  const released = selected === 'S' ? st.supplyRankVisible : st.demandRankVisible;
+  const title = selected === 'S' ? '🏭 공급편' : '🛒 수요편';
+  const rank = current.rows.findIndex(row => row.id === pid);
+  app.innerHTML = `<div class="s-wrap"><div class="stage" style="min-height:80vh">
+    <div class="title" style="font-size:34px">🏁 내 결과</div>
+    <div class="chips" style="justify-content:center">
+      <button class="btn ${selected==='D'?'mint':'sky'}" data-student-result="D" aria-pressed="${selected==='D'}">🛒 수요편 · ${d.mine?.points||0}점</button>
+      <button class="btn ${selected==='S'?'mint':'peach'}" data-student-result="S" aria-pressed="${selected==='S'}">🏭 공급편 · ${s.mine?.points||0}점</button>
+    </div>
+    <div class="card" style="width:min(680px,100%);text-align:left"><h3>${title} 결과</h3>
+      <div class="rule">점수 <b>${current.mine?.points||0}점</b> · 완료 ${current.mine?.done||0}/${current.total}단계</div>
+      <div class="muted" style="font-size:19px">처음에 맞힌 단계 ${current.first.ok}/${current.first.tot}개</div>
+      ${released ? `<div class="hl mint" style="margin-top:12px;font-size:23px">내 순위 ${rank>=0?rank+1:'—'}위</div>
+        <div class="rankTable">${current.rows.map((r,n)=>`<div class="drow"><span>${n+1}위</span><b>${esc(nameOf(r.id))}</b><span>${r.points}점</span><small>완료 ${r.done}/${r.total}단계</small></div>`).join('')}</div>`
+      : '<div class="muted" style="margin-top:10px">전체 순위는 선생님이 공개하면 보여.</div>'}
+    </div></div></div>`;
+  document.querySelectorAll('[data-student-result]').forEach(b => b.onclick = () => {
+    studentResultSet = b.dataset.studentResult;
+    renderStudentSetResults(st);
+  });
+}
+
 function renderStudent() {
   const st = room.state || {}, set = activeSet(), cs = casesOf(set), me = (room.players || {})[pid];
   if (!me) { localStorage.removeItem('curve_pid_' + code); return studentForm(code); }
   if (set === 'S' && !localStorage.getItem(`curve_supply_welcome_${code}_${pid}`)) { localStorage.setItem(`curve_supply_welcome_${code}_${pid}`, '1'); setTimeout(showSupplyWelcome, 0); }
-  if (st.phase === 'end' && st.review && st.review.set === set) { renderStudentReview(st.review); return; }
+  if (st.phase === 'end' && st.review) { renderStudentReview(st.review); return; }
+  if (st.phase === 'end' && !isRace()) { renderStudentSetResults(st); return; }
   if (set === 'D' && st.demandRankVisible) { renderStudentDemandRank(); return; }
   if (set === 'S' && st.supplyRankVisible) { renderStudentSupplyRank(); return; }
   const tg = st.mode === 'together' && st.phase === 'play' && !st.reveal && (st.step || 0) > 0;
