@@ -756,6 +756,88 @@ function teacherResultTabs() {
     <button class="btn big ${selected==='S'?'mint':'peach'}" data-result-set="S" aria-pressed="${selected==='S'}">🏭 공급편 결과</button>
     ${room?.set==='mix' ? `<button class="btn big ${selected==='mix'?'mint':'lav'}" data-result-set="mix" aria-pressed="${selected==='mix'}">⚡ 총정리 결과</button>` : ''}</div>`;
 }
+
+function supplyLessonPanel(st) {
+  const early = playerIds().filter(id => room.players?.[id]?.set === 'S');
+  const records = room.ansBySet?.S || {};
+  const hasPractice = Object.values(records).some(byCase => Object.keys(byCase || {}).length);
+  return `<div class="card"><h3>🏭 다음 시간 공급편 준비</h3>
+    ${room.set === 'D' ? `<div class="muted" style="font-size:18px">먼저 공급편으로 간 학생 ${early.length}명 · 지금은 사전점검으로 기록할 수 있어.</div>
+      ${early.length && st.showNames ? `<div class="chips" style="margin:10px 0">${early.map(id=>`<button class="btn sm sky" data-return-demand="${id}">↩ ${esc(nameOf(id))} 수요편으로</button>`).join('')}</div>`
+        : early.length ? '<div class="muted">개별로 돌리려면 위에서 이름 표시를 켜.</div>' : ''}
+      ${early.length || hasPractice ? '<button class="btn peach" id="saveSupplyPrecheck">📋 오늘 공급 사전점검 보관 · 먼저 간 학생 대기로</button>' : ''}
+      ` : ''}
+    <button class="btn ${room.set==='D'?'mint':'peach'}" id="prepareSupplyLesson">▶ 공급편 1번부터 새로 준비</button>
+    <div class="muted" style="font-size:16px;margin-top:8px">사전점검 기록과 수요편 결과는 남겨 둬. 새 공급편 답안과 점수는 처음부터 시작해.</div></div>
+    ${supplyPrecheckArchivePanel(st)}`;
+}
+function supplyPrecheckArchivePanel(st) {
+  const entries = Object.values(room.prechecks?.supply || {}).sort((a,b)=>(b.savedAt||0)-(a.savedAt||0));
+  if (!entries.length) return '';
+  const fmt = at => new Intl.DateTimeFormat('ko-KR',{timeZone:'Asia/Seoul',month:'numeric',day:'numeric',hour:'numeric',minute:'2-digit'}).format(at);
+  return `<div class="card"><h3>📋 공급 사전점검 기록 · ${entries.length}회</h3>
+    ${entries.map((entry,index)=>{
+      const answers = entry.answers || {}, names = entry.names || {};
+      const ids = Object.keys(names).filter(id=>Object.keys(answers[id]||{}).length);
+      const caseStats = [];
+      (entry.cases||[]).forEach((item,ci)=>stepsOf(item,'S').forEach(step=>{
+        let answered=0,wrong=0;
+        ids.forEach(id=>{const r=answers[id]?.[ci]?.[step];if(r?.first==null)return;answered++;if(!r.ok)wrong++;});
+        if(answered)caseStats.push({ci,step,item,answered,wrong,rate:wrong/answered});
+      }));
+      caseStats.sort((a,b)=>b.rate-a.rate||b.wrong-a.wrong||a.ci-b.ci);
+      const lines = ids.map(id=>{
+        let first=0, answered=0, done=0, points=0;
+        Object.values(answers[id]||{}).forEach(byStep=>Object.values(byStep||{}).forEach(r=>{
+          if(r?.first == null) return;
+          answered++; if(r.ok) first++; if(r.done) done++;
+          if(r.resolvedCorrect || (r.done && r.ok)) points += Number(r.points)||100;
+        }));
+        return `<div class="drow"><span>👤</span><b>${st.showNames?esc(names[id]):'학생'}</b><span>${points}점</span><small>처음 정답 ${first}/${answered} · 완료 ${done}단계</small></div>`;
+      });
+      return `<details ${index===0?'open':''} style="border-top:2px solid var(--line);padding:10px 0">
+        <summary style="cursor:pointer;font-size:21px">📌 ${fmt(entry.savedAt)} · ${ids.length}명 응답 · 사전점검</summary>
+        <div class="muted" style="font-size:16px">먼저 넘어간 학생: ${(entry.earlyIds||[]).map(id=>st.showNames?esc(names[id]||'학생'):'👤').join(' · ') || '개별 이동 기록 없음'}</div>
+        <div class="rankTable">${lines.join('') || '<div class="muted">답한 학생은 없어. 먼저 넘어간 기록만 남겼어.</div>'}</div>
+        <div class="muted" style="font-size:17px;margin:10px 0 6px">많이 틀린 단계</div>
+        <div class="reviewList">${caseStats.slice(0,8).map(r=>`<div class="reviewLink" style="cursor:default"><span>${r.ci+1}번 ${esc(r.item.text)} <small>${reviewStepName(r.step)}</small></span><b class="reviewRate">${Math.round(r.rate*100)}% <small>${r.wrong}/${r.answered}명</small></b></div>`).join('')||'<div class="muted">아직 답안이 없어.</div>'}</div>
+        <div class="muted" style="font-size:15px;margin-top:8px">이 기록은 보관용이야. 다음 시간 공급편 점수에는 합치지 않아.</div>
+      </details>`;
+    }).join('')}</div>`;
+}
+async function saveSupplyPrecheck(prepareNext) {
+  const st = room.state || {}, oldAnswers = room.ansBySet?.S || {};
+  const early = playerIds().filter(id=>room.players?.[id]?.set==='S');
+  const hasAnswers = Object.values(oldAnswers).some(byCase=>Object.keys(byCase||{}).length);
+  const askText = prepareNext
+    ? '공급편을 1번부터 다시 시작할까?<br><small>먼저 푼 공급 답안은 사전점검으로 보관하고, 새 공급 점수는 0점부터 시작해. 수요 기록은 그대로야.</small>'
+    : '오늘 공급편을 사전점검 기록으로 보관할까?<br><small>먼저 간 학생은 수요편으로 돌아가. 다음 시간에는 공급편 1번부터 다시 시작할 수 있어.</small>';
+  if (!await ask(askText,prepareNext?'🏭 새 공급편 준비':'📋 보관하기')) return;
+  const timestamp = Date.now(), changes = {};
+  if (hasAnswers || early.length) changes[`prechecks/supply/p${timestamp}`] = {
+    savedAt: timestamp, names: Object.fromEntries(playerIds().map(id=>[id,nameOf(id)])), earlyIds: early,
+    answers: oldAnswers, cases: casesOf('S')
+  };
+  changes['ansBySet/S'] = null;
+  early.forEach(id=>{ changes[`players/${id}/set`] = null; });
+  changes['state/supplyRankVisible'] = false;
+  changes['state/review'] = null;
+  if (prepareNext) {
+    const supplyCases = casesOf('S');
+    changes['casesBySet/D'] = casesOf('D');
+    changes['casesBySet/S'] = supplyCases;
+    changes.set = 'S'; changes.cases = supplyCases;
+    changes.state = {...st,phase:'lobby',mode:'together',ci:0,step:0,soloFrom:0,reveal:false,auto:false,supplyRankVisible:false,demandRankVisible:false,review:null};
+    delete changes['state/supplyRankVisible']; delete changes['state/review'];
+  }
+  try {
+    await update(A(),changes);
+    toast(prepareNext?'공급편 1번부터 준비됐어. 학생들이 접속하면 시작해.':'사전점검 기록을 보관했어.');
+  } catch(e) {
+    console.error(e); toast('저장하지 못했어. 인터넷을 확인해.');
+  }
+}
+
 const stepBar = (c, cur, doneFn) => `<div class="stepbar"><span class="${cur === 0 ? 'on' : 'ok'}">📰 사례</span>${stepsOf(c).map((s, k) => `<span class="${cur === k + 1 ? 'on' : (doneFn ? doneFn(s) : cur > k + 1) ? 'ok' : ''}">${k + 1}. ${STEP_NAME[s]}</span>`).join('')}</div>`;
 
 
@@ -912,7 +994,7 @@ function renderTeacher() {
       <div class="card"><h3>🙋 입장한 학생 ${ps.length}명</h3><div class="chips">${ps.map(p => `<span class="chip soft" style="${p.online === true ? '' : 'opacity:.4'}">${esc(p.name)}</span>`).join('') || '<span class="muted">아직 아무도 없어</span>'}</div>
         <div class="hl lav" style="margin-top:16px">📈 사례는 이렇게 풀어<br><span style="font-size:19px">${room.set === 'mix' ? '① 가격이 바뀌었어? → ② 곡선 위의 이동? 곡선 자체의 이동? → ③ 누구 사정이 바뀌었어? → ④ 그래프 움직이기 → ⑤ 최종 결과는?' : '① 가격이 바뀌었어? → ② 곡선 위의 이동? 곡선 자체의 이동? → ③ 그래프 움직이기 → ④ 최종 결과는?'}</span></div></div>
     </div>
-    <div class="center">${room.set === 'mix' ? `<button class="btn big mint" id="goRace" ${ps.length ? '' : 'disabled'}>⚡ 총정리 스피드 시험 시작!</button> <span class="muted">한 문제 ${RACE_SEC()}초</span>` : ''}<button class="btn sky" id="conceptDemo">🎬 개념 애니메이션 먼저 보기</button> <button class="btn big mint" id="go" ${ps.length && room.set !== 'mix' ? '' : 'hidden'}>👥 같이 첫 사례 풀기</button> <button class="btn big sky" id="goSolo" ${ps.length && room.set !== 'mix' ? '' : 'hidden'}>🏃 처음부터 각자 풀기</button> <button class="btn sm" id="toSetup">⚙️ 설정 고치기</button></div>`;
+    <div class="center">${room.set === 'mix' ? `<button class="btn big mint" id="goRace" ${ps.length ? '' : 'disabled'}>⚡ 총정리 스피드 시험 시작!</button> <span class="muted">한 문제 ${RACE_SEC()}초</span>` : ''}<button class="btn sky" id="conceptDemo">🎬 개념 애니메이션 먼저 보기</button> <button class="btn big mint" id="go" ${ps.length && room.set !== 'mix' ? '' : 'hidden'}>👥 같이 첫 사례 풀기</button> <button class="btn big sky" id="goSolo" ${ps.length && room.set !== 'mix' ? '' : 'hidden'}>🏃 처음부터 각자 풀기</button> <button class="btn sm" id="toSetup">⚙️ 설정 고치기</button></div>` + (room.set === 'mix' ? '' : supplyLessonPanel(st));
   }
   else if (st.phase === 'play' && isRace()) body = teacherRace(st);
   else if (st.phase === 'end' && isRace()) {
@@ -974,7 +1056,7 @@ function renderTeacher() {
         <div style="font-size:19px;margin-bottom:8px"><b>끝낸 학생 (${allDone}/${ids.length})</b><br>${st.showNames ? finished : '이름 표시를 켜면 누가 끝냈는지 보여.'}</div>
         <div class="muted" style="font-size:17px;margin-bottom:12px"><b>아직 푸는 중:</b> ${st.showNames ? pending : '이름 표시를 켜면 확인할 수 있어.'}</div>
         <button class="btn big peach" id="goSupply">🏭 공급편으로 넘어가기 · ${allDone}/${ids.length}명 완료</button></div>` : ''}
-      ${room.set === 'D' ? `<div class="card"><h3>🏭 공급편으로 보낸 학생</h3><div class="chips">${supplyRows.map(r=>`<span class="chip soft">${st.showNames?esc(nameOf(r.id)):'👤'} · ${r.n}/${casesOf('S').length} 사례</span>`).join('') || '<span class="muted">아직 없어</span>'}</div><div class="muted" style="margin-top:8px">수요편을 다 푼 학생만 개별로 보낼 수 있어.</div><div class="chips" style="margin-top:10px">${rows.filter(r=>r.n>=total).map(r=>`<button class="btn sm peach" data-send-supply="${r.id}">🏭 ${st.showNames?esc(nameOf(r.id)):'학생'} 공급편 보내기</button>`).join('') || '<span class="muted">수요편 완료 학생이 생기면 여기서 보낼 수 있어.</span>'}</div></div>` : ''}
+      ${supplyLessonPanel(st)}
       ${teacherResultTabs()}
       ${teacherSetRankPanel(selectedTeacherResultSet(), st)}
       ${reviewListPanel(selectedTeacherResultSet())}
@@ -1005,6 +1087,7 @@ function renderTeacher() {
         <div class="muted" style="margin:8px 0 12px"><b>아직 덜 푼 학생:</b> ${st.showNames ? waitNames : '이름 표시를 켜면 확인할 수 있어.'}</div>
         <button class="btn big peach" id="goSupply">🏭 공급편으로 넘어가기 · ${doneIds.length}/${playerIds().length}명 완료</button></div>`;
     }
+    body += supplyLessonPanel(st);
   }
   if (st.review && (st.phase === 'end' || (st.phase === 'play' && st.mode === 'solo'))) { body = reviewPanel(st.review); tSumm = null; }
   if (!body) body = `<div class="stage"><div class="rule">잠깐만… 🔄</div></div>`;
@@ -1181,6 +1264,14 @@ function wireTeacher(st, cs) {
     el('ready').onclick = () => S({ phase: 'lobby' });
   }
   document.querySelectorAll('[data-send-supply]').forEach(b => b.onclick = async () => { const id=b.dataset.sendSupply; if (!await ask(`${esc(nameOf(id))}만 공급편으로 보낼까?`, '🏭 보내기')) return; await update(AP(`players/${id}`), {set:'S'}); await S({supplyRankVisible:false}); if (st.mode !== 'solo') await S({mode:'solo',ci:0,step:0,reveal:false,soloFrom:0,auto:false}); toast(`${nameOf(id)} 학생을 공급편으로 보냈어`); });
+  document.querySelectorAll('[data-return-demand]').forEach(b => b.onclick = async () => {
+    const id=b.dataset.returnDemand;
+    if (!await ask(`${esc(nameOf(id))} 학생을 수요편으로 돌릴까?<br><small>공급에서 푼 답은 다음 시간 사전점검 보관 때 함께 남겨.</small>`,'↩ 돌리기')) return;
+    try { await update(AP(`players/${id}`),{set:null}); toast(`${nameOf(id)} 학생을 수요편으로 돌렸어`); }
+    catch(e) { console.error(e); toast('저장하지 못했어.'); }
+  });
+  if (el('saveSupplyPrecheck')) el('saveSupplyPrecheck').onclick = () => saveSupplyPrecheck(false);
+  if (el('prepareSupplyLesson')) el('prepareSupplyLesson').onclick = () => saveSupplyPrecheck(true);
   if (el('toggleSupplyRank')) el('toggleSupplyRank').onclick = () => S({supplyRankVisible:!st.supplyRankVisible});
   if (el('toggleDemandRank')) el('toggleDemandRank').onclick = () => S({demandRankVisible:!st.demandRankVisible});
   if (el('toggleRaceRank')) el('toggleRaceRank').onclick = () => S({raceRankVisible:!st.raceRankVisible});
@@ -1354,7 +1445,7 @@ if (isTeacher) setInterval(autoTick, 300);
 /* =========================================================
    🧒 학생 화면
    ========================================================= */
-let readSeen = {}, sKey = '', dragState = null, hold = null;   // hold: 각자 풀기에서 방금 맞힌 단계를 '다음' 누를 때까지 보여 줌
+let readSeen = {}, sKey = '', dragState = null, hold = null, lastStudentSet = null;   // hold: 각자 풀기에서 방금 맞힌 단계를 '다음' 누를 때까지 보여 줌
 let questionStartedAt = Date.now(), cooldownInterval = null;
 function record(ci, stp, val, ok) {
   const set = activeSet(), r = stepRec(pid, ci, stp, set), nowAt = Date.now();
@@ -1466,6 +1557,7 @@ function renderStudentSetResults(st) {
 
 function renderStudent() {
   const st = room.state || {}, set = activeSet(), cs = casesOf(set), me = (room.players || {})[pid];
+  if (lastStudentSet !== set) { lastStudentSet = set; hold = null; readSeen = {}; sKey = ''; dragState = null; closeSummary(); }
   if (!me) { localStorage.removeItem('curve_pid_' + code); return studentForm(code); }
   if (set === 'S' && !localStorage.getItem(`curve_supply_welcome_${code}_${pid}`)) { localStorage.setItem(`curve_supply_welcome_${code}_${pid}`, '1'); setTimeout(showSupplyWelcome, 0); }
   if (st.phase === 'end' && st.review) { renderStudentReview(st.review); return; }
