@@ -340,7 +340,6 @@ button,.btn,.speech,.rule,.title,.card{word-break:keep-all;overflow-wrap:break-w
 .reviewRate{font-size:22px;color:#b83a43;white-space:nowrap}.reviewChoices{display:grid;gap:8px}.reviewChoice{padding:10px 14px;border:2px solid var(--line);border-radius:12px;background:#fff;font-size:21px}.reviewChoice.right{background:var(--mint);border-color:var(--mintD)}
 .heat [data-review]{cursor:pointer;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:3px}
 @media(max-width:640px){.rankTable .drow{grid-template-columns:48px 1fr 90px;gap:3px}.rankTable .drow small{grid-column:2/4}.reviewLink{font-size:17px}}
-.supplyWelcome .sumCard{border:5px solid #e60012;box-shadow:8px 8px 0 #ffdf00}
 </style>
 </head>
 <body>
@@ -497,7 +496,13 @@ function optionsOf(c, step) {
   if (step === 'price') return [['Y', '💰 응, 가격이 변했어'], ['N', '🙅 아니, 가격은 그대로야']];
   if (step === 'move') return [['along', '🛤️ 곡선 위의 이동<br><small>(곡선은 그대로, 점만 움직여)</small>'], ['shift', '🚚 곡선 자체의 이동<br><small>(곡선이 통째로 움직여)</small>']];
   if (step === 'who') return [['D', '🛒 사는 사람<br><small>(수요 곡선)</small>'], ['S', '🏭 파는 사람<br><small>(공급 곡선)</small>']];
-  if (step === 'drag') return c.type === 'shift' ? [['+', '➡️ 오른쪽 (증가)'], ['-', '⬅️ 왼쪽 (감소)']] : [['+', '⬆️ 위로 (가격 오름)'], ['-', '⬇️ 아래로 (가격 내림)']];
+  if (step === 'drag') {
+    if (c.type === 'shift') return [['+', '➡️ 오른쪽 (증가)'], ['-', '⬅️ 왼쪽 (감소)']];
+    const quantity = c.curve === 'D' ? '수요량' : '공급량';
+    return c.curve === 'D'
+      ? [['-', `➡️ 오른쪽 (${quantity} 증가)`], ['+', `⬅️ 왼쪽 (${quantity} 감소)`]]
+      : [['+', `➡️ 오른쪽 (${quantity} 증가)`], ['-', `⬅️ 왼쪽 (${quantity} 감소)`]];
+  }
   if (c.type === 'shift') return [['+', `📈 ${esc(c.market)} 가격이 오른다`], ['-', `📉 ${esc(c.market)} 가격이 내린다`]];
   const w = c.curve === 'D' ? '사려는 양(수요량)' : '팔려는 양(공급량)';
   return [['+', `📈 ${w}이 늘어난다`], ['-', `📉 ${w}이 줄어든다`]];
@@ -518,7 +523,7 @@ function hintOf(c, step) {
   if (step === 'who') return '🔍 같은 가격에 더 사고 싶어졌다면 🛒 사는 쪽(수요곡선)이야.<br>더 만들거나 팔기 어려워졌다면 🏭 파는 쪽(공급곡선)이야.';
   if (step === 'drag') return c.type === 'shift'
     ? `🔍 같은 가격에서 ${c.curve === 'D' ? '사고 싶은 양' : '팔 수 있는 양'}이 늘면 오른쪽 ➡️, 줄면 왼쪽 ⬅️으로 옮겨!`
-    : '🔍 가격이 올랐으면 점을 위로 ⬆️, 내렸으면 아래로 ⬇️ 옮겨!';
+    : `🔍 점이 오른쪽으로 가면 ${c.curve === 'D' ? '수요량' : '공급량'} 증가 ➡️, 왼쪽으로 가면 감소 ⬅️야. 곡선을 따라 점을 옮겨 봐!`;
   if (c.type === 'shift') return '🔍 두 곡선이 <b>새로 만나는 점 ⭐</b>을 찾아. 원래 점보다 가격이 높아졌어, 낮아졌어?';
   return '🔍 점이 옮겨 간 곳을 봐. 오른쪽이면 수량이 늘고, 왼쪽이면 줄어!';
 }
@@ -662,7 +667,10 @@ function teacherHome() {
     <div class="bigEmoji bounce">📈</div>
     <div class="title">시장 <span>예측하기</span></div>
     <p class="muted" style="font-size:22px">곡선 위의 이동일까? 곡선 자체의 이동일까? 예측해 봐</p>
-    <button class="btn big mint" id="newRoom">새 수업 준비하기 ✨</button>
+    <div class="card" style="width:min(620px,100%);text-align:center"><h3>📍 이번 반은 어디서 시작할까?</h3>
+      <button class="btn big mint" data-new-set="D">🛒 수요편부터</button>
+      <button class="btn big peach" data-new-set="S">🏭 공급편부터</button>
+      <button class="btn big lav" data-new-set="mix">⚡ 총정리부터</button></div>
     ${saved ? `<button class="btn sky" id="resume">이어서 하기 (방 ${esc(saved)})</button>` : ''}
     <div class="card" style="width:min(440px,100%);margin-top:12px">
       <div class="muted" style="font-size:17px;margin-bottom:8px">기존 방을 열면 위쪽에 📋 공급 사전점검 보관 버튼이 보여.</div>
@@ -670,7 +678,7 @@ function teacherHome() {
       <button class="btn peach" id="openTeacherRoom">기존 방 열기</button>
     </div>
   </div></div>`;
-  el('newRoom').onclick = newRoom;
+  document.querySelectorAll('[data-new-set]').forEach(b => b.onclick = () => newRoom(b.dataset.newSet));
   if (el('resume')) el('resume').onclick = () => location.href = `?t=1&room=${saved}`;
   el('openTeacherRoom').onclick = async () => {
     const c=el('teacherRoomCode').value.trim();
@@ -682,11 +690,12 @@ function teacherHome() {
     } catch(e) { console.error(e); toast('방을 열지 못했어. 인터넷을 확인해.'); }
   };
 }
-async function newRoom() {
+async function newRoom(startSet = 'D') {
   try {
     let c;
     for (let i = 0; i < 20; i++) { c = String(Math.floor(1000 + Math.random() * 9000)); if (!(await get(A(c))).exists()) break; }
-    await set(A(c), { createdAt: Date.now(), set: 'D', cases: PRESETS.D, state: { phase: 'setup', mode: 'together', ci: 0, step: 0, reveal: false, soloFrom: 0, showNames: true } });
+    const chosen = ['D','S','mix'].includes(startSet) ? startSet : 'D';
+    await set(A(c), { createdAt: Date.now(), set: chosen, cases: PRESETS[chosen], casesBySet: { [chosen]: PRESETS[chosen] }, state: { phase: 'setup', mode: chosen === 'mix' ? 'race' : 'together', ci: 0, step: 0, reveal: false, soloFrom: 0, showNames: true } });
     localStorage.setItem('curve_teacher_room', c);
     location.href = `?t=1&room=${c}`;
   } catch (e) { console.error(e); toast('방을 못 열었어 😢 인터넷을 확인해'); }
@@ -750,6 +759,7 @@ function topbar(st) {
     ${play && !isRace() ? `<span class="modeTg"><button class="btn sm mint ${st.mode === 'together' ? 'on' : ''}" id="mTog">👥 같이 하기</button><button class="btn sm sky ${st.mode === 'solo' ? 'on' : ''}" id="mSolo">🏃 각자 하기</button></span>` : ''}
     ${play && (st.mode === 'together' || isRace()) ? `<button class="btn sm ${st.auto ? 'mint on' : ''}" id="auto">⏩ 자동 진행 ${st.auto ? 'ON' : 'OFF'}</button>` : ''}
     <button class="btn sm lav" id="names">${st.showNames ? '👤 이름 ON' : '🙈 이름 OFF'}</button>
+    <button class="btn sm sky" id="chooseSet">📍 진도 선택</button>
     ${room.set !== 'mix' ? '<button class="btn sm peach" id="saveSupplyPrecheckTop">📋 공급 사전점검 보관</button>' : ''}
     ${play ? '<button class="btn sm lemon" id="toEnd">🏁 끝내기</button>' : ''}
     <button class="btn sm" id="backStep">◀ 이전 단계</button><a class="btn sm sky" href="hub.html?t=1">🏠 허브로</a><button class="btn sm" id="home">처음 화면</button></div>`;
@@ -770,6 +780,40 @@ function teacherResultTabs() {
     <button class="btn big ${selected==='D'?'mint':'sky'}" data-result-set="D" aria-pressed="${selected==='D'}">🛒 수요편 결과</button>
     <button class="btn big ${selected==='S'?'mint':'peach'}" data-result-set="S" aria-pressed="${selected==='S'}">🏭 공급편 결과</button>
     ${room?.set==='mix' ? `<button class="btn big ${selected==='mix'?'mint':'lav'}" data-result-set="mix" aria-pressed="${selected==='mix'}">⚡ 총정리 결과</button>` : ''}</div>`;
+}
+
+
+function showClassSetPicker() {
+  document.querySelector('.classSetPicker')?.remove();
+  const d=document.createElement('div'); d.className='sumPop classSetPicker';
+  d.innerHTML=`<div class="sumCard" style="display:block;width:min(640px,100%);text-align:center">
+    <h2 style="font-size:30px;margin:0 0 12px">📍 이 반은 어디로 갈까?</h2>
+    <div class="muted" style="font-size:18px;margin-bottom:14px">현재 ${SET_NAME[room.set||'D']} · 이전에 푼 답과 점수는 그대로 남아.</div>
+    <div style="display:grid;gap:10px">
+      ${[['D','🛒 수요편'],['S','🏭 공급편'],['mix','⚡ 총정리']].map(([key,label])=>`<button class="btn big ${room.set===key?'mint':'sky'}" data-class-set="${key}">${label} ${room.set===key?'· 현재':''}</button>`).join('')}
+    </div><button class="btn sm" data-close style="margin-top:16px">닫기</button>
+  </div>`;
+  const close=()=>d.remove();
+  d.querySelector('[data-close]').onclick=close;
+  d.onclick=e=>{if(e.target===d)close();};
+  d.querySelectorAll('[data-class-set]').forEach(b=>b.onclick=()=>{const chosen=b.dataset.classSet;close();switchClassSet(chosen);});
+  document.body.appendChild(d);
+}
+async function switchClassSet(target) {
+  if (!['D','S','mix'].includes(target) || target === (room.set||'D')) return;
+  const previous=room.set||'D', st=room.state||{};
+  if (st.phase !== 'setup' && playerIds().length &&
+      !await ask(`${SET_NAME[target]}로 이동할까?<br><small>이전 기록은 남고, 학생들은 입장 대기 화면으로 이동해.</small>`,'이동하기')) return;
+  const nextCases=room.casesBySet?.[target] || PRESETS[target];
+  const changes={
+    [`casesBySet/${previous}`]:casesOf(previous),
+    [`casesBySet/${target}`]:nextCases,
+    set:target,cases:nextCases,
+    state:{...st,phase:st.phase==='setup'?'setup':'lobby',mode:target==='mix'?'race':'together',ci:0,step:0,soloFrom:0,reveal:false,auto:false,review:null,demandRankVisible:false,supplyRankVisible:false,raceRankVisible:false}
+  };
+  playerIds().forEach(id=>{changes[`players/${id}/set`]=null;});
+  try {await update(A(),changes);toast(`${SET_NAME[target]}로 이동했어`);}
+  catch(e){console.error(e);toast('진도를 바꾸지 못했어. 인터넷을 확인해.');}
 }
 
 function supplyLessonPanel(st) {
@@ -991,8 +1035,9 @@ function renderTeacher() {
   let body = '';
   if (st.phase === 'setup') {
     body = `<div class="card"><h3>⚙️ 사례 준비 <span class="muted" style="font-size:16px">학생들 들어오기 전에 설정해 · 정답이 보이니 칠판에 띄우지 마 🤫</span></h3>
-      <div style="margin-bottom:10px">${['D', 'S', 'mix'].map(k => `<button class="btn ${room.set === k || (!room.set && k === 'D') ? 'mint' : ''}" data-set="${k}">${SET_NAME[k]}</button>`).join(' ')}
-        <span class="muted" style="font-size:16px">누르면 그 편의 기본 사례로 바뀌어</span>
+      <div style="margin-bottom:10px"><div class="q" style="font-size:24px">📍 이번 반 시작 위치: ${SET_NAME[room.set || 'D']}</div>
+        ${['D', 'S', 'mix'].map(k => `<button class="btn ${room.set === k || (!room.set && k === 'D') ? 'mint' : ''}" data-set="${k}">${SET_NAME[k]}부터 시작</button>`).join(' ')}
+        <span class="muted" style="font-size:16px">반 진도에 맞춰 골라. 이전 편 기록은 남아.</span>
         ${room.set === 'mix' ? `<div class="hl lemon" style="margin-top:8px;font-size:18px">⚡ 총정리는 스피드 시험! 사례마다 <b>① 수요/공급 중 무엇이 증가·감소?</b> <b>② 가격은?</b> 두 개만 빨리 골라 (곡선 자체가 움직이는 사례만 나와) · 한 문제 ${[10, 15, 20, 30].map(v => `<button class="btn sm ${RACE_SEC() === v ? 'mint' : ''}" data-sec="${v}" style="margin:0 2px;padding:4px 10px">${v}초</button>`).join('')}</div>` : ''}</div>
       ${cs.map((c, k) => `<div class="cbox">
         <div class="edit-case"><b style="font-size:20px">${k + 1}</b><input data-k="${k}" data-f="emoji" value="${esc(c.emoji)}" maxlength="4"><input data-k="${k}" data-f="market" value="${esc(c.market)}" maxlength="12" placeholder="상품"><input data-k="${k}" data-f="price" value="${esc(c.price || '')}" maxlength="14" placeholder="처음 가격"><input data-k="${k}" data-f="text" value="${esc(c.text)}" maxlength="70" placeholder="사례"></div>
@@ -1242,6 +1287,7 @@ function renderStudentReview(v) {
 function wireTeacher(st, cs) {
   const S = o => update(AP('state'), o);
   el('names').onclick = () => S({ showNames: !st.showNames });
+  el('chooseSet').onclick = showClassSetPicker;
   el('backStep').onclick=async()=>{
     if(st.phase==='setup'){location.href='hub.html?t=1';return;}
     if(!await ask('이전 단계로 돌아갈까?<br><small>낸 답은 지워지지 않아.</small>'))return;
@@ -1282,7 +1328,7 @@ function wireTeacher(st, cs) {
     document.querySelectorAll('[data-del]').forEach(b => b.onclick = () => { const n = casesOf().filter((_, k) => k !== +b.dataset.del); if (n.length) set(AP('cases'), n); });
     document.querySelectorAll('[data-up]').forEach(b => b.onclick = () => { const n = casesOf(), k = +b.dataset.up; [n[k - 1], n[k]] = [n[k], n[k - 1]]; set(AP('cases'), n); });
     if (el('addCase')) el('addCase').onclick = () => set(AP('cases'), [...casesOf(), { emoji: '🎁', market: '새 상품', price: '1개 1,000원', factor: '', text: '사례를 적어', type: 'shift', curve: 'D', dir: '+' }]);
-    document.querySelectorAll('[data-set]').forEach(b => b.onclick = () => { const k = b.dataset.set; ask(`${SET_NAME[k]} 기본 사례 순서로 불러올까?<br><small>(현재 수정한 사례는 기본 사례로 바뀌어)</small>`).then(async y => { if (!y) return; await Promise.all(playerIds().map(id => update(AP(`players/${id}`), {set:null}))); await update(A(), { [`casesBySet/${room.set || 'D'}`]: casesOf(room.set || 'D'), [`casesBySet/${k}`]: PRESETS[k], set:k, cases:PRESETS[k] }); }); });
+    document.querySelectorAll('[data-set]').forEach(b => b.onclick = () => switchClassSet(b.dataset.set));
     el('ready').onclick = () => S({ phase: 'lobby' });
   }
   document.querySelectorAll('[data-send-supply]').forEach(b => b.onclick = async () => { const id=b.dataset.sendSupply; if (!await ask(`${esc(nameOf(id))}만 공급편으로 보낼까?`, '🏭 보내기')) return; await update(AP(`players/${id}`), {set:'S'}); await S({supplyRankVisible:false}); if (st.mode !== 'solo') await S({mode:'solo',ci:0,step:0,reveal:false,soloFrom:0,auto:false}); toast(`${nameOf(id)} 학생을 공급편으로 보냈어`); });
@@ -1357,7 +1403,7 @@ function peekHTML(id) {
   if (ci < 0) body = '<div class="good" style="font-size:26px">🎉 사례를 다 풀었어!</div>';
   else {
     const c = cs[ci], steps = stepsOf(c), cur = steps.findIndex(x => !(stepRec(id, ci, x) || {}).done);
-    const lab = (x, v) => { if (x === 'drag') return c.type === 'shift' ? (v === '+' ? '➡️ 오른쪽으로 끌었어' : '⬅️ 왼쪽으로 끌었어') : (v === '+' ? '⬆️ 위로 끌었어' : '⬇️ 아래로 끌었어'); const o = optionsOf(c, x).find(([k]) => k === v); return o ? o[1].replace(/<br>.*$/, '') : v; };
+    const lab = (x, v) => { const o = optionsOf(c, x).find(([k]) => k === v); return o ? o[1].replace(/<br>.*$/, '') : v; };
     body = caseRow(c, ci) + `<div style="display:grid;gap:8px;margin-top:12px;text-align:left">${steps.map((x, i) => {
       const r = stepRec(id, ci, x);
       const mark = r ? (r.ok ? '🎯 한 번에 맞힘' : r.done ? '🔁 틀렸다가 고쳐서 맞힘' : '❌ 틀려서 힌트 보는 중') : i === cur ? '✍️ 푸는 중…' : '·';
@@ -1518,14 +1564,6 @@ function teacherSetRankPanel(set, st) {
     (rows.map((r,n)=>'<div class="drow"><span>'+ (n+1)+'위</span><b>'+ (st.showNames?esc(nameOf(r.id)):'학생') +'</b><span>'+r.points+'점</span><small>완료 '+r.done+'/'+r.total+'단계</small></div>').join('') || '<div class="muted">아직 기록이 없어</div>')+
     '</div><button class="btn big '+(visible?'lemon':'mint')+'" id="'+id+'">'+(visible?'🙈 순위 공개 끄기':'🏆 학생에게 전체 순위 공개')+'</button></div>';
 }
-function showSupplyWelcome() {
-  document.querySelector('.supplyWelcome')?.remove();
-  const d=document.createElement('div'); d.className='sumPop supplyWelcome';
-  d.innerHTML='<div class="sumCard" style="display:block;width:min(620px,100%);text-align:center"><div style="font-size:64px">🎉🏭🎉</div><div style="font-family:inherit;font-size:34px;color:#e60012;margin:8px 0 16px">축하해! 먼저 공급편으로 넘어갑니다~</div><div style="font-size:24px;margin-bottom:20px">다음 시간에 배울 내용을 먼저 살펴볼까?</div><button class="btn big mint" data-close>공급편 시작!</button></div>';
-  d.querySelector('[data-close]').onclick=()=>d.remove();
-  d.onclick=e=>{if(e.target===d)d.remove();};
-  document.body.appendChild(d);
-}
 function scheduleCooldown(until) {
   clearInterval(cooldownInterval);
   const tick=()=>{
@@ -1582,7 +1620,6 @@ function renderStudent() {
   const st = room.state || {}, set = activeSet(), cs = casesOf(set), me = (room.players || {})[pid];
   if (lastStudentSet !== set) { lastStudentSet = set; hold = null; readSeen = {}; sKey = ''; dragState = null; closeSummary(); }
   if (!me) { localStorage.removeItem('curve_pid_' + code); return studentForm(code); }
-  if (set === 'S' && !localStorage.getItem(`curve_supply_welcome_${code}_${pid}`)) { localStorage.setItem(`curve_supply_welcome_${code}_${pid}`, '1'); setTimeout(showSupplyWelcome, 0); }
   if (st.phase === 'end' && st.review) { renderStudentReview(st.review); return; }
   if (st.phase === 'end' && !isRace()) { renderStudentSetResults(st); return; }
   if (set === 'D' && st.demandRankVisible) { renderStudentDemandRank(); return; }
@@ -1731,7 +1768,7 @@ function renderTogetherStep(c, ci, k, steps, stp, rec, st, top, caseCard, bar) {
     showSummary(`s${ci}`, c, '<button class="btn big mint" id="popOk">알겠어! 👍</button>', d => { d.querySelector('#popOk').onclick = () => closeSummary(true); });
 }
 
-/* 👆 그래프 끌기: 곡선 통째로(좌우) 또는 곡선 위의 점(위아래) */
+/* 👆 그래프 끌기: 곡선 통째로 또는 곡선 위의 점을 좌우로 */
 function setupDrag(c, ci) {
   const wrap = el('gwrap'), svg = () => wrap.querySelector('svg');
   const toSvg = e => { const r = svg().getBoundingClientRect(); return [(e.clientX - r.left) * GW / r.width, (e.clientY - r.top) * GH / r.height]; };
@@ -1755,7 +1792,12 @@ function setupDrag(c, ci) {
         if (!dragState) return; ev.preventDefault();
         const [x, y] = toSvg(ev);
         if (c.type === 'shift') dragState.v = Math.max(-25, Math.min(25, (x - dragState.sx) / pw * 100));
-        else dragState.v = Math.max(22, Math.min(78, (1 - (y - GT) / ph) * 100));
+        else {
+          const quantityDelta = (x - dragState.sx) / pw * 100;
+          const priceDelta = -(y - dragState.sy) / ph * 100;
+          const alongDelta = (priceDelta + (c.curve === 'D' ? -quantityDelta : quantityDelta)) / 2;
+          dragState.v = Math.max(22, Math.min(78, 50 + alongDelta));
+        }
         const s = svg(); s.outerHTML; wrap.innerHTML = c.type === 'shift' ? graphSVG({ c, mode: 'shift', off: dragState.v, hit: true }) : graphSVG({ c, mode: 'along', pt: dragState.v, hit: true });
       };
       const up = () => { window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up); window.removeEventListener('pointercancel', up); if (dragState) finish(dragState.v); };
