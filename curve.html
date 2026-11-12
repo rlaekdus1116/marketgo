@@ -1106,9 +1106,12 @@ function renderStudentReview(v) {
   const data = reviewDetails(v);
   if (!data) return;
   const {c,choices,correct,question} = data;
+  const own = v.set === 'mix' ? raceRec(pid,v.ci)?.[v.step] : stepRec(pid,v.ci,v.step,v.set)?.first;
+  const ownLabel = choices.find(([key]) => key === own)?.[1]?.replace(/<br>.*$/, '') || '';
   app.innerHTML = `<div class="s-wrap"><div class="stage"><span class="roundBadge">🧐 함께 다시 풀기 · ${v.ci+1}번 사례</span>
     ${caseRow(c,v.ci)}<div class="q">${question}</div>
     <div class="reviewChoices">${choices.map(([key,label])=>`<div class="reviewChoice ${v.reveal && key===correct?'right':''}">${v.reveal && key===correct?'✅ ':''}${label}</div>`).join('')}</div>
+    ${v.reveal && ownLabel ? `<div class="hl ${own===correct?'mint':'peach'}" style="font-size:19px">내 첫 답: ${ownLabel} · ${own===correct?'맞았어 🎯':'다시 고쳐 보자 💡'}</div>` : ''}
     <div class="graph" style="width:min(520px,100%)">${v.reveal?solvedGraph(c,v.step==='final'||v.step==='p'):graphSVG({c,mode:'base',showBoth:c.type==='shift'})}</div>
     ${v.reveal ? `<div class="hint">💡 ${chainOf(c).slice(1).join(' → ')}</div>` : '<div class="muted">칠판을 보며 함께 풀어 봐 👀</div>'}</div></div>`;
 }
