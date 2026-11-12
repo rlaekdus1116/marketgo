@@ -268,13 +268,13 @@ button,.btn,.speech,.rule,.title,.card{word-break:keep-all;overflow-wrap:break-w
 
 /* 교사용 사례 시작 화면: 사례와 그래프를 좌우로 배치해 스크롤 없이 보기 */
 .teacherIntroWrap{max-width:1480px;padding:10px 20px 16px}
-.teacherCaseIntro{height:calc(100dvh - 100px);min-height:520px;display:grid;grid-template-columns:minmax(0,1.08fr) minmax(380px,.92fr);grid-template-rows:auto minmax(0,1fr) auto;gap:8px 24px;align-content:center}
+.teacherCaseIntro{height:auto;min-height:0;display:grid;grid-template-columns:minmax(0,1.08fr) minmax(0,.92fr);grid-template-rows:auto auto auto;gap:12px 24px;align-content:start;align-items:center;justify-content:stretch;padding:10px 0 16px}
 .teacherCaseIntro>.roundBadge{grid-column:1/-1;grid-row:1;justify-self:center}
 .teacherCaseIntro>.case{grid-column:1;grid-row:2;max-width:none;width:100%;margin:0;padding:clamp(18px,2.2vw,30px)}
 .teacherCaseIntro>.graph{grid-column:2;grid-row:2;max-width:none!important;width:100%;margin:0;padding:12px}
-.teacherCaseIntro>#nextStep{grid-column:2;grid-row:3;justify-self:center}
-.teacherCaseIntro .graph svg{max-height:min(54vh,480px)}
-@media(max-width:860px){.teacherIntroWrap{padding:10px 12px 24px}.teacherCaseIntro{height:auto;min-height:0;display:flex;flex-direction:column;gap:12px}.teacherCaseIntro>.case,.teacherCaseIntro>.graph{width:100%}.teacherCaseIntro .case .ce{font-size:56px}.teacherCaseIntro .case .ct{font-size:24px}.teacherCaseIntro .graph svg{max-height:42vh}}
+.teacherCaseIntro>#nextStep{grid-column:1/-1;grid-row:3;justify-self:center}
+.teacherCaseIntro .graph svg{max-height:420px}
+@media(max-width:860px){.teacherIntroWrap{padding:10px 12px 24px}.teacherCaseIntro{display:flex;flex-direction:column;gap:12px}.teacherCaseIntro>.case,.teacherCaseIntro>.graph{width:100%}.teacherCaseIntro .case .ce{font-size:56px}.teacherCaseIntro .case .ct{font-size:24px}.teacherCaseIntro .graph svg{max-height:42vh}}
 
 /* 개념 도입 애니메이션 */
 .conceptPop{position:fixed;inset:0;z-index:10000;background:#3b263e99;display:grid;place-items:center;padding:18px}
