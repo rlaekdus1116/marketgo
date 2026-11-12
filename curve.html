@@ -664,9 +664,23 @@ function teacherHome() {
     <p class="muted" style="font-size:22px">곡선 위의 이동일까? 곡선 자체의 이동일까? 예측해 봐</p>
     <button class="btn big mint" id="newRoom">새 수업 준비하기 ✨</button>
     ${saved ? `<button class="btn sky" id="resume">이어서 하기 (방 ${esc(saved)})</button>` : ''}
+    <div class="card" style="width:min(440px,100%);margin-top:12px">
+      <div class="muted" style="font-size:17px;margin-bottom:8px">기존 방을 열면 위쪽에 📋 공급 사전점검 보관 버튼이 보여.</div>
+      <input class="field" id="teacherRoomCode" inputmode="numeric" maxlength="4" placeholder="기존 방 코드 4자리" style="width:170px">
+      <button class="btn peach" id="openTeacherRoom">기존 방 열기</button>
+    </div>
   </div></div>`;
   el('newRoom').onclick = newRoom;
   if (el('resume')) el('resume').onclick = () => location.href = `?t=1&room=${saved}`;
+  el('openTeacherRoom').onclick = async () => {
+    const c=el('teacherRoomCode').value.trim();
+    if (!/^\d{4}$/.test(c)) return toast('방 코드 4자리를 적어.');
+    try {
+      const snapshot = await get(A(c));
+      if (!snapshot.exists()) return toast('그 방을 찾지 못했어.');
+      location.href = `?t=1&room=${c}`;
+    } catch(e) { console.error(e); toast('방을 열지 못했어. 인터넷을 확인해.'); }
+  };
 }
 async function newRoom() {
   try {
