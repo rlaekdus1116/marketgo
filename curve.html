@@ -736,6 +736,7 @@ function topbar(st) {
     ${play && !isRace() ? `<span class="modeTg"><button class="btn sm mint ${st.mode === 'together' ? 'on' : ''}" id="mTog">👥 같이 하기</button><button class="btn sm sky ${st.mode === 'solo' ? 'on' : ''}" id="mSolo">🏃 각자 하기</button></span>` : ''}
     ${play && (st.mode === 'together' || isRace()) ? `<button class="btn sm ${st.auto ? 'mint on' : ''}" id="auto">⏩ 자동 진행 ${st.auto ? 'ON' : 'OFF'}</button>` : ''}
     <button class="btn sm lav" id="names">${st.showNames ? '👤 이름 ON' : '🙈 이름 OFF'}</button>
+    ${room.set !== 'mix' ? '<button class="btn sm peach" id="saveSupplyPrecheckTop">📋 공급 사전점검 보관</button>' : ''}
     ${play ? '<button class="btn sm lemon" id="toEnd">🏁 끝내기</button>' : ''}
     <button class="btn sm" id="backStep">◀ 이전 단계</button><a class="btn sm sky" href="hub.html?t=1">🏠 허브로</a><button class="btn sm" id="home">처음 화면</button></div>`;
 }
@@ -765,8 +766,8 @@ function supplyLessonPanel(st) {
     ${room.set === 'D' ? `<div class="muted" style="font-size:18px">먼저 공급편으로 간 학생 ${early.length}명 · 지금은 사전점검으로 기록할 수 있어.</div>
       ${early.length && st.showNames ? `<div class="chips" style="margin:10px 0">${early.map(id=>`<button class="btn sm sky" data-return-demand="${id}">↩ ${esc(nameOf(id))} 수요편으로</button>`).join('')}</div>`
         : early.length ? '<div class="muted">개별로 돌리려면 위에서 이름 표시를 켜.</div>' : ''}
-      ${early.length || hasPractice ? '<button class="btn peach" id="saveSupplyPrecheck">📋 오늘 공급 사전점검 보관 · 먼저 간 학생 대기로</button>' : ''}
       ` : ''}
+    ${hasPractice || early.length ? '<button class="btn peach" id="saveSupplyPrecheck">📋 오늘 공급 사전점검 보관 · 학생 대기로</button>' : ''}
     <button class="btn ${room.set==='D'?'mint':'peach'}" id="prepareSupplyLesson">▶ 공급편 1번부터 새로 준비</button>
     <div class="muted" style="font-size:16px;margin-top:8px">사전점검 기록과 수요편 결과는 남겨 둬. 새 공급편 답안과 점수는 처음부터 시작해.</div></div>
     ${supplyPrecheckArchivePanel(st)}`;
@@ -809,6 +810,7 @@ async function saveSupplyPrecheck(prepareNext) {
   const st = room.state || {}, oldAnswers = room.ansBySet?.S || {};
   const early = playerIds().filter(id=>room.players?.[id]?.set==='S');
   const hasAnswers = Object.values(oldAnswers).some(byCase=>Object.keys(byCase||{}).length);
+  if (!prepareNext && !hasAnswers && !early.length) { toast('아직 보관할 공급 사전점검 기록이 없어.'); return; }
   const askText = prepareNext
     ? '공급편을 1번부터 다시 시작할까?<br><small>먼저 푼 공급 답안은 사전점검으로 보관하고, 새 공급 점수는 0점부터 시작해. 수요 기록은 그대로야.</small>'
     : '오늘 공급편을 사전점검 기록으로 보관할까?<br><small>먼저 간 학생은 수요편으로 돌아가. 다음 시간에는 공급편 1번부터 다시 시작할 수 있어.</small>';
@@ -822,6 +824,12 @@ async function saveSupplyPrecheck(prepareNext) {
   early.forEach(id=>{ changes[`players/${id}/set`] = null; });
   changes['state/supplyRankVisible'] = false;
   changes['state/review'] = null;
+  if (!prepareNext && room.set === 'S') {
+    changes['casesBySet/S'] = casesOf('S');
+    changes.set = 'D'; changes.cases = casesOf('D');
+    changes.state = {...st,phase:'lobby',mode:'solo',ci:0,step:0,reveal:false,auto:false,supplyRankVisible:false,review:null};
+    delete changes['state/supplyRankVisible']; delete changes['state/review'];
+  }
   if (prepareNext) {
     const supplyCases = casesOf('S');
     changes['casesBySet/D'] = casesOf('D');
@@ -1271,6 +1279,7 @@ function wireTeacher(st, cs) {
     catch(e) { console.error(e); toast('저장하지 못했어.'); }
   });
   if (el('saveSupplyPrecheck')) el('saveSupplyPrecheck').onclick = () => saveSupplyPrecheck(false);
+  if (el('saveSupplyPrecheckTop')) el('saveSupplyPrecheckTop').onclick = () => saveSupplyPrecheck(false);
   if (el('prepareSupplyLesson')) el('prepareSupplyLesson').onclick = () => saveSupplyPrecheck(true);
   if (el('toggleSupplyRank')) el('toggleSupplyRank').onclick = () => S({supplyRankVisible:!st.supplyRankVisible});
   if (el('toggleDemandRank')) el('toggleDemandRank').onclick = () => S({demandRankVisible:!st.demandRankVisible});
