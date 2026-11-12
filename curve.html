@@ -22,6 +22,8 @@ body{font-family:'Jua','Apple SD Gothic Neo','Malgun Gothic','Noto Sans KR',sans
 button{font-family:inherit;color:inherit;cursor:pointer;border:none}
 .wrap{max-width:1100px;margin:0 auto;padding:18px 16px 40px}
 .s-wrap{max-width:760px;margin:0 auto;padding:14px 14px 40px}
+.studentFullscreenControls{padding-bottom:54px}
+.studentFullscreen{position:fixed;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));margin:0;z-index:10001}
 .muted{color:var(--sub)} .center{text-align:center}
 .card{background:var(--card);border:2px solid var(--line);border-radius:26px;padding:18px 20px;box-shadow:0 6px 0 var(--line);margin-bottom:16px}
 h3{margin:0 0 12px;font-size:22px;font-weight:normal}
@@ -413,6 +415,28 @@ const DEFAULT_CASES = PRESETS.D;
 
 const P = new URLSearchParams(location.search);
 const isTeacher = P.get('t') === '1';
+if (!isTeacher) {
+  const fullscreen = document.createElement('button');
+  fullscreen.type = 'button';
+  fullscreen.className = 'btn sm sky studentFullscreen';
+  const syncFullscreen = () => {
+    const active = Boolean(document.fullscreenElement);
+    fullscreen.textContent = active ? '전체화면 닫기' : '전체화면';
+    fullscreen.setAttribute('aria-pressed', String(active));
+  };
+  fullscreen.addEventListener('click', async () => {
+    try {
+      if (document.fullscreenElement) await document.exitFullscreen();
+      else await document.documentElement.requestFullscreen();
+    } catch {
+      toast('이 브라우저에서는 전체화면을 열 수 없어.');
+    }
+  });
+  document.addEventListener('fullscreenchange', syncFullscreen);
+  syncFullscreen();
+  document.body.classList.add('studentFullscreenControls');
+  document.body.append(fullscreen);
+}
 let code = P.get('room') || '';
 const app = document.getElementById('app');
 const el = id => document.getElementById(id);
@@ -741,7 +765,7 @@ function showConceptDemo() {
       <circle class="endDot" data-point="start" cx="112" cy="77" r="7"/><circle class="endDot" data-point="end" cx="270" cy="198" r="7"/>
       <circle class="travelDot" cx="112" cy="77" r="9"/>
       <text class="pointWord" data-point="start" x="98" y="56" text-anchor="end">처음</text><text class="pointWord" data-point="end" x="284" y="183" text-anchor="start">나중</text>
-      <text class="curveWord" x="315" y="72" fill="#e87525">공급곡선</text><text class="curveWord" x="315" y="228" fill="#1678c5">수요곡선</text>
+      <text class="curveWord supplyWord" x="315" y="72" fill="#e87525">공급곡선</text><text class="curveWord demandWord" x="315" y="228" fill="#1678c5">수요곡선</text>
       <g class="eqStart" style="display:none"><circle cx="195" cy="140" r="7" fill="#A3919C" stroke="#fff" stroke-width="3"/><text x="175" y="124" text-anchor="end">처음</text></g>
       <g class="eqEnd" style="display:none" opacity="0"><circle cx="195" cy="140" r="9" fill="#F5B48C" stroke="#fff" stroke-width="3"/><text x="208" y="123" text-anchor="start">나중</text></g>
     </svg></div>
@@ -749,6 +773,7 @@ function showConceptDemo() {
   </div>`;
   const tabs = [...box.querySelectorAll('[data-scene]')];
   const svg = box.querySelector('svg'), dot = svg.querySelector('.travelDot');
+  const quantityY = (demand, x) => demand ? 60 + (x - 90) * 160 / 210 : 220 - (x - 90) * 160 / 210;
   let raf = 0, started = 0, playing = false, scene = 'demandPrice';
   const directionMap = {
     demandPrice: { forward:['가격','↓','수요량','↑'], reverse:['가격','↑','수요량','↓'] },
@@ -764,6 +789,7 @@ function showConceptDemo() {
     box.querySelector('[data-quantity-dir]').textContent = d[3];
   }
   const reset = () => {
+    svg.querySelectorAll('.demandCurve, .supplyCurve, .curveWord').forEach(node => node.style.display = '');
     svg.querySelector('.demandCurve').setAttribute('transform','');
     svg.querySelector('.supplyCurve').setAttribute('transform','');
     svg.querySelector('.demandOld').style.display = 'none';
@@ -781,7 +807,7 @@ function showConceptDemo() {
     updateDirections(scene, t < 0.5);
     if (scene === 'demandPrice' || scene === 'supplyPrice') {
       const d = scene === 'demandPrice', x = 112 + 158 * wave;
-      const y = d ? 77 + 121 * wave : 198 - 121 * wave;
+      const y = quantityY(d, x);
       dot.setAttribute('cx',x); dot.setAttribute('cy',y);
     } else if (scene === 'demandShift' || scene === 'supplyShift') {
       const shift = 75 * wave;
@@ -805,9 +831,17 @@ function showConceptDemo() {
       startWord.setAttribute('text-anchor', d ? 'end' : 'start');
       endWord.setAttribute('x', '284'); endWord.setAttribute('y', d ? '183' : '56'); endWord.setAttribute('text-anchor', 'start');
       dot.style.display = '';
-      dot.setAttribute('cx','112'); dot.setAttribute('cy',d?'77':'198');
-      svg.querySelector('.demandCurve').style.opacity = d ? '1' : '.35';
-      svg.querySelector('.supplyCurve').style.opacity = d ? '.35' : '1';
+      const color = d ? '#398bd0' : '#e98543';
+      svg.querySelectorAll('.endDot').forEach(marker => {
+        const x = Number(marker.getAttribute('cx'));
+        marker.setAttribute('cy', quantityY(d, x));
+        marker.style.stroke = color;
+      });
+      dot.setAttribute('cx', '112');
+      dot.setAttribute('cy', quantityY(d, 112));
+      dot.style.fill = color;
+      svg.querySelectorAll('.demandCurve, .demandWord').forEach(node => node.style.display = d ? '' : 'none');
+      svg.querySelectorAll('.supplyCurve, .supplyWord').forEach(node => node.style.display = d ? 'none' : '');
     } else {
       box.querySelector('.demandOld').style.display = s === 'demandShift' ? '' : 'none';
       box.querySelector('.supplyOld').style.display = s === 'supplyShift' ? '' : 'none';
