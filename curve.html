@@ -1677,11 +1677,14 @@ function syncSocialDock(){
   if(!isTeacher&&!st.chatEnabled){if(box)box.remove();return;}
   if(!box){box=document.createElement('div');box.id=boxId;box.className='socialDock';document.body.appendChild(box);}
   const hadFocus=document.activeElement?.id==='socialInput';
+  const oldMessageList=box.querySelector('.socialMessages'), savedMessageScroll=oldMessageList?.scrollTop||0;
+  const wasAtMessageBottom=!oldMessageList||oldMessageList.scrollHeight-oldMessageList.scrollTop-oldMessageList.clientHeight<28;
+  const savedDockScroll=box.scrollTop;
   const oldMsgs=[...Object.values(socialData.messages||{}),...Object.values(legacySocialData.messages||{})];
   const sentRecords={...(legacySocialData.messagesSent||{}),...(socialData.messagesSent||{})};
   const sentMsgs=Object.entries(sentRecords).map(([from,m])=>({...m,from}));
   const msgs=[...oldMsgs,...sentMsgs.filter(x=>!oldMsgs.some(m=>m.from===x.from&&m.at===x.at))]
-    .sort((a,b)=>(a.at||0)-(b.at||0)).slice(-8);
+    .sort((a,b)=>(a.at||0)-(b.at||0));
   const alreadySent=!!sentRecords[pid]||oldMsgs.some(m=>m.from===pid);
   const messageHtml=msgs.map(m=>'<div class="socialMsg"><b>'+esc(m.name||'학생')+':</b> '+esc(m.text||'')+'</div>').join('');
   if(isTeacher){
@@ -1692,6 +1695,9 @@ function syncSocialDock(){
     box.innerHTML='<div class="socialHead"><b>💬 선생님에게 도움 요청</b></div><div class="socialMessages">'+messageHtml+'</div>'
       +(alreadySent?'<div class="hl sky" style="font-size:15px;margin:6px 0">✅ 메시지는 한 번만 보낼 수 있어. 선생님에게 보냈어.</div>':'<div class="socialCompose help"><input id="socialInput" maxlength="80" placeholder="선생님에게 도움의 메시지 보내기" value="'+esc(socialDraft)+'"><button class="btn sm mint" id="socialSend">선생님에게 도움의 메시지 보내기</button></div><div class="muted" style="font-size:13px;text-align:right">메시지는 한 번만 보낼 수 있어</div>');
   }
+  const newMessageList=box.querySelector('.socialMessages');
+  if(newMessageList)newMessageList.scrollTop=wasAtMessageBottom?newMessageList.scrollHeight:Math.min(savedMessageScroll,newMessageList.scrollHeight);
+  box.scrollTop=savedDockScroll;
   const input=el('socialInput');
   if(input){input.oninput=()=>socialDraft=input.value;input.onkeydown=e=>{if(e.key==='Enter')el('socialSend')?.click();};if(hadFocus){input.focus();input.setSelectionRange(input.value.length,input.value.length);}}
   if(el('socialSend'))el('socialSend').onclick=async()=>{
