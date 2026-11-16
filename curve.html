@@ -636,11 +636,12 @@ function solvedGraph(c, showPrice) {
 }
 
 /* ========== 입구 ========== */
-let room = null, pid = null, render = null, socialData = {}, socialDraft = '', lastTransitionKey = '', lastReactAt = 0, socialMessageSending = false;
+let room = null, pid = null, render = null, socialData = {}, legacySocialData = {}, socialDraft = '', lastTransitionKey = '', lastReactAt = 0, socialMessageSending = false;
 let lastTeacherPointer = 0;
 document.addEventListener('pointerdown',()=>{lastTeacherPointer=Date.now();},true);
 document.addEventListener('pointerup',()=>{lastTeacherPointer=Date.now();},true);
-function roomUiSignature(r){const {ansBySet,ans,race,...ui}=r||{};return JSON.stringify(ui);}
+function roomUiSignature(r){const {ansBySet,ans,race,social,...ui}=r||{};return JSON.stringify(ui);}
+function roomSocialSignature(r){const {social,...ui}=r||{};if(ui.players)ui.players=Object.fromEntries(Object.entries(ui.players).map(([id,p])=>{const {reaction,...rest}=p||{};return [id,rest];}));return JSON.stringify(ui);}
 function refreshLiveTeacherProgress(){const old=el('progressDashboard');if(!old||Date.now()-lastTeacherPointer<900)return;old.outerHTML=teacherProgressPanel(room.state||{});bindTeacherProgressButtons();}
 function start() {
   if (isTeacher && !code) return teacherHome();
@@ -662,12 +663,15 @@ function start() {
     const onl = AP(`players/${pid}/online`);
     onValue(ref(db, '.info/connected'), s => { if (s.val()) { onDisconnect(onl).set(false); set(onl, true); } });
   }
-  onValue(ref(db, `social/curve_${code}`), s => { socialData = s.val() || {}; syncSocialDock(); });
+  onValue(ref(db, `social/curve_${code}`), s => { legacySocialData = s.val() || {}; syncSocialDock(); }, ()=>{});
   onValue(A(), s => {
     const next=s.val();
+    const socialOnly=!!(room&&next&&roomSocialSignature(room)===roomSocialSignature(next));
     const answersOnly=isTeacher&&room&&next&&roomUiSignature(room)===roomUiSignature(next);
     room = next;
     if (!room) { app.innerHTML = `<div class="wrap stage"><div class="bigEmoji">😢</div><p class="rule">방을 찾을 수 없어</p></div>`; return; }
+    socialData = room.social || {};
+    if(socialOnly){syncSocialDock();return;}
     if(answersOnly){refreshLiveTeacherProgress();syncSocialDock();return;}
     trackTransition(); render(); syncSocialDock(); firstPass = false;
   }, e => { console.error(e); toast('데이터를 못 불러왔어 😢'); });
@@ -1652,7 +1656,7 @@ function renderStudentSetResults(st) {
   });
 }
 
-function socialPath(p){return ref(db,'social/curve_'+code+'/'+p);}
+function socialPath(p){return AP('social/'+p);}
 function transitionSound(){try{const C=window.AudioContext||window.webkitAudioContext;if(!C)return;const a=new C(),o=a.createOscillator(),g=a.createGain();o.type='sine';o.frequency.setValueAtTime(660,a.currentTime);o.frequency.exponentialRampToValueAtTime(990,a.currentTime+.11);g.gain.setValueAtTime(.08,a.currentTime);g.gain.exponentialRampToValueAtTime(.001,a.currentTime+.19);o.connect(g);g.connect(a.destination);o.start();o.stop(a.currentTime+.2);o.onended=()=>a.close();}catch(e){}}
 function trackTransition(){if(!room)return;const st=room.state||{},k=[room.set,st.phase,st.mode,st.ci,st.step,st.sub].join('|');if(lastTransitionKey&&k!==lastTransitionKey)transitionSound();lastTransitionKey=k;}
 function syncSocialDock(){
@@ -1660,10 +1664,10 @@ function syncSocialDock(){
   const st=room.state||{},boxId='curveSocialDock';let box=document.getElementById(boxId);
   if(!box){box=document.createElement('div');box.id=boxId;box.className='socialDock';document.body.appendChild(box);}
   const hadFocus=document.activeElement?.id==='socialInput';
-  const oldMsgs=Object.values(socialData.messages||{}), sentMsgs=Object.entries(socialData.messagesSent||{}).map(([from,m])=>({...m,from}));
+  const oldMsgs=[...Object.values(socialData.messages||{}),...Object.values(legacySocialData.messages||{})], sentRecords={...(legacySocialData.messagesSent||{}),...(socialData.messagesSent||{})}, sentMsgs=Object.entries(sentRecords).map(([from,m])=>({...m,from}));
   const msgs=[...oldMsgs,...sentMsgs.filter(x=>!oldMsgs.some(m=>m.from===x.from&&m.at===x.at))].sort((a,b)=>(a.at||0)-(b.at||0)).slice(-8);
-  const alreadySent=!!socialData.messagesSent?.[pid]||oldMsgs.some(m=>m.from===pid);
-  const recent=Object.entries(socialData.reactions||{}).map(([id,r])=>({id,...r})).filter(r=>Date.now()-(r.at||0)<15000);
+  const alreadySent=!!sentRecords[pid]||oldMsgs.some(m=>m.from===pid);
+  const reactionData={...(legacySocialData.reactions||{}),...(socialData.reactions||{})};Object.entries(room.players||{}).forEach(([id,p])=>{if(p.reaction)reactionData[id]=p.reaction;});const recent=Object.entries(reactionData).map(([id,r])=>({id,...r})).filter(r=>Date.now()-(r.at||0)<15000);
   const icons=['👏','💡','😵','❤️','❓'];
   const summary=icons.map(e=>{const n=recent.filter(x=>x.emoji===e).length;return n?e+' '+n:''}).filter(Boolean).join(' · ')||'아직 반응 없어';
   const messageHtml=msgs.map(m=>'<div class="socialMsg"><b>'+esc(m.name||'학생')+':</b> '+esc(m.text||'')+'</div>').join('');
@@ -1675,7 +1679,7 @@ function syncSocialDock(){
     const locked=Date.now()-lastReactAt<2000;const buttons=icons.map(e=>'<button data-react="'+e+'" aria-label="'+e+'" '+(locked?'disabled':'')+'>'+e+'</button>').join('');
     box.innerHTML='<div class="socialHead"><b>🙋 반응 보내기</b><span class="muted" style="font-size:13px">2초마다 한 번</span></div><div class="socialReact">'+buttons+'</div>'
       +(st.chatEnabled?'<div class="socialMessages">'+messageHtml+'</div>'+(alreadySent?'<div class="hl sky" style="font-size:15px;margin:6px 0">✅ 메시지는 한 번만 보낼 수 있어. 선생님에게 보냈어.</div>':'<div class="socialCompose help"><input id="socialInput" maxlength="80" placeholder="선생님에게 도움의 메시지 보내기" value="'+esc(socialDraft)+'"><button class="btn sm mint" id="socialSend">선생님에게 도움의 메시지 보내기</button></div><div class="muted" style="font-size:13px;text-align:right">메시지는 한 번만 보낼 수 있어</div>'):'');
-    document.querySelectorAll('[data-react]').forEach(b=>b.onclick=async()=>{const t=Date.now();if(t-lastReactAt<2000)return;lastReactAt=t;syncSocialDock();await update(socialPath('reactions/'+pid),{emoji:b.dataset.react,at:t,name:nameOf(pid)});setTimeout(syncSocialDock,2000);});
+    document.querySelectorAll('[data-react]').forEach(b=>b.onclick=async()=>{const t=Date.now();if(t-lastReactAt<2000)return;lastReactAt=t;syncSocialDock();try{await update(AP('players/'+pid),{reaction:{emoji:b.dataset.react,at:t,name:nameOf(pid)}});}catch(e){console.error(e);toast('반응을 보내지 못했어. 연결을 확인해');}setTimeout(syncSocialDock,2000);});
   }
   const input=el('socialInput');if(input){input.oninput=()=>socialDraft=input.value;input.onkeydown=e=>{if(e.key==='Enter')el('socialSend')?.click();};if(hadFocus){input.focus();input.setSelectionRange(input.value.length,input.value.length);}}
   if(el('socialSend'))el('socialSend').onclick=async()=>{const text=(el('socialInput')?.value||'').trim().slice(0,80);if(!text||(!isTeacher&&!st.chatEnabled)||socialMessageSending)return;if(isTeacher){socialDraft='';const key=Date.now().toString(36)+Math.random().toString(36).slice(2,6);await update(socialPath('messages/'+key),{name:'교사',text,at:Date.now(),from:'teacher'});return;}if(alreadySent)return toast('메시지는 한 번만 보낼 수 있어');socialMessageSending=true;el('socialSend').disabled=true;const at=Date.now();try{const result=await runTransaction(socialPath('messagesSent/'+pid),current=>current==null?{name:nameOf(pid),text,at,from:pid}:undefined);if(!result.committed){toast('메시지는 한 번만 보낼 수 있어');}else{socialDraft='';toast('선생님에게 보냈어');}}catch(e){console.error(e);toast('메시지를 보내지 못했어. 연결을 확인해');}finally{socialMessageSending=false;syncSocialDock();}};
