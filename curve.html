@@ -1762,7 +1762,7 @@ function renderStudent() {
     if (cooldownUntil > Date.now()) scheduleCooldown(cooldownUntil);
     if (justWrong) { const w = document.querySelector(`.choice[data-v="${rec.first}"]`); if (w && !rec.done) w.classList.add('wrong'); }
   }
-  if (el('goOn')) el('goOn').onclick = () => { hold = null; closeSummary(); sKey = ''; renderStudent(); };
+  if (el('goOn')) el('goOn').onclick = () => { transitionSound(); hold = null; closeSummary(); sKey = ''; renderStudent(); };
   // 마지막 단계 맞힘 → 정리 팝업
   if (k === steps.length && rec && rec.done && !popClosed.has(`s${ci}`)) {
     const solo = st.mode === 'solo', nextLab = el('goOn') ? el('goOn').textContent : '';
