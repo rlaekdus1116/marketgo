@@ -642,6 +642,18 @@ document.addEventListener('pointerdown',()=>{lastTeacherPointer=Date.now();},tru
 document.addEventListener('pointerup',()=>{lastTeacherPointer=Date.now();},true);
 function roomUiSignature(r){const {ansBySet,ans,race,social,...ui}=r||{};return JSON.stringify(ui);}
 function roomSocialSignature(r){const {social,...ui}=r||{};if(ui.players)ui.players=Object.fromEntries(Object.entries(ui.players).map(([id,p])=>{const {reaction,...rest}=p||{};return [id,rest];}));return JSON.stringify(ui);}
+function refreshTeacherAnswerCounts(){
+  const st=room?.state||{};
+  if(!isTeacher||st.phase!=='play'||st.mode!=='together'||!(st.step||0))return;
+  const ci=st.ci||0, c0=casesOf()[ci];if(!c0)return;
+  const stp=stepsOf(c0)[(st.step||0)-1];if(!stp)return;
+  const ids=playerIds(),opts=optionsOf(c0,stp),right=answerOf(c0,stp),counts={};opts.forEach(([v])=>counts[v]=0);
+  let answered=0,correct=0;
+  ids.forEach(id=>{const r=stepRec(id,ci,stp);if(r){answered++;counts[r.first]=(counts[r.first]||0)+1;if(r.ok)correct++;}});
+  const stats=el('teacherAnswerStats');
+  if(stats)stats.textContent='✍️ 답한 학생 '+answered+' / '+ids.length+'명'+(st.reveal?' · 맞힌 학생 '+correct+'명':'');
+  if(st.reveal){const max=Math.max(1,answered),dist=app.querySelector('.dist');if(dist)dist.innerHTML=opts.map(([v,lab])=>'<div class="drow '+(v===right?'right':'')+'"><span>'+(v===right?'✅ ':'')+lab.replace(/<br>.*$/,'')+'</span><div class="dbar"><i style="width:'+(counts[v]/max*100)+'%"></i></div><b>'+counts[v]+'명</b></div>').join('');}
+}
 function refreshLiveTeacherProgress(){const old=el('progressDashboard');if(!old||Date.now()-lastTeacherPointer<900)return;old.outerHTML=teacherProgressPanel(room.state||{});bindTeacherProgressButtons();}
 function start() {
   if (isTeacher && !code) return teacherHome();
@@ -672,7 +684,7 @@ function start() {
     if (!room) { app.innerHTML = `<div class="wrap stage"><div class="bigEmoji">😢</div><p class="rule">방을 찾을 수 없어</p></div>`; return; }
     socialData = room.social || {};
     if(socialOnly){syncSocialDock();return;}
-    if(answersOnly){refreshLiveTeacherProgress();syncSocialDock();return;}
+    if(answersOnly){refreshLiveTeacherProgress();refreshTeacherAnswerCounts();syncSocialDock();return;}
     trackTransition(); render(); syncSocialDock(); firstPass = false;
   }, e => { console.error(e); toast('데이터를 못 불러왔어 😢'); });
 }
@@ -1136,7 +1148,7 @@ function renderTeacher() {
           ${caseRow(c, ci)}
           <div class="q"><span class="muted" style="font-size:.75em">${k}/${steps.length}</span> ${questionOf(c, stp)}</div>
           <div class="dist">${opts.map(([v, lab]) => `<div class="drow ${st.reveal && v === right ? 'right' : ''}"><span>${st.reveal && v === right ? '✅ ' : ''}${lab.replace(/<br>.*$/, '')}</span><div class="dbar"><i style="width:${st.reveal ? counts[v] / max * 100 : 0}%"></i></div><b>${st.reveal ? counts[v] + '명' : '?'}</b></div>`).join('')}</div>
-          <div class="muted" style="font-size:19px">✍️ 답한 학생 ${answered} / ${ids.length}명${st.reveal ? ` · 맞힌 학생 ${ids.filter(id => (stepRec(id, ci, stp) || {}).ok).length}명` : ''}</div>
+          <div id="teacherAnswerStats" class="muted" style="font-size:19px">✍️ 답한 학생 ${answered} / ${ids.length}명${st.reveal ? ` · 맞힌 학생 ${ids.filter(id => (stepRec(id, ci, stp) || {}).ok).length}명` : ''}</div>
           <div>${!st.reveal ? '<button class="btn big lemon" id="reveal">✅ 정답 공개 <span class="autoCd"></span></button>' : last ? (ci + 1 < cs.length ? '<button class="btn big mint" id="nextCase">🚨 다음 사례 <span class="autoCd"></span></button>' : '<button class="btn big mint" id="toEnd2">🏁 끝! 결과 보기</button>') : '<button class="btn big mint" id="nextStep">▶ 다음 단계 <span class="autoCd"></span></button>'}
             ${ci >= 1 && ci + 1 < cs.length ? `<button class="btn big sky" id="toSolo">🏃 이제 각자 풀기</button>` : ''}</div>
         </div>
