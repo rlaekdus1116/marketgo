@@ -331,6 +331,8 @@ button,.btn,.speech,.rule,.title,.card{word-break:keep-all;overflow-wrap:break-w
 .conceptGraph .supplyCurve{stroke:#e98543;stroke-width:5;fill:none;stroke-linecap:round}
 .conceptGraph .demandOld,.conceptGraph .supplyOld{fill:none;stroke-width:4;stroke-dasharray:8 7;opacity:.35}
 .conceptGraph .demandOld{stroke:#a9cce8}.conceptGraph .supplyOld{stroke:#f5b48c}
+
+.socialDock{animation:socialUp .22s ease-out;position:fixed;right:12px;bottom:12px;z-index:9999;width:min(360px,calc(100vw - 24px));background:#fff;border:2px solid var(--line);border-radius:20px;box-shadow:0 5px 18px #5b4b5730;padding:10px}.socialHead{display:flex;justify-content:space-between;align-items:center;gap:6px}.socialReact{display:flex;gap:5px;justify-content:flex-end;margin:6px 0}.socialReact button{background:var(--sky);border-radius:14px;font-size:23px;padding:5px 8px}.socialMessages{max-height:150px;overflow:auto;display:grid;gap:4px;margin:6px 0}.socialMsg{background:var(--bg);border-radius:10px;padding:5px 8px;font-size:15px}.socialCompose{display:flex;gap:5px}.socialCompose input{min-width:0;flex:1;font:inherit;border:2px solid var(--line);border-radius:10px;padding:7px}@keyframes socialUp{from{transform:translateY(18px);opacity:0}to{transform:translateY(0);opacity:1}}@media(max-width:700px){.socialDock{right:6px;bottom:calc(6px + env(safe-area-inset-bottom));width:min(320px,calc(100vw - 12px))}}
 </style>
 <style>
 [data-cooldown]{display:block;margin-top:10px;color:#b00020;font-size:22px}
@@ -634,7 +636,12 @@ function solvedGraph(c, showPrice) {
 }
 
 /* ========== 입구 ========== */
-let room = null, pid = null, render = null;
+let room = null, pid = null, render = null, socialData = {}, socialDraft = '', lastTransitionKey = '', lastReactAt = 0;
+let lastTeacherPointer = 0;
+document.addEventListener('pointerdown',()=>{lastTeacherPointer=Date.now();},true);
+document.addEventListener('pointerup',()=>{lastTeacherPointer=Date.now();},true);
+function roomUiSignature(r){const {ansBySet,ans,race,...ui}=r||{};return JSON.stringify(ui);}
+function refreshLiveTeacherProgress(){const old=el('progressDashboard');if(!old||Date.now()-lastTeacherPointer<900)return;old.outerHTML=teacherProgressPanel(room.state||{});bindTeacherProgressButtons();}
 function start() {
   if (isTeacher && !code) return teacherHome();
   if (!isTeacher) {
@@ -655,10 +662,14 @@ function start() {
     const onl = AP(`players/${pid}/online`);
     onValue(ref(db, '.info/connected'), s => { if (s.val()) { onDisconnect(onl).set(false); set(onl, true); } });
   }
+  onValue(ref(db, `social/curve_${code}`), s => { socialData = s.val() || {}; syncSocialDock(); });
   onValue(A(), s => {
-    room = s.val();
+    const next=s.val();
+    const answersOnly=isTeacher&&room&&next&&roomUiSignature(room)===roomUiSignature(next);
+    room = next;
     if (!room) { app.innerHTML = `<div class="wrap stage"><div class="bigEmoji">😢</div><p class="rule">방을 찾을 수 없어</p></div>`; return; }
-    render(); firstPass = false;
+    if(answersOnly){refreshLiveTeacherProgress();syncSocialDock();return;}
+    trackTransition(); render(); syncSocialDock(); firstPass = false;
   }, e => { console.error(e); toast('데이터를 못 불러왔어 😢'); });
 }
 function teacherHome() {
@@ -706,13 +717,14 @@ function studentForm(prefill) {
     <div class="title">시장 <span>예측하기</span></div>
     <div class="card" style="width:min(460px,100%);display:grid;gap:4px">
       <input class="field" id="jCode" inputmode="numeric" maxlength="4" placeholder="입장 코드 4자리" value="${esc(prefill)}">
-${getStudentName() ? `<div class="hl mint">🙂 ${esc(getStudentName())} 이름 저장 완료</div>` : `<input class="field" id="jName" maxlength="8" placeholder="내 이름">`}
+${getStudentName() ? `<div class="hl mint">🙂 ${esc(getStudentName())} 이름 저장 완료</div>` : `<input class="field" id="jName" maxlength="15" placeholder="내 이름 (15자 이내)">`}
+      <select class="field" id="jEmoji" style="max-width:110px" aria-label="이모티콘">${["🙂","😎","🐰","🐻","🦊","🐼","🐸","🐯","🐱","🐶","🌟","🍀"].map(x=>`<option value="${x}" ${localStorage.getItem("curve_emoji")===x?"selected":""}>${x}</option>`).join("")}</select>
       <button class="btn big mint" id="join">입장하기 🚪</button>
     </div>
   </div></div>`;
-  el('join').onclick = () => join(el('jCode').value.trim(), getStudentName() || (el('jName')?.value || '').trim());
+  el('join').onclick = () => join(el('jCode').value.trim(), (getStudentName() || (el('jName')?.value || '').trim()).slice(0,15), el('jEmoji')?.value || localStorage.getItem('curve_emoji') || '🙂');
 }
-async function join(c, name) {
+async function join(c, name, emoji='🙂') {
   if (!requireStudentRoom(c))return;
   if (!/^\d{4}$/.test(c)) return toast('입장 코드 4자리를 적어');
   if (!name) return toast('이름을 적어');
@@ -726,8 +738,8 @@ async function join(c, name) {
     id = hit ? hit[0] : Math.random().toString(36).slice(2, 10);
     localStorage.setItem('curve_pid_' + c, id);
   }
-  await update(ref(db, `rooms/curve_${c}/players/${id}`), { name, joinedAt: Date.now() });
-  saveStudentName(name); localStorage.setItem('curve_name', name); localStorage.setItem('curve_last_room', c);
+  await update(ref(db, `rooms/curve_${c}/players/${id}`), { name: name.slice(0,15), emoji, joinedAt: Date.now() });
+  localStorage.setItem('curve_emoji',emoji); saveStudentName(name.slice(0,15)); localStorage.setItem('curve_name', name); localStorage.setItem('curve_last_room', c);
   location.href = `?room=${c}`;
 }
 
@@ -746,7 +758,7 @@ function scoreOf(id, skip, set = activeSet()) {
    👩‍🏫 선생님 화면
    ========================================================= */
 let editT = null;
-const nameOf = id => ((room.players || {})[id] || {}).name || '?';
+const nameOf = id => { const p=(room.players||{})[id]||{}; return (p.emoji?p.emoji+' ':'')+(p.name||'?'); };
 const onlineIds = () => Object.entries(room.players || {}).filter(([, p]) => p.online === true).map(([id]) => id);
 const playerIds = () => Object.keys(room.players || {});
 
@@ -1027,6 +1039,30 @@ function showConceptDemo() {
   box.onclick = e => { if(e.target===box){playing=false;cancelAnimationFrame(raf);box.remove();} };
   document.body.appendChild(box); selectScene('demandPrice');
 }
+function teacherProgressPanel(st) {
+  const assigned = id => (room.players||{})[id]?.set || room.set || 'D';
+  const renderSet = set => {
+    const cs=casesOf(set), from=(set==='D'&&room.set==='D'?(st.soloFrom||0):0), total=Math.max(0,cs.length-from);
+    const ids=playerIds().filter(id=>assigned(id)===set);
+    const rows=ids.map(id=>({id,n:cs.filter((c,ci)=>ci>=from&&caseDone(id,ci,c,set)).length}));
+    const complete=rows.filter(r=>r.n>=total);
+    const cards=rows.map(r=>{
+      const done=r.n>=total, pct=total?Math.min(100,r.n/total*100):0;
+      let action='';
+      if(done&&set==='D') action='<button class="btn sm peach" data-send-supply="'+esc(r.id)+'">🏭 공급편으로 보내기</button>';
+      if(done&&set==='S') action='<button class="btn sm mint" data-finish-supply="'+esc(r.id)+'">✅ 결과 화면 보내기</button>';
+      return '<div class="pp"><div style="display:flex;justify-content:space-between;gap:8px"><b>'+(st.showNames?esc(nameOf(r.id)):'👤 학생')+'</b><span>'+(done?'✅':'✍️')+'</span></div><div class="bar"><i style="width:'+pct+'%"></i></div><div style="display:flex;align-items:center;justify-content:space-between;gap:5px;flex-wrap:wrap"><span class="muted" style="font-size:14px">'+r.n+' / '+total+'</span>'+action+'</div></div>';
+    }).join('')||'<div class="muted">아직 입장한 학생이 없어</div>';
+    let extra='';
+    if(set==='S') {
+      extra='<button class="btn big mint" id="releaseSupplyDone" '+(complete.length?'':'disabled')+'>🏁 공급편 끝낸 학생만 결과 화면으로 보내기 · '+complete.length+'명</button>';
+      const released=rows.filter(r=>(room.players||{})[r.id]?.releaseResults);
+      if(released.length) extra+='<div class="hl sky">결과 화면에 있는 학생 '+released.length+'명 <button class="btn sm sky" id="returnSupplyDone">↩ 문제 화면으로 돌리기</button></div>';
+    }
+    return '<div class="card"><h3>'+(set==='D'?'🛒 수요편':'🏭 공급편')+' 진행 <span class="muted" style="font-size:16px">완료 '+complete.length+'/'+ids.length+'명 · 이 편 사례만 계산</span></h3><div class="prog">'+cards+'</div>'+extra+'</div>';
+  };
+  return '<div id="progressDashboard"><div class="center" style="margin-bottom:10px"><span class="roundBadge">🏃 각자 풀이 · 편별 진행률</span></div>'+renderSet('D')+renderSet('S')+'</div>';
+}
 function renderTeacher() {
   const st = room.state || {}, cs = casesOf();
   if (lastResultRoomSet !== room.set) { teacherResultSet = null; lastResultRoomSet = room.set; }
@@ -1108,26 +1144,12 @@ function renderTeacher() {
     }
   }
   else if (st.phase === 'play' && st.mode === 'solo') {
-    const ids = playerIds().filter(id => !((room.players || {})[id] || {}).set || ((room.players || {})[id] || {}).set === 'D'), from = st.soloFrom || 0, total = cs.length - from;
-    const rows = ids.map(id => { const n = cs.filter((c, ci) => ci >= from && caseDone(id, ci, c, 'D')).length; return { id, n }; }).sort((a, b) => nameOf(a.id).localeCompare(nameOf(b.id)));
-    const supplyRows = playerIds().filter(id => (room.players || {})[id]?.set === 'S' || (room.set === 'S' && !(room.players || {})[id]?.set)).map(id => ({id,n:casesOf('S').filter((c,ci)=>caseDone(id,ci,c,'S')).length}));
-    const ranks = supplyRankRows();
-    const allDone = rows.filter(r => r.n >= total).length;
-    const finished = rows.filter(r => r.n >= total).map(r => st.showNames ? esc(nameOf(r.id)) : '👤').join(' · ') || '아직 없어';
-    const pending = rows.filter(r => r.n < total).map(r => st.showNames ? esc(nameOf(r.id)) : '👤').join(' · ') || '모두 끝냈어';
-    body = `<div class="center" style="margin-bottom:10px"><span class="roundBadge">🏃 각자 푸는 중 · 사례 ${from + 1}~${cs.length}</span></div>
-      <div class="card"><h3>📈 진행 상황 <span class="muted" style="font-size:16px">다 푼 학생 ${allDone} / ${ids.length}명</span></h3>
-        <div class="muted" style="font-size:15px;margin-bottom:6px">👆 이름을 누르면 그 학생이 지금 푸는 화면을 볼 수 있어</div>
-        <div class="prog">${rows.map(r => `<div class="pp" data-peek="${r.id}" style="cursor:pointer">${st.showNames ? esc(nameOf(r.id)) : '📈'} ${r.n >= total ? '🎉' : ''}<div class="bar"><i style="width:${total ? r.n / total * 100 : 0}%"></i></div><span class="muted" style="font-size:14px">${r.n} / ${total}</span></div>`).join('')}</div></div>
-      ${room.set === 'D' ? `<div class="card"><h3>✅ 수요편 완료 확인</h3>
-        <div style="font-size:19px;margin-bottom:8px"><b>끝낸 학생 (${allDone}/${ids.length})</b><br>${st.showNames ? finished : '이름 표시를 켜면 누가 끝냈는지 보여.'}</div>
-        <div class="muted" style="font-size:17px;margin-bottom:12px"><b>아직 푸는 중:</b> ${st.showNames ? pending : '이름 표시를 켜면 확인할 수 있어.'}</div>
-        <button class="btn big peach" id="goSupply">🏭 공급편으로 넘어가기 · ${allDone}/${ids.length}명 완료</button></div>` : ''}
-      ${supplyLessonPanel(st)}
-      ${teacherResultTabs()}
-      ${teacherSetRankPanel(selectedTeacherResultSet(), st)}
-      ${reviewListPanel(selectedTeacherResultSet())}
-      ${heatTable(casesOf(selectedTeacherResultSet()), 0, selectedTeacherResultSet())}`;
+    body = teacherProgressPanel(st)
+      + supplyLessonPanel(st)
+      + teacherResultTabs()
+      + teacherSetRankPanel(selectedTeacherResultSet(), st)
+      + reviewListPanel(selectedTeacherResultSet())
+      + heatTable(casesOf(selectedTeacherResultSet()), 0, selectedTeacherResultSet());
   }
   else if (st.phase === 'end') {
     hubLog('curve', code, ['이름', '편', '처음에 맞힌 단계', '푼 단계', '첫 시도 정답률(%)'], playerIds().map(id => { const sc = scoreOf(id); return [nameOf(id), SET_NAME[room.set || 'D'].replace(/^\S+ /, ''), sc.ok, sc.tot, sc.tot ? Math.round(sc.ok / sc.tot * 100) : '']; }), SET_NAME[room.set || 'D']);
@@ -1157,6 +1179,7 @@ function renderTeacher() {
     body += supplyLessonPanel(st);
   }
   if (st.review && (st.phase === 'end' || (st.phase === 'play' && st.mode === 'solo'))) { body = reviewPanel(st.review); tSumm = null; }
+  if (st.classReview) { body = reviewPanel({...st.classReview, shared:true}); tSumm = null; }
   if (!body) body = `<div class="stage"><div class="rule">잠깐만… 🔄</div></div>`;
   const introLayout = isTeacher && st.phase === 'play' && st.mode === 'together' && !(st.step || 0) ? ' teacherIntroWrap' : '';
   app.innerHTML = `<div class="wrap${introLayout}">${topbar(st)}${body}</div>`;
@@ -1173,9 +1196,13 @@ function renderTeacher() {
   if (el('openSum')) el('openSum').onclick = () => { popClosed.delete(`t${st.ci || 0}`); renderTeacher(); };
   document.querySelectorAll('[data-result-set]').forEach(b => b.onclick = () => { teacherResultSet = b.dataset.resultSet; renderTeacher(); });
   document.querySelectorAll('[data-review]').forEach(b => b.onclick = () => openReview(b.dataset.reviewSet || room.set || 'D', Number(b.dataset.reviewCi), b.dataset.reviewStep));
-  if (el('reviewBack')) el('reviewBack').onclick = () => update(AP('state'), { review: null });
-  if (el('reviewReveal')) el('reviewReveal').onclick = () => update(AP('state/review'), { reveal: true });
-  if (el('reviewHide')) el('reviewHide').onclick = () => update(AP('state/review'), { reveal: false });
+  if (el('reviewBack')) el('reviewBack').onclick = () => st.classReview ? S({classReview:null}) : S({review:null});
+  if (el('reviewReveal')) el('reviewReveal').onclick = () => set(AP(st.classReview?'classReview/reveal':'review/reveal'), true);
+  if (el('reviewHide')) el('reviewHide').onclick = () => set(AP(st.classReview?'classReview/reveal':'review/reveal'), false);
+  if (el('shareReview')) el('shareReview').onclick = () => st.classReview ? S({classReview:null,review:null}) : S({classReview:{...st.review,reveal:false},review:null});
+  document.querySelectorAll('[data-finish-supply]').forEach(b=>b.onclick=async()=>{const id=b.dataset.finishSupply;if(!await ask(nameOf(id)+' 학생을 결과 화면으로 보낼까?'))return;await update(AP('players/'+id),{releaseResults:true});});
+  if(el('releaseSupplyDone'))el('releaseSupplyDone').onclick=async()=>{const done=playerIds().filter(id=>(((room.players||{})[id]?.set==='S')||(room.set==='S'&&!(room.players||{})[id]?.set))&&casesOf('S').every((c,ci)=>caseDone(id,ci,c,'S')));if(!done.length)return;if(!await ask('공급편을 끝낸 '+done.length+'명만 결과 화면으로 보낼까?'))return;const patch={};done.forEach(id=>patch['players/'+id+'/releaseResults']=true);await update(A(),patch);};
+  if(el('returnSupplyDone'))el('returnSupplyDone').onclick=async()=>{const patch={};playerIds().filter(id=>(room.players||{})[id]?.releaseResults).forEach(id=>patch['players/'+id+'/releaseResults']=null);if(Object.keys(patch).length)await update(A(),patch);};
 }
 // 사례 × 단계별 "처음에 맞힌 비율" — 어디서 많이 헷갈렸는지 한눈에
 function heatTable(cs, from, set = room.set || 'D') {
@@ -1263,6 +1290,7 @@ function reviewPanel(v) {
   return `<div class="card"><button class="btn sm sky" id="reviewBack">← 오답 목록으로</button>
     <h3>🧐 ${v.ci+1}번 사례 · ${reviewStepName(v.step)}${stat}</h3>
     <div class="muted" style="font-size:17px;margin-bottom:10px">학생 화면에도 같은 사례가 보여. 먼저 함께 생각하고 정답을 공개해.</div>
+    <button class="btn big sky" id="shareReview">${v.shared?'↩ 전체 화면 닫기':'📺 이 문제를 전체 화면에 띄우기'}</button>
     <div class="play2"><div class="side">${caseRow(c,v.ci)}
       <div class="q">${question}</div>
       <div class="reviewChoices">${choices.map(([key,label])=>`<div class="reviewChoice ${v.reveal && key===correct?'right':''}">${v.reveal && key===correct?'✅ ':''}${label} ${v.reveal?`<small> · 첫 답 ${counts[key]}명</small>`:''}</div>`).join('')}</div>
@@ -1282,6 +1310,13 @@ function renderStudentReview(v) {
     ${v.reveal && ownLabel ? `<div class="hl ${own===correct?'mint':'peach'}" style="font-size:19px">내 첫 답: ${ownLabel} · ${own===correct?'맞았어 🎯':'다시 고쳐 보자 💡'}</div>` : ''}
     <div class="graph" style="width:min(520px,100%)">${v.reveal?solvedGraph(c,v.step==='final'||v.step==='p'):graphSVG({c,mode:'base',showBoth:c.type==='shift'})}</div>
     ${v.reveal ? `<div class="hint">💡 ${chainOf(c).slice(1).join(' → ')}</div>` : '<div class="muted">칠판을 보며 함께 풀어 봐 👀</div>'}</div></div>`;
+}
+
+function bindTeacherProgressButtons(){
+  document.querySelectorAll('[data-send-supply]').forEach(b=>b.onclick=async()=>{const id=b.dataset.sendSupply;if(!await ask(esc(nameOf(id))+'만 공급편으로 보낼까?','🏭 보내기'))return;await update(AP('players/'+id),{set:'S'});await update(AP('state'),{supplyRankVisible:false});toast(nameOf(id)+' 학생을 공급편으로 보냈어');});
+  document.querySelectorAll('[data-finish-supply]').forEach(b=>b.onclick=async()=>{const id=b.dataset.finishSupply;if(!await ask(nameOf(id)+' 학생을 결과 화면으로 보낼까?'))return;await update(AP('players/'+id),{releaseResults:true});});
+  if(el('releaseSupplyDone'))el('releaseSupplyDone').onclick=async()=>{const done=playerIds().filter(id=>(((room.players||{})[id]?.set==='S')||(room.set==='S'&&!(room.players||{})[id]?.set))&&casesOf('S').every((c,ci)=>caseDone(id,ci,c,'S')));if(!done.length)return;if(!await ask('공급편을 끝낸 '+done.length+'명만 결과 화면으로 보낼까?'))return;const patch={};done.forEach(id=>patch['players/'+id+'/releaseResults']=true);await update(A(),patch);};
+  if(el('returnSupplyDone'))el('returnSupplyDone').onclick=async()=>{const patch={};playerIds().filter(id=>(room.players||{})[id]?.releaseResults).forEach(id=>patch['players/'+id+'/releaseResults']=null);if(Object.keys(patch).length)await update(A(),patch);};
 }
 
 function wireTeacher(st, cs) {
@@ -1603,23 +1638,52 @@ function renderStudentSetResults(st) {
       <button class="btn ${selected==='D'?'mint':'sky'}" data-student-result="D" aria-pressed="${selected==='D'}">🛒 수요편 · ${d.mine?.points||0}점</button>
       <button class="btn ${selected==='S'?'mint':'peach'}" data-student-result="S" aria-pressed="${selected==='S'}">🏭 공급편 · ${s.mine?.points||0}점</button>
     </div>
-    <div class="card" style="width:min(680px,100%);text-align:left"><h3>${title} 결과</h3>
+    <div class="card" style="width:min(680px,100%);text-align:left"><h3>${title} 결과</h3>${(room.players||{})[pid]?.releaseResults?'<button class="btn sm sky" id="returnToQuestions">↩ 문제 화면으로 돌아가기</button>':''}
       <div class="rule">점수 <b>${current.mine?.points||0}점</b> · 완료 ${current.mine?.done||0}/${current.total}단계</div>
       <div class="muted" style="font-size:19px">처음에 맞힌 단계 ${current.first.ok}/${current.first.tot}개</div>
       ${released ? `<div class="hl mint" style="margin-top:12px;font-size:23px">내 순위 ${rank>=0?rank+1:'—'}위</div>
         <div class="rankTable">${current.rows.map((r,n)=>`<div class="drow"><span>${n+1}위</span><b>${esc(nameOf(r.id))}</b><span>${r.points}점</span><small>완료 ${r.done}/${r.total}단계</small></div>`).join('')}</div>`
       : '<div class="muted" style="margin-top:10px">전체 순위는 선생님이 공개하면 보여.</div>'}
     </div></div></div>`;
+  if(el('returnToQuestions'))el('returnToQuestions').onclick=()=>update(AP('players/'+pid),{releaseResults:null});
   document.querySelectorAll('[data-student-result]').forEach(b => b.onclick = () => {
     studentResultSet = b.dataset.studentResult;
     renderStudentSetResults(st);
   });
 }
 
+function socialPath(p){return ref(db,'social/curve_'+code+'/'+p);}
+function transitionSound(){try{const C=window.AudioContext||window.webkitAudioContext;if(!C)return;const a=new C(),o=a.createOscillator(),g=a.createGain();o.type='sine';o.frequency.setValueAtTime(660,a.currentTime);o.frequency.exponentialRampToValueAtTime(990,a.currentTime+.11);g.gain.setValueAtTime(.08,a.currentTime);g.gain.exponentialRampToValueAtTime(.001,a.currentTime+.19);o.connect(g);g.connect(a.destination);o.start();o.stop(a.currentTime+.2);o.onended=()=>a.close();}catch(e){}}
+function trackTransition(){if(!room)return;const st=room.state||{},k=[room.set,st.phase,st.mode,st.ci,st.step,st.sub].join('|');if(lastTransitionKey&&k!==lastTransitionKey)transitionSound();lastTransitionKey=k;}
+function syncSocialDock(){
+  if(!room||!code||(!isTeacher&&!pid))return;
+  const st=room.state||{},boxId='curveSocialDock';let box=document.getElementById(boxId);
+  if(!box){box=document.createElement('div');box.id=boxId;box.className='socialDock';document.body.appendChild(box);}
+  const hadFocus=document.activeElement?.id==='socialInput';
+  const msgs=Object.values(socialData.messages||{}).sort((a,b)=>(a.at||0)-(b.at||0)).slice(-8);
+  const recent=Object.entries(socialData.reactions||{}).map(([id,r])=>({id,...r})).filter(r=>Date.now()-(r.at||0)<15000);
+  const icons=['👏','💡','😵','❤️','❓'];
+  const summary=icons.map(e=>{const n=recent.filter(x=>x.emoji===e).length;return n?e+' '+n:''}).filter(Boolean).join(' · ')||'아직 반응 없어';
+  const messageHtml=msgs.map(m=>'<div class="socialMsg"><b>'+esc(m.name||'학생')+':</b> '+esc(m.text||'')+'</div>').join('');
+  if(isTeacher){
+    box.innerHTML='<div class="socialHead"><b>👀 반응 · '+summary+'</b><button id="chatToggle" class="btn sm '+(st.chatEnabled?'mint':'sky')+'">'+(st.chatEnabled?'💬 채팅 ON':'💬 채팅 OFF')+'</button></div>'
+      +(st.chatEnabled?'<div class="socialMessages">'+(messageHtml||'<span class="muted">아직 채팅이 없어</span>')+'</div><div class="socialCompose"><input id="socialInput" maxlength="80" placeholder="학생에게 보낼 말 (80자)" value="'+esc(socialDraft)+'"><button class="btn sm mint" id="socialSend">보내기</button></div>':'');
+    if(el('chatToggle'))el('chatToggle').onclick=()=>update(AP('state'),{chatEnabled:!st.chatEnabled});
+  }else{
+    const locked=Date.now()-lastReactAt<2000;const buttons=icons.map(e=>'<button data-react="'+e+'" aria-label="'+e+'" '+(locked?'disabled':'')+'>'+e+'</button>').join('');
+    box.innerHTML='<div class="socialHead"><b>🙋 반응 보내기</b><span class="muted" style="font-size:13px">2초마다 한 번</span></div><div class="socialReact">'+buttons+'</div>'
+      +(st.chatEnabled?'<div class="socialMessages">'+messageHtml+'</div><div class="socialCompose"><input id="socialInput" maxlength="80" placeholder="채팅 (80자)" value="'+esc(socialDraft)+'"><button class="btn sm mint" id="socialSend">보내기</button></div>':'');
+    document.querySelectorAll('[data-react]').forEach(b=>b.onclick=async()=>{const t=Date.now();if(t-lastReactAt<2000)return;lastReactAt=t;syncSocialDock();await update(socialPath('reactions/'+pid),{emoji:b.dataset.react,at:t,name:nameOf(pid)});setTimeout(syncSocialDock,2000);});
+  }
+  const input=el('socialInput');if(input){input.oninput=()=>socialDraft=input.value;input.onkeydown=e=>{if(e.key==='Enter')el('socialSend')?.click();};if(hadFocus){input.focus();input.setSelectionRange(input.value.length,input.value.length);}}
+  if(el('socialSend'))el('socialSend').onclick=async()=>{const text=(el('socialInput')?.value||'').trim().slice(0,80);if(!text||(!isTeacher&&!st.chatEnabled))return;socialDraft='';const key=Date.now().toString(36)+Math.random().toString(36).slice(2,6);await update(socialPath('messages/'+key),{name:isTeacher?'교사':nameOf(pid),text,at:Date.now(),from:isTeacher?'teacher':pid});};
+}
 function renderStudent() {
   const st = room.state || {}, set = activeSet(), cs = casesOf(set), me = (room.players || {})[pid];
   if (lastStudentSet !== set) { lastStudentSet = set; hold = null; readSeen = {}; sKey = ''; dragState = null; closeSummary(); }
   if (!me) { localStorage.removeItem('curve_pid_' + code); return studentForm(code); }
+  if (me?.releaseResults) { renderStudentSetResults({...st,phase:'end'}); return; }
+  if (st.classReview) { renderStudentReview(st.classReview); return; }
   if (st.phase === 'end' && st.review) { renderStudentReview(st.review); return; }
   if (st.phase === 'end' && !isRace()) { renderStudentSetResults(st); return; }
   if (set === 'D' && st.demandRankVisible) { renderStudentDemandRank(); return; }
@@ -1627,7 +1691,7 @@ function renderStudent() {
   const tg = st.mode === 'together' && st.phase === 'play' && !st.reveal && (st.step || 0) > 0;
   const sc = tg ? scoreOf(pid, [st.ci || 0, stepsOf(cs[st.ci || 0] || {})[(st.step || 0) - 1]]) : scoreOf(pid);   // 공개 전엔 점수로 정답이 새지 않게
   const shownScore = set === 'S' ? ((supplyRankRows().find(x=>x.id===pid)||{}).points||0) : sc.ok;
-  const top = `<div class="s-top"><span class="me">🙂 ${esc(me.name)}</span><span class="pill">⭐ ${shownScore}점</span></div>`;
+  const top = `<div class="s-top"><span class="me">${esc(nameOf(pid))}</span><span class="pill">⭐ ${shownScore}점</span></div>`;
   const wait = (emo, t, s) => { app.innerHTML = `<div class="s-wrap">${top}<div class="stage" style="min-height:70vh"><div class="bigEmoji bounce">${emo}</div><div class="title" style="font-size:38px">${t}</div><div class="rule">${s}</div></div></div>`; };
   if (dragState) return;   // 끄는 중엔 다시 그리지 않음
   if (st.phase === 'setup' || st.phase === 'lobby') { sKey = ''; return wait('📈', '입장 완료!', '칠판을 봐 👀<br>곧 첫 사례가 나와'); }
