@@ -333,7 +333,7 @@ button,.btn,.speech,.rule,.title,.card{word-break:keep-all;overflow-wrap:break-w
 .conceptGraph .demandOld{stroke:#a9cce8}.conceptGraph .supplyOld{stroke:#f5b48c}
 
 .socialDock{animation:socialUp .22s ease-out;position:fixed;right:12px;bottom:12px;z-index:9999;width:min(360px,calc(100vw - 24px));background:#fff;border:2px solid var(--line);border-radius:20px;box-shadow:0 5px 18px #5b4b5730;padding:10px}.socialHead{display:flex;justify-content:space-between;align-items:center;gap:6px}.socialReact{display:flex;gap:5px;justify-content:flex-end;margin:6px 0}.socialReact button{background:var(--sky);border-radius:14px;font-size:23px;padding:5px 8px}.socialMessages{max-height:150px;overflow:auto;display:grid;gap:4px;margin:6px 0}.socialMsg{background:var(--bg);border-radius:10px;padding:5px 8px;font-size:15px}.socialCompose{display:flex;gap:5px}.socialCompose input{min-width:0;flex:1;font:inherit;border:2px solid var(--line);border-radius:10px;padding:7px}.socialCompose.help{display:grid;grid-template-columns:1fr}.socialCompose.help .btn{width:100%;margin:0;font-size:15px}@keyframes socialUp{from{transform:translateY(18px);opacity:0}to{transform:translateY(0);opacity:1}}@media(max-width:700px){.socialDock{right:6px;bottom:calc(6px + env(safe-area-inset-bottom));width:min(320px,calc(100vw - 12px))}}
-.reactionNoticeStack{position:fixed;right:14px;top:88px;z-index:10050;display:grid;gap:8px;pointer-events:none}.reactionNotice{display:flex;align-items:center;gap:10px;background:#fff;border:3px solid var(--mintD);border-radius:18px;padding:10px 16px;box-shadow:0 5px 0 var(--mintD);font-size:20px;animation:reactionIn .25s ease-out}.reactionNotice .reactionFace{font-size:34px}.reactionNotice.out{opacity:0;transform:translateX(30px);transition:.3s}.reactionFeed{display:flex;gap:5px;flex-wrap:wrap;margin-top:7px}.reactionFeedItem{display:flex;align-items:center;gap:5px;background:var(--mint);border-radius:12px;padding:3px 8px;font-size:14px}.reactionFeedItem span{font-size:19px}@keyframes reactionIn{from{opacity:0;transform:translateX(25px)}to{opacity:1;transform:translateX(0)}}@media(max-width:700px){.reactionNoticeStack{right:8px;left:8px;top:70px}.reactionNotice{font-size:17px}.socialDock{max-height:42vh;overflow:auto}}</style>
+</style>
 <style>
 [data-cooldown]{display:block;margin-top:10px;color:#b00020;font-size:22px}
 .rankTable .drow{display:grid;grid-template-columns:70px 1fr 110px 205px;align-items:center;gap:6px}
@@ -636,7 +636,7 @@ function solvedGraph(c, showPrice) {
 }
 
 /* ========== 입구 ========== */
-let room = null, pid = null, render = null, socialData = {}, legacySocialData = {}, socialDraft = '', lastTransitionKey = '', lastReactAt = 0, socialMessageSending = false, reactionInitForRoom = '', reactionSeen = {};
+let room = null, pid = null, render = null, socialData = {}, legacySocialData = {}, socialDraft = '', lastTransitionKey = '', lastReactAt = 0, socialMessageSending = false;
 let lastTeacherPointer = 0;
 document.addEventListener('pointerdown',()=>{lastTeacherPointer=Date.now();},true);
 document.addEventListener('pointerup',()=>{lastTeacherPointer=Date.now();},true);
@@ -1659,33 +1659,39 @@ function renderStudentSetResults(st) {
 function socialPath(p){return AP('social/'+p);}
 function transitionSound(){try{const C=window.AudioContext||window.webkitAudioContext;if(!C)return;const a=new C(),o=a.createOscillator(),g=a.createGain();o.type='sine';o.frequency.setValueAtTime(660,a.currentTime);o.frequency.exponentialRampToValueAtTime(990,a.currentTime+.11);g.gain.setValueAtTime(.08,a.currentTime);g.gain.exponentialRampToValueAtTime(.001,a.currentTime+.19);o.connect(g);g.connect(a.destination);o.start();o.stop(a.currentTime+.2);o.onended=()=>a.close();}catch(e){}}
 function trackTransition(){if(!room)return;const st=room.state||{},k=[room.set,st.phase,st.mode,st.ci,st.step,st.sub].join('|');if(lastTransitionKey&&k!==lastTransitionKey)transitionSound();lastTransitionKey=k;}
-function showReactionNotice(r){let stack=document.getElementById('reactionNoticeStack');if(!stack){stack=document.createElement('div');stack.id='reactionNoticeStack';stack.className='reactionNoticeStack';document.body.appendChild(stack);}const n=document.createElement('div');n.className='reactionNotice';n.innerHTML='<span class="reactionFace">'+esc(r.emoji||'🙂')+'</span><b>'+esc(r.name||nameOf(r.id))+'</b><span>반응을 보냈어</span>';stack.appendChild(n);setTimeout(()=>{n.classList.add('out');setTimeout(()=>n.remove(),300);},4200);}
 function syncSocialDock(){
   if(!room||!code||(!isTeacher&&!pid))return;
   const st=room.state||{},boxId='curveSocialDock';let box=document.getElementById(boxId);
+  if(!isTeacher&&!st.chatEnabled){if(box)box.remove();return;}
   if(!box){box=document.createElement('div');box.id=boxId;box.className='socialDock';document.body.appendChild(box);}
   const hadFocus=document.activeElement?.id==='socialInput';
-  const oldMsgs=[...Object.values(socialData.messages||{}),...Object.values(legacySocialData.messages||{})], sentRecords={...(legacySocialData.messagesSent||{}),...(socialData.messagesSent||{})}, sentMsgs=Object.entries(sentRecords).map(([from,m])=>({...m,from}));
-  const msgs=[...oldMsgs,...sentMsgs.filter(x=>!oldMsgs.some(m=>m.from===x.from&&m.at===x.at))].sort((a,b)=>(a.at||0)-(b.at||0)).slice(-8);
+  const oldMsgs=[...Object.values(socialData.messages||{}),...Object.values(legacySocialData.messages||{})];
+  const sentRecords={...(legacySocialData.messagesSent||{}),...(socialData.messagesSent||{})};
+  const sentMsgs=Object.entries(sentRecords).map(([from,m])=>({...m,from}));
+  const msgs=[...oldMsgs,...sentMsgs.filter(x=>!oldMsgs.some(m=>m.from===x.from&&m.at===x.at))]
+    .sort((a,b)=>(a.at||0)-(b.at||0)).slice(-8);
   const alreadySent=!!sentRecords[pid]||oldMsgs.some(m=>m.from===pid);
-  const reactionData={...(legacySocialData.reactions||{}),...(socialData.reactions||{})};Object.entries(room.players||{}).forEach(([id,p])=>{if(p.reaction)reactionData[id]=p.reaction;});const recent=Object.entries(reactionData).map(([id,r])=>({id,...r})).filter(r=>Date.now()-(r.at||0)<15000);
-  if(isTeacher){if(reactionInitForRoom!==code){reactionInitForRoom=code;reactionSeen={};recent.forEach(r=>reactionSeen[r.id]=r.at||0);recent.slice().sort((a,b)=>(b.at||0)-(a.at||0)).slice(0,3).reverse().forEach(showReactionNotice);}else{recent.filter(r=>(r.at||0)>(reactionSeen[r.id]||0)).forEach(r=>{showReactionNotice(r);reactionSeen[r.id]=r.at||0;});recent.forEach(r=>{reactionSeen[r.id]=Math.max(reactionSeen[r.id]||0,r.at||0);});}}
-  const icons=['👏','💡','😵','❤️','❓'];
-  const summary=icons.map(e=>{const n=recent.filter(x=>x.emoji===e).length;return n?e+' '+n:''}).filter(Boolean).join(' · ')||'아직 반응 없어';
   const messageHtml=msgs.map(m=>'<div class="socialMsg"><b>'+esc(m.name||'학생')+':</b> '+esc(m.text||'')+'</div>').join('');
   if(isTeacher){
-    const feed=recent.slice().sort((a,b)=>(b.at||0)-(a.at||0)).slice(0,5).map(r=>'<div class="reactionFeedItem"><b>'+esc(r.name||nameOf(r.id))+'</b><span>'+esc(r.emoji||'🙂')+'</span></div>').join('');
-    box.innerHTML='<div class="socialHead"><b>👀 반응 · '+summary+'</b><button id="chatToggle" class="btn sm '+(st.chatEnabled?'mint':'sky')+'">'+(st.chatEnabled?'💬 채팅 ON':'💬 채팅 OFF')+'</button></div><div class="reactionFeed">'+(feed||'<span class="muted">반응을 보내면 이름과 표정이 여기에 떠</span>')+'</div>'
-      +(st.chatEnabled?'<div class="socialMessages">'+(messageHtml||'<span class="muted">아직 채팅이 없어</span>')+'</div><div class="socialCompose"><input id="socialInput" maxlength="80" placeholder="학생에게 보낼 말 (80자)" value="'+esc(socialDraft)+'"><button class="btn sm mint" id="socialSend">보내기</button></div>':'');
+    box.innerHTML='<div class="socialHead"><b>💬 도움 메시지</b><button id="chatToggle" class="btn sm '+(st.chatEnabled?'mint':'sky')+'">'+(st.chatEnabled?'채팅 ON':'채팅 OFF')+'</button></div>'
+      +(st.chatEnabled?'<div class="socialMessages">'+(messageHtml||'<span class="muted">아직 온 메시지가 없어</span>')+'</div><div class="socialCompose"><input id="socialInput" maxlength="80" placeholder="학생에게 보낼 답장 (80자)" value="'+esc(socialDraft)+'"><button class="btn sm mint" id="socialSend">보내기</button></div>':'');
     if(el('chatToggle'))el('chatToggle').onclick=()=>update(AP('state'),{chatEnabled:!st.chatEnabled});
   }else{
-    const locked=Date.now()-lastReactAt<2000;const buttons=icons.map(e=>'<button data-react="'+e+'" aria-label="'+e+'" '+(locked?'disabled':'')+'>'+e+'</button>').join('');
-    box.innerHTML='<div class="socialHead"><b>🙋 반응 보내기</b><span class="muted" style="font-size:13px">2초마다 한 번</span></div><div class="socialReact">'+buttons+'</div>'
-      +(st.chatEnabled?'<div class="socialMessages">'+messageHtml+'</div>'+(alreadySent?'<div class="hl sky" style="font-size:15px;margin:6px 0">✅ 메시지는 한 번만 보낼 수 있어. 선생님에게 보냈어.</div>':'<div class="socialCompose help"><input id="socialInput" maxlength="80" placeholder="선생님에게 도움의 메시지 보내기" value="'+esc(socialDraft)+'"><button class="btn sm mint" id="socialSend">선생님에게 도움의 메시지 보내기</button></div><div class="muted" style="font-size:13px;text-align:right">메시지는 한 번만 보낼 수 있어</div>'):'');
-    document.querySelectorAll('[data-react]').forEach(b=>b.onclick=async()=>{const t=Date.now();if(t-lastReactAt<2000)return;lastReactAt=t;syncSocialDock();try{await update(AP('players/'+pid),{reaction:{emoji:b.dataset.react,at:t,name:nameOf(pid)}});}catch(e){console.error(e);toast('반응을 보내지 못했어. 연결을 확인해');}setTimeout(syncSocialDock,2000);});
+    box.innerHTML='<div class="socialHead"><b>💬 선생님에게 도움 요청</b></div><div class="socialMessages">'+messageHtml+'</div>'
+      +(alreadySent?'<div class="hl sky" style="font-size:15px;margin:6px 0">✅ 메시지는 한 번만 보낼 수 있어. 선생님에게 보냈어.</div>':'<div class="socialCompose help"><input id="socialInput" maxlength="80" placeholder="선생님에게 도움의 메시지 보내기" value="'+esc(socialDraft)+'"><button class="btn sm mint" id="socialSend">선생님에게 도움의 메시지 보내기</button></div><div class="muted" style="font-size:13px;text-align:right">메시지는 한 번만 보낼 수 있어</div>');
   }
-  const input=el('socialInput');if(input){input.oninput=()=>socialDraft=input.value;input.onkeydown=e=>{if(e.key==='Enter')el('socialSend')?.click();};if(hadFocus){input.focus();input.setSelectionRange(input.value.length,input.value.length);}}
-  if(el('socialSend'))el('socialSend').onclick=async()=>{const text=(el('socialInput')?.value||'').trim().slice(0,80);if(!text||(!isTeacher&&!st.chatEnabled)||socialMessageSending)return;if(isTeacher){socialDraft='';const key=Date.now().toString(36)+Math.random().toString(36).slice(2,6);await update(socialPath('messages/'+key),{name:'교사',text,at:Date.now(),from:'teacher'});return;}if(alreadySent)return toast('메시지는 한 번만 보낼 수 있어');socialMessageSending=true;el('socialSend').disabled=true;const at=Date.now();try{const result=await runTransaction(socialPath('messagesSent/'+pid),current=>current==null?{name:nameOf(pid),text,at,from:pid}:undefined);if(!result.committed){toast('메시지는 한 번만 보낼 수 있어');}else{socialDraft='';toast('선생님에게 보냈어');}}catch(e){console.error(e);toast('메시지를 보내지 못했어. 연결을 확인해');}finally{socialMessageSending=false;syncSocialDock();}};
+  const input=el('socialInput');
+  if(input){input.oninput=()=>socialDraft=input.value;input.onkeydown=e=>{if(e.key==='Enter')el('socialSend')?.click();};if(hadFocus){input.focus();input.setSelectionRange(input.value.length,input.value.length);}}
+  if(el('socialSend'))el('socialSend').onclick=async()=>{
+    const text=(el('socialInput')?.value||'').trim().slice(0,80);
+    if(!text||(!isTeacher&&!st.chatEnabled)||socialMessageSending)return;
+    if(isTeacher){socialDraft='';const key=Date.now().toString(36)+Math.random().toString(36).slice(2,6);await update(socialPath('messages/'+key),{name:'교사',text,at:Date.now(),from:'teacher'});return;}
+    if(alreadySent)return toast('메시지는 한 번만 보낼 수 있어');
+    socialMessageSending=true;el('socialSend').disabled=true;const at=Date.now();
+    try{const result=await runTransaction(socialPath('messagesSent/'+pid),current=>current==null?{name:nameOf(pid),text,at,from:pid}:undefined);if(!result.committed){toast('메시지는 한 번만 보낼 수 있어');}else{socialDraft='';toast('선생님에게 보냈어');}}
+    catch(e){console.error(e);toast('메시지를 보내지 못했어. 연결을 확인해');}
+    finally{socialMessageSending=false;syncSocialDock();}
+  };
 }
 function renderStudent() {
   const st = room.state || {}, set = activeSet(), cs = casesOf(set), me = (room.players || {})[pid];
