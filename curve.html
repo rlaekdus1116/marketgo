@@ -1215,7 +1215,7 @@ function renderTeacher() {
         <button class="btn big peach" id="goSupply">🏭 공급편으로 넘어가기 · ${doneIds.length}/${playerIds().length}명 완료</button></div>`;
     }
     body += supplyLessonPanel(st);
-    if (room.set === 'S') body += wholeGameStartCard();
+    if (room.set === 'S') body += '<div id="progressDashboard">'+teacherProgressPanel(st)+'</div>';
   }
   if (st.review && (st.phase === 'end' || (st.phase === 'play' && st.mode === 'solo'))) { body = reviewPanel(st.review); tSumm = null; }
   if (st.classReview) { body = reviewPanel({...st.classReview, shared:true}); tSumm = null; }
