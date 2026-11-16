@@ -758,7 +758,7 @@ function scoreOf(id, skip, set = activeSet()) {
    👩‍🏫 선생님 화면
    ========================================================= */
 let editT = null;
-const nameOf = id => { const p=(room.players||{})[id]||{}; return (p.emoji?p.emoji+' ':'')+(p.name||'?'); };
+const nameOf = id => { const p=(room.players||{})[id]||{}; return (p.emoji||'🙂')+' '+(p.name||'?'); };
 const onlineIds = () => Object.entries(room.players || {}).filter(([, p]) => p.online === true).map(([id]) => id);
 const playerIds = () => Object.keys(room.players || {});
 
