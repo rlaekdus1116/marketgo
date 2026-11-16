@@ -1055,6 +1055,32 @@ function showConceptDemo() {
   box.onclick = e => { if(e.target===box){playing=false;cancelAnimationFrame(raf);box.remove();} };
   document.body.appendChild(box); selectScene('demandPrice');
 }
+function allSupplyDone(){
+  const ids=playerIds();
+  return ids.length>0&&ids.every(id=>{
+    const assigned=(room.players||{})[id]?.set||room.set||'D';
+    return assigned==='S'&&casesOf('S').every((item,ci)=>caseDone(id,ci,item,'S'));
+  });
+}
+function wholeGameStartButton(){
+  const ready=allSupplyDone();
+  return '<button class="btn big lemon" id="startWholeGame" '+(ready?'':'disabled')+'>⚡ 전체게임 시작'+(ready?'':' · 모두 공급편을 끝내면 열려')+'</button>';
+}
+function wholeGameStartCard(){
+  return '<div class="card"><h3>🏁 공급편 완료</h3><div class="muted" style="font-size:18px;margin-bottom:8px">이제 사례를 보고 바뀐 것과 시장가격만 골라.</div>'+wholeGameStartButton()+'</div>';
+}
+async function startWholeGame(){
+  if(!allSupplyDone())return toast('모든 학생이 공급편을 끝낸 뒤 시작할 수 있어.');
+  if(!await ask('수요·공급 전체게임을 시작할까? 학생 기록은 그대로 남아.','⚡ 시작'))return;
+  const mix=room.casesBySet?.mix||PRESETS.mix, st0=room.state||{}, patch={
+    'casesBySet/D':casesOf('D'),'casesBySet/S':casesOf('S'),'casesBySet/mix':mix,
+    set:'mix',cases:mix,race:null,
+    state:{...st0,phase:'play',mode:'race',ci:0,sub:'q',qStarts:{0:now()+1800},auto:true,reveal:false,review:null,classReview:null,raceRankVisible:false,demandRankVisible:false,supplyRankVisible:false}
+  };
+  if(room.race)patch['raceArchives/'+Date.now()]=room.race;
+  playerIds().forEach(id=>{patch['players/'+id+'/set']=null;patch['players/'+id+'/releaseResults']=null;});
+  try{await update(A(),patch);toast('전체게임 시작!');}catch(e){console.error(e);toast('전체게임을 시작하지 못했어.');}
+}
 function teacherProgressPanel(st) {
   const assigned = id => (room.players||{})[id]?.set || room.set || 'D';
   const renderSet = set => {
@@ -1066,15 +1092,11 @@ function teacherProgressPanel(st) {
       const done=r.n>=total, pct=total?Math.min(100,r.n/total*100):0;
       let action='';
       if(done&&set==='D') action='<button class="btn sm peach" data-send-supply="'+esc(r.id)+'">🏭 공급편으로 보내기</button>';
-      if(done&&set==='S') action='<button class="btn sm mint" data-finish-supply="'+esc(r.id)+'">✅ 결과 화면 보내기</button>';
+      
       return '<div class="pp"><div style="display:flex;justify-content:space-between;gap:8px"><b>'+(st.showNames?esc(nameOf(r.id)):'👤 학생')+'</b><span>'+(done?'✅':'✍️')+'</span></div><div class="bar"><i style="width:'+pct+'%"></i></div><div style="display:flex;align-items:center;justify-content:space-between;gap:5px;flex-wrap:wrap"><span class="muted" style="font-size:14px">'+r.n+' / '+total+'</span>'+action+'</div></div>';
     }).join('')||'<div class="muted">아직 입장한 학생이 없어</div>';
     let extra='';
-    if(set==='S') {
-      extra='<button class="btn big mint" id="releaseSupplyDone" '+(complete.length?'':'disabled')+'>🏁 공급편 끝낸 학생만 결과 화면으로 보내기 · '+complete.length+'명</button>';
-      const released=rows.filter(r=>(room.players||{})[r.id]?.releaseResults);
-      if(released.length) extra+='<div class="hl sky">결과 화면에 있는 학생 '+released.length+'명 <button class="btn sm sky" id="returnSupplyDone">↩ 문제 화면으로 돌리기</button></div>';
-    }
+    if(set==='S') extra=wholeGameStartButton();
     return '<div class="card"><h3>'+(set==='D'?'🛒 수요편':'🏭 공급편')+' 진행 <span class="muted" style="font-size:16px">완료 '+complete.length+'/'+ids.length+'명 · 이 편 사례만 계산</span></h3><div class="prog">'+cards+'</div>'+extra+'</div>';
   };
   return '<div id="progressDashboard"><div class="center" style="margin-bottom:10px"><span class="roundBadge">🏃 각자 풀이 · 편별 진행률</span></div>'+renderSet('D')+renderSet('S')+'</div>';
@@ -1090,7 +1112,7 @@ function renderTeacher() {
       <div style="margin-bottom:10px"><div class="q" style="font-size:24px">📍 이번 반 시작 위치: ${SET_NAME[room.set || 'D']}</div>
         ${['D', 'S', 'mix'].map(k => `<button class="btn ${room.set === k || (!room.set && k === 'D') ? 'mint' : ''}" data-set="${k}">${SET_NAME[k]}부터 시작</button>`).join(' ')}
         <span class="muted" style="font-size:16px">반 진도에 맞춰 골라. 이전 편 기록은 남아.</span>
-        ${room.set === 'mix' ? `<div class="hl lemon" style="margin-top:8px;font-size:18px">⚡ 총정리는 스피드 시험! 사례마다 <b>① 수요/공급 중 무엇이 증가·감소?</b> <b>② 가격은?</b> 두 개만 빨리 골라 (곡선 자체가 움직이는 사례만 나와) · 한 문제 ${[10, 15, 20, 30].map(v => `<button class="btn sm ${RACE_SEC() === v ? 'mint' : ''}" data-sec="${v}" style="margin:0 2px;padding:4px 10px">${v}초</button>`).join('')}</div>` : ''}</div>
+        ${room.set === 'mix' ? `<div class="hl lemon" style="margin-top:8px;font-size:18px">⚡ 총정리는 스피드 시험! 사례마다 <b>① 수요·수요량·공급·공급량 중 무엇이 변했어?</b> <b>② 시장가격은 오를까, 내릴까?</b> 두 가지만 골라 · 한 문제 ${[10, 15, 20, 30].map(v => `<button class="btn sm ${RACE_SEC() === v ? 'mint' : ''}" data-sec="${v}" style="margin:0 2px;padding:4px 10px">${v}초</button>`).join('')}</div>` : ''}</div>
       ${cs.map((c, k) => `<div class="cbox">
         <div class="edit-case"><b style="font-size:20px">${k + 1}</b><input data-k="${k}" data-f="emoji" value="${esc(c.emoji)}" maxlength="4"><input data-k="${k}" data-f="market" value="${esc(c.market)}" maxlength="12" placeholder="상품"><input data-k="${k}" data-f="price" value="${esc(c.price || '')}" maxlength="14" placeholder="처음 가격"><input data-k="${k}" data-f="text" value="${esc(c.text)}" maxlength="70" placeholder="사례"></div>
         <div class="edit-sel">요인 <input data-k="${k}" data-f="factor" value="${esc(c.factor || '')}" maxlength="14" style="width:130px"> 정답:
@@ -1111,7 +1133,7 @@ function renderTeacher() {
       <div class="card center"><h3>태블릿으로 입장!</h3><div class="muted">입장 코드</div><div class="bigcode">${esc(code)}</div><div id="qr"></div>
         <div class="muted" style="font-size:13px;word-break:break-all">${esc(url)}</div></div>
       <div class="card"><h3>🙋 입장한 학생 ${ps.length}명</h3><div class="chips">${ps.map(p => `<span class="chip soft" style="${p.online === true ? '' : 'opacity:.4'}">${esc(p.name)}</span>`).join('') || '<span class="muted">아직 아무도 없어</span>'}</div>
-        <div class="hl lav" style="margin-top:16px">📈 사례는 이렇게 풀어<br><span style="font-size:19px">${room.set === 'mix' ? '① 가격이 바뀌었어? → ② 곡선 위의 이동? 곡선 자체의 이동? → ③ 누구 사정이 바뀌었어? → ④ 그래프 움직이기 → ⑤ 최종 결과는?' : '① 가격이 바뀌었어? → ② 곡선 위의 이동? 곡선 자체의 이동? → ③ 그래프 움직이기 → ④ 최종 결과는?'}</span></div></div>
+        <div class="hl lav" style="margin-top:16px">📈 사례는 이렇게 풀어<br><span style="font-size:19px">${room.set === 'mix' ? '사례를 읽고 ① 바뀐 것 고르기 ② 시장가격 방향 고르기' : '① 가격이 바뀌었어? → ② 곡선 위의 이동? 곡선 자체의 이동? → ③ 그래프 움직이기 → ④ 최종 결과는?'}</span></div></div>
     </div>
     <div class="center">${room.set === 'mix' ? `<button class="btn big mint" id="goRace" ${ps.length ? '' : 'disabled'}>⚡ 총정리 스피드 시험 시작!</button> <span class="muted">한 문제 ${RACE_SEC()}초</span>` : ''}<button class="btn sky" id="conceptDemo">🎬 개념 애니메이션 먼저 보기</button> <button class="btn big mint" id="go" ${ps.length && room.set !== 'mix' ? '' : 'hidden'}>👥 같이 첫 사례 풀기</button> <button class="btn big sky" id="goSolo" ${ps.length && room.set !== 'mix' ? '' : 'hidden'}>🏃 처음부터 각자 풀기</button> <button class="btn sm" id="toSetup">⚙️ 설정 고치기</button></div>` + (room.set === 'mix' ? '' : supplyLessonPanel(st));
   }
@@ -1193,6 +1215,7 @@ function renderTeacher() {
         <button class="btn big peach" id="goSupply">🏭 공급편으로 넘어가기 · ${doneIds.length}/${playerIds().length}명 완료</button></div>`;
     }
     body += supplyLessonPanel(st);
+    if (room.set === 'S') body += wholeGameStartCard();
   }
   if (st.review && (st.phase === 'end' || (st.phase === 'play' && st.mode === 'solo'))) { body = reviewPanel(st.review); tSumm = null; }
   if (st.classReview) { body = reviewPanel({...st.classReview, shared:true}); tSumm = null; }
@@ -1201,6 +1224,7 @@ function renderTeacher() {
   app.innerHTML = `<div class="wrap${introLayout}">${topbar(st)}${body}</div>`;
   if (st.phase === 'lobby' && window.QRCode) new QRCode(el('qr'), { text: location.origin + location.pathname + '?room=' + code, width: 200, height: 200, colorDark: '#5B4B57', colorLight: '#ffffff' });
   wireTeacher(st, cs);
+  bindTeacherProgressButtons();
   // 마지막 단계 정답 공개 → 정리 팝업
   if (tSumm && !popClosed.has(tSumm.key)) {
     const more = tSumm.ci + 1 < tSumm.n;
@@ -1329,6 +1353,7 @@ function renderStudentReview(v) {
 }
 
 function bindTeacherProgressButtons(){
+  if(el('startWholeGame'))el('startWholeGame').onclick=startWholeGame;
   document.querySelectorAll('[data-send-supply]').forEach(b=>b.onclick=async()=>{const id=b.dataset.sendSupply;if(!await ask(esc(nameOf(id))+'만 공급편으로 보낼까?','🏭 보내기'))return;await update(AP('players/'+id),{set:'S'});await update(AP('state'),{supplyRankVisible:false});toast(nameOf(id)+' 학생을 공급편으로 보냈어');});
   document.querySelectorAll('[data-finish-supply]').forEach(b=>b.onclick=async()=>{const id=b.dataset.finishSupply;if(!await ask(nameOf(id)+' 학생을 결과 화면으로 보낼까?'))return;await update(AP('players/'+id),{releaseResults:true});});
   if(el('releaseSupplyDone'))el('releaseSupplyDone').onclick=async()=>{const done=playerIds().filter(id=>(((room.players||{})[id]?.set==='S')||(room.set==='S'&&!(room.players||{})[id]?.set))&&casesOf('S').every((c,ci)=>caseDone(id,ci,c,'S')));if(!done.length)return;if(!await ask('공급편을 끝낸 '+done.length+'명만 결과 화면으로 보낼까?'))return;const patch={};done.forEach(id=>patch['players/'+id+'/releaseResults']=true);await update(A(),patch);};
@@ -1428,8 +1453,8 @@ function wireTeacher(st, cs) {
 const isRace = () => room && room.set === 'mix';
 const raceCases = () => casesOf().filter(c => c.type === 'shift');
 const RACE_SEC = () => (room && room.raceSec) || 15;
-const WHAT_OPTS = [['D+', '🛒 수요 증가'], ['D-', '🛒 수요 감소'], ['S+', '🏭 공급 증가'], ['S-', '🏭 공급 감소']];
-const PRICE_OPTS = [['+', '📈 가격 상승'], ['-', '📉 가격 하락']];
+const WHAT_OPTS = [['D+', '🛒 수요 증가'], ['D-', '🛒 수요 감소'], ['S+', '🏭 공급 증가'], ['S-', '🏭 공급 감소'], ['Dq+', '🛒 수요량 증가'], ['Dq-', '🛒 수요량 감소'], ['Sq+', '🏭 공급량 증가'], ['Sq-', '🏭 공급량 감소']];
+const PRICE_OPTS = [['+', '📈 시장가격 상승'], ['-', '📉 시장가격 하락']];
 const raceAns = c => ({ w: c.curve + c.dir, p: priceAfter(c) });
 const raceRec = (id, ci) => (((room.race || {})[ci]) || {})[id] || null;
 function racePts(c, ci, id, qStart) {   // 맞히면 50점 + 빠를수록 최대 50점 (문제당)
