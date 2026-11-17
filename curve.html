@@ -361,6 +361,27 @@ button,.btn,.speech,.rule,.title,.card{word-break:keep-all;overflow-wrap:break-w
  .s-play .raceChoices .choice.wrong{background:#ffe3e7;border-color:#de8c9b}
  .raceT .raceGraph{width:min(100%,650px);margin:20px auto 0}
  .raceT .raceActions{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap}
+ .raceRight{display:flex;flex-direction:column;align-items:center;gap:14px;width:100%}
+ .raceRight .raceGraph{width:100%;margin:0}
+ .raceRightActions{display:flex;flex-direction:column;align-items:center;gap:8px;width:100%}
+ .raceRightActions .btn.big{min-width:min(100%,290px)}
+ .raceRightActions .raceBranch{width:100%}
+ .raceRightActions .raceBranch .btn{width:100%;margin:5px 0}
+ .raceStudentResult{background:#fff;border:3px solid var(--line);border-radius:24px;padding:18px;text-align:center;width:100%;font-size:20px;box-shadow:0 5px 0 var(--line)}
+ .raceStudentResult.correct{background:#e4f7eb;border-color:#67bf8c}
+ .raceStudentResult.incorrect{background:#fff1e6;border-color:#eda994}
+ .raceResultIcon{font-size:42px;line-height:1.1}
+ .raceResultTitle{font-size:34px}
+ .raceResultPoints{font-size:29px;color:#684a76}
+ .raceResultTotal{font-size:21px;margin-bottom:8px}
+ .raceStudentResult>b{display:block;border-top:2px dashed #b9a5b3;padding-top:9px}
+ .rankOverlay{position:fixed;inset:0;z-index:10000;display:grid;place-items:center;padding:16px;background:#3e2b3fbb}
+ .rankSheet{background:#fff;border:4px solid #704f68;border-radius:26px;width:min(740px,100%);padding:22px;max-height:90vh;display:flex;flex-direction:column}
+ .rankTitle{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:30px}
+ .rankEntries{overflow:auto;min-height:0;display:grid;gap:7px}
+ .rankEntry{display:grid;grid-template-columns:52px minmax(0,1fr) 110px 95px;gap:8px;align-items:center;padding:10px 14px;border-radius:14px;background:var(--lemon);font-size:21px}
+ .rankEntry b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+ .rankEntry strong{text-align:right}.rankEntry small{text-align:right;color:var(--sub)}
  @media(max-width:600px){
    .raceOption,.s-play .raceChoices .choice{font-size:clamp(17px,4.9vw,25px)}
    .raceOptionLabel{gap:4px}
@@ -401,10 +422,23 @@ button,.btn,.speech,.rule,.title,.card{word-break:keep-all;overflow-wrap:break-w
  .raceT:has(.raceOptions>:nth-child(2):last-child) .raceOption{min-height:112px;font-size:clamp(26px,3vw,40px)}
  .raceChoices:has(>:nth-child(2):last-child) .choice{min-height:130px;font-size:clamp(25px,3vw,38px)}
  @media(max-width:600px){.raceSymbol{border-radius:8px;margin-right:.35em}.raceBranch .btn{width:100%}.raceClassResult{font-size:20px}}
+ @media(max-width:600px){.rankEntry{grid-template-columns:40px 1fr 82px;font-size:17px}.rankEntry small{grid-column:2/4}.rankTitle{font-size:23px}}
  @media(min-width:900px){.raceT:has(.raceGraph){display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,.8fr);gap:22px;align-items:start;max-width:1200px}.raceT:has(.raceGraph) .raceOption{font-size:clamp(19px,1.8vw,27px);min-height:58px}.raceT:has(.raceGraph) .raceGraph{position:sticky;top:16px}.raceT:has(.raceGraph) .case.row .ct{font-size:23px}}
  @media(min-width:900px){.raceT:has(.raceGraph):has(.raceOptions>:nth-child(2):last-child) .raceOption{font-size:clamp(22px,2vw,28px);min-height:94px}}
  @media(min-width:900px) and (max-height:800px){.raceT .side{gap:8px}.raceT .q{font-size:25px;padding:8px 0}.raceOption{min-height:55px}.raceT .case.row .ct{font-size:24px}.raceT .raceActions .btn{padding:10px 18px;font-size:21px}}
  @media(min-width:900px) and (max-height:800px){.wrap:has(.raceT){padding-bottom:14px}.wrap:has(.raceT) .topbar{margin-bottom:10px}.raceT .case.row{padding:10px 16px}.raceT .case.row .ce{font-size:44px}.raceT .roundBadge{font-size:21px;padding:5px 18px}.raceT .raceOptions{gap:8px}.raceT .raceOption{min-height:52px;padding:8px 18px;font-size:26px}.raceT .q{margin:0}}
+ @media(min-width:900px) and (max-height:800px){
+   .wrap:has(.raceT) .topbar{flex-wrap:nowrap;gap:4px}
+   .wrap:has(.raceT) .topbar .logo{font-size:22px;white-space:nowrap}
+   .wrap:has(.raceT) .topbar .pill{font-size:14px;padding:4px 9px;white-space:nowrap}
+   .wrap:has(.raceT) .topbar .btn.sm{font-size:13px;padding:6px 8px;white-space:nowrap;margin:0}
+   .raceRight .raceGraph svg{max-height:285px;width:auto;max-width:100%;margin:auto}
+   .raceRight{gap:6px}.raceRightActions{gap:4px}
+   .raceRightActions .raceBranch{padding:8px 12px}
+   .raceRightActions .raceBranch>b{font-size:21px;margin-bottom:2px}
+   .raceRightActions .raceBranch .btn{margin:3px 0}
+   .raceRightActions .raceBranch .btn.big{font-size:20px;padding:8px 12px}
+ }
  </style>
 <style>
 [data-cooldown]{display:block;margin-top:10px;color:#b00020;font-size:22px}
@@ -905,6 +939,7 @@ function topbar(st) {
     ${st.phase !== 'setup' ? `<span class="pill">🙋 ${onlineIds().length}명 접속</span>` : ''}
     ${play && !isRace() ? `<span class="modeTg"><button class="btn sm mint ${st.mode === 'together' ? 'on' : ''}" id="mTog">👥 같이 하기</button><button class="btn sm sky ${st.mode === 'solo' ? 'on' : ''}" id="mSolo">🏃 각자 하기</button></span>` : ''}
     ${play && (st.mode === 'together' && !isRace()) ? `<button class="btn sm ${st.auto ? 'mint on' : ''}" id="auto">⏩ 자동 진행 ${st.auto ? 'ON' : 'OFF'}</button>` : ''}
+    ${isRace() && play && st.mode==='race' ? '<button class="btn sm lemon" id="liveRaceRank">🏆 실시간 순위</button>' : ''}
     ${isRace() && (st.phase==='lobby' || (play && st.mode==='race')) ? '<button class="btn sm lav" id="raceMusic" aria-pressed="'+!!raceMusicEnabled+'">'+(raceMusicEnabled?'♪ 배경음 켜짐':'♪ 배경음 켜기')+'</button>' : ''}
     <button class="btn sm lav" id="names">${st.showNames ? '👤 이름 ON' : '🙈 이름 OFF'}</button>
     <button class="btn sm sky" id="chooseSet">📍 진도 선택</button>
@@ -1316,6 +1351,7 @@ function refreshTeacherRaceCounts(){
   const ci=st.ci||0,grid=el('raceVoteCounts'),stat=el('raceAnswered');
   if(grid&&raceCases()[ci])grid.innerHTML=teacherRaceOptionRows(raceCases()[ci],ci,st.sub==='res');
   if(stat)stat.textContent='✍️ 제출 '+playerIds().filter(id=>(raceRec(id,ci)||{}).w).length+' / '+playerIds().length+'명';
+  syncLiveRaceRank();
 }
 function renderTeacher() {
   const st = room.state || {}, cs = casesOf();
@@ -1444,6 +1480,7 @@ function renderTeacher() {
   app.innerHTML = `<div class="wrap${introLayout}">${topbar(st)}${body}</div>`;
   if (st.phase === 'lobby' && window.QRCode) new QRCode(el('qr'), { text: location.origin + location.pathname + '?room=' + code, width: 200, height: 200, colorDark: '#5B4B57', colorLight: '#ffffff' });
   wireTeacher(st, cs);
+  syncLiveRaceRank();
   bindTeacherProgressButtons();
   // 마지막 단계 정답 공개 → 정리 팝업
   if (tSumm && !popClosed.has(tSumm.key)) {
@@ -1617,6 +1654,7 @@ function wireTeacher(st, cs) {
     return raceStateAction(current => current.sub==='priceIntro' ? nextRaceQuestion(current,current.ci) : null);
   };
   if (el('raceMusic')) el('raceMusic').onclick = toggleRaceMusic;
+  if (el('liveRaceRank')) el('liveRaceRank').onclick = () => { raceRankOpen=!raceRankOpen; syncLiveRaceRank(); };
   if (el('raceNext')) el('raceNext').onclick = () => raceAdvance();
   if (el('raceClose')) el('raceClose').onclick = () => raceStateAction(current => current.sub==='q'?{sub:'res'}:null);
   if (el('startFillReview')) el('startFillReview').onclick = startFillReview;
@@ -1740,6 +1778,28 @@ function raceScores() {
   return out;
 }
 const raceTop = () => { const sc = raceScores(); return Object.keys(sc).sort((a, b) => sc[b] - sc[a]).map(id => ({ id, v: sc[id] })); };
+// During a question, only revealed questions count toward the teacher's live ranking.
+let raceRankOpen=false;
+function liveRaceRows(){
+  const st=room.state||{},end=st.sub==='res'?(st.ci||0):(st.ci||0)-1,starts=st.qStarts||{};
+  return playerIds().map(id=>{
+    let points=0,correct=0;
+    raceCases().forEach((c,ci)=>{if(ci>end||!starts[ci])return;const v=racePts(c,ci,id,starts[ci]);points+=v;if(v)correct++;});
+    return {id,points,correct};
+  }).sort((a,b)=>b.points-a.points||b.correct-a.correct||nameOf(a.id).localeCompare(nameOf(b.id)));
+}
+function syncLiveRaceRank(){
+  let modal=document.getElementById('liveRaceRankPanel');
+  if(!isTeacher||!room||room.state?.phase!=='play'||room.state?.mode!=='race'||!raceRankOpen){modal?.remove();return;}
+  if(!modal){modal=document.createElement('div');modal.id='liveRaceRankPanel';modal.className='rankOverlay';document.body.appendChild(modal);}
+  const rows=liveRaceRows(),st=room.state;
+  modal.innerHTML='<div class="rankSheet"><div class="rankTitle"><b>🏆 실시간 순위</b><button class="btn sm" id="closeLiveRank">닫기 ✕</button></div>'+
+    '<p class="muted">정답 공개가 끝난 문제까지의 점수야. 지금 푸는 문제는 공개한 뒤 반영돼.</p>'+
+    '<div class="rankEntries">'+rows.map((r,i)=>'<div class="rankEntry"><span>'+(i+1)+'위</span><b>'+esc(st.showNames?nameOf(r.id):'학생 '+(i+1))+'</b><strong>'+r.points+'점</strong><small>'+r.correct+'문제 정답</small></div>').join('')+'</div></div>';
+  modal.querySelector('#closeLiveRank').onclick=()=>{raceRankOpen=false;modal.remove();};
+  modal.onclick=e=>{if(e.target===modal){raceRankOpen=false;modal.remove();}};
+}
+
 
 /* 👀 학생 화면 엿보기 (각자 하기) */
 let peekId = null;
@@ -1933,10 +1993,11 @@ function teacherRace(st) {
     (res ? '' : tBar(c))+'<div class="q">'+raceQuestion(c)+'</div>'+
     '<div class="raceOptions" id="raceVoteCounts">'+teacherRaceOptionRows(c,ci,res)+'</div>'+
     (res ? '<div class="hl mint raceExplanation">'+raceOutcome(c)+'</div>'+raceClassResult(c,ci) : '')+
-    '<div class="raceActions"><div class="muted" id="raceAnswered">✍️ 제출 '+answered+' / '+playerIds().length+'명</div>'+
-    (res ? (basicDone ? '<div class="raceBranch"><b>기본 8문제 완료!</b><div><button class="btn big mint" id="raceNext">추가 4문제 풀기 →</button><button class="btn big lemon" id="startFillReview">빈칸 정리로 →</button><button class="btn sky" id="raceFinish">게임 결과 보기</button></div></div>' : '<button class="btn big mint" id="raceNext">'+nextLabel+'</button>') :
-      '<button class="btn lemon" id="raceClose">마감하고 정답 보기</button>')+'</div></div>'+
-    (res ? '<div class="graph raceGraph">'+solvedGraph(c,true)+'</div>' : '')+'</div>';
+    (!res?'<div class="raceActions"><div class="muted" id="raceAnswered">✍️ 제출 '+answered+' / '+playerIds().length+'명</div><button class="btn lemon" id="raceClose">마감하고 정답 보기</button></div>':'')+'</div>'+
+    (res ? '<div class="raceRight"><div class="graph raceGraph">'+solvedGraph(c,true)+'</div><div class="raceRightActions">'+
+      '<div class="muted" id="raceAnswered">✍️ 제출 '+answered+' / '+playerIds().length+'명</div>'+
+      (basicDone?'<div class="raceBranch"><b>기본 8문제 완료!</b><button class="btn big mint" id="raceNext">추가 4문제 풀기 →</button><button class="btn big lemon" id="startFillReview">빈칸 정리로 →</button><button class="btn sky" id="raceFinish">게임 결과 보기</button></div>':'<button class="btn big mint" id="raceNext">'+nextLabel+'</button>')+
+      '</div></div>' : '')+'</div>';
 }
 function renderStudentRaceRank() {
   const rows=raceTop(), i=rows.findIndex(r=>r.id===pid), mine=rows[i]||{v:0};
@@ -2116,10 +2177,12 @@ function syncSocialDock(){
   const savedDockScroll=box.scrollTop;
   const oldMsgs=[...Object.values(socialData.messages||{}),...Object.values(legacySocialData.messages||{})];
   const sentRecords={...(legacySocialData.messagesSent||{}),...(socialData.messagesSent||{})};
-  const sentMsgs=Object.entries(sentRecords).map(([from,m])=>({...m,from}));
+  const secondRecords={...(legacySocialData.messagesSent2||{}),...(socialData.messagesSent2||{})};
+  const sentMsgs=[...Object.entries(sentRecords),...Object.entries(secondRecords)].map(([from,m])=>({...m,from}));
   const msgs=[...oldMsgs,...sentMsgs.filter(x=>!oldMsgs.some(m=>m.from===x.from&&m.at===x.at))]
     .sort((a,b)=>(a.at||0)-(b.at||0));
-  const alreadySent=!!sentRecords[pid]||oldMsgs.some(m=>m.from===pid);
+  const firstSent=!!sentRecords[pid]||oldMsgs.some(m=>m.from===pid), sentCount=Number(firstSent)+Number(!!secondRecords[pid]);
+  const alreadySent=sentCount>=2;
   const messageHtml=msgs.map(m=>'<div class="socialMsg"><b>'+esc(m.name||'학생')+':</b> '+esc(m.text||'')+'</div>').join('');
   if(isTeacher){
     box.innerHTML='<div class="socialHead"><b>💬 도움 메시지</b><button id="chatToggle" class="btn sm '+(st.chatEnabled?'mint':'sky')+'">'+(st.chatEnabled?'채팅 ON':'채팅 OFF')+'</button></div>'
@@ -2127,7 +2190,7 @@ function syncSocialDock(){
     if(el('chatToggle'))el('chatToggle').onclick=()=>update(AP('state'),{chatEnabled:!st.chatEnabled});
   }else{
     box.innerHTML='<div class="socialHead"><b>💬 선생님에게 도움 요청</b></div><div class="socialMessages">'+messageHtml+'</div>'
-      +(alreadySent?'<div class="hl sky" style="font-size:15px;margin:6px 0">✅ 메시지는 한 번만 보낼 수 있어. 선생님에게 보냈어.</div>':'<div class="socialCompose help"><input id="socialInput" maxlength="80" placeholder="선생님에게 도움의 메시지 보내기" value="'+esc(socialDraft)+'"><button class="btn sm mint" id="socialSend">선생님에게 도움의 메시지 보내기</button></div><div class="muted" style="font-size:13px;text-align:right">메시지는 한 번만 보낼 수 있어</div>');
+      +(alreadySent?'<div class="hl sky" style="font-size:15px;margin:6px 0">✅ 두 번 모두 보냈어. 선생님에게 전달됐어.</div>':'<div class="socialCompose help"><input id="socialInput" maxlength="80" placeholder="선생님에게 도움의 메시지 보내기" value="'+esc(socialDraft)+'"><button class="btn sm mint" id="socialSend">선생님에게 도움의 메시지 보내기</button></div><div class="muted" style="font-size:13px;text-align:right">메시지는 두 번까지 보낼 수 있어 · 남은 횟수 '+(2-sentCount)+'회</div>');
   }
   const newMessageList=box.querySelector('.socialMessages');
   if(newMessageList)newMessageList.scrollTop=wasAtMessageBottom?newMessageList.scrollHeight:Math.min(savedMessageScroll,newMessageList.scrollHeight);
@@ -2138,9 +2201,9 @@ function syncSocialDock(){
     const text=(el('socialInput')?.value||'').trim().slice(0,80);
     if(!text||(!isTeacher&&!st.chatEnabled)||socialMessageSending)return;
     if(isTeacher){socialDraft='';const key=Date.now().toString(36)+Math.random().toString(36).slice(2,6);await update(socialPath('messages/'+key),{name:'교사',text,at:Date.now(),from:'teacher'});return;}
-    if(alreadySent)return toast('메시지는 한 번만 보낼 수 있어');
+    if(alreadySent)return toast('메시지는 두 번까지 보낼 수 있어');
     socialMessageSending=true;el('socialSend').disabled=true;const at=Date.now();
-    try{const result=await runTransaction(socialPath('messagesSent/'+pid),current=>current==null?{name:nameOf(pid),text,at,from:pid}:undefined);if(!result.committed){toast('메시지는 한 번만 보낼 수 있어');}else{socialDraft='';toast('선생님에게 보냈어');}}
+    try{const slot=firstSent?'messagesSent2/':'messagesSent/';const result=await runTransaction(socialPath(slot+pid),current=>current==null?{name:nameOf(pid),text,at,from:pid}:undefined);if(!result.committed){toast('이미 보냈어. 새로고침 후 다시 확인해.');}else{socialDraft='';toast('선생님에게 보냈어 · '+(1-sentCount)+'회 남았어');}}
     catch(e){console.error(e);toast('메시지를 보내지 못했어. 연결을 확인해');}
     finally{socialMessageSending=false;syncSocialDock();}
   };
@@ -2271,14 +2334,13 @@ function studentRace(st,top) {
   let msg = '';
   if (res) {
     const picked = rec?.w === right;
-    msg = '<div class="'+(picked?'good':'hint')+'">'+(picked?'맞았어! +'+racePts(c,ci,pid,start)+'점':rec?.w?'정답을 확인해 봐.':'제출 시간이 끝났어.')+
-      '<br><b>'+raceOutcome(c)+'</b></div>'+(picked&&raceStreak(pid,ci)>=2?'<div class="streakBadge">🔥 '+raceStreak(pid,ci)+'문제 연속 정답!</div>':'')+'<div class="muted">선생님이 다음 문제를 열면 같이 넘어가.</div>';
+    msg = '<div class="raceStudentResult '+(picked?'correct':'incorrect')+'"><div class="raceResultIcon">'+(picked?'🎉':'💡')+'</div><div class="raceResultTitle">'+(picked?'정답!':'아쉬워, 오답이야')+'</div><div class="raceResultPoints">'+(picked?'이번 문제 +'+racePts(c,ci,pid,start)+'점':'이번 문제 +0점')+'</div><div class="raceResultTotal">지금까지 '+(raceScores()[pid]||0)+'점</div><b>'+raceOutcome(c)+'</b></div>'+(picked&&raceStreak(pid,ci)>=2?'<div class="streakBadge">🔥 '+raceStreak(pid,ci)+'문제 연속 정답!</div>':'')+'<div class="muted">선생님이 다음 문제를 열면 같이 넘어가.</div>';
   } else if (rec?.w) msg = '<div class="good answerLocked">🔒 제출 완료!<br>칠판에서 정답 공개를 기다려.</div>';
   const choices = raceOptions(c).map(([value,label],i) => {
     const style = res && value === right ? 'right' : rec?.w === value ? (res?'wrong':'picked') : '';
     return '<button class="choice raceTone'+i+' '+style+'" data-v="'+value+'" '+(res||rec?.w||!ready?'disabled':'')+'>'+raceChoiceLabel(label,i)+'</button>';
   }).join('');
-  const total = (raceScores()[pid] || 0) - (res ? 0 : racePts(c,ci,pid,start));
+  const total = (raceScores()[pid] || 0) - (!res && start ? racePts(c,ci,pid,start) : 0);
   app.innerHTML = '<div class="s-wrap">'+top.replace(/⭐ [0-9]+점/,'⭐ '+total+'점')+
     '<div class="s-play two"><div class="col"><span class="roundBadge">'+raceRoundLabel(c,ci)+'</span>'+raceCaseRow(c,ci)+(res?'':tBar(c))+msg+'</div>'+
     '<div class="col"><div class="q">'+raceQuestion(c)+'</div><div class="choices raceChoices">'+choices+'</div>'+
