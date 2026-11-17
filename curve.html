@@ -184,7 +184,7 @@ canvas{display:block;width:100%;touch-action:none;border-radius:16px}
 
 /* ===== 시장 예측하기 전용 ===== */
 .case.row{display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:center;text-align:left;padding:12px 20px;max-width:none}
-.case.row .ce{font-size:58px}.case.row .cm{margin:0 8px 0 0;font-size:18px}.case.row .cp{display:inline;font-size:19px;margin:0}.case.row .ct{font-size:25px;margin-top:4px;line-height:1.35}
+.case.row .ce{font-size:76px}.case.row .cm{display:inline-flex;align-items:center;gap:8px;margin:0 8px 4px 0;padding:6px 18px;font-size:clamp(26px,3vw,38px);font-weight:700;line-height:1.2;background:var(--lemon);border:2px solid var(--lemonD);border-radius:18px;box-shadow:0 3px 0 var(--lemonD)}.case.row .cp{display:inline;font-size:19px;margin:0}.case.row .ct{font-size:25px;margin-top:4px;line-height:1.35}
 .play2{display:grid;grid-template-columns:1.1fr .9fr;gap:18px;align-items:start}
 .play2 .graph svg{max-height:calc(100vh - 250px);width:auto;max-width:100%;margin:0 auto}
 .play2 .side{display:flex;flex-direction:column;gap:10px;align-items:center}
@@ -220,10 +220,11 @@ canvas{display:block;width:100%;touch-action:none;border-radius:16px}
 .toast{pointer-events:none}
 .case{background:#fff;border:4px solid var(--ink);border-radius:30px;padding:22px 26px;box-shadow:0 8px 0 var(--ink);text-align:center;max-width:820px;width:100%}
 .case .ce{font-size:84px;line-height:1}
-.case .cm{display:inline-block;background:var(--lemon);border-radius:999px;padding:4px 18px;font-size:22px;margin:6px 0}
+ .case .cm{display:inline-flex;align-items:center;gap:8px;background:var(--lemon);border:2px solid var(--lemonD);border-radius:18px;padding:8px 20px;font-size:clamp(28px,4vw,42px);line-height:1.15;margin:8px 0;box-shadow:0 3px 0 var(--lemonD)}
 .case .cp{font-size:24px;margin:4px 0 8px;color:var(--peachD)}
 .case .ct{font-size:32px;line-height:1.45}
 .case.s .ct{font-size:24px} .case.s .ce{font-size:56px}
+.case.row .cm::before{content:'📍';font-size:.8em}
 .stepbar{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin:8px 0}
 .stepbar span{background:#fff;border:2px solid var(--line);border-radius:999px;padding:4px 12px;font-size:15px;color:var(--sub)}
 .stepbar span.on{background:var(--lemon);border-color:var(--lemonD);color:var(--ink)}
@@ -1896,11 +1897,12 @@ function syncRaceMusic(st) {
   if (nextRaceBeat < time) nextRaceBeat = time+.025;
   const progress = st.sub === 'priceIntro' ? 0 : Math.max(0,(now()-start)/(raceSeconds(c)*1000));
   const melody = c.priceRound ? [57,64,60,67,59,65,62,69] : [60,64,67,72,62,65,69,74];
-  const pulse = (c.priceRound ? .49 : .44) - .15*progress;
+  const pulse = (c.priceRound ? .34 : .32) - .055*progress;
   while (nextRaceBeat < time+.37) {
     const beat = raceBeat++, note = melody[beat%melody.length];
-    raceNote(note+(progress>.78 && beat%2 ? 12 : 0),nextRaceBeat,pulse*.86,.038+.021*progress,c.priceRound?'triangle':'sine');
-    if (beat%2===0) raceNote(note-12,nextRaceBeat,pulse*.75,.025,'sine');
+    raceNote(note+(progress>.7 && beat%2 ? 12 : 0),nextRaceBeat,pulse*.76,.055+.035*progress,c.priceRound?'triangle':'sine');
+    if (beat%2===0) raceNote(beat%4===0?36:40,nextRaceBeat,.13,.095+.025*progress,'sine');
+    if (beat%4===2) raceNote(84,nextRaceBeat,.075,.018,'square');
     nextRaceBeat += pulse;
   }
 }
