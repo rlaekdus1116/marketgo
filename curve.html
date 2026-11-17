@@ -1756,8 +1756,8 @@ const WHAT_OPTS = [['D+', '🛒 수요 증가'], ['D-', '🛒 수요 감소'], [
 const PRICE_OPTS = [['+', '📈 시장가격 상승'], ['-', '📉 시장가격 하락']];
 const raceOptions = c => c.priceRound ? PRICE_OPTS : WHAT_OPTS;
 const raceQuestion = c => c.priceRound ? (c.question || `${c.market} 시장가격은 어떻게 변할까?`) : c.type === 'along'
-  ? `${c.market} 시장에서 ${c.curve === 'D' ? '소비자가 사려는 양' : '판매자가 팔려는 양'}은 어떻게 달라질까?`
-  : `${c.market} 시장에서 ${c.curve === 'D' ? '소비자 입장' : '판매자 입장'}의 ${c.curve === 'D' ? '수요곡선' : '공급곡선'}은 어떻게 변할까?`;
+  ? `가격이 바뀌면 ${c.market} 시장의 수량은 어떻게 달라질까?`
+  : `${c.market} 시장에서 어떤 변화가 생길까?`;
 const raceSeconds = c => c.priceRound ? PRICE_SECONDS : RACE_SEC();
 const raceRoundLabel = (c,ci) => c.priceRound
   ? ((ci-raceChangeCases().length)<PRICE_BASIC_COUNT ? '가격 예측 · 기본 '+(ci-raceChangeCases().length+1)+' / '+PRICE_BASIC_COUNT : '가격 예측 · 추가 '+(ci-raceChangeCases().length-PRICE_BASIC_COUNT+1)+' / '+(PRICE_CASES.length-PRICE_BASIC_COUNT))
