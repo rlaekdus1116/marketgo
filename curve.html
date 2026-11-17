@@ -336,6 +336,7 @@ button,.btn,.speech,.rule,.title,.card{word-break:keep-all;overflow-wrap:break-w
 
 .socialDock{animation:socialUp .22s ease-out;position:fixed;right:12px;bottom:12px;z-index:9999;width:min(360px,calc(100vw - 24px));background:#fff;border:2px solid var(--line);border-radius:20px;box-shadow:0 5px 18px #5b4b5730;padding:10px}.socialHead{display:flex;justify-content:space-between;align-items:center;gap:6px}.socialReact{display:flex;gap:5px;justify-content:flex-end;margin:6px 0}.socialReact button{background:var(--sky);border-radius:14px;font-size:23px;padding:5px 8px}.socialMessages{max-height:150px;overflow:auto;display:grid;gap:4px;margin:6px 0}.socialMsg{background:var(--bg);border-radius:10px;padding:5px 8px;font-size:15px}.socialCompose{display:flex;gap:5px}.socialCompose input{min-width:0;flex:1;font:inherit;border:2px solid var(--line);border-radius:10px;padding:7px}.socialCompose.help{display:grid;grid-template-columns:1fr}.socialCompose.help .btn{width:100%;margin:0;font-size:15px}@keyframes socialUp{from{transform:translateY(18px);opacity:0}to{transform:translateY(0);opacity:1}}@media(max-width:700px){.socialDock{right:6px;bottom:calc(6px + env(safe-area-inset-bottom));width:min(320px,calc(100vw - 12px))}}
  .raceT{max-width:1040px;margin:auto}
+ .wrap:has(.raceT){max-width:1320px;padding:12px 20px 24px}
  .raceT .side{display:flex;flex-direction:column;align-items:center;gap:12px}
  .raceClock{display:flex;gap:12px;align-items:center;width:min(100%,620px);font-size:22px}
  .raceClock b{min-width:4ch;color:#694054}
@@ -369,6 +370,41 @@ button,.btn,.speech,.rule,.title,.card{word-break:keep-all;overflow-wrap:break-w
  .priceRoundIntro h2{font-size:clamp(34px,7vw,62px);font-weight:normal;margin:0}
  .priceRoundIntro p{font-size:clamp(18px,3vw,26px);margin:12px 0}
  .priceIntroIcon{font-size:56px}
+ /* Classroom quiz: consistent colors and symbols on both screens. */
+ .raceTone0,.raceTone4{--answer-bg:#FFE1EC;--answer-edge:#D58BA4}
+ .raceTone1,.raceTone5{--answer-bg:#E0EEFF;--answer-edge:#84A9D6}
+ .raceTone2,.raceTone6{--answer-bg:#FFF0BF;--answer-edge:#D4B45A}
+ .raceTone3,.raceTone7{--answer-bg:#E7DFFF;--answer-edge:#A394CC}
+ .raceOption,.s-play .raceChoices .choice{background:var(--answer-bg,#fff);border-color:var(--answer-edge,var(--line));color:#473948}
+ .raceSymbol{display:inline-flex;flex:none;align-items:center;justify-content:center;width:1.65em;height:1.65em;border-radius:12px;background:#ffffffa8;font-size:.75em;margin-right:.6em}
+ .raceOptionLabel>span:first-child,.s-play .raceChoices .choice{display:flex;align-items:center;text-align:left}
+ .raceOptionLabel{display:grid;grid-template-columns:minmax(0,1fr) auto}
+ .raceOptionLabel>span:first-child{min-width:0}
+ .raceChoices .choice:disabled{opacity:1;cursor:default}
+ .s-play .raceChoices .choice.picked{outline:4px solid #72517B;outline-offset:2px}
+ .raceChoices .choice:focus-visible{outline:4px solid #72517B;outline-offset:3px}
+ .raceOption.right,.s-play .raceChoices .choice.right{border-width:4px;color:#245B44}
+ .raceOption--result:not(.right){opacity:.68}
+ .raceClock.raceReady{background:var(--lav);padding:8px 16px;border-radius:18px}
+ .raceClock.raceReady b{min-width:5ch;font-size:30px}
+ .raceClock.raceUrgent b{color:#B62D55;animation:beat .8s ease-in-out infinite}
+ @media(prefers-reduced-motion:reduce){.raceClock.raceUrgent b{animation:none}}
+ .raceClock.raceUrgent .bar>i{background:#DE6685}
+ .raceClassResult{background:#fff;border:2px solid var(--pinkD);border-radius:18px;padding:10px 20px;font-size:24px;text-align:center}
+ .raceClassResult small{display:block;color:var(--sub);font-size:14px}
+ .raceExplanation{text-align:center;font-size:clamp(20px,2.3vw,28px)}
+ .streakBadge{background:#FFF0BF;color:#82521F;border-radius:999px;padding:8px 20px;font-size:24px}
+ .answerLocked{background:var(--lav);font-size:24px}
+ .raceBranch{background:#fff;border:2px solid var(--mintD);border-radius:20px;padding:16px;text-align:center}
+ .raceBranch>b{display:block;font-size:26px;margin-bottom:8px}
+ .raceBranch .btn.big{font-size:23px;padding:14px 22px}
+ .raceT:has(.raceOptions>:nth-child(2):last-child) .raceOption{min-height:112px;font-size:clamp(26px,3vw,40px)}
+ .raceChoices:has(>:nth-child(2):last-child) .choice{min-height:130px;font-size:clamp(25px,3vw,38px)}
+ @media(max-width:600px){.raceSymbol{border-radius:8px;margin-right:.35em}.raceBranch .btn{width:100%}.raceClassResult{font-size:20px}}
+ @media(min-width:900px){.raceT:has(.raceGraph){display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,.8fr);gap:22px;align-items:start;max-width:1200px}.raceT:has(.raceGraph) .raceOption{font-size:clamp(19px,1.8vw,27px);min-height:58px}.raceT:has(.raceGraph) .raceGraph{position:sticky;top:16px}.raceT:has(.raceGraph) .case.row .ct{font-size:23px}}
+ @media(min-width:900px){.raceT:has(.raceGraph):has(.raceOptions>:nth-child(2):last-child) .raceOption{font-size:clamp(22px,2vw,28px);min-height:94px}}
+ @media(min-width:900px) and (max-height:800px){.raceT .side{gap:8px}.raceT .q{font-size:25px;padding:8px 0}.raceOption{min-height:55px}.raceT .case.row .ct{font-size:24px}.raceT .raceActions .btn{padding:10px 18px;font-size:21px}}
+ @media(min-width:900px) and (max-height:800px){.wrap:has(.raceT){padding-bottom:14px}.wrap:has(.raceT) .topbar{margin-bottom:10px}.raceT .case.row{padding:10px 16px}.raceT .case.row .ce{font-size:44px}.raceT .roundBadge{font-size:21px;padding:5px 18px}.raceT .raceOptions{gap:8px}.raceT .raceOption{min-height:52px;padding:8px 18px;font-size:26px}.raceT .q{margin:0}}
  </style>
 <style>
 [data-cooldown]{display:block;margin-top:10px;color:#b00020;font-size:22px}
@@ -411,7 +447,7 @@ const PRESETS = {
   D: [
     { emoji: '🍓', market: '과일모찌', price: '1개 6,000원', factor: '상품 가격', text: '과일모찌 가격이 6,000원에서 8,000원으로 올랐어.', type: 'along', curve: 'D', dir: '+' },
     { emoji: '🍗', market: '치킨', price: '1마리 20,000원', factor: '상품 가격', text: '치킨 가격이 20,000원에서 15,000원으로 내렸어.', type: 'along', curve: 'D', dir: '-' },
-    { emoji: '🍓', market: '과일모찌', price: '1개 6,000원', factor: '선호(취향)', text: '유명 아이돌이 SNS에 과일모찌 먹방을 올렸어!', type: 'shift', curve: 'D', dir: '+' },
+    { emoji: '🍓', market: '과일모찌', price: '1개 6,000원', factor: '선호(취향)', text: '과일모찌가 큰 인기를 얻었어.', type: 'shift', curve: 'D', dir: '+' },
     { emoji: '🍗', market: '치킨', price: '1마리 20,000원', factor: '소비자 소득', text: '학생들의 용돈이 줄었어.', type: 'shift', curve: 'D', dir: '-' },
     { emoji: '🍗', market: '치킨', price: '1마리 20,000원', factor: '소비자 소득', text: '학생들의 용돈이 늘었어.', type: 'shift', curve: 'D', dir: '+' },
     { emoji: '🥤', market: '콜라', price: '1캔 2,000원', factor: '대체재 가격', text: '사이다 가격이 크게 올랐어.', type: 'shift', curve: 'D', dir: '+' },
@@ -419,8 +455,8 @@ const PRESETS = {
     { emoji: '🍼', market: '분유', price: '1통 30,000원', factor: '소비자 수', text: '태어나는 아기 수가 줄었어.', type: 'shift', curve: 'D', dir: '-' },
     { emoji: '🍿', market: '축제 간식', price: '1개 3,000원', factor: '소비자 수', text: '학교 축제 방문객이 늘었어.', type: 'shift', curve: 'D', dir: '+' },
     { emoji: '🍿', market: '축제 간식', price: '1개 3,000원', factor: '소비자 수', text: '학교 축제 방문객이 줄었어.', type: 'shift', curve: 'D', dir: '-' },
-    { emoji: '🧻', market: '휴지', price: '1팩 10,000원', factor: '미래 가격 예상', text: '다음 달부터 휴지 가격이 오른다는 소식이 있어.', type: 'shift', curve: 'D', dir: '+' },
-    { emoji: '🧻', market: '휴지', price: '1팩 10,000원', factor: '미래 가격 예상', text: '다음 달 휴지 가격이 내릴 거래.', type: 'shift', curve: 'D', dir: '-' },
+    { emoji: '🧻', market: '휴지', price: '1팩 10,000원', factor: '미래 가격 예상', text: '휴지를 사려던 소비자들이 다음 달 가격 인상 소식을 들었어.', type: 'shift', curve: 'D', dir: '+' },
+    { emoji: '🧻', market: '휴지', price: '1팩 10,000원', factor: '미래 가격 예상', text: '휴지를 사려던 소비자들이 다음 달 할인 소식을 들었어.', type: 'shift', curve: 'D', dir: '-' },
     { emoji: '🥤', market: '콜라', price: '1캔 2,000원', factor: '대체재 가격', text: '사이다 가격이 내렸어.', type: 'shift', curve: 'D', dir: '-' },
     { emoji: '🍿', market: '팝콘', price: '1통 6,000원', factor: '보완재 가격', text: '영화 관람료가 내렸어.', type: 'shift', curve: 'D', dir: '+' },
     { emoji: '🍓', market: '과일모찌', price: '1개 6,000원', factor: '선호(취향)', text: '과일모찌의 인기가 식었어.', type: 'shift', curve: 'D', dir: '-' },
@@ -435,8 +471,8 @@ const PRESETS = {
     { emoji: '🥬', market: '배추', price: '1포기 5,000원', factor: '자연 조건(날씨)', text: '태풍 때문에 배추밭이 망가졌어.', type: 'shift', curve: 'S', dir: '-' },
     { emoji: '🍕', market: '피자설기', price: '1조각 4,500원', factor: '공급자 수', text: '학교 앞에 피자설기 가게가 5곳 새로 생겼어.', type: 'shift', curve: 'S', dir: '+' },
     { emoji: '🍕', market: '피자설기', price: '1조각 4,500원', factor: '공급자 수', text: '학교 앞 피자설기 가게 몇 곳이 문을 닫았어.', type: 'shift', curve: 'S', dir: '-' },
-    { emoji: '🥬', market: '배추', price: '1포기 5,000원', factor: '미래 가격 예상', text: '다음 달 배추 가격이 크게 오를 거래.', type: 'shift', curve: 'S', dir: '-' },
-    { emoji: '🥬', market: '배추', price: '1포기 5,000원', factor: '미래 가격 예상', text: '다음 달 배추 가격이 내릴 거래.', type: 'shift', curve: 'S', dir: '+' },
+    { emoji: '🥬', market: '배추', price: '1포기 5,000원', factor: '미래 가격 예상', text: '배추를 판매하는 농부들이 다음 달 가격 상승을 예상해.', type: 'shift', curve: 'S', dir: '-' },
+    { emoji: '🥬', market: '배추', price: '1포기 5,000원', factor: '미래 가격 예상', text: '배추를 판매하는 농부들이 다음 달 가격 하락을 예상해.', type: 'shift', curve: 'S', dir: '+' },
     { emoji: '🐟', market: '붕어빵', price: '3개 2,000원', factor: '생산 기술', text: '붕어빵 기계가 고장 났어.', type: 'shift', curve: 'S', dir: '-' },
     { emoji: '🍕', market: '피자', price: '1판 20,000원', factor: '노동(임금)', text: '피자 가게 직원들의 임금이 올랐어.', type: 'shift', curve: 'S', dir: '-' },
     { emoji: '🍕', market: '피자', price: '1판 20,000원', factor: '자본(기계·이자)', text: '피자 굽는 기계 대여료가 내려갔어.', type: 'shift', curve: 'S', dir: '+' },
@@ -457,15 +493,15 @@ PRESETS.mix = [mixDq[0],mixD[0],mixSq[0],mixS[0],mixDq[1],mixD[1],mixSq[1],mixS[
 const FILL_CASES = [
   {market:'매점 간식',topic:'수요 · 소비자 수',text:'학교에 전학생이 늘었어.',curve:'D',dir:'+',price:'+'},
   {market:'치킨',topic:'수요 · 소득',text:'학생들의 용돈이 늘었어.',curve:'D',dir:'+',price:'+'},
-  {market:'과일모찌',topic:'수요 · 소비자 선호',text:'유명 아이돌이 과일모찌 먹방을 올렸어.',curve:'D',dir:'+',price:'+'},
+  {market:'과일모찌',topic:'수요 · 소비자 선호',text:'과일모찌가 큰 인기를 얻었어.',curve:'D',dir:'+',price:'+'},
   {market:'콜라',topic:'수요 · 대체재 가격',text:'콜라 대신 마실 수 있는 사이다 가격이 올랐어.',curve:'D',dir:'+',price:'+'},
   {market:'팝콘',topic:'수요 · 보완재 가격',text:'영화 관람료가 올랐어.',curve:'D',dir:'-',price:'-'},
-  {market:'과일모찌',topic:'수요 · 미래 가격 예상',text:'다음 달 과일모찌 가격이 오를 거래.',curve:'D',dir:'+',price:'+'},
-  {market:'과일모찌',topic:'수요 · 미래 가격 예상',text:'다음 달 과일모찌 가격이 내릴 거래.',curve:'D',dir:'-',price:'-'},
+  {market:'과일모찌',topic:'수요 · 미래 가격 예상',text:'과일모찌를 사려던 소비자들이 다음 달 가격 인상 소식을 들었어.',curve:'D',dir:'+',price:'+'},
+  {market:'과일모찌',topic:'수요 · 미래 가격 예상',text:'과일모찌를 사려던 소비자들이 다음 달 할인 소식을 들었어.',curve:'D',dir:'-',price:'-'},
   {market:'치킨',topic:'수요 · 미래 소득 예상',text:'다음 달부터 용돈이 늘어날 거래.',curve:'D',dir:'+',price:'+'},
   {market:'상품',topic:'공급 · 생산요소 가격',text:'노동자 임금, 기계 대여료, 땅 임대료가 올랐어.',curve:'S',dir:'-',price:'+'},
   {market:'상품',topic:'공급 · 생산 기술',text:'새 기계가 나와 같은 시간에 더 많은 상품을 만들 수 있어.',curve:'S',dir:'+',price:'-'},
-  {market:'배추',topic:'공급 · 미래 가격 예상',text:'다음 달 배추 가격이 오를 거래.',curve:'S',dir:'-',price:'+'},
+  {market:'배추',topic:'공급 · 미래 가격 예상',text:'배추를 판매하는 농부들이 다음 달 가격 상승을 예상해.',curve:'S',dir:'-',price:'+'},
   {market:'피자',topic:'공급 · 기업의 수',text:'학교 앞 피자 가게가 새로 여러 곳 생겼어.',curve:'S',dir:'+',price:'-'},
   {market:'딸기',topic:'공급 · 자연 조건',text:'날씨가 좋아 딸기가 풍년이야.',curve:'S',dir:'+',price:'-'},
   {market:'항공권',topic:'공급 · 생산요소 가격',text:'전쟁으로 항공유 가격이 올랐어.',curve:'S',dir:'-',price:'+'}
@@ -536,6 +572,15 @@ function ask(msg, yes = '응', no = '아니') {
 const activeSet = () => (!isTeacher && room?.players?.[pid]?.set) || (room && room.set) || 'D';
 // 이전에 만든 방에 저장된 기본 문항에도 새 문구를 적용한다.
 const revisedCaseText = new Map([
+  ["다음 달부터 휴지 가격이 오른다는 소식이 있어.", "휴지를 사려던 소비자들이 다음 달 가격 인상 소식을 들었어."],
+  ["다음 달 휴지 가격이 내릴 거래.", "휴지를 사려던 소비자들이 다음 달 할인 소식을 들었어."],
+  ["다음 달 배추 가격이 크게 오를 거래.", "배추를 판매하는 농부들이 다음 달 가격 상승을 예상해."],
+  ["다음 달 배추 가격이 오를 거래.", "배추를 판매하는 농부들이 다음 달 가격 상승을 예상해."],
+  ["다음 달 배추 가격이 내릴 거래.", "배추를 판매하는 농부들이 다음 달 가격 하락을 예상해."],
+  ["다음 달 과일모찌 가격이 오를 거래.", "과일모찌를 사려던 소비자들이 다음 달 가격 인상 소식을 들었어."],
+  ["다음 달 과일모찌 가격이 내릴 거래.", "과일모찌를 사려던 소비자들이 다음 달 할인 소식을 들었어."],
+  ["유명 아이돌이 SNS에 과일모찌 먹방을 올렸어!", "과일모찌가 큰 인기를 얻었어."],
+  ["유명 아이돌이 과일모찌 먹방을 올렸어.", "과일모찌가 큰 인기를 얻었어."],
   ["학생들의 용돈이 줄어 치킨을 사 먹는 학생이 줄었어.", "학생들의 용돈이 줄었어."],
   ["학생들의 용돈이 늘어 치킨을 사 먹는 학생이 많아졌어.", "학생들의 용돈이 늘었어."],
   ["사이다 가격이 크게 올랐어. 콜라 시장에서는 어떤 변화가 생길까?", "사이다 가격이 크게 올랐어."],
@@ -543,14 +588,14 @@ const revisedCaseText = new Map([
   ["태어나는 아기 수가 줄어 분유를 찾는 가정도 줄었어.", "태어나는 아기 수가 줄었어."],
   ["학교 축제에 방문객이 늘어 간식을 사려는 사람이 많아졌어.", "학교 축제 방문객이 늘었어."],
   ["학교 축제 방문객이 줄어 간식을 사려는 사람도 적어졌어.", "학교 축제 방문객이 줄었어."],
-  ["다음 달 휴지 가격이 내린다는 소식이 있어. 지금 사려는 사람이 줄었어.", "다음 달 휴지 가격이 내릴 거래."],
+  ["다음 달 휴지 가격이 내린다는 소식이 있어. 지금 사려는 사람이 줄었어.", "휴지를 사려던 소비자들이 다음 달 할인 소식을 들었어."],
   ["대체재인 사이다 가격이 내려 콜라보다 사이다를 찾는 사람이 많아졌어.", "사이다 가격이 내렸어."],
   ["보완재인 영화 관람료가 내려 영화관에 가는 사람이 늘었어.", "영화 관람료가 내렸어."],
   ["건강에 대한 관심이 커져 과일모찌를 찾는 사람이 줄었어.", "과일모찌의 인기가 식었어."],
   ["배추 가격이 5,000원에서 8,000원으로 올랐어. 농부들은?", "배추 가격이 5,000원에서 8,000원으로 올랐어."],
   ["붕어빵 가격이 3개 2,000원에서 1,000원으로 내렸어. 가게 주인은?", "붕어빵 가격이 3개 2,000원에서 1,000원으로 내렸어."],
-  ["다음 달 배추 가격이 크게 오를 거래. 농부들이 지금은 팔지 않고 저장해 둬.", "다음 달 배추 가격이 크게 오를 거래."],
-  ["다음 달 배추 가격이 내릴 거래. 농부들이 지금 더 많이 내다 팔아.", "다음 달 배추 가격이 내릴 거래."],
+  ["다음 달 배추 가격이 크게 오를 거래. 농부들이 지금은 팔지 않고 저장해 둬.", "배추를 판매하는 농부들이 다음 달 가격 상승을 예상해."],
+  ["다음 달 배추 가격이 내릴 거래. 농부들이 지금 더 많이 내다 팔아.", "배추를 판매하는 농부들이 다음 달 가격 하락을 예상해."],
   ["붕어빵 기계가 고장 나 한 번에 굽는 양이 줄었어.", "붕어빵 기계가 고장 났어."],
   ["전쟁으로 국제 유가가 올라 항공유 가격과 항공사 운항 비용이 커졌어.", "전쟁으로 항공유 가격이 올랐어."]
 ]);
@@ -1153,7 +1198,7 @@ async function startWholeGame(force=false){
   const savedMix=room.casesBySet?.mix, mix=savedMix?.some(c=>c.type==='along')?savedMix:PRESETS.mix, st0=room.state||{}, patch={
     'casesBySet/D':casesOf('D'),'casesBySet/S':casesOf('S'),'casesBySet/mix':mix,
     set:'mix',cases:mix,race:null,
-    state:{...st0,phase:'play',mode:'race',ci:0,sub:'q',qStarts:{0:now()+800},auto:false,reveal:false,review:null,classReview:null,raceRankVisible:false,demandRankVisible:false,supplyRankVisible:false}
+    state:{...st0,phase:'play',mode:'race',ci:0,sub:'q',qStarts:{0:now()+3200},auto:false,reveal:false,review:null,classReview:null,raceRankVisible:false,demandRankVisible:false,supplyRankVisible:false}
   };
   if(room.race)patch['raceArchives/'+Date.now()]=room.race;
   playerIds().forEach(id=>{patch['players/'+id+'/set']=null;patch['players/'+id+'/releaseResults']=null;});
@@ -1201,11 +1246,14 @@ function teacherFill(st){
     '<div class="fillStats" id="fillTeacherStats">✍️ 제출 '+submitted+' / '+ids.length+'명</div><div id="fillTeacherRoster" class="chips">'+roster+'</div></div>'+
     '<div class="fillControls">'+(st.fillReveal?'<button class="btn big mint" id="fillNext">'+(ci+1<FILL_CASES.length?'다음 빈칸 →':'빈칸 정리 끝내기')+'</button>':'<button class="btn big lemon" id="fillReveal">✅ 정답 공개</button>')+'</div></div>';
 }
+const fillDrafts = new Map();
+let fillSending = false;
 function studentFill(st,top){
   const ci=st.fillCi||0,item=FILL_CASES[ci];
   if(!item)return;
   const rec=((room.fillAnswers||{})[ci]||{})[pid]||{},revealed=!!st.fillReveal;
-  const curve=rec.curve||(revealed?item.curve:''),dir=rec.dir||(revealed?item.dir:''),price=rec.price||(revealed?item.price:'');
+  const draftKey=code+'|'+pid+'|'+(st.fillStartedAt||0)+'|'+ci, draft=fillDrafts.get(draftKey)||{};
+  const curve=rec.curve||(revealed?item.curve:draft.curve||''),dir=rec.dir||(revealed?item.dir:draft.dir||''),price=rec.price||(revealed?item.price:draft.price||'');
   const correct=!!rec.curve&&rec.curve===item.curve&&rec.dir===item.dir&&rec.price===item.price;
   let status='';
   if(revealed)status='<div class="'+(correct?'good':'hint')+'">'+(rec.curve?(correct?'✅ 모두 맞았어!':'네 답과 정답을 비교해 봐.'):'아직 답을 제출하지 않았어.')+'<br><b>'+fillResult(item)+'</b></div>';
@@ -1218,11 +1266,17 @@ function studentFill(st,top){
     fillSelect('fillDir','증가 / 감소',[['+','증가'],['-','감소']],dir,disabled)+
     '<span>→ 균형가격</span>'+fillSelect('fillPrice','상승 / 하락',[['+','상승'],['-','하락']],price,disabled)+'</div>'+
     status+(!disabled?'<button class="btn big mint" id="submitFill">✅ 빈칸 제출</button>':'')+'</div></div></div>';
+  ['fillCurve','fillDir','fillPrice'].forEach(id=>{if(el(id))el(id).onchange=()=>fillDrafts.set(draftKey,{curve:el('fillCurve').value,dir:el('fillDir').value,price:el('fillPrice').value});});
   if(el('submitFill'))el('submitFill').onclick=async()=>{
+    if(fillSending)return;
     const curve=el('fillCurve').value,dir=el('fillDir').value,price=el('fillPrice').value;
     if(!curve||!dir||!price)return toast('세 칸을 모두 채워.');
     if(((room.fillAnswers||{})[ci]||{})[pid])return;
-    await update(AP('fillAnswers/'+ci+'/'+pid),{curve,dir,price,at:now()});
+    if(room.state?.mode!=='fill'||room.state?.fillCi!==ci||room.state?.fillReveal)return;
+    fillSending=true;el('submitFill').disabled=true;
+    try{await runTransaction(AP('fillAnswers/'+ci+'/'+pid),old=>old==null?{curve,dir,price,at:now()}:undefined);fillDrafts.delete(draftKey);}
+    catch(error){console.error(error);toast('제출하지 못했어. 다시 눌러 봐.');}
+    finally{fillSending=false;if(el('submitFill'))el('submitFill').disabled=false;}
   };
 }
 function teacherFillEndSummary(){
@@ -1246,12 +1300,12 @@ function refreshTeacherFillCounts(){
 function teacherRaceOptionRows(c,ci,revealed) {
   const correct = raceAns(c).w;
   const ids = playerIds();
-  return raceOptions(c).map(([value,label]) => {
+  return raceOptions(c).map(([value,label],i) => {
     const isCorrect = revealed && value === correct;
     const count = revealed ? ids.filter(id => raceRec(id,ci)?.w === value).length : 0;
     const percent = count / Math.max(1,ids.length) * 100;
-    return '<div class="raceOption'+(revealed?' raceOption--result':'')+(isCorrect?' right':'')+'">'+
-      '<div class="raceOptionLabel"><span>'+(isCorrect?'✅ ':'')+label+'</span>'+
+    return '<div class="raceOption raceTone'+i+(revealed?' raceOption--result':'')+(isCorrect?' right':'')+'">'+
+      '<div class="raceOptionLabel"><span>'+raceChoiceLabel(label,i,isCorrect)+'</span>'+
       (revealed?'<span class="raceOptionCount">'+count+'명</span>':'')+'</div>'+
       (revealed?'<div class="dbar"><i style="width:'+percent+'%"></i></div>':'')+'</div>';
   }).join('');
@@ -1295,7 +1349,7 @@ function renderTeacher() {
       <div class="card center"><h3>태블릿으로 입장!</h3><div class="muted">입장 코드</div><div class="bigcode">${esc(code)}</div><div id="qr"></div>
         <div class="muted" style="font-size:13px;word-break:break-all">${esc(url)}</div></div>
       <div class="card"><h3>🙋 입장한 학생 ${ps.length}명</h3><div class="chips">${ps.map(p => `<span class="chip soft" style="${p.online === true ? '' : 'opacity:.4'}">${esc(p.name)}</span>`).join('') || '<span class="muted">아직 아무도 없어</span>'}</div>
-        <div class="hl lav" style="margin-top:16px">📈 사례는 이렇게 풀어<br><span style="font-size:19px">${room.set === 'mix' ? '모두 같은 사례를 보고 답을 하나씩 골라. 시장 변화 찾기 다음엔 시장가격 예측 8문제를 풀어.' : '① 가격이 바뀌었어? → ② 곡선 위의 이동? 곡선 자체의 이동? → ③ 그래프 움직이기 → ④ 최종 결과는?'}</span></div></div>
+        <div class="hl lav" style="margin-top:16px">📈 사례는 이렇게 풀어<br><span style="font-size:19px">${room.set === 'mix' ? '모두 같은 사례를 보고 답을 하나씩 골라. 시장 변화 찾기 → 가격 예측 기본 8문제 → 선택 4문제 → 빈칸 정리. 다음 문제는 선생님이 열어.' : '① 가격이 바뀌었어? → ② 곡선 위의 이동? 곡선 자체의 이동? → ③ 그래프 움직이기 → ④ 최종 결과는?'}</span></div></div>
     </div>
     <div class="center">${room.set === 'mix' ? `<button class="btn big mint" id="goRace" ${ps.length ? '' : 'disabled'}>⚡ 시장 변화 찾기 시작</button> <span class="muted">한 문제 ${RACE_SEC()}초</span>` : ''}<button class="btn sky" id="conceptDemo">🎬 개념 애니메이션 먼저 보기</button> <button class="btn big mint" id="go" ${ps.length && room.set !== 'mix' ? '' : 'hidden'}>👥 같이 첫 사례 풀기</button> <button class="btn big sky" id="goSolo" ${ps.length && room.set !== 'mix' ? '' : 'hidden'}>🏃 처음부터 각자 풀기</button> <button class="btn sm" id="toSetup">⚙️ 설정 고치기</button></div>` + (room.set === 'mix' ? '' : supplyLessonPanel(st));
   }
@@ -1560,16 +1614,13 @@ function wireTeacher(st, cs) {
   if (el('goRace')) el('goRace').onclick = () => startRaceFromLobby();
   if (el('startPriceRound')) el('startPriceRound').onclick = () => {
     if (raceMusicEnabled === null) enableRaceMusic();
-    return S({sub:'q',['qStarts/'+st.ci]:now()+800});
+    return raceStateAction(current => current.sub==='priceIntro' ? nextRaceQuestion(current,current.ci) : null);
   };
   if (el('raceMusic')) el('raceMusic').onclick = toggleRaceMusic;
   if (el('raceNext')) el('raceNext').onclick = () => raceAdvance();
-  if (el('raceClose')) el('raceClose').onclick = () => S({ sub: 'res' });
-  if (el('startFillReview')) el('startFillReview').onclick = async () => {
-    const patch={fillAnswers:null,state:{...(room.state||{}),phase:'play',mode:'fill',fillCi:0,fillReveal:false,auto:false}};
-    if(room.fillAnswers)patch['fillArchives/'+Date.now()]=room.fillAnswers;
-    await update(A(),patch);
-  };
+  if (el('raceClose')) el('raceClose').onclick = () => raceStateAction(current => current.sub==='q'?{sub:'res'}:null);
+  if (el('startFillReview')) el('startFillReview').onclick = startFillReview;
+  if (el('raceFinish')) el('raceFinish').onclick = () => raceStateAction(current => current.sub==='res'?{phase:'end'}:null);
   if (el('fillReveal')) el('fillReveal').onclick = () => S({fillReveal:true});
   if (el('fillNext')) el('fillNext').onclick = () => {
     const ci=st.fillCi||0;
@@ -1641,15 +1692,20 @@ function wireTeacher(st, cs) {
 
 /* ⚡ 총정리 스피드 시험: 사례마다 ① 무엇이 증가/감소? ② 가격은? — 빨리·많이 맞힐수록 점수 ↑ */
 const isRace = () => room && room.set === 'mix';
+const PRICE_BASIC_COUNT = 8;
 const PRICE_CASES = [
-  {emoji:'🍓',market:'과일모찌',text:'유명 아이돌이 과일모찌 먹방을 올렸어.',curve:'D',dir:'+'},
-  {emoji:'✈️',market:'항공권',text:'전쟁으로 항공유 가격이 올랐어.',curve:'S',dir:'-'},
-  {emoji:'🍿',market:'팝콘',text:'영화 관람료가 올랐어.',curve:'D',dir:'-'},
-  {emoji:'🐟',market:'붕어빵',text:'같은 시간에 붕어빵을 더 많이 구울 수 있는 기계가 보급됐어.',curve:'S',dir:'+'},
-  {emoji:'🥤',market:'콜라',text:'콜라 대신 마시던 사이다의 가격이 크게 올랐어.',curve:'D',dir:'+'},
-  {emoji:'🥬',market:'배추',text:'태풍으로 배추밭이 피해를 입었어.',curve:'S',dir:'-'},
-  {emoji:'🍗',market:'치킨',text:'다음 주에 치킨값이 내릴 거래.',question:'이번 주 치킨 시장가격은 어떻게 변할까?',curve:'D',dir:'-'},
-  {emoji:'🍕',market:'피자',text:'학교 앞에 피자 가게가 여러 곳 새로 생겼어.',curve:'S',dir:'+'}
+  {emoji:'🍓',market:'과일모찌',text:'과일모찌가 큰 인기를 얻었어.',cause:'소비자 선호 ↑',curve:'D',dir:'+'},
+  {emoji:'✈️',market:'항공권',text:'전쟁으로 항공유 가격이 올랐어.',cause:'항공유 가격 ↑',curve:'S',dir:'-'},
+  {emoji:'🍿',market:'영화관 팝콘',text:'영화 관람료가 올랐어.',cause:'보완재인 영화 관람료 ↑',curve:'D',dir:'-'},
+  {emoji:'🐟',market:'붕어빵',text:'붕어빵을 더 빨리 굽는 기계가 보급됐어.',cause:'생산 기술 발전',curve:'S',dir:'+'},
+  {emoji:'🥤',market:'콜라',text:'콜라 대신 마시던 사이다 가격이 올랐어.',cause:'대체재인 사이다 가격 ↑',curve:'D',dir:'+'},
+  {emoji:'🥬',market:'배추',text:'태풍으로 배추밭이 피해를 입었어.',cause:'배추밭 피해',curve:'S',dir:'-'},
+  {emoji:'🍗',market:'치킨',text:'치킨을 사려던 학생들이 다음 주 할인 소식을 들었어.',question:'이번 주 치킨 시장가격은 어떻게 변할까?',cause:'소비자의 미래 가격 하락 예상',curve:'D',dir:'-'},
+  {emoji:'🍕',market:'피자',text:'학교 앞에 피자 가게가 여러 곳 새로 생겼어.',cause:'기업 수 ↑',curve:'S',dir:'+'},
+  {emoji:'🍗',market:'치킨',text:'학생들의 용돈이 늘었어.',cause:'소비자 소득 ↑',curve:'D',dir:'+'},
+  {emoji:'🍿',market:'축제 간식',text:'학교 축제 방문객이 줄었어.',cause:'소비자 수 ↓',curve:'D',dir:'-'},
+  {emoji:'🥬',market:'배추',text:'배추를 판매하는 농부들이 다음 달 가격 상승을 예상해.',question:'이번 달 배추 시장가격은 어떻게 변할까?',cause:'생산자의 미래 가격 상승 예상',curve:'S',dir:'-'},
+  {emoji:'🍕',market:'피자',text:'피자 굽는 기계 대여료가 내렸어.',cause:'기계 대여료 ↓',curve:'S',dir:'+'}
 ].map(item => ({...item, type:'shift', priceRound:true}));
 const raceChangeCases = () => casesOf('mix');
 const raceCases = () => [...raceChangeCases(), ...PRICE_CASES];
@@ -1663,13 +1719,13 @@ const raceQuestion = c => c.priceRound ? (c.question || '이 사건 뒤 시장�
   : '이 시장에서 어떤 변화가 일어날까?';
 const raceSeconds = c => c.priceRound ? PRICE_SECONDS : RACE_SEC();
 const raceRoundLabel = (c,ci) => c.priceRound
-  ? '시장가격 예측 '+(ci-raceChangeCases().length+1)+' / '+PRICE_CASES.length
+  ? ((ci-raceChangeCases().length)<PRICE_BASIC_COUNT ? '가격 예측 · 기본 '+(ci-raceChangeCases().length+1)+' / '+PRICE_BASIC_COUNT : '가격 예측 · 추가 '+(ci-raceChangeCases().length-PRICE_BASIC_COUNT+1)+' / '+(PRICE_CASES.length-PRICE_BASIC_COUNT))
   : '시장 변화 찾기 '+(ci+1)+' / '+raceChangeCases().length;
 const raceAns = c => c.priceRound ? {w:priceAfter(c)} : c.type === 'along' ? ({w:c.curve+'q'+qtyAfter(c),p:null}) : ({w:c.curve+c.dir,p:priceAfter(c)});
 const raceOutcome = c => c.type==='along'
-  ? '가격 변화 → '+(c.curve==='D'?'수요량 ':'공급량 ')+(qtyAfter(c)==='+'?'증가 ↑':'감소 ↓')
-  : (c.curve==='D'?'수요':'공급')+' '+(c.dir==='+'?'증가 ↑':'감소 ↓')+' → 시장가격 '+(priceAfter(c)==='+'?'상승 ↑':'하락 ↓');
-const raceCaseRow = (c,ci) => '<div class="case row"><div class="ce">'+esc(c.emoji)+'</div><div><span class="cm">'+esc(c.market)+' · 사례 '+(ci+1)+'</span>'+
+  ? '가격 '+(c.dir==='+'?'상승 ↑':'하락 ↓')+' → '+(c.curve==='D'?'수요량 ':'공급량 ')+(qtyAfter(c)==='+'?'증가 ↑':'감소 ↓')
+  : (c.cause?esc(c.cause)+' → ':'')+(c.curve==='D'?'수요':'공급')+' '+(c.dir==='+'?'증가 ↑':'감소 ↓')+' → 시장가격 '+(priceAfter(c)==='+'?'상승 ↑':'하락 ↓');
+const raceCaseRow = (c,ci) => '<div class="case row"><div class="ce">'+esc(c.emoji)+'</div><div><span class="cm">'+esc(c.market)+' 시장'+'</span>'+
   (c.priceRound ? '' : c.type==='along'?'<div class="cp">💰 바뀐 것: '+esc(c.market)+' 가격</div>': c.price?'<div class="cp">💰 처음 가격: '+esc(c.price)+'</div>':'')+
   '<div class="ct">'+esc(c.text)+'</div></div></div>';
 const raceRec = (id, ci) => (((room.race || {})[ci]) || {})[id] || null;
@@ -1715,7 +1771,7 @@ function showPeek() {
 
 
 let raceAudio = null, raceMusicEnabled = null;
-let raceTrack = '', raceBeat = 0, nextRaceBeat = 0;
+let raceTrack = '', raceBeat = 0, nextRaceBeat = 0, raceCueKey = '';
 function refreshRaceMusicButton() {
   const button = el('raceMusic');
   if (!button) return;
@@ -1766,6 +1822,12 @@ function syncRaceMusic(st) {
   if (!c || (st.sub==='q' && (!start || now() >= start+raceSeconds(c)*1000))) return;
   const track = st.sub+'-'+ci+'-'+start;
   const time = raceAudio.currentTime;
+  if(st.sub==='q' && now()<start){
+    const count=Math.min(3,Math.ceil((start-now())/1000)), cue=ci+'|'+start+'|'+count;
+    if(cue!==raceCueKey){raceCueKey=cue;raceNote(count===1?79:72,time+.02,.18,.055,'sine');}
+    raceTrack='';
+    return;
+  }
   if (track !== raceTrack) {
     raceTrack = track;
     raceBeat = 0;
@@ -1783,28 +1845,78 @@ function syncRaceMusic(st) {
   }
 }
 async function startRaceFromLobby() {
+  if(raceActionBusy)return;
+  raceActionBusy=true;
   if (raceMusicEnabled === null) enableRaceMusic();
   const st = room.state || {};
   const patch = {race:null,state:{...st,phase:'play',mode:'race',ci:0,sub:'q',
-    qStarts:{0:now()+800},auto:false,raceRankVisible:false,review:null,classReview:null}};
+    qStarts:{0:now()+3200},auto:false,raceRankVisible:false,review:null,classReview:null}};
   if (room.race) patch['raceArchives/'+Date.now()] = room.race;
   try { await update(A(),patch); }
   catch (error) { console.error(error); toast('게임을 시작하지 못했어. 다시 눌러 봐.'); }
+  finally{raceActionBusy=false;}
+}
+let raceActionBusy = false, raceSending = false;
+async function raceStateAction(makePatch) {
+  if (raceActionBusy) return;
+  const expected = room.state || {};
+  if (expected.phase !== 'play' || expected.mode !== 'race') return;
+  raceActionBusy = true;
+  try {
+    await runTransaction(AP('state'), current => {
+      if (!current || current.phase!==expected.phase || current.mode!==expected.mode ||
+          current.ci!==expected.ci || current.sub!==expected.sub) return;
+      const patch = makePatch(current);
+      return patch ? {...current,...patch} : undefined;
+    });
+  } catch (error) { console.error(error); toast('진행을 보내지 못했어. 다시 눌러 봐.'); }
+  finally { raceActionBusy = false; }
+}
+function nextRaceQuestion(st,ci) {
+  // Returning from review must preserve original answers, clock and score.
+  return st.qStarts?.[ci] ? {ci,sub:'res'} : {ci,sub:'q',qStarts:{...(st.qStarts||{}),[ci]:now()+3200}};
 }
 function raceAdvance() {
-  const st = room.state || {};
-  if (st.sub !== 'res') return;
-  const ci = (st.ci || 0) + 1;
-  if (ci >= raceCases().length) return update(AP('state'), {phase:'end'});
-  if (ci === raceChangeCases().length) return update(AP('state'), {ci, sub:'priceIntro'});
-  return update(AP('state'), {ci, sub:'q', ['qStarts/'+ci]:now()+800});
+  return raceStateAction(st => {
+    if (st.sub !== 'res') return;
+    const ci = (st.ci || 0) + 1;
+    if (ci >= raceCases().length) return {phase:'end'};
+    if (ci === raceChangeCases().length && !st.qStarts?.[ci]) return {ci,sub:'priceIntro'};
+    return nextRaceQuestion(st,ci);
+  });
+}
+async function startFillReview() {
+  if (raceActionBusy) return;
+  raceActionBusy = true;
+  const patch={'state/phase':'play','state/mode':'fill','state/fillCi':0,
+    'state/fillReveal':false,'state/fillStartedAt':now(),'state/auto':false,'state/classReview':null,'state/review':null,
+    fillAnswers:null};
+  if(room.fillAnswers)patch['fillArchives/'+Date.now()]=room.fillAnswers;
+  try { await update(A(),patch); }
+  catch(error){console.error(error);toast('빈칸 정리를 열지 못했어. 다시 눌러 봐.');}
+  finally{raceActionBusy=false;}
 }
 function priceRoundIntro(teacher) {
   return '<div class="priceRoundIntro"><div class="card"><div aria-hidden="true" class="priceIntroIcon">📈</div>'+
-    '<h2>시장가격 예측 라운드</h2><p>사례를 읽고 시장가격이 오를지 내릴지 골라.</p>'+
-    '<p>'+PRICE_CASES.length+'문제 · 문제당 '+PRICE_SECONDS+'초</p>'+
+    '<h2>시장가격 예측</h2><p>사례를 읽고, 이 시장의 가격을 예측해.</p>'+
+    '<p>기본 8문제 + 선택 4문제 · 문제당 '+PRICE_SECONDS+'초</p>'+
+    '<p class="muted">사례에 나온 요인만 바뀐다고 생각해.</p>'+
     (teacher ? '<button class="btn big mint" id="startPriceRound">▶ 가격 문제 시작</button>' :
-      '<div class="muted">선생님이 시작 버튼을 누르면 다 같이 시작해.</div>')+'</div></div>';
+      '<div class="muted">선생님이 시작하면 다 같이 출발해.</div>')+'</div></div>';
+}
+const RACE_MARKS = ['▲','◆','●','■','▲','◆','●','■'];
+const raceChoiceLabel = (label,i,correct=false) => '<span class="raceSymbol" aria-hidden="true">'+(correct?'✓':RACE_MARKS[i])+'</span><span>'+label.replace(/^[^가-힣]+/,'')+'</span>';
+function raceStreak(id,ci) {
+  let count=0;
+  const cs=raceCases(), starts=room.state?.qStarts||{};
+  for(let i=ci;i>=0;i--){if(!starts[i]||raceRec(id,i)?.w!==raceAns(cs[i]).w)break;count++;}
+  return count;
+}
+function raceClassResult(c,ci) {
+  const ids=playerIds(), submitted=ids.filter(id=>raceRec(id,ci)?.w);
+  const correct=submitted.filter(id=>raceRec(id,ci).w===raceAns(c).w).length;
+  return '<div class="raceClassResult">'+(submitted.length&&correct===submitted.length?'🎉 전원 정답!':'👏 함께 맞힌 사람')+
+    ' <b>'+correct+' / '+submitted.length+'명</b><small>제출한 학생 기준</small></div>';
 }
 const tBar = c => '<div class="raceClock"><b class="raceTime">'+raceSeconds(c)+'초</b>'+
   '<div class="bar"><i class="raceBar" style="width:100%;transition:none"></i></div></div>';
@@ -1814,14 +1926,15 @@ function teacherRace(st) {
   if (!c) return '<div class="stage"><div class="rule">사례가 없어</div></div>';
   const answered = playerIds().filter(id => raceRec(id,ci)?.w).length;
   const res = st.sub === 'res';
+  const basicDone = c.priceRound && ci-raceChangeCases().length+1===PRICE_BASIC_COUNT;
   const nextLabel = ci+1 === rs.length ? '최종 결과 보기' :
     ci+1 === raceChangeCases().length ? '시장가격 예측으로 →' : '다음 문제 →';
   return '<div class="raceT"><div class="side"><span class="roundBadge">'+raceRoundLabel(c,ci)+'</span>'+raceCaseRow(c,ci)+
     (res ? '' : tBar(c))+'<div class="q">'+raceQuestion(c)+'</div>'+
     '<div class="raceOptions" id="raceVoteCounts">'+teacherRaceOptionRows(c,ci,res)+'</div>'+
-    (res ? '<div class="hl mint">'+raceOutcome(c)+'</div>' : '')+
+    (res ? '<div class="hl mint raceExplanation">'+raceOutcome(c)+'</div>'+raceClassResult(c,ci) : '')+
     '<div class="raceActions"><div class="muted" id="raceAnswered">✍️ 제출 '+answered+' / '+playerIds().length+'명</div>'+
-    (res ? '<button class="btn big mint" id="raceNext">'+nextLabel+'</button>' :
+    (res ? (basicDone ? '<div class="raceBranch"><b>기본 8문제 완료!</b><div><button class="btn big mint" id="raceNext">추가 4문제 풀기 →</button><button class="btn big lemon" id="startFillReview">빈칸 정리로 →</button><button class="btn sky" id="raceFinish">게임 결과 보기</button></div></div>' : '<button class="btn big mint" id="raceNext">'+nextLabel+'</button>') :
       '<button class="btn lemon" id="raceClose">마감하고 정답 보기</button>')+'</div></div>'+
     (res ? '<div class="graph raceGraph">'+solvedGraph(c,true)+'</div>' : '')+'</div>';
 }
@@ -2132,10 +2245,14 @@ function renderStudent() {
 
 
 function updateRaceClock(c,end) {
-  const left = Math.max(0,end-now());
-  const scale = raceSeconds(c)*1000;
-  document.querySelectorAll('.raceBar').forEach(bar => bar.style.width = Math.min(100,left/scale*100)+'%');
-  document.querySelectorAll('.raceTime').forEach(label => label.textContent = Math.min(raceSeconds(c),Math.ceil(left/1000))+'초');
+  const remaining = Math.max(0,end-now()), scale=raceSeconds(c)*1000;
+  const before = remaining>scale;
+  document.querySelectorAll('.raceBar').forEach(bar => bar.style.width = Math.min(100,remaining/scale*100)+'%');
+  document.querySelectorAll('.raceTime').forEach(label => label.textContent = before ? '준비 '+Math.min(3,Math.ceil((remaining-scale)/1000)) : Math.ceil(remaining/1000)+'초');
+  document.querySelectorAll('.raceClock').forEach(clock => {
+    clock.classList.toggle('raceReady',before);
+    clock.classList.toggle('raceUrgent',!before&&remaining>0&&remaining<=5000);
+  });
 }
 function studentRace(st,top) {
   if (st.sub === 'priceIntro') {
@@ -2155,11 +2272,11 @@ function studentRace(st,top) {
   if (res) {
     const picked = rec?.w === right;
     msg = '<div class="'+(picked?'good':'hint')+'">'+(picked?'맞았어! +'+racePts(c,ci,pid,start)+'점':rec?.w?'정답을 확인해 봐.':'제출 시간이 끝났어.')+
-      '<br><b>'+raceOutcome(c)+'</b></div><div class="muted">선생님이 다음 문제를 열면 같이 넘어가.</div>';
-  } else if (rec?.w) msg = '<div class="good">제출했어. 정답 공개를 기다려.</div>';
-  const choices = raceOptions(c).map(([value,label]) => {
+      '<br><b>'+raceOutcome(c)+'</b></div>'+(picked&&raceStreak(pid,ci)>=2?'<div class="streakBadge">🔥 '+raceStreak(pid,ci)+'문제 연속 정답!</div>':'')+'<div class="muted">선생님이 다음 문제를 열면 같이 넘어가.</div>';
+  } else if (rec?.w) msg = '<div class="good answerLocked">🔒 제출 완료!<br>칠판에서 정답 공개를 기다려.</div>';
+  const choices = raceOptions(c).map(([value,label],i) => {
     const style = res && value === right ? 'right' : rec?.w === value ? (res?'wrong':'picked') : '';
-    return '<button class="choice '+style+'" data-v="'+value+'" '+(res||rec?.w||!ready?'disabled':'')+'>'+label+'</button>';
+    return '<button class="choice raceTone'+i+' '+style+'" data-v="'+value+'" '+(res||rec?.w||!ready?'disabled':'')+'>'+raceChoiceLabel(label,i)+'</button>';
   }).join('');
   const total = (raceScores()[pid] || 0) - (res ? 0 : racePts(c,ci,pid,start));
   app.innerHTML = '<div class="s-wrap">'+top.replace(/⭐ [0-9]+점/,'⭐ '+total+'점')+
@@ -2169,17 +2286,19 @@ function studentRace(st,top) {
   if (!res) updateRaceClock(c,end);
   const buttons = app.querySelectorAll('.raceChoices .choice:not([disabled])');
   buttons.forEach(button => button.onclick = async () => {
-    if (room.state?.phase !== 'play' || room.state?.mode !== 'race' || room.state?.sub !== 'q' || (room.state.ci || 0) !== ci || now() >= end || raceRec(pid,ci)) return;
+    if (room.state?.phase !== 'play' || room.state?.mode !== 'race' || room.state?.sub !== 'q' || (room.state.ci || 0) !== ci || now()<start || now() >= end || raceRec(pid,ci) || raceSending) return;
+    raceSending=true;
     buttons.forEach(item => item.disabled = true);
     button.classList.add('picked');
     try {
-      await update(AP('race/'+ci+'/'+pid),{w:button.dataset.v,wAt:now()});
+      const answer={w:button.dataset.v,wAt:now()};
+      await runTransaction(AP('race/'+ci+'/'+pid),old=>old==null?answer:undefined);
     } catch (error) {
       console.error(error);
       toast('답을 보내지 못했어. 다시 눌러 봐.');
       sKey = '';
       renderStudent();
-    }
+    } finally { raceSending=false; }
   });
 }
 if (!isTeacher) setInterval(() => {
