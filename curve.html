@@ -225,6 +225,8 @@ canvas{display:block;width:100%;touch-action:none;border-radius:16px}
 .case .ct{font-size:32px;line-height:1.45}
 .case.s .ct{font-size:24px} .case.s .ce{font-size:56px}
 .case.row .cm::before{content:'📍';font-size:.8em}
+.raceT .q{font-size:clamp(29px,3vw,36px);font-weight:700;line-height:1.3}
+.s-play .q{font-size:clamp(27px,3vw,34px);font-weight:700;line-height:1.3}
 .stepbar{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin:8px 0}
 .stepbar span{background:#fff;border:2px solid var(--line);border-radius:999px;padding:4px 12px;font-size:15px;color:var(--sub)}
 .stepbar span.on{background:var(--lemon);border-color:var(--lemonD);color:var(--ink)}
@@ -664,10 +666,10 @@ function optionsOf(c, step) {
   return [['+', `📈 ${w}이 늘어난다`], ['-', `📉 ${w}이 줄어든다`]];
 }
 function questionOf(c, step) {
-  if (step === 'price') return `이번에 볼 <b>${esc(c.market)} 가격</b>이 바뀌었어?`;
-  if (step === 'move') return `<b>${esc(c.market)} ${curveName(c.curve)}곡선</b>에서 점만 움직여, 곡선 전체가 움직여?`;
-  if (step === 'who') return '<b>가격은 그대로야.</b> 사는 쪽과 파는 쪽 중 누구의 사정이 바뀌었어?';
-  if (step === 'drag') return c.type === 'shift' ? `<b>${esc(c.market)} ${curveName(c.curve)}곡선</b>을 왼쪽이나 오른쪽으로 옮겨 봐.` : `<b>${esc(c.market)} ${curveName(c.curve)}곡선 위에서</b> 점을 움직여 봐.`;
+  if (step === 'price') return `이번에 볼 <b>${esc(c.market)} 시장 가격</b>이 바뀌었어?`;
+  if (step === 'move') return `<b>${esc(c.market)} 시장의 ${curveName(c.curve)}곡선</b>에서 점만 움직여, 곡선 전체가 움직여?`;
+  if (step === 'who') return `<b>${esc(c.market)} 가격은 그대로야.</b> 소비자와 판매자 중 누구의 사정이 바뀌었어?`;
+  if (step === 'drag') return c.type === 'shift' ? `<b>${esc(c.market)} 시장의 ${curveName(c.curve)}곡선</b>을 왼쪽이나 오른쪽으로 옮겨 봐.` : `<b>${esc(c.market)} 시장의 ${curveName(c.curve)}곡선 위에서</b> 점을 움직여 봐.`;
   if (c.type === 'shift') return `이 변화 뒤 <b>${esc(c.market)} 시장가격</b>은 오를까, 내릴까?`;
   return c.curve === 'D' ? '그럼 <b>사려는 양(수요량)</b>은?' : '그럼 <b>팔려는 양(공급량)</b>은?';
 }
@@ -1735,7 +1737,7 @@ const PRICE_BASIC_COUNT = 8;
 const PRICE_CASES = [
   {emoji:'🍓',market:'과일모찌',text:'과일모찌가 큰 인기를 얻었어.',cause:'소비자 선호 ↑',curve:'D',dir:'+'},
   {emoji:'✈️',market:'항공권',text:'전쟁으로 항공유 가격이 올랐어.',cause:'항공유 가격 ↑',curve:'S',dir:'-'},
-  {emoji:'🍿',market:'영화관 팝콘',text:'영화 관람료가 올랐어.',cause:'보완재인 영화 관람료 ↑',curve:'D',dir:'-'},
+  {emoji:'🍿',market:'팝콘',text:'영화 관람료가 올랐어.',cause:'보완재인 영화 관람료 ↑',curve:'D',dir:'-'},
   {emoji:'🐟',market:'붕어빵',text:'붕어빵을 더 빨리 굽는 기계가 보급됐어.',cause:'생산 기술 발전',curve:'S',dir:'+'},
   {emoji:'🥤',market:'콜라',text:'콜라 대신 마시던 사이다 가격이 올랐어.',cause:'대체재인 사이다 가격 ↑',curve:'D',dir:'+'},
   {emoji:'🥬',market:'배추',text:'태풍으로 배추밭이 피해를 입었어.',cause:'배추밭 피해',curve:'S',dir:'-'},
@@ -1753,9 +1755,9 @@ const RACE_SEC = () => (room && room.raceSec) || 20;
 const WHAT_OPTS = [['D+', '🛒 수요 증가'], ['D-', '🛒 수요 감소'], ['S+', '🏭 공급 증가'], ['S-', '🏭 공급 감소'], ['Dq+', '🛒 수요량 증가'], ['Dq-', '🛒 수요량 감소'], ['Sq+', '🏭 공급량 증가'], ['Sq-', '🏭 공급량 감소']];
 const PRICE_OPTS = [['+', '📈 시장가격 상승'], ['-', '📉 시장가격 하락']];
 const raceOptions = c => c.priceRound ? PRICE_OPTS : WHAT_OPTS;
-const raceQuestion = c => c.priceRound ? (c.question || '이 사건 뒤 시장가격은 어떻게 변할까?') : c.type === 'along'
-  ? (c.curve === 'D' ? '사려는 양은 어떻게 달라질까?' : '팔려는 양은 어떻게 달라질까?')
-  : '이 시장에서 어떤 변화가 일어날까?';
+const raceQuestion = c => c.priceRound ? (c.question || `${c.market} 시장가격은 어떻게 변할까?`) : c.type === 'along'
+  ? `${c.market} 시장에서 ${c.curve === 'D' ? '소비자가 사려는 양' : '판매자가 팔려는 양'}은 어떻게 달라질까?`
+  : `${c.market} 시장에서 ${c.curve === 'D' ? '소비자 입장' : '판매자 입장'}의 ${c.curve === 'D' ? '수요곡선' : '공급곡선'}은 어떻게 변할까?`;
 const raceSeconds = c => c.priceRound ? PRICE_SECONDS : RACE_SEC();
 const raceRoundLabel = (c,ci) => c.priceRound
   ? ((ci-raceChangeCases().length)<PRICE_BASIC_COUNT ? '가격 예측 · 기본 '+(ci-raceChangeCases().length+1)+' / '+PRICE_BASIC_COUNT : '가격 예측 · 추가 '+(ci-raceChangeCases().length-PRICE_BASIC_COUNT+1)+' / '+(PRICE_CASES.length-PRICE_BASIC_COUNT))
@@ -1960,7 +1962,7 @@ async function startFillReview() {
 }
 function priceRoundIntro(teacher) {
   return '<div class="priceRoundIntro"><div class="card"><div aria-hidden="true" class="priceIntroIcon">📈</div>'+
-    '<h2>시장가격 예측</h2><p>사례를 읽고, 이 시장의 가격을 예측해.</p>'+
+    '<h2>시장가격 예측</h2><p>사례에 나온 상품의 시장가격을 예측해.</p>'+
     '<p>기본 8문제 + 선택 4문제 · 문제당 '+PRICE_SECONDS+'초</p>'+
     '<p class="muted">사례에 나온 요인만 바뀐다고 생각해.</p>'+
     (teacher ? '<button class="btn big mint" id="startPriceRound">▶ 가격 문제 시작</button>' :
