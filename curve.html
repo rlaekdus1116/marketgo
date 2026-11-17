@@ -207,11 +207,8 @@ canvas{display:block;width:100%;touch-action:none;border-radius:16px}
 .tile .te{font-size:44px;line-height:1.1}.tile .tb{font-size:23px;margin-top:4px}.tile .ts{font-size:15px;color:var(--sub)}
 .s-wrap{max-width:1150px}
 .tile .tb{white-space:nowrap;font-size:21px}.sumCard{grid-template-columns:.8fr 1.2fr}
-.raceT .drow{margin:2px 0;font-size:20px}.raceT .dbar{height:26px}.raceT .q{margin:0}
-.raceChoices{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.raceChoices .choice{min-height:74px;padding:20px 12px;font-size:25px;line-height:1.25;border-color:#F5DDE7;box-shadow:0 5px 0 #F5DDE7}.raceChoices .choice.picked{background:#FBE0EA;border-color:#E9AFC3;box-shadow:0 5px 0 #E9AFC3}.raceChoices .choice.right{background:var(--mint);border-color:var(--mintD)}
-.raceOptions{display:grid;grid-template-columns:1fr 1fr;gap:7px}.raceOptions .drow{grid-template-columns:minmax(105px,1.2fr) 1fr 40px;gap:5px;margin:0;font-size:17px}.raceOptions .dbar{height:24px}
 .fillCard{width:min(1000px,100%);text-align:center}.fillScenario{font-size:30px;line-height:1.45;margin:16px auto}.fillSentence{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;font-size:27px;margin:20px 0}.fillSelect{font:inherit;color:var(--ink);background:#FFF0C7;border:3px solid #F0D582;border-radius:16px;padding:10px 12px;min-width:145px;text-align:center}.fillSelect:disabled{opacity:1;color:var(--ink)}.fillControls{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap}.fillStats{font-size:19px;background:var(--sky);border-radius:18px;padding:10px 15px;margin:12px auto}.fillRow{border-top:1px solid var(--line);padding:9px 0;text-align:left;font-size:18px}
-@media(max-width:800px){.raceOptions{grid-template-columns:1fr}.raceChoices .choice{font-size:23px;min-height:68px}.fillScenario{font-size:24px}.fillSentence{font-size:22px}.fillSelect{min-width:120px}}
+@media(max-width:800px){.fillScenario{font-size:24px}.fillSentence{font-size:22px}.fillSelect{min-width:120px}}
 
 .nb{display:inline-flex;width:24px;height:24px;border-radius:50%;color:#fff;font-size:16px;align-items:center;justify-content:center;margin-right:5px;vertical-align:2px}
 .tile.last{background:var(--mint);border-color:var(--mintD)}
@@ -338,11 +335,35 @@ button,.btn,.speech,.rule,.title,.card{word-break:keep-all;overflow-wrap:break-w
 .conceptGraph .demandOld{stroke:#a9cce8}.conceptGraph .supplyOld{stroke:#f5b48c}
 
 .socialDock{animation:socialUp .22s ease-out;position:fixed;right:12px;bottom:12px;z-index:9999;width:min(360px,calc(100vw - 24px));background:#fff;border:2px solid var(--line);border-radius:20px;box-shadow:0 5px 18px #5b4b5730;padding:10px}.socialHead{display:flex;justify-content:space-between;align-items:center;gap:6px}.socialReact{display:flex;gap:5px;justify-content:flex-end;margin:6px 0}.socialReact button{background:var(--sky);border-radius:14px;font-size:23px;padding:5px 8px}.socialMessages{max-height:150px;overflow:auto;display:grid;gap:4px;margin:6px 0}.socialMsg{background:var(--bg);border-radius:10px;padding:5px 8px;font-size:15px}.socialCompose{display:flex;gap:5px}.socialCompose input{min-width:0;flex:1;font:inherit;border:2px solid var(--line);border-radius:10px;padding:7px}.socialCompose.help{display:grid;grid-template-columns:1fr}.socialCompose.help .btn{width:100%;margin:0;font-size:15px}@keyframes socialUp{from{transform:translateY(18px);opacity:0}to{transform:translateY(0);opacity:1}}@media(max-width:700px){.socialDock{right:6px;bottom:calc(6px + env(safe-area-inset-bottom));width:min(320px,calc(100vw - 12px))}}
- .raceT:not(:has(.graph)){display:block;max-width:900px;margin:auto}
+ .raceT{max-width:1040px;margin:auto}
+ .raceT .side{display:flex;flex-direction:column;align-items:center;gap:12px}
  .raceClock{display:flex;gap:12px;align-items:center;width:min(100%,620px);font-size:22px}
  .raceClock b{min-width:4ch;color:#694054}
  .raceT .q{font-size:clamp(23px,3vw,32px)}
- .raceT .raceOptions{width:100%;max-width:840px}
+ .raceOptions,.s-play .raceChoices{
+   display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-auto-rows:1fr;
+   gap:clamp(8px,1.2vw,15px);width:100%;max-width:none;
+ }
+ .raceOption,.s-play .raceChoices .choice{
+   min-width:0;min-height:clamp(62px,8vh,93px);margin:0;
+   border:2px solid #dfc7d5;border-radius:18px;background:#fff;color:var(--ink);
+   font-size:clamp(22px,2.25vw,36px);line-height:1.2;padding:10px clamp(10px,2vw,24px);
+ }
+ .raceOption{display:grid;grid-template-rows:1fr;align-items:center;box-shadow:0 3px 0 #ead6e2}
+ .raceOptionLabel{display:flex;justify-content:space-between;align-items:center;gap:8px}
+ .raceOption--result{grid-template-rows:1fr auto;gap:7px}
+ .raceOption .dbar{height:7px}
+ .raceOptionCount{font-size:.65em;white-space:nowrap;color:var(--ink)}
+ .raceOption.right,.s-play .raceChoices .choice.right{background:var(--mint);border-color:var(--mintD)}
+ .raceOption.right .dbar i{background:#68b999}
+ .s-play .raceChoices .choice.picked{background:#FBE0EA;border-color:#E9AFC3}
+ .s-play .raceChoices .choice.wrong{background:#ffe3e7;border-color:#de8c9b}
+ .raceT .raceGraph{width:min(100%,650px);margin:20px auto 0}
+ .raceT .raceActions{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap}
+ @media(max-width:600px){
+   .raceOption,.s-play .raceChoices .choice{font-size:clamp(17px,4.9vw,25px)}
+   .raceOptionLabel{gap:4px}
+ }
  .priceRoundIntro{position:fixed;inset:0;z-index:85;background:#342234cf;display:grid;place-items:center;padding:20px;overflow:auto}
  .priceRoundIntro .card{width:min(720px,100%);text-align:center;margin:0;padding:clamp(20px,5vw,52px);border:4px solid #ab6f92}
  .priceRoundIntro h2{font-size:clamp(34px,7vw,62px);font-weight:normal;margin:0}
@@ -391,22 +412,22 @@ const PRESETS = {
     { emoji: '🍓', market: '과일모찌', price: '1개 6,000원', factor: '상품 가격', text: '과일모찌 가격이 6,000원에서 8,000원으로 올랐어.', type: 'along', curve: 'D', dir: '+' },
     { emoji: '🍗', market: '치킨', price: '1마리 20,000원', factor: '상품 가격', text: '치킨 가격이 20,000원에서 15,000원으로 내렸어.', type: 'along', curve: 'D', dir: '-' },
     { emoji: '🍓', market: '과일모찌', price: '1개 6,000원', factor: '선호(취향)', text: '유명 아이돌이 SNS에 과일모찌 먹방을 올렸어!', type: 'shift', curve: 'D', dir: '+' },
-    { emoji: '🍗', market: '치킨', price: '1마리 20,000원', factor: '소비자 소득', text: '학생들의 용돈이 줄어 치킨을 사 먹는 학생이 줄었어.', type: 'shift', curve: 'D', dir: '-' },
-    { emoji: '🍗', market: '치킨', price: '1마리 20,000원', factor: '소비자 소득', text: '학생들의 용돈이 늘어 치킨을 사 먹는 학생이 많아졌어.', type: 'shift', curve: 'D', dir: '+' },
-    { emoji: '🥤', market: '콜라', price: '1캔 2,000원', factor: '대체재 가격', text: '사이다 가격이 크게 올랐어. 콜라 시장에서는 어떤 변화가 생길까?', type: 'shift', curve: 'D', dir: '+' },
-    { emoji: '🍿', market: '팝콘', price: '1통 6,000원', factor: '보완재 가격', text: '영화관람료가 크게 올랐어. 팝콘 시장에서는 어떤 변화가 생길까?', type: 'shift', curve: 'D', dir: '-' },
-    { emoji: '🍼', market: '분유', price: '1통 30,000원', factor: '소비자 수', text: '태어나는 아기 수가 줄어 분유를 찾는 가정도 줄었어.', type: 'shift', curve: 'D', dir: '-' },
-    { emoji: '🍿', market: '축제 간식', price: '1개 3,000원', factor: '소비자 수', text: '학교 축제에 방문객이 늘어 간식을 사려는 사람이 많아졌어.', type: 'shift', curve: 'D', dir: '+' },
-    { emoji: '🍿', market: '축제 간식', price: '1개 3,000원', factor: '소비자 수', text: '학교 축제 방문객이 줄어 간식을 사려는 사람도 적어졌어.', type: 'shift', curve: 'D', dir: '-' },
+    { emoji: '🍗', market: '치킨', price: '1마리 20,000원', factor: '소비자 소득', text: '학생들의 용돈이 줄었어.', type: 'shift', curve: 'D', dir: '-' },
+    { emoji: '🍗', market: '치킨', price: '1마리 20,000원', factor: '소비자 소득', text: '학생들의 용돈이 늘었어.', type: 'shift', curve: 'D', dir: '+' },
+    { emoji: '🥤', market: '콜라', price: '1캔 2,000원', factor: '대체재 가격', text: '사이다 가격이 크게 올랐어.', type: 'shift', curve: 'D', dir: '+' },
+    { emoji: '🍿', market: '팝콘', price: '1통 6,000원', factor: '보완재 가격', text: '영화 관람료가 크게 올랐어.', type: 'shift', curve: 'D', dir: '-' },
+    { emoji: '🍼', market: '분유', price: '1통 30,000원', factor: '소비자 수', text: '태어나는 아기 수가 줄었어.', type: 'shift', curve: 'D', dir: '-' },
+    { emoji: '🍿', market: '축제 간식', price: '1개 3,000원', factor: '소비자 수', text: '학교 축제 방문객이 늘었어.', type: 'shift', curve: 'D', dir: '+' },
+    { emoji: '🍿', market: '축제 간식', price: '1개 3,000원', factor: '소비자 수', text: '학교 축제 방문객이 줄었어.', type: 'shift', curve: 'D', dir: '-' },
     { emoji: '🧻', market: '휴지', price: '1팩 10,000원', factor: '미래 가격 예상', text: '다음 달부터 휴지 가격이 오른다는 소식이 있어.', type: 'shift', curve: 'D', dir: '+' },
-    { emoji: '🧻', market: '휴지', price: '1팩 10,000원', factor: '미래 가격 예상', text: '다음 달 휴지 가격이 내린다는 소식이 있어. 지금 사려는 사람이 줄었어.', type: 'shift', curve: 'D', dir: '-' },
-    { emoji: '🥤', market: '콜라', price: '1캔 2,000원', factor: '대체재 가격', text: '대체재인 사이다 가격이 내려 콜라보다 사이다를 찾는 사람이 많아졌어.', type: 'shift', curve: 'D', dir: '-' },
-    { emoji: '🍿', market: '팝콘', price: '1통 6,000원', factor: '보완재 가격', text: '보완재인 영화 관람료가 내려 영화관에 가는 사람이 늘었어.', type: 'shift', curve: 'D', dir: '+' },
-    { emoji: '🍓', market: '과일모찌', price: '1개 6,000원', factor: '선호(취향)', text: '건강에 대한 관심이 커져 과일모찌를 찾는 사람이 줄었어.', type: 'shift', curve: 'D', dir: '-' },
+    { emoji: '🧻', market: '휴지', price: '1팩 10,000원', factor: '미래 가격 예상', text: '다음 달 휴지 가격이 내릴 거래.', type: 'shift', curve: 'D', dir: '-' },
+    { emoji: '🥤', market: '콜라', price: '1캔 2,000원', factor: '대체재 가격', text: '사이다 가격이 내렸어.', type: 'shift', curve: 'D', dir: '-' },
+    { emoji: '🍿', market: '팝콘', price: '1통 6,000원', factor: '보완재 가격', text: '영화 관람료가 내렸어.', type: 'shift', curve: 'D', dir: '+' },
+    { emoji: '🍓', market: '과일모찌', price: '1개 6,000원', factor: '선호(취향)', text: '과일모찌의 인기가 식었어.', type: 'shift', curve: 'D', dir: '-' },
   ],
   S: [
-    { emoji: '🥬', market: '배추', price: '1포기 5,000원', factor: '상품 가격', text: '배추 가격이 5,000원에서 8,000원으로 올랐어. 농부들은?', type: 'along', curve: 'S', dir: '+' },
-    { emoji: '🐟', market: '붕어빵', price: '3개 2,000원', factor: '상품 가격', text: '붕어빵 가격이 3개 2,000원에서 1,000원으로 내렸어. 가게 주인은?', type: 'along', curve: 'S', dir: '-' },
+    { emoji: '🥬', market: '배추', price: '1포기 5,000원', factor: '상품 가격', text: '배추 가격이 5,000원에서 8,000원으로 올랐어.', type: 'along', curve: 'S', dir: '+' },
+    { emoji: '🐟', market: '붕어빵', price: '3개 2,000원', factor: '상품 가격', text: '붕어빵 가격이 3개 2,000원에서 1,000원으로 내렸어.', type: 'along', curve: 'S', dir: '-' },
     { emoji: '🍓', market: '과일모찌', price: '1개 6,000원', factor: '생산 요소 가격', text: '과일모찌 재료인 찹쌀 가격이 크게 올랐어.', type: 'shift', curve: 'S', dir: '-' },
     { emoji: '🍓', market: '과일모찌', price: '1개 6,000원', factor: '생산 요소 가격', text: '과일모찌 재료인 찹쌀 가격이 내렸어.', type: 'shift', curve: 'S', dir: '+' },
     { emoji: '🐟', market: '붕어빵', price: '3개 2,000원', factor: '생산 기술', text: '붕어빵을 더 빨리 굽는 기계가 나왔어.', type: 'shift', curve: 'S', dir: '+' },
@@ -414,14 +435,14 @@ const PRESETS = {
     { emoji: '🥬', market: '배추', price: '1포기 5,000원', factor: '자연 조건(날씨)', text: '태풍 때문에 배추밭이 망가졌어.', type: 'shift', curve: 'S', dir: '-' },
     { emoji: '🍕', market: '피자설기', price: '1조각 4,500원', factor: '공급자 수', text: '학교 앞에 피자설기 가게가 5곳 새로 생겼어.', type: 'shift', curve: 'S', dir: '+' },
     { emoji: '🍕', market: '피자설기', price: '1조각 4,500원', factor: '공급자 수', text: '학교 앞 피자설기 가게 몇 곳이 문을 닫았어.', type: 'shift', curve: 'S', dir: '-' },
-    { emoji: '🥬', market: '배추', price: '1포기 5,000원', factor: '미래 가격 예상', text: '다음 달 배추 가격이 크게 오를 거래. 농부들이 지금은 팔지 않고 저장해 둬.', type: 'shift', curve: 'S', dir: '-' },
-    { emoji: '🥬', market: '배추', price: '1포기 5,000원', factor: '미래 가격 예상', text: '다음 달 배추 가격이 내릴 거래. 농부들이 지금 더 많이 내다 팔아.', type: 'shift', curve: 'S', dir: '+' },
-    { emoji: '🐟', market: '붕어빵', price: '3개 2,000원', factor: '생산 기술', text: '붕어빵 기계가 고장 나 한 번에 굽는 양이 줄었어.', type: 'shift', curve: 'S', dir: '-' },
+    { emoji: '🥬', market: '배추', price: '1포기 5,000원', factor: '미래 가격 예상', text: '다음 달 배추 가격이 크게 오를 거래.', type: 'shift', curve: 'S', dir: '-' },
+    { emoji: '🥬', market: '배추', price: '1포기 5,000원', factor: '미래 가격 예상', text: '다음 달 배추 가격이 내릴 거래.', type: 'shift', curve: 'S', dir: '+' },
+    { emoji: '🐟', market: '붕어빵', price: '3개 2,000원', factor: '생산 기술', text: '붕어빵 기계가 고장 났어.', type: 'shift', curve: 'S', dir: '-' },
     { emoji: '🍕', market: '피자', price: '1판 20,000원', factor: '노동(임금)', text: '피자 가게 직원들의 임금이 올랐어.', type: 'shift', curve: 'S', dir: '-' },
     { emoji: '🍕', market: '피자', price: '1판 20,000원', factor: '자본(기계·이자)', text: '피자 굽는 기계 대여료가 내려갔어.', type: 'shift', curve: 'S', dir: '+' },
     { emoji: '🥬', market: '배추', price: '1포기 5,000원', factor: '토지(임대료)', text: '배추밭 임대료가 올랐어.', type: 'shift', curve: 'S', dir: '-' },
     { emoji: '🥬', market: '배추', price: '1포기 5,000원', factor: '토지(임대료)', text: '배추밭 임대료가 내려갔어.', type: 'shift', curve: 'S', dir: '+' },
-    { emoji: '✈️', market: '항공편', price: '1장 100,000원', factor: '생산 요소 가격(연료)', text: '전쟁으로 국제 유가가 올라 항공유 가격과 항공사 운항 비용이 커졌어.', type: 'shift', curve: 'S', dir: '-' },
+    { emoji: '✈️', market: '항공편', price: '1장 100,000원', factor: '생산 요소 가격(연료)', text: '전쟁으로 항공유 가격이 올랐어.', type: 'shift', curve: 'S', dir: '-' },
   ],
 };
 // 앞의 두 사례는 함께 시범 풀이: 가격 변화에 따른 수량 변화 → 가격 외 요인에 따른 곡선 변화
@@ -434,20 +455,20 @@ const mixDq = PRESETS.D.filter(c => c.type === 'along');
 const mixSq = PRESETS.S.filter(c => c.type === 'along');
 PRESETS.mix = [mixDq[0],mixD[0],mixSq[0],mixS[0],mixDq[1],mixD[1],mixSq[1],mixS[1],...Array.from({length:3},(_,i)=>[mixD[i+2],mixS[i+2]]).flat(),mixD[5]];
 const FILL_CASES = [
-  {topic:'수요 · 소비자 수',text:'새로운 학생들이 전학 와서 매점 이용자가 늘었어.',curve:'D',dir:'+',price:'+'},
-  {topic:'수요 · 소득',text:'학생들의 용돈이 늘었어. 이 상품은 정상재야.',curve:'D',dir:'+',price:'+'},
-  {topic:'수요 · 소비자 선호',text:'유명 아이돌이 과일모찌를 먹어 찾는 사람이 많아졌어.',curve:'D',dir:'+',price:'+'},
-  {topic:'수요 · 대체재 가격',text:'콜라의 대체재인 사이다 가격이 올랐어.',curve:'D',dir:'+',price:'+'},
-  {topic:'수요 · 보완재 가격',text:'영화관람료가 올랐어. 영화와 팝콘은 함께 소비해.',curve:'D',dir:'-',price:'-'},
-  {topic:'수요 · 미래 가격 예상',text:'다음 달 과일모찌 가격이 오를 거래. 지금 사려는 사람이 늘었어.',curve:'D',dir:'+',price:'+'},
-  {topic:'수요 · 미래 가격 예상',text:'다음 달 과일모찌 가격이 내릴 거래. 지금 사려는 사람이 줄었어.',curve:'D',dir:'-',price:'-'},
-  {topic:'수요 · 미래 소득 예상',text:'다음 달 용돈이 늘 거라고 예상해 지금 소비를 늘렸어.',curve:'D',dir:'+',price:'+'},
-  {topic:'공급 · 생산요소 가격',text:'노동자 임금, 기계 대여료, 땅 임대료가 올랐어.',curve:'S',dir:'-',price:'+'},
-  {topic:'공급 · 생산 기술',text:'새 기계가 나와 같은 시간에 더 많은 상품을 만들 수 있어.',curve:'S',dir:'+',price:'-'},
-  {topic:'공급 · 미래 가격 예상',text:'다음 달 배추 가격이 오를 거래. 농부들이 지금 출하를 미뤄.',curve:'S',dir:'-',price:'+'},
-  {topic:'공급 · 기업의 수',text:'학교 앞 피자 가게가 새로 여러 곳 생겼어.',curve:'S',dir:'+',price:'-'},
-  {topic:'공급 · 자연 조건',text:'날씨가 좋아 딸기가 풍년이야.',curve:'S',dir:'+',price:'-'},
-  {topic:'공급 · 생산요소 가격',text:'전쟁으로 국제 유가가 올라 항공유와 운송 비용이 커졌어.',curve:'S',dir:'-',price:'+'}
+  {market:'매점 간식',topic:'수요 · 소비자 수',text:'학교에 전학생이 늘었어.',curve:'D',dir:'+',price:'+'},
+  {market:'치킨',topic:'수요 · 소득',text:'학생들의 용돈이 늘었어.',curve:'D',dir:'+',price:'+'},
+  {market:'과일모찌',topic:'수요 · 소비자 선호',text:'유명 아이돌이 과일모찌 먹방을 올렸어.',curve:'D',dir:'+',price:'+'},
+  {market:'콜라',topic:'수요 · 대체재 가격',text:'콜라 대신 마실 수 있는 사이다 가격이 올랐어.',curve:'D',dir:'+',price:'+'},
+  {market:'팝콘',topic:'수요 · 보완재 가격',text:'영화 관람료가 올랐어.',curve:'D',dir:'-',price:'-'},
+  {market:'과일모찌',topic:'수요 · 미래 가격 예상',text:'다음 달 과일모찌 가격이 오를 거래.',curve:'D',dir:'+',price:'+'},
+  {market:'과일모찌',topic:'수요 · 미래 가격 예상',text:'다음 달 과일모찌 가격이 내릴 거래.',curve:'D',dir:'-',price:'-'},
+  {market:'치킨',topic:'수요 · 미래 소득 예상',text:'다음 달부터 용돈이 늘어날 거래.',curve:'D',dir:'+',price:'+'},
+  {market:'상품',topic:'공급 · 생산요소 가격',text:'노동자 임금, 기계 대여료, 땅 임대료가 올랐어.',curve:'S',dir:'-',price:'+'},
+  {market:'상품',topic:'공급 · 생산 기술',text:'새 기계가 나와 같은 시간에 더 많은 상품을 만들 수 있어.',curve:'S',dir:'+',price:'-'},
+  {market:'배추',topic:'공급 · 미래 가격 예상',text:'다음 달 배추 가격이 오를 거래.',curve:'S',dir:'-',price:'+'},
+  {market:'피자',topic:'공급 · 기업의 수',text:'학교 앞 피자 가게가 새로 여러 곳 생겼어.',curve:'S',dir:'+',price:'-'},
+  {market:'딸기',topic:'공급 · 자연 조건',text:'날씨가 좋아 딸기가 풍년이야.',curve:'S',dir:'+',price:'-'},
+  {market:'항공권',topic:'공급 · 생산요소 가격',text:'전쟁으로 항공유 가격이 올랐어.',curve:'S',dir:'-',price:'+'}
 ];
 const SET_NAME = { D: '🛒 수요편', S: '🏭 공급편', mix: '🔀 총정리' };
 const DEFAULT_CASES = PRESETS.D;
@@ -513,7 +534,27 @@ function ask(msg, yes = '응', no = '아니') {
 
 /* ========== 사례 → 단계·정답·힌트 ========== */
 const activeSet = () => (!isTeacher && room?.players?.[pid]?.set) || (room && room.set) || 'D';
-const casesOf = (set = activeSet()) => ((room && set === (room.set || 'D') ? room.cases : room?.casesBySet?.[set] || PRESETS[set]) || DEFAULT_CASES).map(c => ({ ...c, type: c.type === 'along' ? 'along' : 'shift', curve: c.curve === 'S' ? 'S' : 'D', dir: c.dir === '-' ? '-' : '+' }));
+// 이전에 만든 방에 저장된 기본 문항에도 새 문구를 적용한다.
+const revisedCaseText = new Map([
+  ["학생들의 용돈이 줄어 치킨을 사 먹는 학생이 줄었어.", "학생들의 용돈이 줄었어."],
+  ["학생들의 용돈이 늘어 치킨을 사 먹는 학생이 많아졌어.", "학생들의 용돈이 늘었어."],
+  ["사이다 가격이 크게 올랐어. 콜라 시장에서는 어떤 변화가 생길까?", "사이다 가격이 크게 올랐어."],
+  ["영화관람료가 크게 올랐어. 팝콘 시장에서는 어떤 변화가 생길까?", "영화 관람료가 크게 올랐어."],
+  ["태어나는 아기 수가 줄어 분유를 찾는 가정도 줄었어.", "태어나는 아기 수가 줄었어."],
+  ["학교 축제에 방문객이 늘어 간식을 사려는 사람이 많아졌어.", "학교 축제 방문객이 늘었어."],
+  ["학교 축제 방문객이 줄어 간식을 사려는 사람도 적어졌어.", "학교 축제 방문객이 줄었어."],
+  ["다음 달 휴지 가격이 내린다는 소식이 있어. 지금 사려는 사람이 줄었어.", "다음 달 휴지 가격이 내릴 거래."],
+  ["대체재인 사이다 가격이 내려 콜라보다 사이다를 찾는 사람이 많아졌어.", "사이다 가격이 내렸어."],
+  ["보완재인 영화 관람료가 내려 영화관에 가는 사람이 늘었어.", "영화 관람료가 내렸어."],
+  ["건강에 대한 관심이 커져 과일모찌를 찾는 사람이 줄었어.", "과일모찌의 인기가 식었어."],
+  ["배추 가격이 5,000원에서 8,000원으로 올랐어. 농부들은?", "배추 가격이 5,000원에서 8,000원으로 올랐어."],
+  ["붕어빵 가격이 3개 2,000원에서 1,000원으로 내렸어. 가게 주인은?", "붕어빵 가격이 3개 2,000원에서 1,000원으로 내렸어."],
+  ["다음 달 배추 가격이 크게 오를 거래. 농부들이 지금은 팔지 않고 저장해 둬.", "다음 달 배추 가격이 크게 오를 거래."],
+  ["다음 달 배추 가격이 내릴 거래. 농부들이 지금 더 많이 내다 팔아.", "다음 달 배추 가격이 내릴 거래."],
+  ["붕어빵 기계가 고장 나 한 번에 굽는 양이 줄었어.", "붕어빵 기계가 고장 났어."],
+  ["전쟁으로 국제 유가가 올라 항공유 가격과 항공사 운항 비용이 커졌어.", "전쟁으로 항공유 가격이 올랐어."]
+]);
+const casesOf = (set = activeSet()) => ((room && set === (room.set || 'D') ? room.cases : room?.casesBySet?.[set] || PRESETS[set]) || DEFAULT_CASES).map(c => ({ ...c, text: revisedCaseText.get(c.text) ?? c.text, type: c.type === 'along' ? 'along' : 'shift', curve: c.curve === 'S' ? 'S' : 'D', dir: c.dir === '-' ? '-' : '+' }));
 // 수요편·공급편은 답이 뻔해서 '누구 마음?' 단계를 빼고, 총정리에서만 물어
 const stepsOf = (c, set = activeSet()) => c.type === 'shift' ? (set === 'mix' ? ['price', 'move', 'who', 'drag', 'final'] : ['price', 'move', 'drag', 'final']) : ['price', 'move', 'drag', 'final'];
 const STEP_NAME = { price: '상품 가격 확인', move: '점 이동과 곡선 이동 구분', who: '바뀐 쪽 찾기', drag: '그래프에서 나타내기', final: '결과 확인' };
@@ -1152,7 +1193,7 @@ function teacherFill(st){
   const answers=(room.fillAnswers||{})[ci]||{},ids=playerIds(),submitted=Object.keys(answers).length;
   const roster=ids.map(id=>'<span class="chip '+(answers[id]?'soft':'')+'">'+(st.showNames?esc(nameOf(id)):'👤 학생')+(answers[id]?' ✅':' ⏳')+'</span>').join(' ');
   return '<div class="stage"><span class="roundBadge">📝 빈칸 총정리 '+(ci+1)+' / '+FILL_CASES.length+'</span>'+
-    '<div class="card fillCard"><div class="muted">'+(st.fillReveal?esc(item.topic):'교과서 요인')+'</div><div class="fillScenario">'+esc(item.text)+'</div>'+
+    '<div class="card fillCard"><div class="muted">'+(st.fillReveal?esc(item.topic):esc(item.market)+' 시장')+'</div><div class="fillScenario">'+esc(item.text)+'</div>'+
     '<div class="fillSentence">'+fillSelect('teacherFillCurve','수요 / 공급',[['D','수요'],['S','공급']],st.fillReveal?item.curve:'',true)+
     fillSelect('teacherFillDir','증가 / 감소',[['+','증가'],['-','감소']],st.fillReveal?item.dir:'',true)+
     '<span>→ 균형가격</span>'+fillSelect('teacherFillPrice','상승 / 하락',[['+','상승'],['-','하락']],st.fillReveal?item.price:'',true)+'</div>'+
@@ -1172,7 +1213,7 @@ function studentFill(st,top){
   const disabled=!!rec.curve||revealed,total=FILL_CASES.length;
   app.innerHTML='<div class="s-wrap">'+top.replace(/⭐ \d+점/,'📝 빈칸 정리 · 제한시간 없음')+
     '<div class="stage"><span class="roundBadge">📝 '+(ci+1)+' / '+total+'</span><div class="card fillCard">'+
-    '<div class="muted">'+(revealed?esc(item.topic):'교과서 요인')+'</div><div class="fillScenario">'+esc(item.text)+'</div>'+
+    '<div class="muted">'+(revealed?esc(item.topic):esc(item.market)+' 시장')+'</div><div class="fillScenario">'+esc(item.text)+'</div>'+
     '<div class="fillSentence">'+fillSelect('fillCurve','수요 / 공급',[['D','수요'],['S','공급']],curve,disabled)+
     fillSelect('fillDir','증가 / 감소',[['+','증가'],['-','감소']],dir,disabled)+
     '<span>→ 균형가격</span>'+fillSelect('fillPrice','상승 / 하락',[['+','상승'],['-','하락']],price,disabled)+'</div>'+
@@ -1202,10 +1243,18 @@ function refreshTeacherFillCounts(){
   if(stat)stat.textContent='✍️ 제출 '+Object.keys(answers).length+' / '+ids.length+'명';
   if(list)list.innerHTML=ids.map(id=>'<span class="chip '+(answers[id]?'soft':'')+'">'+(st.showNames?esc(nameOf(id)):'👤 학생')+(answers[id]?' ✅':' ⏳')+'</span>').join(' ');
 }
-function teacherRaceOptionRows(c,ci,res){
-  const a=raceAns(c),ids=playerIds();
-  const count=v=>ids.filter(id=>(raceRec(id,ci)||{}).w===v).length;
-  return raceOptions(c).map(([v,lab])=>'<div class="drow '+(res&&v===a.w?'right':'')+'"><span>'+(res&&v===a.w?'✅ ':'')+lab+'</span><div class="dbar"><i style="width:'+(res?count(v)/Math.max(1,ids.length)*100:0)+'%"></i></div><b>'+(res?count(v)+'명':'?')+'</b></div>').join('');
+function teacherRaceOptionRows(c,ci,revealed) {
+  const correct = raceAns(c).w;
+  const ids = playerIds();
+  return raceOptions(c).map(([value,label]) => {
+    const isCorrect = revealed && value === correct;
+    const count = revealed ? ids.filter(id => raceRec(id,ci)?.w === value).length : 0;
+    const percent = count / Math.max(1,ids.length) * 100;
+    return '<div class="raceOption'+(revealed?' raceOption--result':'')+(isCorrect?' right':'')+'">'+
+      '<div class="raceOptionLabel"><span>'+(isCorrect?'✅ ':'')+label+'</span>'+
+      (revealed?'<span class="raceOptionCount">'+count+'명</span>':'')+'</div>'+
+      (revealed?'<div class="dbar"><i style="width:'+percent+'%"></i></div>':'')+'</div>';
+  }).join('');
 }
 function refreshTeacherRaceCounts(){
   const st=room?.state||{};
@@ -1593,13 +1642,13 @@ function wireTeacher(st, cs) {
 /* ⚡ 총정리 스피드 시험: 사례마다 ① 무엇이 증가/감소? ② 가격은? — 빨리·많이 맞힐수록 점수 ↑ */
 const isRace = () => room && room.set === 'mix';
 const PRICE_CASES = [
-  {emoji:'🍓',market:'과일모찌',text:'유명 아이돌이 과일모찌 먹방을 올린 뒤 찾는 사람이 늘었어.',curve:'D',dir:'+'},
-  {emoji:'✈️',market:'항공권',text:'전쟁으로 국제 유가가 올라 항공사의 운항 비용이 커졌어.',curve:'S',dir:'-'},
-  {emoji:'🍿',market:'팝콘',text:'영화 관람료가 올라 영화관을 찾는 사람이 줄었어.',curve:'D',dir:'-'},
+  {emoji:'🍓',market:'과일모찌',text:'유명 아이돌이 과일모찌 먹방을 올렸어.',curve:'D',dir:'+'},
+  {emoji:'✈️',market:'항공권',text:'전쟁으로 항공유 가격이 올랐어.',curve:'S',dir:'-'},
+  {emoji:'🍿',market:'팝콘',text:'영화 관람료가 올랐어.',curve:'D',dir:'-'},
   {emoji:'🐟',market:'붕어빵',text:'같은 시간에 붕어빵을 더 많이 구울 수 있는 기계가 보급됐어.',curve:'S',dir:'+'},
   {emoji:'🥤',market:'콜라',text:'콜라 대신 마시던 사이다의 가격이 크게 올랐어.',curve:'D',dir:'+'},
-  {emoji:'🥬',market:'배추',text:'태풍으로 배추밭이 피해를 입어 수확량이 줄었어.',curve:'S',dir:'-'},
-  {emoji:'🍗',market:'치킨',text:'다음 주에 치킨값이 내린다는 소식을 듣고 이번 주에 주문하려던 사람들이 구매를 미뤘어.',curve:'D',dir:'-'},
+  {emoji:'🥬',market:'배추',text:'태풍으로 배추밭이 피해를 입었어.',curve:'S',dir:'-'},
+  {emoji:'🍗',market:'치킨',text:'다음 주에 치킨값이 내릴 거래.',question:'이번 주 치킨 시장가격은 어떻게 변할까?',curve:'D',dir:'-'},
   {emoji:'🍕',market:'피자',text:'학교 앞에 피자 가게가 여러 곳 새로 생겼어.',curve:'S',dir:'+'}
 ].map(item => ({...item, type:'shift', priceRound:true}));
 const raceChangeCases = () => casesOf('mix');
@@ -1609,7 +1658,7 @@ const RACE_SEC = () => (room && room.raceSec) || 20;
 const WHAT_OPTS = [['D+', '🛒 수요 증가'], ['D-', '🛒 수요 감소'], ['S+', '🏭 공급 증가'], ['S-', '🏭 공급 감소'], ['Dq+', '🛒 수요량 증가'], ['Dq-', '🛒 수요량 감소'], ['Sq+', '🏭 공급량 증가'], ['Sq-', '🏭 공급량 감소']];
 const PRICE_OPTS = [['+', '📈 시장가격 상승'], ['-', '📉 시장가격 하락']];
 const raceOptions = c => c.priceRound ? PRICE_OPTS : WHAT_OPTS;
-const raceQuestion = c => c.priceRound ? '이 사건 뒤 시장가격은 어떻게 변할까?' : c.type === 'along'
+const raceQuestion = c => c.priceRound ? (c.question || '이 사건 뒤 시장가격은 어떻게 변할까?') : c.type === 'along'
   ? (c.curve === 'D' ? '사려는 양은 어떻게 달라질까?' : '팔려는 양은 어떻게 달라질까?')
   : '이 시장에서 어떤 변화가 일어날까?';
 const raceSeconds = c => c.priceRound ? PRICE_SECONDS : RACE_SEC();
@@ -1767,14 +1816,14 @@ function teacherRace(st) {
   const res = st.sub === 'res';
   const nextLabel = ci+1 === rs.length ? '최종 결과 보기' :
     ci+1 === raceChangeCases().length ? '시장가격 예측으로 →' : '다음 문제 →';
-  return '<div class="play2 raceT"><div class="side"><span class="roundBadge">'+raceRoundLabel(c,ci)+'</span>'+raceCaseRow(c,ci)+
+  return '<div class="raceT"><div class="side"><span class="roundBadge">'+raceRoundLabel(c,ci)+'</span>'+raceCaseRow(c,ci)+
     (res ? '' : tBar(c))+'<div class="q">'+raceQuestion(c)+'</div>'+
     '<div class="raceOptions" id="raceVoteCounts">'+teacherRaceOptionRows(c,ci,res)+'</div>'+
     (res ? '<div class="hl mint">'+raceOutcome(c)+'</div>' : '')+
-    '<div class="muted" id="raceAnswered">✍️ 제출 '+answered+' / '+playerIds().length+'명</div>'+
+    '<div class="raceActions"><div class="muted" id="raceAnswered">✍️ 제출 '+answered+' / '+playerIds().length+'명</div>'+
     (res ? '<button class="btn big mint" id="raceNext">'+nextLabel+'</button>' :
-      '<button class="btn lemon" id="raceClose">마감하고 정답 보기</button>')+'</div>'+
-    (res ? '<div class="side"><div class="graph">'+solvedGraph(c,true)+'</div></div>' : '')+'</div>';
+      '<button class="btn lemon" id="raceClose">마감하고 정답 보기</button>')+'</div></div>'+
+    (res ? '<div class="graph raceGraph">'+solvedGraph(c,true)+'</div>' : '')+'</div>';
 }
 function renderStudentRaceRank() {
   const rows=raceTop(), i=rows.findIndex(r=>r.id===pid), mine=rows[i]||{v:0};
