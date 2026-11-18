@@ -451,6 +451,7 @@ button,.btn,.speech,.rule,.title,.card{word-break:keep-all;overflow-wrap:break-w
 .reviewRate{font-size:22px;color:#b83a43;white-space:nowrap}.reviewChoices{display:grid;gap:8px}.reviewChoice{padding:10px 14px;border:2px solid var(--line);border-radius:12px;background:#fff;font-size:21px}.reviewChoice.right{background:var(--mint);border-color:var(--mintD)}
 .heat [data-review]{cursor:pointer;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:3px}
 @media(max-width:640px){.rankTable .drow{grid-template-columns:48px 1fr 90px;gap:3px}.rankTable .drow small{grid-column:2/4}.reviewLink{font-size:17px}}
+ .socialDock.socialBottom{position:relative;inset:auto;width:calc(100% - 32px);max-width:1280px;margin:16px auto;z-index:1;animation:none}.socialBottom summary{cursor:pointer;padding:8px;font-size:18px}.correctRoster{width:100%;background:#fff;border:2px solid var(--mintD);border-radius:16px;padding:10px;font-size:20px}.correctRoster summary{cursor:pointer}.correctRoster div{padding:10px;max-height:150px;overflow:auto}
 </style>
 </head>
 <body>
@@ -1339,8 +1340,8 @@ function teacherRaceOptionRows(c,ci,revealed) {
   const correct = raceAns(c).w;
   const ids = playerIds();
   return raceOptions(c).map(([value,label],i) => {
-    const isCorrect = revealed && value === correct;
-    const count = revealed ? ids.filter(id => raceRec(id,ci)?.w === value).length : 0;
+    const isCorrect = revealed && correct.split('|').includes(value);
+    const count = revealed ? ids.filter(id => raceRec(id,ci)?.w?.split('|').includes(value)).length : 0;
     const percent = count / Math.max(1,ids.length) * 100;
     return '<div class="raceOption raceTone'+i+(revealed?' raceOption--result':'')+(isCorrect?' right':'')+'">'+
       '<div class="raceOptionLabel"><span>'+raceChoiceLabel(label,i,isCorrect)+'</span>'+
@@ -1756,15 +1757,15 @@ const WHAT_OPTS = [['D+', '🛒 수요 증가'], ['D-', '🛒 수요 감소'], [
 const PRICE_OPTS = [['+', '📈 시장가격 상승'], ['-', '📉 시장가격 하락']];
 const raceOptions = c => c.priceRound ? PRICE_OPTS : WHAT_OPTS;
 const raceQuestion = c => c.priceRound ? (c.question || `${c.market} 시장가격은 어떻게 변할까?`) : c.type === 'along'
-  ? `가격이 바뀌면 ${c.market} 시장의 수량은 어떻게 달라질까?`
+  ? `${c.market} 가격 변화에 따른 수요량·공급량 변화 두 개를 골라.`
   : `${c.market} 시장에서 어떤 변화가 생길까?`;
 const raceSeconds = c => c.priceRound ? PRICE_SECONDS : RACE_SEC();
 const raceRoundLabel = (c,ci) => c.priceRound
   ? ((ci-raceChangeCases().length)<PRICE_BASIC_COUNT ? '가격 예측 · 기본 '+(ci-raceChangeCases().length+1)+' / '+PRICE_BASIC_COUNT : '가격 예측 · 추가 '+(ci-raceChangeCases().length-PRICE_BASIC_COUNT+1)+' / '+(PRICE_CASES.length-PRICE_BASIC_COUNT))
   : '시장 변화 찾기 '+(ci+1)+' / '+raceChangeCases().length;
-const raceAns = c => c.priceRound ? {w:priceAfter(c)} : c.type === 'along' ? ({w:c.curve+'q'+qtyAfter(c),p:null}) : ({w:c.curve+c.dir,p:priceAfter(c)});
+const raceAns = c => c.priceRound ? {w:priceAfter(c)} : c.type==='along' ? {w:['Dq'+(c.dir==='+'?'-':'+'),'Sq'+c.dir].sort().join('|'),p:null} : {w:c.curve+c.dir,p:priceAfter(c)};
 const raceOutcome = c => c.type==='along'
-  ? '가격 '+(c.dir==='+'?'상승 ↑':'하락 ↓')+' → '+(c.curve==='D'?'수요량 ':'공급량 ')+(qtyAfter(c)==='+'?'증가 ↑':'감소 ↓')
+  ? '가격 '+(c.dir==='+'?'상승 ↑ → 수요량 감소 ↓ · 공급량 증가 ↑':'하락 ↓ → 수요량 증가 ↑ · 공급량 감소 ↓')
   : (c.cause?esc(c.cause)+' → ':'')+(c.curve==='D'?'수요':'공급')+' '+(c.dir==='+'?'증가 ↑':'감소 ↓')+' → 시장가격 '+(priceAfter(c)==='+'?'상승 ↑':'하락 ↓');
 const raceCaseRow = (c,ci) => '<div class="case row"><div class="ce">'+esc(c.emoji)+'</div><div><span class="cm">'+esc(c.market)+' 시장'+'</span>'+
   (c.priceRound ? '' : c.type==='along'?'<div class="cp">💰 바뀐 것: '+esc(c.market)+' 가격</div>': c.price?'<div class="cp">💰 처음 가격: '+esc(c.price)+'</div>':'')+
@@ -1979,7 +1980,7 @@ function raceStreak(id,ci) {
 function raceClassResult(c,ci) {
   const ids=playerIds(), submitted=ids.filter(id=>raceRec(id,ci)?.w);
   const correct=submitted.filter(id=>raceRec(id,ci).w===raceAns(c).w).length;
-  return '<div class="raceClassResult">'+(submitted.length&&correct===submitted.length?'🎉 전원 정답!':'👏 함께 맞힌 사람')+
+  return '<details class="correctRoster"><summary>정답자 확인 ('+correct+'명)</summary><div>'+submitted.filter(id=>raceRec(id,ci).w===raceAns(c).w).map(id=>esc(nameOf(id))).join(' · ')+'</div></details><div class="raceClassResult">'+(submitted.length&&correct===submitted.length?'🎉 전원 정답!':'👏 함께 맞힌 사람')+
     ' <b>'+correct+' / '+submitted.length+'명</b><small>제출한 학생 기준</small></div>';
 }
 const tBar = c => '<div class="raceClock"><b class="raceTime">'+raceSeconds(c)+'초</b>'+
@@ -2174,7 +2175,8 @@ function syncSocialDock(){
   if(!room||!code||(!isTeacher&&!pid))return;
   const st=room.state||{},boxId='curveSocialDock';let box=document.getElementById(boxId);
   if(!isTeacher&&!st.chatEnabled){if(box)box.remove();return;}
-  if(!box){box=document.createElement('div');box.id=boxId;box.className='socialDock';document.body.appendChild(box);}
+  if(!box){box=document.createElement('div');box.id=boxId;box.className='socialDock socialBottom';document.body.appendChild(box);}
+  const wasOpen=box.querySelector('details')?.open||false;
   const hadFocus=document.activeElement?.id==='socialInput';
   const oldMessageList=box.querySelector('.socialMessages'), savedMessageScroll=oldMessageList?.scrollTop||0;
   const wasAtMessageBottom=!oldMessageList||oldMessageList.scrollHeight-oldMessageList.scrollTop-oldMessageList.clientHeight<28;
@@ -2196,6 +2198,8 @@ function syncSocialDock(){
     box.innerHTML='<div class="socialHead"><b>💬 선생님에게 도움 요청</b></div><div class="socialMessages">'+messageHtml+'</div>'
       +(alreadySent?'<div class="hl sky" style="font-size:15px;margin:6px 0">✅ 두 번 모두 보냈어. 선생님에게 전달됐어.</div>':'<div class="socialCompose help"><input id="socialInput" maxlength="80" placeholder="선생님에게 도움의 메시지 보내기" value="'+esc(socialDraft)+'"><button class="btn sm mint" id="socialSend">선생님에게 도움의 메시지 보내기</button></div><div class="muted" style="font-size:13px;text-align:right">메시지는 두 번까지 보낼 수 있어 · 남은 횟수 '+(2-sentCount)+'회</div>');
   }
+  const dockContent=box.innerHTML;box.innerHTML='<details '+(wasOpen?'open':'')+'><summary>💬 도움 메시지 · 펼치기 / 접기</summary>'+dockContent+'</details>';
+  if(isTeacher&&el('chatToggle'))el('chatToggle').onclick=()=>update(AP('state'),{chatEnabled:!st.chatEnabled});
   const newMessageList=box.querySelector('.socialMessages');
   if(newMessageList)newMessageList.scrollTop=wasAtMessageBottom?newMessageList.scrollHeight:Math.min(savedMessageScroll,newMessageList.scrollHeight);
   box.scrollTop=savedDockScroll;
@@ -2341,7 +2345,7 @@ function studentRace(st,top) {
     msg = '<div class="raceStudentResult '+(picked?'correct':'incorrect')+'"><div class="raceResultIcon">'+(picked?'🎉':'💡')+'</div><div class="raceResultTitle">'+(picked?'정답!':'아쉬워, 오답이야')+'</div><div class="raceResultPoints">'+(picked?'이번 문제 +'+racePts(c,ci,pid,start)+'점':'이번 문제 +0점')+'</div><div class="raceResultTotal">지금까지 '+(raceScores()[pid]||0)+'점</div><b>'+raceOutcome(c)+'</b></div>'+(picked&&raceStreak(pid,ci)>=2?'<div class="streakBadge">🔥 '+raceStreak(pid,ci)+'문제 연속 정답!</div>':'')+'<div class="muted">선생님이 다음 문제를 열면 같이 넘어가.</div>';
   } else if (rec?.w) msg = '<div class="good answerLocked">🔒 제출 완료!<br>칠판에서 정답 공개를 기다려.</div>';
   const choices = raceOptions(c).map(([value,label],i) => {
-    const style = res && value === right ? 'right' : rec?.w === value ? (res?'wrong':'picked') : '';
+    const style = res && right.split('|').includes(value) ? 'right' : rec?.w?.split('|').includes(value) ? (res?'wrong':'picked') : '';
     return '<button class="choice raceTone'+i+' '+style+'" data-v="'+value+'" '+(res||rec?.w||!ready?'disabled':'')+'>'+raceChoiceLabel(label,i)+'</button>';
   }).join('');
   const total = (raceScores()[pid] || 0) - (!res && start ? racePts(c,ci,pid,start) : 0);
@@ -2350,14 +2354,17 @@ function studentRace(st,top) {
     '<div class="col"><div class="q">'+raceQuestion(c)+'</div><div class="choices raceChoices">'+choices+'</div>'+
     (res?'<div class="graph">'+solvedGraph(c,true)+'</div>':'')+'</div></div></div>';
   if (!res) updateRaceClock(c,end);
+  const selected=new Set();
+  const multi=c.type==='along'&&!c.priceRound;
   const buttons = app.querySelectorAll('.raceChoices .choice:not([disabled])');
   buttons.forEach(button => button.onclick = async () => {
     if (room.state?.phase !== 'play' || room.state?.mode !== 'race' || room.state?.sub !== 'q' || (room.state.ci || 0) !== ci || now()<start || now() >= end || raceRec(pid,ci) || raceSending) return;
+    if(multi){const v=button.dataset.v;if(selected.has(v)){selected.delete(v);button.classList.remove('picked');return;}selected.add(v);button.classList.add('picked');if(selected.size<2)return;}
     raceSending=true;
     buttons.forEach(item => item.disabled = true);
     button.classList.add('picked');
     try {
-      const answer={w:button.dataset.v,wAt:now()};
+      const answer={w:multi?[...selected].sort().join('|'):button.dataset.v,wAt:now()};
       await runTransaction(AP('race/'+ci+'/'+pid),old=>old==null?answer:undefined);
     } catch (error) {
       console.error(error);
