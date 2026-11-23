@@ -453,6 +453,11 @@ button,.btn,.speech,.rule,.title,.card{word-break:keep-all;overflow-wrap:break-w
 @media(max-width:640px){.rankTable .drow{grid-template-columns:48px 1fr 90px;gap:3px}.rankTable .drow small{grid-column:2/4}.reviewLink{font-size:17px}}
  .socialDock.socialBottom{position:relative;inset:auto;width:calc(100% - 32px);max-width:1280px;margin:16px auto;z-index:1;animation:none}.socialBottom summary{cursor:pointer;padding:8px;font-size:18px}.correctRoster{width:100%;background:#fff;border:2px solid var(--mintD);border-radius:16px;padding:10px;font-size:20px}.correctRoster summary{cursor:pointer}.correctRoster div{padding:10px;max-height:150px;overflow:auto}
 </style>
+<style>
+.proofScreen{max-width:1280px}.proofHeader{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px;font-size:24px;flex-wrap:wrap}
+.proofLayout{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:22px;align-items:start}.proofMarket{font-size:clamp(28px,4vw,42px);background:var(--lemon);border-radius:18px;padding:8px 18px;display:inline-block}.proofEvent{font-size:clamp(24px,3vw,34px);margin-top:12px}.proofStatement p{font-size:clamp(30px,4vw,46px);margin:16px 0}.proofWord{font-size:inherit;border:3px dashed #b35d81;border-radius:14px;background:var(--pink);padding:5px 16px}.proofWord:disabled{opacity:1;cursor:default}.proofInstruction,.proofExplanation{font-size:21px}.proofControls{position:sticky;top:12px;font-size:20px}.proofControls .btn{width:100%;font-size:23px;margin:12px 0 0;padding:16px}.proofAnswer{padding:12px;background:var(--mint);border-radius:16px;font-size:27px;margin-bottom:16px}.proofEdits{font-size:22px}.proofOptions{display:flex;flex-wrap:wrap;gap:8px}.proofScreen [aria-pressed="true"]{outline:4px solid #387c65}.proofScreen details div{max-height:180px;overflow:auto}.proofScreen summary{cursor:pointer}
+@media(max-width:760px){.proofLayout{grid-template-columns:1fr;gap:12px}.proofControls{position:static}.proofScreen{padding:12px}.proofHeader{font-size:20px}.proofControls p{margin:6px 0}}
+</style>
 </head>
 <body>
 <div id="app"></div>
@@ -840,6 +845,8 @@ function start() {
     room = next;
     if (!room) { app.innerHTML = `<div class="wrap stage"><div class="bigEmoji">😢</div><p class="rule">방을 찾을 수 없어</p></div>`; return; }
     socialData = room.social || {};
+    if(room.state?.phase === "proof"){closeSummary();renderProof();syncSocialDock();return;}
+    if(proofViewKey){proofViewKey="";sKey="";}
     if(socialOnly){syncSocialDock();return;}
     if(answersOnly){refreshLiveTeacherProgress();refreshTeacherAnswerCounts();refreshTeacherRaceCounts();refreshTeacherFillCounts();syncSocialDock();return;}
     trackTransition(); render(); syncSocialDock(); firstPass = false;
@@ -946,7 +953,7 @@ function topbar(st) {
     ${isRace() && play && st.mode==='race' ? '<button class="btn sm lemon" id="liveRaceRank">🏆 실시간 순위</button>' : ''}
     ${isRace() && (st.phase==='lobby' || (play && st.mode==='race')) ? '<button class="btn sm lav" id="raceMusic" aria-pressed="'+!!raceMusicEnabled+'">'+(raceMusicEnabled?'♪ 배경음 켜짐':'♪ 배경음 켜기')+'</button>' : ''}
     <button class="btn sm lav" id="names">${st.showNames ? '👤 이름 ON' : '🙈 이름 OFF'}</button>
-    <button class="btn sm sky" id="chooseSet">📍 진도 선택</button>
+    <button class="btn sm sky" id="chooseSet">📍 진도 선택</button><button class="btn sm lemon" id="proofStart">🔎 틀린 부분 찾기</button>
     ${room.set !== 'mix' ? '<button class="btn sm peach" id="saveSupplyPrecheckTop">📋 공급 사전점검 보관</button>' : ''}
     ${play ? '<button class="btn sm lemon" id="toEnd">🏁 끝내기</button>' : ''}
     <button class="btn sm" id="backStep">◀ 이전 단계</button><a class="btn sm sky" href="hub.html?t=1">🏠 허브로</a><button class="btn sm" id="home">처음 화면</button></div>`;
@@ -1358,6 +1365,7 @@ function refreshTeacherRaceCounts(){
   syncLiveRaceRank();
 }
 function renderTeacher() {
+  if(room?.state?.phase === "proof")return renderProof();
   const st = room.state || {}, cs = casesOf();
   if (lastResultRoomSet !== room.set) { teacherResultSet = null; lastResultRoomSet = room.set; }
   tSumm = null;
@@ -1623,6 +1631,7 @@ function bindTeacherProgressButtons(){
 }
 
 function wireTeacher(st, cs) {
+  if(el("proofStart"))el("proofStart").onclick=proofStart;
   const S = o => update(AP('state'), o);
   el('names').onclick = () => S({ showNames: !st.showNames });
   el('chooseSet').onclick = showClassSetPicker;
@@ -2023,6 +2032,7 @@ function raceEnd(teacher) {
 const AUTO = { read: 8000, afterAll: 2000, next: 6000, sum: 12000 };
 let autoKey = '', autoAt = 0;
 function autoTick() {
+  if(room?.state?.phase === "proof")return;
   if (!isTeacher || !room) return;
   const st = room.state || {}, cs = casesOf();
   const cds = document.querySelectorAll('.autoCd');
@@ -2217,6 +2227,7 @@ function syncSocialDock(){
   };
 }
 function renderStudent() {
+  if(room?.state?.phase === "proof")return renderProof();
   const st = room.state || {}, set = activeSet(), cs = casesOf(set), me = (room.players || {})[pid];
   if (lastStudentSet !== set) { lastStudentSet = set; hold = null; readSeen = {}; sKey = ''; dragState = null; closeSummary(); }
   if (!me) { localStorage.removeItem('curve_pid_' + code); return studentForm(code); }
@@ -2447,7 +2458,90 @@ function setupDrag(c, ci) {
   bind();
 }
 
+/* 용어 오류 찾기: 수업 상태와 점수는 보존하고 별도 회차로 기록한다. */
+const PROOF_CASES = [
+ ['치킨','치킨 가격이 20,000원에서 25,000원으로 올랐어.','수요','감소','수요량','상품 자체의 가격 상승 → 같은 수요곡선 위에서 점 이동'],
+ ['과일모찌','과일모찌 가격이 6,000원에서 4,000원으로 내렸어.','수요','증가','수요량','상품 자체의 가격 하락 → 같은 수요곡선 위에서 점 이동'],
+ ['과일모찌','과일모찌가 큰 인기를 얻었어.','수요량','증가','수요','선호도 상승 → 같은 가격에서도 사려는 양 증가 → 수요곡선 이동'],
+ ['배추','배추 가격이 5,000원에서 8,000원으로 올랐어.','공급','증가','공급량','상품 자체의 가격 상승 → 같은 공급곡선 위에서 점 이동'],
+ ['팝콘','영화 관람료가 올랐어. 영화와 팝콘은 함께 소비해.','수요','감소','수요','보완재 가격 상승 → 팝콘 수요 감소'],
+ ['붕어빵','붕어빵을 더 빨리 굽는 기계가 나왔어.','공급량','증가','공급','생산기술 발전 → 같은 가격에서도 팔려는 양 증가 → 공급곡선 이동'],
+ ['치킨','용돈이 늘면서 같은 치킨 가격에도 더 사려 해.','수요량','증가','수요','소득 증가로 가격별 구매 계획 변화 → 수요곡선 이동'],
+ ['붕어빵','붕어빵 가격이 2,000원에서 1,000원으로 내렸어.','공급량','감소','공급량','상품 자체의 가격 하락 → 같은 공급곡선 위에서 점 이동'],
+ ['콜라','대체재인 사이다의 가격이 올랐어.','수요량','증가','수요','다른 상품인 사이다 가격 상승 → 콜라 수요곡선 이동'],
+ ['피자','피자 가게 직원들의 임금이 올랐어.','공급량','감소','공급','생산요소 가격 상승 → 생산비 증가 → 공급곡선 이동'],
+ ['치킨','치킨 가격이 20,000원에서 15,000원으로 내렸어.','수요량','증가','수요량','상품 자체의 가격 하락 → 같은 수요곡선 위에서 점 이동'],
+ ['배추','태풍으로 배추밭이 망가졌어.','공급량','감소','공급','생산 여건 악화 → 같은 가격에서 공급 가능한 양 감소 → 공급곡선 이동']
+].map(([market,event,word,dir,answer,why])=>({market,event,word,dir,answer,why}));
+let proofBusy=false, proofViewKey='', proofDraft=null, proofOpened=false;
+const proofRecord = (p,id) => room.proofRuns?.[p.run]?.answers?.[p.ci]?.[id];
+const proofCorrect = (c,r) => !!r && r.word===c.answer;
+async function proofStart(){
+ if(proofBusy)return;proofBusy=true;
+ try{closeSummary();const started=now(),run='p'+Date.now();await runTransaction(A(),r=>{
+  if(!r||r.state?.phase==='proof')return;
+  r.proof={run,ci:0,reveal:false,started,returnState:r.state||{phase:'lobby'}};
+  r.state={...(r.state||{}),phase:'proof'};return r;
+ });}catch(e){toast('시작하지 못했어. 다시 눌러 봐.');}finally{proofBusy=false;}
+}
+async function proofControl(action){
+ if(proofBusy)return;proofBusy=true;
+ const expected=room.proof;
+ try{await runTransaction(A(),r=>{
+  const p=r?.proof;if(!p||r.state?.phase!=='proof'||p.run!==expected.run||p.ci!==expected.ci||p.reveal!==expected.reveal)return;
+  if(action==='return'){
+   const restored={...p.returnState},elapsed=now()-p.started;
+   if(restored.mode==='race'&&restored.sub==='q'&&restored.qStarts?.[restored.ci]!=null){restored.qStarts={...restored.qStarts,[restored.ci]:restored.qStarts[restored.ci]+elapsed};}
+   r.state=restored;p.finished=now();
+  }else if(action==='reveal')p.reveal=true;
+  else if(action==='next'&&p.reveal&&p.ci<PROOF_CASES.length-1){p.ci++;p.reveal=false;}
+  else if(action==='prev'&&p.ci>0){p.ci--;p.reveal=true;}
+  else return;
+  return r;
+ });}catch(e){toast('변경하지 못했어. 다시 눌러 봐.');}finally{proofBusy=false;}
+}
+function proofStats(){
+ const p=room.proof;if(!p||!el('proofStats'))return;
+ const c=PROOF_CASES[p.ci],ids=playerIds(),submitted=ids.filter(id=>proofRecord(p,id));
+ el('proofStats').textContent='제출 '+submitted.length+' / '+ids.length+'명';
+ const roster=el('proofRoster');if(roster&&p.reveal){const right=submitted.filter(id=>proofCorrect(c,proofRecord(p,id)));roster.innerHTML='<summary>정답자 확인 · '+right.length+'명</summary><div>'+right.map(id=>esc(nameOf(id))).join(' · ')+'</div>';}
+}
+function renderProof(){
+ const p=room.proof,c=PROOF_CASES[p?.ci];if(!c)return;
+ if(!isTeacher&&!room.players?.[pid])return studentForm(code);
+ const rec=proofRecord(p,pid),key=[p.run,p.ci,p.reveal,!!rec,isTeacher].join('|');
+ if(proofViewKey===key&&el('proofScreen')){proofStats();return;}
+ if(proofViewKey!==key){proofViewKey=key;proofDraft=null;proofOpened=false;}
+ const locked=p.reveal||!!rec;
+ app.innerHTML=`<main id="proofScreen" class="wrap proofScreen">
+ <header class="proofHeader"><b>🔎 틀린 부분 찾기 · ${p.ci+1} / ${PROOF_CASES.length}</b>${isTeacher?'<button class="btn sm sky" id="proofReturn">원래 수업으로 돌아가기</button>':`<span>${esc(nameOf(pid))}</span>`}</header>
+ <div class="proofLayout"><section><div class="card"><div class="proofMarket">${esc(c.market)} 시장</div><div class="proofEvent">${esc(c.event)}</div></div>
+ <div class="card proofStatement"><div class="muted">이 설명은 맞을까?</div><p>${esc(c.market)}의 <button class="proofWord" id="proofWord" ${locked||isTeacher?'disabled':''}>${esc(p.reveal?c.answer:c.word)}</button> ${c.dir}</p>
+ ${!p.reveal?'<div class="proofInstruction">틀린 말을 눌러 고쳐. 맞는 문장이면 ‘틀린 부분 없음’을 골라.</div>':`<div class="proofExplanation">${esc(c.why)}</div>`}</div>
+ ${!isTeacher&&!locked?'<div id="proofEdits" class="proofEdits" hidden><div>어떤 말로 바꿀까?</div><div class="proofOptions">'+['수요','수요량','공급','공급량'].filter(w=>w!==c.word).map(w=>`<button class="btn sky" data-proof-word="${w}">${w}</button>`).join('')+'</div></div><button class="btn" id="proofNone">틀린 부분 없음</button><p id="proofDraftLabel" aria-live="polite">아직 고르지 않았어.</p><button class="btn mint big" id="proofSubmit" disabled>답 제출</button>':''}
+ ${!isTeacher&&rec&&!p.reveal?'<div class="card center">제출 완료! 선생님의 정답 공개를 기다려.</div>':''}
+ ${!isTeacher&&p.reveal?`<div class="card center ${proofCorrect(c,rec)?'mint':'peach'}"><h2>${!rec?'제출하지 않았어':proofCorrect(c,rec)?'정답!':'다시 확인해 보자'}</h2>${rec?'내 답: '+esc(rec.word)+' '+c.dir+'<br>':''}정확한 표현: <b>${esc(c.answer)} ${c.dir}</b></div>`:''}
+ </section><aside class="card proofControls">${isTeacher?`<div id="proofStats"></div><p>제한시간 없음 · 교사가 직접 진행</p>${p.reveal?`<div class="proofAnswer">${c.word===c.answer?'틀린 부분 없음':esc(c.word)+' → '+esc(c.answer)}</div><details id="proofRoster"></details><button class="btn big mint" id="proofNext">${p.ci===PROOF_CASES.length-1?'활동 끝내고 돌아가기':'다음 문제'}</button>`:'<button class="btn big lemon" id="proofReveal">정답 공개</button>'}${p.ci>0?'<button class="btn sky" id="proofPrev">이전 문제</button>':''}`:'<b>점 하나 · 수요량 / 공급량<br>곡선 전체 · 수요 / 공급</b>'}</aside></div></main>`;
+ if(isTeacher){el('proofReturn').onclick=()=>proofControl('return');if(el('proofReveal'))el('proofReveal').onclick=()=>proofControl('reveal');if(el('proofNext'))el('proofNext').onclick=()=>proofControl(p.ci===PROOF_CASES.length-1?'return':'next');if(el('proofPrev'))el('proofPrev').onclick=()=>proofControl('prev');proofStats();return;}
+ if(locked)return;
+ const pick=w=>{proofDraft=w;el('proofDraftLabel').textContent='내 답: '+w+' '+c.dir;el('proofSubmit').disabled=false;app.querySelectorAll('[data-proof-word]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.proofWord===w)));el('proofNone').setAttribute('aria-pressed',String(w===c.word));};
+ el('proofWord').onclick=()=>{proofOpened=true;el('proofEdits').hidden=false;};
+ app.querySelectorAll('[data-proof-word]').forEach(b=>b.onclick=()=>pick(b.dataset.proofWord));
+ el('proofNone').onclick=()=>pick(c.word);
+ el('proofSubmit').onclick=async()=>{
+  if(proofBusy||!proofDraft)return;proofBusy=true;el('proofSubmit').disabled=true;const word=proofDraft;
+  try{const result=await runTransaction(A(),r=>{
+   if(r?.state?.phase!=='proof'||r.proof?.run!==p.run||r.proof?.ci!==p.ci||r.proof.reveal)return;
+   r.proofRuns=r.proofRuns||{};const run=r.proofRuns[p.run]||(r.proofRuns[p.run]={started:p.started,answers:{}});run.answers=run.answers||{};const answers=run.answers[p.ci]||(run.answers[p.ci]={});
+   if(answers[pid])return;answers[pid]={word,at:now()};return r;
+  });if(!result.committed)toast('제출이 마감됐거나 이미 제출했어.');}
+  catch(e){toast('답을 보내지 못했어. 다시 눌러 봐.');if(el('proofSubmit'))el('proofSubmit').disabled=false;}
+  finally{proofBusy=false;}
+ };
+}
+
 start();
 </script>
 </body>
 </html>
+
