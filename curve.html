@@ -455,7 +455,7 @@ button,.btn,.speech,.rule,.title,.card{word-break:keep-all;overflow-wrap:break-w
 </style>
 <style>
 .proofScreen{max-width:1280px}.proofHeader{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px;font-size:24px;flex-wrap:wrap}
-.proofLayout{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:22px;align-items:start}.proofMarket{font-size:clamp(28px,4vw,42px);background:var(--lemon);border-radius:18px;padding:8px 18px;display:inline-block}.proofEvent{font-size:clamp(24px,3vw,34px);margin-top:12px}.proofStatement p{font-size:clamp(30px,4vw,46px);margin:16px 0}.proofWord{font-size:inherit;border:3px dashed #b35d81;border-radius:14px;background:var(--pink);padding:5px 16px}.proofWord:disabled{opacity:1;cursor:default}.proofInstruction,.proofExplanation{font-size:21px}.proofControls{position:sticky;top:12px;font-size:20px}.proofControls .btn{width:100%;font-size:23px;margin:12px 0 0;padding:16px}.proofAnswer{padding:12px;background:var(--mint);border-radius:16px;font-size:27px;margin-bottom:16px}.proofEdits{font-size:22px}.proofOptions{display:flex;flex-wrap:wrap;gap:8px}.proofScreen [aria-pressed="true"]{outline:4px solid #387c65}.proofScreen details div{max-height:180px;overflow:auto}.proofScreen summary{cursor:pointer}
+.proofLayout{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:22px;align-items:start}.proofMarket{font-size:clamp(28px,4vw,42px);background:var(--lemon);border-radius:18px;padding:8px 18px;display:inline-block}.proofEvent{font-size:clamp(24px,3vw,34px);margin-top:12px}.proofStatement p{font-size:clamp(30px,4vw,46px);margin:16px 0}.proofWord{font-size:inherit;border:3px dashed #b35d81;border-radius:14px;background:var(--pink);padding:5px 16px}.proofWord:disabled{opacity:1;cursor:default}.proofInstruction,.proofExplanation{font-size:21px}.proofControls{position:sticky;top:12px;font-size:20px}.proofControls .btn{width:100%;font-size:23px;margin:12px 0 0;padding:16px}.proofAnswer{padding:12px;background:var(--mint);border-radius:16px;font-size:27px;margin-bottom:16px}.proofEdits{font-size:22px}.proofOptions{display:flex;flex-wrap:wrap;gap:8px}.proofScreen [aria-pressed="true"]{outline:4px solid #387c65}.proofScreen details div{max-height:180px;overflow:auto}.proofScreen summary{cursor:pointer}.proofStudentLayout{grid-template-columns:minmax(0,1fr);max-width:900px;margin:auto}.proofStudentLayout .proofControls{display:none}.proofEdits .btn{font-size:28px;min-height:60px}.proofInstruction{color:#695361}
 @media(max-width:760px){.proofLayout{grid-template-columns:1fr;gap:12px}.proofControls{position:static}.proofScreen{padding:12px}.proofHeader{font-size:20px}.proofControls p{margin:6px 0}}
 </style>
 </head>
@@ -985,10 +985,11 @@ function showClassSetPicker() {
     <div class="muted" style="font-size:18px;margin-bottom:14px">현재 ${SET_NAME[room.set||'D']} · 이전에 푼 답과 점수는 그대로 남아.</div>
     <div style="display:grid;gap:10px">
       ${[['D','🛒 수요편'],['S','🏭 공급편'],['mix','⚡ 총정리']].map(([key,label])=>`<button class="btn big ${room.set===key?'mint':'sky'}" data-class-set="${key}">${label} ${room.set===key?'· 현재':''}</button>`).join('')}
-    </div><button class="btn sm" data-close style="margin-top:16px">닫기</button>
+    </div><button class="btn big lemon" data-proof-start>🔎 틀린 부분 찾기 · 12문제</button><div class="muted" style="font-size:17px">언제든 선택 가능 · 끝나면 하던 수업으로 돌아가</div><button class="btn sm" data-close style="margin-top:16px">닫기</button>
   </div>`;
   const close=()=>d.remove();
   d.querySelector('[data-close]').onclick=close;
+  d.querySelector('[data-proof-start]').onclick=()=>{close();proofStart();};
   d.onclick=e=>{if(e.target===d)close();};
   d.querySelectorAll('[data-class-set]').forEach(b=>b.onclick=()=>{const chosen=b.dataset.classSet;close();switchClassSet(chosen);});
   document.body.appendChild(d);
@@ -1782,7 +1783,8 @@ const raceCaseRow = (c,ci) => '<div class="case row"><div class="ce">'+esc(c.emo
 const raceRec = (id, ci) => (((room.race || {})[ci]) || {})[id] || null;
 function racePts(c, ci, id, qStart) {   // 맞히면 50점 + 빠를수록 최대 50점 (문제당)
   const r = raceRec(id, ci); if (!r) return 0; const a = raceAns(c), lim = raceSeconds(c) * 1000;
-  const one = at => 50 + Math.round(50 * Math.max(0, Math.min(1, 1 - (at - qStart) / lim)));
+  const scoreStart = Number.isFinite(r.scoreStart) ? r.scoreStart : qStart;
+  const one = at => 50 + Math.round(50 * Math.max(0, Math.min(1, 1 - (at - scoreStart) / lim)));
   return r.w === a.w ? one(r.wAt) : 0;
 }
 function raceScores() {
@@ -2491,11 +2493,15 @@ async function proofControl(action){
   const p=r?.proof;if(!p||r.state?.phase!=='proof'||p.run!==expected.run||p.ci!==expected.ci||p.reveal!==expected.reveal)return;
   if(action==='return'){
    const restored={...p.returnState},elapsed=now()-p.started;
-   if(restored.mode==='race'&&restored.sub==='q'&&restored.qStarts?.[restored.ci]!=null){restored.qStarts={...restored.qStarts,[restored.ci]:restored.qStarts[restored.ci]+elapsed};}
+   if(restored.mode==='race'&&restored.sub==='q'&&restored.qStarts?.[restored.ci]!=null){
+    const originalStart=restored.qStarts[restored.ci];
+    Object.values(r.race?.[restored.ci]||{}).forEach(answer=>{if(answer&&answer.scoreStart==null)answer.scoreStart=originalStart;});
+    restored.qStarts={...restored.qStarts,[restored.ci]:originalStart+elapsed};
+   }
    r.state=restored;p.finished=now();
-  }else if(action==='reveal')p.reveal=true;
-  else if(action==='next'&&p.reveal&&p.ci<PROOF_CASES.length-1){p.ci++;p.reveal=false;}
-  else if(action==='prev'&&p.ci>0){p.ci--;p.reveal=true;}
+  }else if(action==='reveal'){p.reveal=true;p.revealed=p.revealed||{};p.revealed[p.ci]=true;}
+  else if(action==='next'&&p.reveal&&p.ci<PROOF_CASES.length-1){p.ci++;p.reveal=!!p.revealed?.[p.ci];}
+  else if(action==='prev'&&p.ci>0){p.ci--;p.reveal=true;p.revealed=p.revealed||{};p.revealed[p.ci]=true;}
   else return;
   return r;
  });}catch(e){toast('변경하지 못했어. 다시 눌러 봐.');}finally{proofBusy=false;}
@@ -2515,8 +2521,8 @@ function renderProof(){
  const locked=p.reveal||!!rec;
  app.innerHTML=`<main id="proofScreen" class="wrap proofScreen">
  <header class="proofHeader"><b>🔎 틀린 부분 찾기 · ${p.ci+1} / ${PROOF_CASES.length}</b>${isTeacher?'<button class="btn sm sky" id="proofReturn">원래 수업으로 돌아가기</button>':`<span>${esc(nameOf(pid))}</span>`}</header>
- <div class="proofLayout"><section><div class="card"><div class="proofMarket">${esc(c.market)} 시장</div><div class="proofEvent">${esc(c.event)}</div></div>
- <div class="card proofStatement"><div class="muted">이 설명은 맞을까?</div><p>${esc(c.market)}의 <button class="proofWord" id="proofWord" ${locked||isTeacher?'disabled':''}>${esc(p.reveal?c.answer:c.word)}</button> ${c.dir}</p>
+ <div class="proofLayout ${isTeacher?'':'proofStudentLayout'}"><section><div class="card"><div class="proofMarket">${esc(c.market)} 시장</div><div class="proofEvent">${esc(c.event)}</div></div>
+ <div class="card proofStatement"><div class="muted">이 사건으로 생긴 그래프 변화의 이름, 맞을까?</div><p>${esc(c.market)}의 <button class="proofWord" id="proofWord" ${locked||isTeacher?'disabled':''}>${esc(p.reveal?c.answer:c.word)}</button> ${c.dir}</p>
  ${!p.reveal?'<div class="proofInstruction">틀린 말을 눌러 고쳐. 맞는 문장이면 ‘틀린 부분 없음’을 골라.</div>':`<div class="proofExplanation">${esc(c.why)}</div>`}</div>
  ${!isTeacher&&!locked?'<div id="proofEdits" class="proofEdits" hidden><div>어떤 말로 바꿀까?</div><div class="proofOptions">'+['수요','수요량','공급','공급량'].filter(w=>w!==c.word).map(w=>`<button class="btn sky" data-proof-word="${w}">${w}</button>`).join('')+'</div></div><button class="btn" id="proofNone">틀린 부분 없음</button><p id="proofDraftLabel" aria-live="polite">아직 고르지 않았어.</p><button class="btn mint big" id="proofSubmit" disabled>답 제출</button>':''}
  ${!isTeacher&&rec&&!p.reveal?'<div class="card center">제출 완료! 선생님의 정답 공개를 기다려.</div>':''}
@@ -2536,7 +2542,7 @@ function renderProof(){
    if(answers[pid])return;answers[pid]={word,at:now()};return r;
   });if(!result.committed)toast('제출이 마감됐거나 이미 제출했어.');}
   catch(e){toast('답을 보내지 못했어. 다시 눌러 봐.');if(el('proofSubmit'))el('proofSubmit').disabled=false;}
-  finally{proofBusy=false;}
+  finally{proofBusy=false;if(el('proofSubmit')&&room.state?.phase==='proof'&&room.proof?.run===p.run&&room.proof?.ci===p.ci&&!room.proof.reveal&&!proofRecord(p,pid))el('proofSubmit').disabled=!proofDraft;}
  };
 }
 
@@ -2544,4 +2550,5 @@ start();
 </script>
 </body>
 </html>
+
 
