@@ -861,7 +861,8 @@ function teacherHome() {
     <div class="card" style="width:min(620px,100%);text-align:center"><h3>📍 이번 반은 어디서 시작할까?</h3>
       <button class="btn big mint" data-new-set="D">🛒 수요편부터</button>
       <button class="btn big peach" data-new-set="S">🏭 공급편부터</button>
-      <button class="btn big lav" data-new-set="mix">⚡ 총정리부터</button></div>
+      <button class="btn big lav" data-new-set="mix">⚡ 총정리부터</button>
+      <button class="btn big lemon" data-new-set="proof">🔎 틀린 부분 찾기부터</button></div>
     ${saved ? `<button class="btn sky" id="resume">이어서 하기 (방 ${esc(saved)})</button>` : ''}
     <div class="card" style="width:min(440px,100%);margin-top:12px">
       <div class="muted" style="font-size:17px;margin-bottom:8px">기존 방을 열면 위쪽에 📋 공급 사전점검 보관 버튼이 보여.</div>
@@ -881,15 +882,32 @@ function teacherHome() {
     } catch(e) { console.error(e); toast('방을 열지 못했어. 인터넷을 확인해.'); }
   };
 }
+let creatingRoom = false;
 async function newRoom(startSet = 'D') {
+  if (creatingRoom) return;
+  creatingRoom = true;
+  document.querySelectorAll('[data-new-set]').forEach(b=>b.disabled=true);
   try {
-    let c;
-    for (let i = 0; i < 20; i++) { c = String(Math.floor(1000 + Math.random() * 9000)); if (!(await get(A(c))).exists()) break; }
+    const proofOnly = startSet === 'proof';
     const chosen = ['D','S','mix'].includes(startSet) ? startSet : 'D';
-    await set(A(c), { createdAt: Date.now(), set: chosen, cases: PRESETS[chosen], casesBySet: { [chosen]: PRESETS[chosen] }, state: { phase: 'setup', mode: chosen === 'mix' ? 'race' : 'together', ci: 0, step: 0, reveal: false, soloFrom: 0, showNames: true } });
+    const createdAt = Date.now();
+    const initialState = { phase: 'setup', mode: chosen === 'mix' ? 'race' : 'together', ci: 0, step: 0, reveal: false, soloFrom: 0, showNames: true };
+    const data = { createdAt, set: chosen, cases: PRESETS[chosen], casesBySet: { [chosen]: PRESETS[chosen] }, state: initialState };
+    if (proofOnly) {
+      data.proof = { run:'p'+createdAt, ci:0, reveal:false, started:now(), returnState:{...initialState}, directStart:true };
+      data.state = {...initialState,phase:'proof'};
+    }
+    let c = null;
+    for (let i=0;i<20;i++) {
+      const candidate=String(Math.floor(1000+Math.random()*9000));
+      const result=await runTransaction(A(candidate),current=>current==null?data:undefined);
+      if(result.committed){c=candidate;break;}
+    }
+    if(!c)throw new Error('No available room code');
     localStorage.setItem('curve_teacher_room', c);
     location.href = `?t=1&room=${c}`;
   } catch (e) { console.error(e); toast('방을 못 열었어 😢 인터넷을 확인해'); }
+  finally { creatingRoom=false;document.querySelectorAll('[data-new-set]').forEach(b=>b.disabled=false); }
 }
 function studentForm(prefill) {
   app.innerHTML = `<div class="s-wrap"><div class="stage" style="min-height:80vh">
@@ -2520,15 +2538,15 @@ function renderProof(){
  if(proofViewKey!==key){proofViewKey=key;proofDraft=null;proofOpened=false;}
  const locked=p.reveal||!!rec;
  app.innerHTML=`<main id="proofScreen" class="wrap proofScreen">
- <header class="proofHeader"><b>🔎 틀린 부분 찾기 · ${p.ci+1} / ${PROOF_CASES.length}</b>${isTeacher?'<button class="btn sm sky" id="proofReturn">원래 수업으로 돌아가기</button>':`<span>${esc(nameOf(pid))}</span>`}</header>
+ <header class="proofHeader"><b>🔎 틀린 부분 찾기 · ${p.ci+1} / ${PROOF_CASES.length}</b>${isTeacher?'<span class="pill">방 코드 '+esc(code)+'</span><button class="btn sm sky" id="proofReturn">'+(p.directStart?'수업 선택으로':'원래 수업으로 돌아가기')+'</button>':`<span>${esc(nameOf(pid))}</span>`}</header>
  <div class="proofLayout ${isTeacher?'':'proofStudentLayout'}"><section><div class="card"><div class="proofMarket">${esc(c.market)} 시장</div><div class="proofEvent">${esc(c.event)}</div></div>
  <div class="card proofStatement"><div class="muted">이 사건으로 생긴 그래프 변화의 이름, 맞을까?</div><p>${esc(c.market)}의 <button class="proofWord" id="proofWord" ${locked||isTeacher?'disabled':''}>${esc(p.reveal?c.answer:c.word)}</button> ${c.dir}</p>
  ${!p.reveal?'<div class="proofInstruction">틀린 말을 눌러 고쳐. 맞는 문장이면 ‘틀린 부분 없음’을 골라.</div>':`<div class="proofExplanation">${esc(c.why)}</div>`}</div>
  ${!isTeacher&&!locked?'<div id="proofEdits" class="proofEdits" hidden><div>어떤 말로 바꿀까?</div><div class="proofOptions">'+['수요','수요량','공급','공급량'].filter(w=>w!==c.word).map(w=>`<button class="btn sky" data-proof-word="${w}">${w}</button>`).join('')+'</div></div><button class="btn" id="proofNone">틀린 부분 없음</button><p id="proofDraftLabel" aria-live="polite">아직 고르지 않았어.</p><button class="btn mint big" id="proofSubmit" disabled>답 제출</button>':''}
  ${!isTeacher&&rec&&!p.reveal?'<div class="card center">제출 완료! 선생님의 정답 공개를 기다려.</div>':''}
  ${!isTeacher&&p.reveal?`<div class="card center ${proofCorrect(c,rec)?'mint':'peach'}"><h2>${!rec?'제출하지 않았어':proofCorrect(c,rec)?'정답!':'다시 확인해 보자'}</h2>${rec?'내 답: '+esc(rec.word)+' '+c.dir+'<br>':''}정확한 표현: <b>${esc(c.answer)} ${c.dir}</b></div>`:''}
- </section><aside class="card proofControls">${isTeacher?`<div id="proofStats"></div><p>제한시간 없음 · 교사가 직접 진행</p>${p.reveal?`<div class="proofAnswer">${c.word===c.answer?'틀린 부분 없음':esc(c.word)+' → '+esc(c.answer)}</div><details id="proofRoster"></details><button class="btn big mint" id="proofNext">${p.ci===PROOF_CASES.length-1?'활동 끝내고 돌아가기':'다음 문제'}</button>`:'<button class="btn big lemon" id="proofReveal">정답 공개</button>'}${p.ci>0?'<button class="btn sky" id="proofPrev">이전 문제</button>':''}`:'<b>점 하나 · 수요량 / 공급량<br>곡선 전체 · 수요 / 공급</b>'}</aside></div></main>`;
- if(isTeacher){el('proofReturn').onclick=()=>proofControl('return');if(el('proofReveal'))el('proofReveal').onclick=()=>proofControl('reveal');if(el('proofNext'))el('proofNext').onclick=()=>proofControl(p.ci===PROOF_CASES.length-1?'return':'next');if(el('proofPrev'))el('proofPrev').onclick=()=>proofControl('prev');proofStats();return;}
+ </section><aside class="card proofControls">${isTeacher?`<div id="proofStats"></div><details class="proofJoin"><summary>학생 입장 QR</summary><div id="proofQr"></div><a href="?room=${esc(code)}" target="_blank" rel="noopener">학생 입장 화면</a></details><p>제한시간 없음 · 교사가 직접 진행</p>${p.reveal?`<div class="proofAnswer">${c.word===c.answer?'틀린 부분 없음':esc(c.word)+' → '+esc(c.answer)}</div><details id="proofRoster"></details><button class="btn big mint" id="proofNext">${p.ci===PROOF_CASES.length-1?'활동 끝내고 돌아가기':'다음 문제'}</button>`:'<button class="btn big lemon" id="proofReveal">정답 공개</button>'}${p.ci>0?'<button class="btn sky" id="proofPrev">이전 문제</button>':''}`:'<b>점 하나 · 수요량 / 공급량<br>곡선 전체 · 수요 / 공급</b>'}</aside></div></main>`;
+ if(isTeacher){if(window.QRCode&&el('proofQr'))new QRCode(el('proofQr'),{text:location.origin+location.pathname+'?room='+code,width:180,height:180,colorDark:'#5B4B57',colorLight:'#ffffff'});el('proofReturn').onclick=()=>proofControl('return');if(el('proofReveal'))el('proofReveal').onclick=()=>proofControl('reveal');if(el('proofNext'))el('proofNext').onclick=()=>proofControl(p.ci===PROOF_CASES.length-1?'return':'next');if(el('proofPrev'))el('proofPrev').onclick=()=>proofControl('prev');proofStats();return;}
  if(locked)return;
  const pick=w=>{proofDraft=w;el('proofDraftLabel').textContent='내 답: '+w+' '+c.dir;el('proofSubmit').disabled=false;app.querySelectorAll('[data-proof-word]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.proofWord===w)));el('proofNone').setAttribute('aria-pressed',String(w===c.word));};
  el('proofWord').onclick=()=>{proofOpened=true;el('proofEdits').hidden=false;};
