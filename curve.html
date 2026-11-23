@@ -466,6 +466,19 @@ button,.btn,.speech,.rule,.title,.card{word-break:keep-all;overflow-wrap:break-w
 .proofToken:focus-visible{outline:3px solid #518dbe}
 @media(max-height:800px){.proofScreen .card{padding:12px 16px;margin-bottom:12px}.proofStatement p{margin:10px 0}.proofScreen .proofHeader{margin-bottom:12px}.proofEvent{font-size:clamp(22px,3vw,30px)}.proofScreen #proofDraftLabel{margin:8px 0}.proofScreen #proofSubmit{padding:12px 24px;font-size:24px}}
 </style>
+<style>
+.proofScreen .proofOptions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;width:100%;margin:10px 0 14px}
+.proofScreen .proofOptions .btn{box-sizing:border-box;width:100%;height:68px;min-height:68px;margin:0;padding:10px;font-size:28px;line-height:1.2;display:flex;align-items:center;justify-content:center}
+.proofScreen #proofNone{width:100%;height:68px;min-height:68px;margin:0;padding:10px;font-size:28px;line-height:1.2}
+.proofJoinDialog{border:2px solid var(--line);border-radius:24px;background:white;color:var(--ink);padding:20px;text-align:center;width:min(360px,calc(100% - 32px));max-height:85dvh;overflow:auto;font-family:inherit}
+.proofJoinDialog::backdrop{background:rgba(40,25,40,.45)}
+.proofJoinDialog h2{margin:8px}.proofJoinCode{font-size:28px;margin-bottom:16px}
+.proofJoinDialog #proofQr{display:flex;justify-content:center;margin:16px 0}
+.proofJoinDialog #proofQr img,.proofJoinDialog #proofQr canvas{max-width:100%;height:auto}
+.proofJoinDialog a{display:block;text-decoration:none;font-size:20px;margin:12px 0 0}
+.proofJoinDialog #proofJoinClose{display:block;margin-left:auto}
+@media(max-width:480px){.proofScreen .proofOptions .btn,.proofScreen #proofNone{height:60px;min-height:60px;font-size:25px}}
+</style>
 </head>
 <body>
 <div id="app"></div>
@@ -2538,6 +2551,17 @@ function proofStats(){
  el('proofStats').textContent='제출 '+submitted.length+' / '+ids.length+'명';
  const roster=el('proofRoster');if(roster&&p.reveal){const right=submitted.filter(id=>proofCorrect(c,proofRecord(p,id)));roster.innerHTML='<summary>정답자 확인 · '+right.length+'명</summary><div>'+right.map(id=>esc(nameOf(id))).join(' · ')+'</div>';}
 }
+function showProofJoin(){
+ if(!isTeacher||el('proofJoinDialog'))return;
+ const d=document.createElement('dialog');d.id='proofJoinDialog';d.className='proofJoinDialog';
+ d.innerHTML='<button class="btn sm" id="proofJoinClose" autofocus>닫기</button><h2>학생 입장</h2><div class="proofJoinCode">방 코드 '+esc(code)+'</div><div id="proofQr"></div><a class="btn sky" href="?room='+encodeURIComponent(code)+'" target="_blank" rel="noopener">학생 입장 화면</a>';
+ app.appendChild(d);
+ el('proofJoinClose').onclick=()=>d.close();
+ d.onclick=e=>{if(e.target===d){const r=d.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)d.close();}};
+ d.onclose=()=>{d.remove();el('proofJoinButton')?.focus();};
+ d.showModal();
+ if(window.QRCode)new QRCode(el('proofQr'),{text:location.origin+location.pathname+'?room='+code,width:220,height:220,colorDark:'#5B4B57',colorLight:'#ffffff'});
+}
 function renderProof(){
  const p=room.proof,c=PROOF_CASES[p?.ci];if(!c)return;
  if(!isTeacher&&!room.players?.[pid])return studentForm(code);
@@ -2546,15 +2570,15 @@ function renderProof(){
  if(proofViewKey!==key){proofViewKey=key;proofDraft=null;proofOpened=false;}
  const locked=p.reveal||!!rec;
  app.innerHTML=`<main id="proofScreen" class="wrap proofScreen">
- <header class="proofHeader"><b>🔎 틀린 부분 찾기 · ${p.ci+1} / ${PROOF_CASES.length}</b>${isTeacher?'<span class="pill">방 코드 '+esc(code)+'</span><button class="btn sm sky" id="proofReturn">'+(p.directStart?'수업 선택으로':'원래 수업으로 돌아가기')+'</button>':`<span>${esc(nameOf(pid))}</span>`}</header>
+ <header class="proofHeader"><b>🔎 틀린 부분 찾기 · ${p.ci+1} / ${PROOF_CASES.length}</b>${isTeacher?'<span class="pill">방 코드 '+esc(code)+'</span><button class="btn sm sky" id="proofJoinButton">학생 입장 QR</button><button class="btn sm sky" id="proofReturn">'+(p.directStart?'수업 선택으로':'원래 수업으로 돌아가기')+'</button>':`<span>${esc(nameOf(pid))}</span>`}</header>
  <div class="proofLayout ${isTeacher?'':'proofStudentLayout'}"><section><div class="card"><div class="proofMarket">${esc(c.market)} 시장</div><div class="proofEvent">${esc(c.event)}</div></div>
  <div class="card proofStatement"><div class="muted">이 사건을 설명한 문장, 맞을까?</div><p>${esc(c.market)}의 <button class="proofToken ${p.reveal&&c.word!==c.answer?'proofCorrected':''}" id="proofWord" ${locked||isTeacher?'disabled':''}>${esc(p.reveal?c.answer:c.word)}</button> <button class="proofToken" id="proofDir" ${locked||isTeacher?'disabled':''}>${c.dir}</button></p>
  ${!p.reveal?'<div class="proofInstruction">틀린 말을 눌러 고쳐. 맞는 문장이면 ‘틀린 부분 없음’을 골라.</div>':`<div class="proofExplanation">${esc(c.why)}</div>`}</div>
  ${!isTeacher&&!locked?'<div id="proofEdits" class="proofEdits" hidden></div><button class="btn" id="proofNone">틀린 부분 없음</button><p id="proofDraftLabel" aria-live="polite">아직 고르지 않았어.</p><button class="btn mint big" id="proofSubmit" disabled>답 제출</button>':''}
  ${!isTeacher&&rec&&!p.reveal?'<div class="card center">제출 완료! 선생님의 정답 공개를 기다려.</div>':''}
  ${!isTeacher&&p.reveal?`<div class="card center ${proofCorrect(c,rec)?'mint':'peach'}"><h2>${!rec?'제출하지 않았어':proofCorrect(c,rec)?'정답!':'다시 확인해 보자'}</h2>${rec?'내 답: '+esc(rec.word)+' '+esc(rec.dir||c.dir)+'<br>':''}정확한 표현: <b>${esc(c.answer)} ${c.dir}</b></div>`:''}
- </section><aside class="card proofControls">${isTeacher?`<div id="proofStats"></div><details class="proofJoin"><summary>학생 입장 QR</summary><div id="proofQr"></div><a href="?room=${esc(code)}" target="_blank" rel="noopener">학생 입장 화면</a></details><p>제한시간 없음 · 교사가 직접 진행</p>${p.reveal?`<div class="proofAnswer">${c.word===c.answer?'틀린 부분 없음':esc(c.word)+' → '+esc(c.answer)}</div><details id="proofRoster"></details><button class="btn big mint" id="proofNext">${p.ci===PROOF_CASES.length-1?'활동 끝내고 돌아가기':'다음 문제'}</button>`:'<button class="btn big lemon" id="proofReveal">다음 · 정답 보기</button>'}${p.ci>0?'<button class="btn sky" id="proofPrev">이전 문제</button>':''}`:'<b>점 하나 · 수요량 / 공급량<br>곡선 전체 · 수요 / 공급</b>'}</aside></div></main>`;
- if(isTeacher){if(window.QRCode&&el('proofQr'))new QRCode(el('proofQr'),{text:location.origin+location.pathname+'?room='+code,width:180,height:180,colorDark:'#5B4B57',colorLight:'#ffffff'});el('proofReturn').onclick=()=>proofControl('return');if(el('proofReveal'))el('proofReveal').onclick=()=>proofControl('reveal');if(el('proofNext'))el('proofNext').onclick=()=>proofControl(p.ci===PROOF_CASES.length-1?'return':'next');if(el('proofPrev'))el('proofPrev').onclick=()=>proofControl('prev');proofStats();return;}
+ </section><aside class="card proofControls">${isTeacher?`<div id="proofStats"></div><p>제한시간 없음 · 교사가 직접 진행</p>${p.reveal?`<div class="proofAnswer">${c.word===c.answer?'틀린 부분 없음':esc(c.word)+' → '+esc(c.answer)}</div><details id="proofRoster"></details><button class="btn big mint" id="proofNext">${p.ci===PROOF_CASES.length-1?'활동 끝내고 돌아가기':'다음 문제'}</button>`:'<button class="btn big lemon" id="proofReveal">다음 · 정답 보기</button>'}${p.ci>0?'<button class="btn sky" id="proofPrev">이전 문제</button>':''}`:'<b>점 하나 · 수요량 / 공급량<br>곡선 전체 · 수요 / 공급</b>'}</aside></div></main>`;
+ if(isTeacher){el('proofJoinButton').onclick=showProofJoin;el('proofReturn').onclick=()=>proofControl('return');if(el('proofReveal'))el('proofReveal').onclick=()=>proofControl('reveal');if(el('proofNext'))el('proofNext').onclick=()=>proofControl(p.ci===PROOF_CASES.length-1?'return':'next');if(el('proofPrev'))el('proofPrev').onclick=()=>proofControl('prev');proofStats();return;}
  if(locked)return;
  let draftWord=c.word,draftDir=c.dir;
  const showDraft=()=>{
