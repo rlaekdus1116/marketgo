@@ -458,6 +458,14 @@ button,.btn,.speech,.rule,.title,.card{word-break:keep-all;overflow-wrap:break-w
 .proofLayout{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:22px;align-items:start}.proofMarket{font-size:clamp(28px,4vw,42px);background:var(--lemon);border-radius:18px;padding:8px 18px;display:inline-block}.proofEvent{font-size:clamp(24px,3vw,34px);margin-top:12px}.proofStatement p{font-size:clamp(30px,4vw,46px);margin:16px 0}.proofWord{font-size:inherit;border:3px dashed #b35d81;border-radius:14px;background:var(--pink);padding:5px 16px}.proofWord:disabled{opacity:1;cursor:default}.proofInstruction,.proofExplanation{font-size:21px}.proofControls{position:sticky;top:12px;font-size:20px}.proofControls .btn{width:100%;font-size:23px;margin:12px 0 0;padding:16px}.proofAnswer{padding:12px;background:var(--mint);border-radius:16px;font-size:27px;margin-bottom:16px}.proofEdits{font-size:22px}.proofOptions{display:flex;flex-wrap:wrap;gap:8px}.proofScreen [aria-pressed="true"]{outline:4px solid #387c65}.proofScreen details div{max-height:180px;overflow:auto}.proofScreen summary{cursor:pointer}.proofStudentLayout{grid-template-columns:minmax(0,1fr);max-width:900px;margin:auto}.proofStudentLayout .proofControls{display:none}.proofEdits .btn{font-size:28px;min-height:60px}.proofInstruction{color:#695361}
 @media(max-width:760px){.proofLayout{grid-template-columns:1fr;gap:12px}.proofControls{position:static}.proofScreen{padding:12px}.proofHeader{font-size:20px}.proofControls p{margin:6px 0}}
 </style>
+<style>
+.proofToken{font:inherit;color:inherit;background:transparent;border:0;border-radius:8px;padding:4px 6px;min-height:48px;box-shadow:none}
+.proofToken:disabled{opacity:1;cursor:default}
+.proofToken.proofSelected{background:var(--sky);outline:2px solid #518dbe}
+.proofToken.proofCorrected{background:var(--mint)}
+.proofToken:focus-visible{outline:3px solid #518dbe}
+@media(max-height:800px){.proofScreen .card{padding:12px 16px;margin-bottom:12px}.proofStatement p{margin:10px 0}.proofScreen .proofHeader{margin-bottom:12px}.proofEvent{font-size:clamp(22px,3vw,30px)}.proofScreen #proofDraftLabel{margin:8px 0}.proofScreen #proofSubmit{padding:12px 24px;font-size:24px}}
+</style>
 </head>
 <body>
 <div id="app"></div>
@@ -2495,7 +2503,7 @@ const PROOF_CASES = [
 ].map(([market,event,word,dir,answer,why])=>({market,event,word,dir,answer,why}));
 let proofBusy=false, proofViewKey='', proofDraft=null, proofOpened=false;
 const proofRecord = (p,id) => room.proofRuns?.[p.run]?.answers?.[p.ci]?.[id];
-const proofCorrect = (c,r) => !!r && r.word===c.answer;
+const proofCorrect = (c,r) => !!r && r.word===c.answer && (r.dir||c.dir)===c.dir;
 async function proofStart(){
  if(proofBusy)return;proofBusy=true;
  try{closeSummary();const started=now(),run='p'+Date.now();await runTransaction(A(),r=>{
@@ -2540,24 +2548,45 @@ function renderProof(){
  app.innerHTML=`<main id="proofScreen" class="wrap proofScreen">
  <header class="proofHeader"><b>🔎 틀린 부분 찾기 · ${p.ci+1} / ${PROOF_CASES.length}</b>${isTeacher?'<span class="pill">방 코드 '+esc(code)+'</span><button class="btn sm sky" id="proofReturn">'+(p.directStart?'수업 선택으로':'원래 수업으로 돌아가기')+'</button>':`<span>${esc(nameOf(pid))}</span>`}</header>
  <div class="proofLayout ${isTeacher?'':'proofStudentLayout'}"><section><div class="card"><div class="proofMarket">${esc(c.market)} 시장</div><div class="proofEvent">${esc(c.event)}</div></div>
- <div class="card proofStatement"><div class="muted">이 사건으로 생긴 그래프 변화의 이름, 맞을까?</div><p>${esc(c.market)}의 <button class="proofWord" id="proofWord" ${locked||isTeacher?'disabled':''}>${esc(p.reveal?c.answer:c.word)}</button> ${c.dir}</p>
+ <div class="card proofStatement"><div class="muted">이 사건을 설명한 문장, 맞을까?</div><p>${esc(c.market)}의 <button class="proofToken ${p.reveal&&c.word!==c.answer?'proofCorrected':''}" id="proofWord" ${locked||isTeacher?'disabled':''}>${esc(p.reveal?c.answer:c.word)}</button> <button class="proofToken" id="proofDir" ${locked||isTeacher?'disabled':''}>${c.dir}</button></p>
  ${!p.reveal?'<div class="proofInstruction">틀린 말을 눌러 고쳐. 맞는 문장이면 ‘틀린 부분 없음’을 골라.</div>':`<div class="proofExplanation">${esc(c.why)}</div>`}</div>
- ${!isTeacher&&!locked?'<div id="proofEdits" class="proofEdits" hidden><div>어떤 말로 바꿀까?</div><div class="proofOptions">'+['수요','수요량','공급','공급량'].filter(w=>w!==c.word).map(w=>`<button class="btn sky" data-proof-word="${w}">${w}</button>`).join('')+'</div></div><button class="btn" id="proofNone">틀린 부분 없음</button><p id="proofDraftLabel" aria-live="polite">아직 고르지 않았어.</p><button class="btn mint big" id="proofSubmit" disabled>답 제출</button>':''}
+ ${!isTeacher&&!locked?'<div id="proofEdits" class="proofEdits" hidden></div><button class="btn" id="proofNone">틀린 부분 없음</button><p id="proofDraftLabel" aria-live="polite">아직 고르지 않았어.</p><button class="btn mint big" id="proofSubmit" disabled>답 제출</button>':''}
  ${!isTeacher&&rec&&!p.reveal?'<div class="card center">제출 완료! 선생님의 정답 공개를 기다려.</div>':''}
- ${!isTeacher&&p.reveal?`<div class="card center ${proofCorrect(c,rec)?'mint':'peach'}"><h2>${!rec?'제출하지 않았어':proofCorrect(c,rec)?'정답!':'다시 확인해 보자'}</h2>${rec?'내 답: '+esc(rec.word)+' '+c.dir+'<br>':''}정확한 표현: <b>${esc(c.answer)} ${c.dir}</b></div>`:''}
- </section><aside class="card proofControls">${isTeacher?`<div id="proofStats"></div><details class="proofJoin"><summary>학생 입장 QR</summary><div id="proofQr"></div><a href="?room=${esc(code)}" target="_blank" rel="noopener">학생 입장 화면</a></details><p>제한시간 없음 · 교사가 직접 진행</p>${p.reveal?`<div class="proofAnswer">${c.word===c.answer?'틀린 부분 없음':esc(c.word)+' → '+esc(c.answer)}</div><details id="proofRoster"></details><button class="btn big mint" id="proofNext">${p.ci===PROOF_CASES.length-1?'활동 끝내고 돌아가기':'다음 문제'}</button>`:'<button class="btn big lemon" id="proofReveal">정답 공개</button>'}${p.ci>0?'<button class="btn sky" id="proofPrev">이전 문제</button>':''}`:'<b>점 하나 · 수요량 / 공급량<br>곡선 전체 · 수요 / 공급</b>'}</aside></div></main>`;
+ ${!isTeacher&&p.reveal?`<div class="card center ${proofCorrect(c,rec)?'mint':'peach'}"><h2>${!rec?'제출하지 않았어':proofCorrect(c,rec)?'정답!':'다시 확인해 보자'}</h2>${rec?'내 답: '+esc(rec.word)+' '+esc(rec.dir||c.dir)+'<br>':''}정확한 표현: <b>${esc(c.answer)} ${c.dir}</b></div>`:''}
+ </section><aside class="card proofControls">${isTeacher?`<div id="proofStats"></div><details class="proofJoin"><summary>학생 입장 QR</summary><div id="proofQr"></div><a href="?room=${esc(code)}" target="_blank" rel="noopener">학생 입장 화면</a></details><p>제한시간 없음 · 교사가 직접 진행</p>${p.reveal?`<div class="proofAnswer">${c.word===c.answer?'틀린 부분 없음':esc(c.word)+' → '+esc(c.answer)}</div><details id="proofRoster"></details><button class="btn big mint" id="proofNext">${p.ci===PROOF_CASES.length-1?'활동 끝내고 돌아가기':'다음 문제'}</button>`:'<button class="btn big lemon" id="proofReveal">다음 · 정답 보기</button>'}${p.ci>0?'<button class="btn sky" id="proofPrev">이전 문제</button>':''}`:'<b>점 하나 · 수요량 / 공급량<br>곡선 전체 · 수요 / 공급</b>'}</aside></div></main>`;
  if(isTeacher){if(window.QRCode&&el('proofQr'))new QRCode(el('proofQr'),{text:location.origin+location.pathname+'?room='+code,width:180,height:180,colorDark:'#5B4B57',colorLight:'#ffffff'});el('proofReturn').onclick=()=>proofControl('return');if(el('proofReveal'))el('proofReveal').onclick=()=>proofControl('reveal');if(el('proofNext'))el('proofNext').onclick=()=>proofControl(p.ci===PROOF_CASES.length-1?'return':'next');if(el('proofPrev'))el('proofPrev').onclick=()=>proofControl('prev');proofStats();return;}
  if(locked)return;
- const pick=w=>{proofDraft=w;el('proofDraftLabel').textContent='내 답: '+w+' '+c.dir;el('proofSubmit').disabled=false;app.querySelectorAll('[data-proof-word]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.proofWord===w)));el('proofNone').setAttribute('aria-pressed',String(w===c.word));};
- el('proofWord').onclick=()=>{proofOpened=true;el('proofEdits').hidden=false;};
- app.querySelectorAll('[data-proof-word]').forEach(b=>b.onclick=()=>pick(b.dataset.proofWord));
- el('proofNone').onclick=()=>pick(c.word);
+ let draftWord=c.word,draftDir=c.dir;
+ const showDraft=()=>{
+  proofDraft={word:draftWord,dir:draftDir};
+  el('proofDraftLabel').textContent='내 답: '+draftWord+' '+draftDir;
+  el('proofSubmit').disabled=false;
+  el('proofNone').setAttribute('aria-pressed',String(draftWord===c.word&&draftDir===c.dir));
+ };
+ const choosePart=part=>{
+  app.querySelectorAll('.proofToken').forEach(b=>b.classList.remove('proofSelected'));
+  el(part==='word'?'proofWord':'proofDir').classList.add('proofSelected');
+  const options=part==='word'?['수요','수요량','공급','공급량']:['증가','감소'];
+  el('proofEdits').hidden=false;
+  el('proofEdits').innerHTML='<div>어떤 말로 바꿀까?</div><div class="proofOptions">'+options.map(w=>'<button class="btn sky" data-proof-value="'+w+'">'+w+'</button>').join('')+'</div>';
+  el('proofEdits').querySelectorAll('[data-proof-value]').forEach(b=>b.onclick=()=>{
+   if(part==='word')draftWord=b.dataset.proofValue;else draftDir=b.dataset.proofValue;
+   showDraft();
+   el('proofEdits').querySelectorAll('[data-proof-value]').forEach(item=>item.setAttribute('aria-pressed',String(item===b)));
+  });
+ };
+ el('proofWord').onclick=()=>choosePart('word');
+ el('proofDir').onclick=()=>choosePart('dir');
+ el('proofNone').onclick=()=>{
+  draftWord=c.word;draftDir=c.dir;showDraft();el('proofEdits').hidden=true;
+  app.querySelectorAll('.proofToken').forEach(b=>b.classList.remove('proofSelected'));
+ };
  el('proofSubmit').onclick=async()=>{
-  if(proofBusy||!proofDraft)return;proofBusy=true;el('proofSubmit').disabled=true;const word=proofDraft;
+  if(proofBusy||!proofDraft)return;proofBusy=true;el('proofSubmit').disabled=true;const {word,dir}=proofDraft;
   try{const result=await runTransaction(A(),r=>{
    if(r?.state?.phase!=='proof'||r.proof?.run!==p.run||r.proof?.ci!==p.ci||r.proof.reveal)return;
    r.proofRuns=r.proofRuns||{};const run=r.proofRuns[p.run]||(r.proofRuns[p.run]={started:p.started,answers:{}});run.answers=run.answers||{};const answers=run.answers[p.ci]||(run.answers[p.ci]={});
-   if(answers[pid])return;answers[pid]={word,at:now()};return r;
+   if(answers[pid])return;answers[pid]={word,dir,at:now()};return r;
   });if(!result.committed)toast('제출이 마감됐거나 이미 제출했어.');}
   catch(e){toast('답을 보내지 못했어. 다시 눌러 봐.');if(el('proofSubmit'))el('proofSubmit').disabled=false;}
   finally{proofBusy=false;if(el('proofSubmit')&&room.state?.phase==='proof'&&room.proof?.run===p.run&&room.proof?.ci===p.ci&&!room.proof.reveal&&!proofRecord(p,pid))el('proofSubmit').disabled=!proofDraft;}
