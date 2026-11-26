@@ -442,7 +442,49 @@ button,.btn,.speech,.rule,.title,.card{word-break:keep-all;overflow-wrap:break-w
    .raceRightActions .raceBranch .btn{margin:3px 0}
    .raceRightActions .raceBranch .btn.big{font-size:20px;padding:8px 12px}
  }
- </style>
+ /* ===== 📸 수업 돌아보기 (교사 전용) ===== */
+.lvFab{position:fixed;left:12px;bottom:12px;z-index:9998;margin:0;font-size:18px;padding:10px 16px}
+.lvPop{position:fixed;inset:0;z-index:10050;background:var(--bg,#FFF8FB);display:flex;flex-direction:column;overflow:hidden}
+.lvHead{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:10px 14px;background:#fff;border-bottom:2px solid var(--line)}.lvHead>b{font-size:22px;margin-right:auto}
+.lvTabs{display:flex;flex-wrap:wrap;gap:4px}.lvTabs .btn{margin:0}
+.lvNote{font-size:15px;color:#8a7684;padding:4px 16px;background:#fff}
+.lvBody{flex:1;overflow:auto;min-height:0}.lvPad{padding:14px 16px;max-width:1280px;margin:auto}
+.lvScenes{display:grid;grid-template-columns:260px minmax(0,1fr);height:100%;min-height:0}
+.lvScenes.photo{grid-template-columns:minmax(0,1fr)}.lvScenes.photo .lvList{display:none}
+.lvList{overflow:auto;background:#fff;border-right:2px solid var(--line);padding:10px}
+.lvGroup{font-size:16px;color:#8a7684;margin:12px 0 4px}.lvGroup:first-child{margin-top:0}
+.lvItem{display:block;width:100%;text-align:left;background:transparent;border-radius:12px;padding:7px 10px;font-size:16px;margin:2px 0}.lvItem.on{background:var(--mint);font-weight:bold}.lvItem:hover{background:var(--sky)}
+.lvStageWrap{display:flex;flex-direction:column;min-height:0;overflow:auto;padding:14px}
+.lvScene{background:#FFF8FB;border-radius:26px;padding:22px 26px;flex:1}.lvScene h2{font-size:clamp(26px,3vw,38px);margin:4px 0 14px}
+.lvTag{display:inline-block;background:var(--lemon);border-radius:999px;padding:4px 14px;font-size:17px}
+.lvCtrl{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:6px;padding-top:10px}.lvCtrl .btn{margin:0}
+.lvSplit{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:20px;align-items:start}
+.lvGraph{background:#fff;border:2px solid var(--line);border-radius:20px;padding:8px}.lvGraph svg{width:100%;height:auto;display:block}
+.lvHidden{text-align:center;color:#8a7684;font-size:16px;margin-top:8px}
+.lvStep{background:#fff;border:2px solid var(--line);border-radius:18px;padding:10px 14px;margin-top:10px}
+.lvStepQ{font-size:19px;margin-bottom:6px}.lvStepQ span{background:var(--lav,#EEE8FF);border-radius:999px;padding:2px 10px;font-size:15px;margin-right:4px}
+.lvOpt{margin:5px 0}.lvOptTop{display:flex;justify-content:space-between;gap:8px;font-size:17px}.lvOpt.right .lvOptTop{color:#2c7d5c;font-weight:bold}
+.lvTrack{height:12px;background:#F4EDF1;border-radius:99px;overflow:hidden}.lvTrack i{display:block;height:100%;background:#C9B7EE;border-radius:99px}.lvOpt.right .lvTrack i{background:#5FC79B}
+.lvOptGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:4px 16px;margin:10px 0}
+.lvCover{text-align:center;display:flex;flex-direction:column;align-items:center;gap:12px;padding:20px 0}.lvCover p{font-size:24px}
+.lvQr{background:#fff;padding:14px;border-radius:20px;border:2px solid var(--line)}
+.lvStatRow{display:flex;flex-wrap:wrap;gap:10px;width:100%;margin:10px 0}.lvStatRow>div{background:#fff;border:2px solid var(--line);border-radius:16px;padding:8px 14px;min-width:140px;display:flex;flex-direction:column;text-align:left}.lvStatRow>div.grow{flex:1}.lvStatRow small{color:#8a7684;font-size:14px}.lvStatRow b{font-size:22px}
+.lvRankList{display:grid;gap:6px;max-width:760px}.lvRankRow{display:grid;grid-template-columns:60px 1fr auto auto;gap:12px;align-items:center;background:#fff;border:2px solid var(--line);border-radius:16px;padding:8px 14px;font-size:20px}.lvRankRow.top{background:var(--lemon)}.lvRankRow small{color:#8a7684;font-size:15px}
+.lvChips{display:flex;flex-wrap:wrap;gap:4px}.lvChips .btn{margin:0}
+.lvWrongList{display:grid;gap:8px}.lvWrong{display:grid;grid-template-columns:44px minmax(0,1fr) auto auto;gap:12px;align-items:center;background:#fff;border:2px solid var(--line);border-radius:18px;padding:10px 14px}
+.lvWrong.hot{border-color:var(--redD);background:#FFF4F4}.lvWrong.warm{border-color:var(--lemonD,#EAD37A)}
+.lvRank{font-size:24px;text-align:center}.lvWrongMain b{font-size:19px}.lvWrongMain small{display:block;color:#8a7684;font-size:15px}
+.lvKind{display:inline-block;background:var(--sky);border-radius:999px;padding:1px 9px;font-size:14px}
+.lvRate{text-align:right}.lvRate b{font-size:26px;color:#c44}.lvRate small{display:block;font-size:14px;color:#8a7684}.lvWrongBtns{display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end}.lvWrongBtns .btn{margin:0}
+.lvCodeRow{display:flex;flex-wrap:wrap;align-items:center;gap:8px}.lvCodeRow .btn{margin:0}
+.lvAuc{background:#fff;border:2px solid var(--line);border-radius:24px;padding:16px 18px;margin-bottom:16px}.lvAucHead{font-size:24px;margin-bottom:8px}
+.lvGraph.wide{max-width:980px;margin:auto}
+.lvLegend{display:flex;flex-wrap:wrap;gap:14px;justify-content:center;font-size:16px;margin:8px 0}.lvLegend i{display:inline-block;width:26px;height:8px;border-radius:4px;margin-right:6px;vertical-align:middle}.lvLegend i.dash{background:repeating-linear-gradient(90deg,#7B5FD6 0 8px,transparent 8px 13px)}
+.lvTop{font-size:18px;margin:6px 0}.lvRefl{margin-top:8px;font-size:17px}.lvRefl summary{cursor:pointer}.lvRefl div{padding:4px 0;border-top:1px dashed var(--line)}
+@media(max-width:900px){.lvScenes{grid-template-columns:1fr}.lvList{max-height:150px;border-right:0;border-bottom:2px solid var(--line)}.lvSplit{grid-template-columns:1fr}.lvWrong{grid-template-columns:36px 1fr;}.lvRate,.lvWrongBtns{grid-column:2;text-align:left;justify-content:flex-start}}
+
+.askPop,.conceptPop{z-index:10070}.toast{z-index:10080}
+</style>
 <style>
 [data-cooldown]{display:block;margin-top:10px;color:#b00020;font-size:22px}
 .rankTable .drow{display:grid;grid-template-columns:70px 1fr 110px 205px;align-items:center;gap:6px}
@@ -2615,6 +2657,307 @@ function renderProof(){
   catch(e){toast('답을 보내지 못했어. 다시 눌러 봐.');if(el('proofSubmit'))el('proofSubmit').disabled=false;}
   finally{proofBusy=false;if(el('proofSubmit')&&room.state?.phase==='proof'&&room.proof?.run===p.run&&room.proof?.ci===p.ci&&!room.proof.reveal&&!proofRecord(p,pid))el('proofSubmit').disabled=!proofDraft;}
  };
+}
+
+/* =========================================================
+   📸 수업 돌아보기 (교사 전용 · 읽기 전용)
+   - 수업 장면 다시보기 · 많이 틀린 문제 · 경매 예측 vs 실제 곡선
+   - 이 화면은 Firebase 수업 상태를 바꾸지 않아. (‘학생과 함께 다시 풀기’만 기존 다시보기 기능을 열고, 정답은 그 화면에서 교사가 직접 공개)
+   ========================================================= */
+const LV = { open:false, tab:'scenes', idx:0, showAns:false, showNames:false, auto:false, photo:false, setFilter:'all', auctionCode:'', auction:null, auctionBusy:false };
+let lvUnsub = null, lvT = null, lvAutoT = null, lvScenesCache = [];
+const lvName = (id, n) => LV.showNames ? esc(nameOf(id)) : '학생' + (n != null ? ' ' + (n + 1) : '');
+const lvPct = (a, b) => b ? Math.round(a / b * 100) : 0;
+const lvBar = (label, count, total, right) => `<div class="lvOpt ${right ? 'right' : ''}"><div class="lvOptTop"><span>${right ? '✅ ' : ''}${label}</span><b>${count}명</b></div><div class="lvTrack"><i style="width:${lvPct(count, total)}%"></i></div></div>`;
+const lvKw = n => { n = Math.round(+n || 0); if (!n) return '0원'; const e = Math.floor(n / 1e8), m = Math.floor(n % 1e8 / 1e4), r = n % 1e4; let s = ''; if (e) s += e + '억'; if (m) s += (s ? ' ' : '') + m.toLocaleString() + '만'; if (r) s += (s ? ' ' : '') + (r % 1000 === 0 && !e && !m ? r / 1000 + '천' : r.toLocaleString()); return s + '원'; };
+const lvHasSet = set => !!(room && (room.set === set || room.casesBySet?.[set] || Object.keys(room.ansBySet?.[set] || {}).length || (set === 'D' && room.ans)));
+
+/* ---------- 많이 틀린 문제 (모든 활동 합쳐서) ---------- */
+function lvFillEntries() {
+  const out = [];
+  FILL_CASES.forEach((item, ci) => {
+    const a = Object.values((room.fillAnswers || {})[ci] || {});
+    if (!a.length) return;
+    const wrong = a.filter(r => !(r.curve === item.curve && r.dir === item.dir && r.price === item.price)).length;
+    out.push({ kind:'fill', ci, item, answered:a.length, wrong, rate:wrong / a.length, title:`빈칸 ${ci + 1}. ${esc(item.topic || item.market)}`, sub:esc(item.text) });
+  });
+  return out;
+}
+function lvProofAnswers(ci) {
+  const out = [];
+  Object.values(room.proofRuns || {}).forEach(run => Object.entries(run?.answers?.[ci] || {}).forEach(([id, r]) => r && out.push({ id, ...r })));
+  return out;
+}
+function lvProofEntries() {
+  const out = [];
+  PROOF_CASES.forEach((c, ci) => {
+    const a = lvProofAnswers(ci);
+    if (!a.length) return;
+    const wrong = a.filter(r => !proofCorrect(c, r)).length;
+    out.push({ kind:'proof', ci, item:c, answered:a.length, wrong, rate:wrong / a.length, title:`틀린 부분 찾기 ${ci + 1}. ${esc(c.market)}`, sub:esc(c.event) });
+  });
+  return out;
+}
+function lvWrongEntries() {
+  const list = [];
+  ['D', 'S'].forEach(set => { if (lvHasSet(set)) reviewEntries(set).forEach(r => list.push({ ...r, kind:set, title:`${r.ci + 1}번 ${esc(r.item.emoji)} ${esc(r.item.market)} · ${reviewStepName(r.step)}`, sub:esc(r.item.text) })); });
+  if (room.race) reviewEntries('mix').forEach(r => list.push({ ...r, kind:'mix', title:`${r.ci + 1}번 ${esc(r.item.emoji)} ${esc(r.item.market)} · ${r.item.priceRound ? '시장가격 예측' : '무엇이 변했나'}`, sub:esc(r.item.text) }));
+  list.push(...lvFillEntries(), ...lvProofEntries());
+  return list.sort((a, b) => b.rate - a.rate || b.wrong - a.wrong || a.ci - b.ci);
+}
+const LV_KIND = { D:'🛒 수요편', S:'🏭 공급편', mix:'⚡ 총정리', fill:'📝 빈칸 정리', proof:'🔎 틀린 부분 찾기' };
+function lvSceneKey(e) { return e.kind === 'fill' ? 'fill-' + e.ci : e.kind === 'proof' ? 'proof-' + e.ci : e.kind === 'mix' ? 'mix-' + e.ci : e.kind + '-' + e.ci; }
+function lvWrongTab() {
+  const all = lvWrongEntries(), kinds = [...new Set(all.map(e => e.kind))];
+  const list = LV.setFilter === 'all' ? all : all.filter(e => e.kind === LV.setFilter);
+  const inProof = room.state?.phase === 'proof';
+  return `<div class="lvPad"><div class="lvChips"><button class="btn sm ${LV.setFilter === 'all' ? 'mint' : ''}" data-lv-filter="all">전체 ${all.length}</button>${kinds.map(k => `<button class="btn sm ${LV.setFilter === k ? 'mint' : ''}" data-lv-filter="${k}">${LV_KIND[k]} ${all.filter(e => e.kind === k).length}</button>`).join('')}</div>
+    <div class="muted" style="font-size:17px;margin:6px 0 12px">첫 번째 답 기준 오답률 순서 · 응답한 학생만 계산 · 지금 이 화면은 교사 기기에서만 보여. ${inProof ? '<br>⚠️ 틀린 부분 찾기 진행 중에는 ‘함께 다시 풀기’를 쓸 수 없어. 원래 수업으로 돌아간 뒤 눌러.' : ''}</div>
+    <div class="lvWrongList">${list.map((e, i) => `<div class="lvWrong ${e.rate >= .5 ? 'hot' : e.rate >= .3 ? 'warm' : ''}">
+      <div class="lvRank">${i + 1}</div><div class="lvWrongMain"><span class="lvKind">${LV_KIND[e.kind]}</span> <b>${e.title}</b><small>${e.sub}</small></div>
+      <div class="lvRate"><b>${Math.round(e.rate * 100)}%</b><small>${e.wrong}/${e.answered}명 오답</small></div>
+      <div class="lvWrongBtns"><button class="btn sm sky" data-lv-jump="${lvSceneKey(e)}">🎞 장면</button>${['D', 'S', 'mix'].includes(e.kind) && !inProof ? `<button class="btn sm lemon" data-lv-class="${e.kind}|${e.ci}|${e.step}">📺 함께 다시 풀기</button>` : ''}</div></div>`).join('') || '<div class="card muted">아직 답한 기록이 없어.</div>'}</div></div>`;
+}
+
+/* ---------- 경매 예측 vs 실제 ---------- */
+const LV_AUCTION_DEFAULT = {
+  auction: [
+    { emoji:'🍫', name:'선생님 책상 위 에너지바', prices:[100, 300, 500, 1000, 1500], supply:1, predict:false },
+    { emoji:'📄', name:'기말고사 사회 시험지', prices:[1000, 50000, 100000, 300000, 1000000, 10000000], supply:5, predict:true },
+    { emoji:'🧸', name:'한정판 미니 키링', prices:[1000, 3000, 5000, 7000, 10000], supply:3, predict:false },
+    { emoji:'🎁', name:'미스터리 선물 상자', prices:[1000, 2000, 3000, 5000, 10000], supply:2, predict:false }],
+  auctionS: [{ emoji:'🍡', name:'과일모찌 장수', prices:[2000, 3000, 4000, 5000, 6000], supply:5, predict:true }]
+};
+async function lvLoadAuction(c) {
+  if (!/^\d{4}$/.test(c)) return toast('경매 방 코드 4자리를 적어.');
+  LV.auctionBusy = true; LV.auctionCode = c; lvRender();
+  try {
+    const [d, s] = await Promise.all([get(ref(db, 'rooms/auction_' + c)), get(ref(db, 'rooms/auctionS_' + c))]);
+    LV.auction = { code:c, auction:d.val(), auctionS:s.val() };
+  } catch (e) { console.error(e); toast('경매 기록을 불러오지 못했어.'); LV.auction = { code:c, error:true }; }
+  finally { LV.auctionBusy = false; lvScenesCache = []; lvRender(); }
+}
+function lvPredQ(pts, lv) {
+  if (!Array.isArray(pts) || pts.length < 2) return null;
+  const s = [...pts].sort((a, b) => a[1] - b[1]);
+  if (lv <= s[0][1]) return s[0][0];
+  if (lv >= s[s.length - 1][1]) return s[s.length - 1][0];
+  for (let i = 1; i < s.length; i++) if (s[i][1] >= lv) { const [x0, y0] = s[i - 1], [x1, y1] = s[i]; return y1 === y0 ? (x0 + x1) / 2 : x0 + (x1 - x0) * (lv - y0) / (y1 - y0); }
+  return s[s.length - 1][0];
+}
+function lvAuctionItems(kind, r) {
+  if (!r) return [];
+  const sup = kind === 'auctionS';
+  const items = (r.items || LV_AUCTION_DEFAULT[kind]).map(x => ({ ...x, prices:[...new Set((x.prices || []).map(Number).filter(p => p > 0))].sort((a, b) => a - b) }));
+  return items.map((it, i) => {
+    const preds = (r.preds || {})[i] || {}, ans = (r.ans || {})[i] || {};
+    if (!Object.keys(preds).length && !it.predict) return null;
+    const N = Math.max(1, r.meta?.[i]?.n || 0, Object.keys(r.players || {}).length, Object.keys(ans).length);
+    let upto = r.meta?.[i]?.upto;
+    if (upto == null) upto = r.state?.item === i && r.state?.li != null ? r.state.li : (Object.keys(ans).length ? it.prices.length - 1 : -1);
+    upto = Math.min(it.prices.length - 1, upto);
+    const inAt = (a, lv) => sup ? (a?.from != null && a.from <= lv) : (a?.last ?? -1) >= lv;
+    const actual = Array.from({ length:Math.max(0, upto + 1) }, (_, lv) => Object.values(ans).filter(a => inAt(a, lv)).length);
+    const predList = Object.entries(preds).map(([id, v]) => ({ id, pts:v?.pts, reason:v?.reason || '' })).filter(p => Array.isArray(p.pts) && p.pts.length > 1);
+    const levels = it.prices.length;
+    const avg = Array.from({ length:levels }, (_, lv) => { const q = predList.map(p => lvPredQ(p.pts, lv)).filter(v => v != null); return q.length ? q.reduce((s, v) => s + v, 0) / q.length : null; });
+    const acc = r.acc?.[i] || {};
+    const accList = Object.entries(acc).filter(([, a]) => a != null).sort((a, b) => b[1] - a[1]);
+    let gapLv = -1, gap = 0; actual.forEach((q, lv) => { if (avg[lv] == null) return; const g = Math.abs(avg[lv] - q); if (g > gap) { gap = g; gapLv = lv; } });
+    const refl = Object.entries((r.reflections || {})[i] || {}).filter(([, x]) => x?.text);
+    return { kind, sup, i, it, N, upto, actual, predList, avg, accList, gapLv, gap, refl, names:r.players || {} };
+  }).filter(Boolean);
+}
+function lvAuctionSVG(d) {
+  const W = 860, H = 470, ML = 120, MR = 26, MT = 22, MB = 54, pw = W - ML - MR, ph = H - MT - MB, L = d.it.prices.length;
+  const x = q => ML + q / Math.max(1, d.N) * pw, y = lv => MT + (1 - (lv + .5) / L) * ph;
+  const col = d.sup ? '#2FA67A' : '#E8803E';
+  let g = `<rect x="${ML}" y="${MT}" width="${pw}" height="${ph}" fill="#FFFDF9" stroke="#F2E6EC" stroke-width="2" rx="8"/>`;
+  d.it.prices.forEach((p, lv) => g += `<line x1="${ML}" x2="${W - MR}" y1="${y(lv)}" y2="${y(lv)}" stroke="#F2E6EC"/><text x="${ML - 10}" y="${y(lv) + 6}" text-anchor="end" font-size="17" fill="#A3919C">${lvKw(p)}</text>`);
+  const qs = d.N <= 12 ? 1 : d.N <= 30 ? 2 : 5;
+  for (let q = 0; q <= d.N; q += qs) g += `<text x="${x(q)}" y="${H - MB + 24}" text-anchor="middle" font-size="16" fill="#A3919C">${q}</text>`;
+  g += `<text x="${ML - 8}" y="${MT - 6}" text-anchor="end" font-size="15" fill="#A3919C">가격</text><text x="${W - MR}" y="${H - 8}" text-anchor="end" font-size="15" fill="#A3919C">${d.sup ? '팔겠다는' : '사겠다는'} 사람 수(명)</text>`;
+  d.predList.forEach(p => { const s = [...p.pts].sort((a, b) => a[1] - b[1]); g += `<path d="M${s.map(([q, lv]) => x(q) + ',' + y(lv)).join(' L')}" fill="none" stroke="#B8A7EE" stroke-width="2" opacity=".35"/>`; });
+  const av = d.avg.map((q, lv) => q == null ? null : [x(q), y(lv)]).filter(Boolean);
+  if (av.length > 1) g += `<path d="M${av.map(p => p.join(',')).join(' L')}" fill="none" stroke="#7B5FD6" stroke-width="5" stroke-dasharray="12 8" stroke-linecap="round"/>`;
+  if (d.actual.length) {
+    g += `<path d="M${d.actual.map((q, lv) => x(q) + ',' + y(lv)).join(' L')}" fill="none" stroke="${col}" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>`;
+    d.actual.forEach((q, lv) => g += `<circle cx="${x(q)}" cy="${y(lv)}" r="10" fill="${col}" stroke="#fff" stroke-width="3"/>`);
+  }
+  if (d.gapLv >= 0 && d.avg[d.gapLv] != null) { const a = x(d.avg[d.gapLv]), b = x(d.actual[d.gapLv]), yy = y(d.gapLv); g += `<line x1="${a}" x2="${b}" y1="${yy}" y2="${yy}" stroke="#D94F6A" stroke-width="3" stroke-dasharray="4 4"/><text x="${(a + b) / 2}" y="${yy - 14}" text-anchor="middle" font-size="16" fill="#D94F6A" stroke="#fff" stroke-width="5" paint-order="stroke">차이 ${d.gap.toFixed(1)}명</text>`; }
+  return `<svg viewBox="0 0 ${W} ${H}" font-family="Jua" role="img" aria-label="경매 예측 곡선과 실제 곡선 비교">${g}</svg>`;
+}
+function lvAuctionCard(d) {
+  const avgAcc = d.accList.length ? (d.accList.reduce((s, [, a]) => s + a, 0) / d.accList.length).toFixed(1) + '%' : '-';
+  const gapText = d.gapLv >= 0 ? `<b>${lvKw(d.it.prices[d.gapLv])}</b>에서 예측(평균 ${d.avg[d.gapLv].toFixed(1)}명)과 실제(${d.actual[d.gapLv]}명)가 가장 많이 달랐어.` : '아직 비교할 실제 응답이 없어.';
+  const nm = id => LV.showNames ? esc(((d.names[id] || {}).name) || '학생') : '학생';
+  return `<div class="lvAuc"><div class="lvAucHead"><span class="lvKind">${d.sup ? '🏷️ 판매소(공급)' : '🔨 경매소(수요)'}</span> <b>${esc(d.it.emoji)} ${esc(d.it.name)}</b></div>
+    <div class="lvGraph wide">${lvAuctionSVG(d)}</div>
+    <div class="lvLegend"><span><i style="background:${d.sup ? '#2FA67A' : '#E8803E'}"></i>실제 곡선 (가격 ${d.upto + 1}칸까지 부름)</span><span><i class="dash"></i>반 평균 예측</span><span><i style="background:#B8A7EE"></i>학생 ${d.predList.length}명 예측</span></div>
+    <div class="lvStatRow"><div><small>평균 정확도</small><b>${avgAcc}</b></div><div><small>예측 제출</small><b>${d.predList.length}/${d.N}명</b></div><div class="grow"><small>가장 큰 차이</small><span>${gapText}</span></div></div>
+    ${d.accList.length ? `<div class="lvTop">🔮 예언왕 ${d.accList.slice(0, 3).map(([id, a], k) => `<span class="pill">${['🥇', '🥈', '🥉'][k]} ${nm(id)} ${a}%</span>`).join(' ')}</div>` : ''}
+    ${d.refl.length ? `<details class="lvRefl"><summary>✍️ 예측-실제 비교 글 ${d.refl.length}개</summary>${d.refl.map(([id, x]) => `<div><b>${nm(id)}</b> ${esc(x.text)}</div>`).join('')}</details>` : ''}</div>`;
+}
+function lvAuctionData() { if (!LV.auction || LV.auction.error) return []; return [...lvAuctionItems('auction', LV.auction.auction), ...lvAuctionItems('auctionS', LV.auction.auctionS)]; }
+function lvAuctionTab() {
+  const data = lvAuctionData();
+  const hint = localStorage.getItem('auction_teacher_room') || '';
+  return `<div class="lvPad"><div class="card lvCodeRow"><b>🔨 경매 방 코드</b><input class="field" id="lvAucCode" inputmode="numeric" maxlength="4" value="${esc(LV.auctionCode || code)}" style="width:130px"><button class="btn mint" id="lvAucLoad">${LV.auctionBusy ? '불러오는 중…' : '불러오기'}</button>${hint && hint !== (LV.auctionCode || code) ? `<button class="btn sm sky" data-lv-auc="${esc(hint)}">이 기기 최근 경매방 ${esc(hint)}</button>` : ''}<span class="muted" style="font-size:16px">허브에서 같은 수업 코드를 썼다면 지금 코드 그대로 두면 돼.</span></div>
+    ${!LV.auction ? '<div class="card muted">불러오기를 눌러.</div>' : LV.auction.error ? '<div class="card">기록을 불러오지 못했어. 인터넷과 코드를 확인해.</div>' : !LV.auction.auction && !LV.auction.auctionS ? `<div class="card">방 ${esc(LV.auction.code)}에 경매 기록이 없어. 경매소에서 쓴 코드를 적어.</div>` : !data.length ? '<div class="card">이 방에는 🔮 예언하기를 켠 상품이 없어.</div>' : data.map(lvAuctionCard).join('')}</div>`;
+}
+
+/* ---------- 장면 만들기 ---------- */
+function lvCaseScene(set, c, ci) {
+  const ids = playerIds(), steps = stepsOf(c, set);
+  const rows = steps.map(step => {
+    const counts = {}, opts = optionsOf(c, step); opts.forEach(([k]) => counts[k] = 0);
+    let n = 0; ids.forEach(id => { const f = stepRec(id, ci, step, set)?.first; if (f != null) { n++; if (counts[f] != null) counts[f]++; } });
+    const right = answerOf(c, step);
+    return `<div class="lvStep"><div class="lvStepQ"><span>${STEP_NAME[step]}</span> ${questionOf(c, step)}</div>${opts.map(([k, l]) => lvBar(l.replace(/<br>.*$/, ''), counts[k], n, LV.showAns && k === right)).join('')}<div class="muted" style="font-size:15px">응답 ${n}명</div></div>`;
+  }).join('');
+  return `<div class="lvSplit"><div>${caseRow(c, ci)}${rows}</div><div><div class="lvGraph">${LV.showAns ? solvedGraph(c, true) : graphSVG({ c, mode:'base', showBoth:c.type === 'shift' })}</div>${LV.showAns ? `<div class="hint">💡 ${chainOf(c).slice(1).join(' → ')}</div>` : '<div class="lvHidden">🔒 정답 그래프는 ‘정답 보기’를 켜면 보여</div>'}</div></div>`;
+}
+function lvRankScene(rows, unit) {
+  return `<div class="lvRankList">${rows.slice(0, 15).map((r, n) => `<div class="lvRankRow ${n < 3 ? 'top' : ''}"><span>${['🥇', '🥈', '🥉'][n] || (n + 1) + '위'}</span><b>${lvName(r.id, n)}</b><strong>${r.points}점</strong><small>${unit(r)}</small></div>`).join('') || '<div class="muted">아직 기록이 없어</div>'}</div>`;
+}
+function lvRaceScene(c, ci) {
+  const ids = playerIds(), right = raceAns(c).w.split('|');
+  let n = 0; const counts = {}; raceOptions(c).forEach(([k]) => counts[k] = 0);
+  ids.forEach(id => { const w = raceRec(id, ci)?.w; if (!w) return; n++; w.split('|').forEach(k => { if (counts[k] != null) counts[k]++; }); });
+  return `<div class="lvSplit"><div>${raceCaseRow(c, ci)}<div class="q">${raceQuestion(c)}</div><div class="lvOptGrid">${raceOptions(c).map(([k, l]) => lvBar(l, counts[k], n, LV.showAns && right.includes(k))).join('')}</div><div class="muted">응답 ${n}명</div>${LV.showAns ? `<div class="hint">💡 ${raceOutcome(c)}</div>` : ''}</div>
+    <div><div class="lvGraph">${LV.showAns ? solvedGraph(c, true) : graphSVG({ c, mode:'base', showBoth:true })}</div>${LV.showAns ? '' : '<div class="lvHidden">🔒 정답은 가려 뒀어</div>'}</div></div>`;
+}
+function lvFillScene(item, ci) {
+  const a = Object.values((room.fillAnswers || {})[ci] || {}), cnt = {};
+  a.forEach(r => { const k = (r.curve === 'D' ? '수요' : r.curve === 'S' ? '공급' : '?') + ' ' + (r.dir === '+' ? '증가' : r.dir === '-' ? '감소' : '?') + ' → 균형가격 ' + (r.price === '+' ? '상승' : r.price === '-' ? '하락' : '?'); cnt[k] = (cnt[k] || 0) + 1; });
+  const right = fillResult(item);
+  return `<div class="card fillCard"><div class="muted">${esc(item.market)} 시장</div><div class="fillScenario">${esc(item.text)}</div></div><div class="lvOptGrid">${Object.entries(cnt).sort((x, y) => y[1] - x[1]).map(([k, v]) => lvBar(k, v, a.length, LV.showAns && k === right)).join('') || '<div class="muted">제출 없음</div>'}</div>${LV.showAns ? `<div class="hl mint" style="font-size:24px">정답: ${right}</div>` : ''}<div class="muted">제출 ${a.length}명</div>`;
+}
+function lvProofScene(c, ci) {
+  const a = lvProofAnswers(ci), cnt = {};
+  a.forEach(r => { const k = (r.word || '?') + ' ' + (r.dir || c.dir); cnt[k] = (cnt[k] || 0) + 1; });
+  const right = c.answer + ' ' + c.dir;
+  return `<div class="card"><div class="proofMarket">${esc(c.market)} 시장</div><div class="proofEvent">${esc(c.event)}</div></div>
+    <div class="card proofStatement"><div class="muted">이 사건을 설명한 문장</div><p>${esc(c.market)}의 <span class="proofToken ${LV.showAns && c.word !== c.answer ? 'proofCorrected' : ''}">${esc(LV.showAns ? c.answer : c.word)}</span> <span class="proofToken">${esc(c.dir)}</span></p>${LV.showAns ? `<div class="proofExplanation">${esc(c.why)}</div>` : ''}</div>
+    <div class="lvOptGrid">${Object.entries(cnt).sort((x, y) => y[1] - x[1]).map(([k, v]) => lvBar(k === c.word + ' ' + c.dir ? k + ' (그대로 둠)' : k + '(으)로 고침', v, a.length, LV.showAns && k === right)).join('') || '<div class="muted">제출 없음</div>'}</div><div class="muted">제출 ${a.length}건</div>`;
+}
+const lvScrub = h => String(h).replace(/ id="(dPath|sPath|pt|hit)"/g, '').replace(/ data-review(-[a-z]+)?(="[^"]*")?/g, '');
+function lvBuildScenes() {
+  const S = [], add = (key, group, title, html) => S.push({ key, group, title, html:lvScrub(html) });
+  const ids = playerIds(), date = room.createdAt ? new Intl.DateTimeFormat('ko-KR', { timeZone:'Asia/Seoul', year:'numeric', month:'long', day:'numeric', weekday:'short' }).format(room.createdAt) : '';
+  const played = [['D', '수요편'], ['S', '공급편']].filter(([k]) => lvHasSet(k)).map(([, n]) => n);
+  if (room.race) played.push('총정리'); if (room.fillAnswers) played.push('빈칸 정리'); if (room.proofRuns) played.push('틀린 부분 찾기');
+  add('cover', '🎬 시작', '수업 표지', `<div class="lvCover"><div class="bigEmoji">📈</div><div class="title">시장 <span>예측하기</span></div><p>곡선 위의 이동일까? 곡선 자체의 이동일까?</p><div class="lvStatRow"><div><small>수업 날짜</small><b>${esc(date)}</b></div><div><small>참여 학생</small><b>${ids.length}명</b></div><div class="grow"><small>진행한 활동</small><b>${played.join(' · ') || '준비 중'}</b></div></div></div>`);
+  add('join', '🎬 시작', '학생 입장 (QR)', `<div class="lvCover"><div class="q">태블릿으로 QR을 찍고 들어와!</div><div id="lvQr" class="lvQr"></div><div class="title" style="font-size:44px">방 코드 <span>${esc(code)}</span></div></div>`);
+  const demoNote = '<div class="center"><button class="btn big lav" data-lv-demo>▶ 개념 애니메이션 열기</button><div class="muted" style="margin-top:8px">수요량 변화 / 수요 변화 / 공급량 변화 / 공급 변화를 움직임으로 보여 줘.</div></div>';
+  add('demo', '🎬 시작', '개념 애니메이션', `<div class="lvSplit"><div><div class="lvGraph">${graphSVG({ c:{ curve:'D', type:'shift', dir:'+', market:'' }, mode:'shift', off:20, done:true, showPrice:false, showBoth:true })}</div><div class="center muted">곡선 자체의 이동</div></div><div><div class="lvGraph">${graphSVG({ c:{ curve:'D', type:'along', dir:'+', market:'' }, mode:'along', pt:70, done:true, showPrice:false })}</div><div class="center muted">곡선 위의 이동</div></div></div>${demoNote}`);
+  ['D', 'S'].forEach(set => {
+    if (!lvHasSet(set)) return;
+    const cs = casesOf(set), g = SET_NAME[set];
+    cs.forEach((c, ci) => add(set + '-' + ci, g, `${ci + 1}번 ${c.emoji} ${c.market}`, lvCaseScene(set, c, ci)));
+    add(set + '-heat', g, '처음에 맞힌 비율', heatTable(cs, 0, set));
+    const rows = set === 'S' ? supplyRankRows() : demandRankRows();
+    add(set + '-rank', g, '점수·순위', lvRankScene(rows, r => `완료 ${r.done}/${r.total}단계`));
+  });
+  if (room.race) {
+    const qs = room.state?.qStarts || {};
+    raceCases().forEach((c, ci) => { if (qs[ci] || room.race[ci]) add('mix-' + ci, '⚡ 총정리', raceRoundLabel(c, ci) + ` · ${c.emoji} ${c.market}`, lvRaceScene(c, ci)); });
+    add('mix-rank', '⚡ 총정리', '스피드 시험 순위', lvRankScene(raceTop().map(r => ({ id:r.id, points:r.v })), () => ''));
+  }
+  if (room.fillAnswers) FILL_CASES.forEach((item, ci) => { if ((room.fillAnswers || {})[ci]) add('fill-' + ci, '📝 빈칸 정리', `${ci + 1}. ${item.topic || item.market}`, lvFillScene(item, ci)); });
+  if (room.proofRuns) PROOF_CASES.forEach((c, ci) => { if (lvProofAnswers(ci).length) add('proof-' + ci, '🔎 틀린 부분 찾기', `${ci + 1}. ${c.market}`, lvProofScene(c, ci)); });
+  lvAuctionData().forEach(d => add('auc-' + d.kind + '-' + d.i, '🔮 경매 예측', `${d.it.emoji} ${d.it.name}`, lvAuctionCard(d)));
+  const wrong = lvWrongEntries().slice(0, 6);
+  add('wrong-top', '🏁 마무리', '많이 틀린 문제 TOP', `<div class="lvWrongList">${wrong.map((e, i) => `<div class="lvWrong ${e.rate >= .5 ? 'hot' : 'warm'}"><div class="lvRank">${i + 1}</div><div class="lvWrongMain"><span class="lvKind">${LV_KIND[e.kind]}</span> <b>${e.title}</b><small>${e.sub}</small></div><div class="lvRate"><b>${Math.round(e.rate * 100)}%</b><small>${e.wrong}/${e.answered}명</small></div></div>`).join('') || '<div class="muted">기록 없음</div>'}</div>`);
+  return S;
+}
+function lvSceneTab() {
+  const S = lvScenesCache = lvBuildScenes();
+  if (LV.idx >= S.length) LV.idx = S.length - 1; if (LV.idx < 0) LV.idx = 0;
+  const cur = S[LV.idx]; let lastG = '';
+  return `<div class="lvScenes ${LV.photo ? 'photo' : ''}"><aside class="lvList">${S.map((s, i) => { const head = s.group !== lastG ? `<div class="lvGroup">${s.group}</div>` : ''; lastG = s.group; return head + `<button class="lvItem ${i === LV.idx ? 'on' : ''}" data-lv-idx="${i}">${esc(s.title)}</button>`; }).join('')}
+      ${!LV.auction ? '<button class="btn sm lav" data-lv-loadauc style="margin-top:10px">🔮 경매 예측 장면 불러오기</button>' : ''}</aside>
+    <section class="lvStageWrap"><div class="lvScene" id="lvScene"><div class="lvTag">${cur.group}</div><h2>${esc(cur.title)}</h2>${cur.html}</div>
+      <div class="lvCtrl"><button class="btn sky" data-lv-step="-1">◀ 이전</button><span class="pill">${LV.idx + 1} / ${S.length}</span><button class="btn sky" data-lv-step="1">다음 ▶</button>
+        <button class="btn ${LV.auto ? 'mint' : ''}" id="lvAuto">${LV.auto ? '⏸ 자동 멈춤' : '⏯ 자동 넘김 5초'}</button><button class="btn lemon" id="lvShot">📷 이 장면 PNG 저장</button><button class="btn lav" id="lvPhoto">${LV.photo ? '↩ 목록 보기' : '🖼 사진 모드'}</button></div></section></div>`;
+}
+
+/* ---------- 화면 틀 ---------- */
+function lvRender() {
+  if (!LV.open) return;
+  let pop = el('lvPop');
+  if (!pop) { pop = document.createElement('div'); pop.id = 'lvPop'; pop.className = 'lvPop'; document.body.appendChild(pop); }
+  const keepList = pop.querySelector('.lvList')?.scrollTop || 0, keepBody = pop.querySelector('.lvBody')?.scrollTop || 0;
+  const body = LV.tab === 'wrong' ? lvWrongTab() : LV.tab === 'auction' ? lvAuctionTab() : lvSceneTab();
+  pop.innerHTML = `<header class="lvHead"><b>📸 수업 돌아보기 · 방 ${esc(code)}</b>
+    <div class="lvTabs">${[['scenes', '🎞 장면 다시보기'], ['wrong', '❌ 많이 틀린 문제'], ['auction', '🔮 경매 예측 vs 실제']].map(([k, l]) => `<button class="btn sm ${LV.tab === k ? 'mint' : 'sky'}" data-lv-tab="${k}">${l}</button>`).join('')}</div>
+    <div class="lvTabs"><button class="btn sm ${LV.showAns ? 'peach' : ''}" id="lvAns">${LV.showAns ? '🔓 정답 보이는 중' : '🔒 정답 가림'}</button><button class="btn sm ${LV.showNames ? 'peach' : ''}" id="lvNames">${LV.showNames ? '👤 이름 보이는 중' : '🙈 이름 숨김'}</button><button class="btn sm" id="lvClose">닫기 ✕</button></div></header>
+    <div class="lvNote">교사 기기에서만 보이는 화면이야. 학생 화면과 수업 진행은 바뀌지 않아. ${LV.showAns ? '<b>칠판에 띄운 상태라면 정답이 보이니 주의해.</b>' : ''}</div>
+    <div class="lvBody">${body}</div>`;
+  const q = pop.querySelector('.lvList'); if (q) q.scrollTop = keepList; const b = pop.querySelector('.lvBody'); if (b && LV.tab !== 'scenes') b.scrollTop = keepBody;
+  if (el('lvQr') && window.QRCode) new QRCode(el('lvQr'), { text:location.origin + location.pathname + '?room=' + code, width:260, height:260, colorDark:'#5B4B57', colorLight:'#ffffff' });
+  lvWire(pop);
+}
+function lvWire(pop) {
+  pop.querySelectorAll('[data-lv-tab]').forEach(b => b.onclick = () => { LV.tab = b.dataset.lvTab; if (LV.tab === 'auction' && !LV.auction && !LV.auctionBusy) lvLoadAuction(LV.auctionCode || code); else lvRender(); });
+  el('lvAns').onclick = async () => { if (!LV.showAns && !await ask('정답을 이 화면에 보여 줄까?<br><small>학생 태블릿에는 안 나가지만, 칠판에 띄운 상태면 다 보여.</small>', '🔓 보여 줘', '취소')) return; LV.showAns = !LV.showAns; lvRender(); };
+  el('lvNames').onclick = () => { LV.showNames = !LV.showNames; lvRender(); };
+  el('lvClose').onclick = lvClose;
+  pop.querySelectorAll('[data-lv-filter]').forEach(b => b.onclick = () => { LV.setFilter = b.dataset.lvFilter; lvRender(); });
+  pop.querySelectorAll('[data-lv-jump]').forEach(b => b.onclick = () => { const S = lvBuildScenes(), k = b.dataset.lvJump; let i = S.findIndex(s => s.key === k); if (i < 0) { const set = k.split('-')[0]; i = S.findIndex(s => s.key.startsWith(set + '-')); } LV.idx = Math.max(0, i); LV.tab = 'scenes'; lvRender(); });
+  pop.querySelectorAll('[data-lv-class]').forEach(b => b.onclick = async () => {
+    const [set, ci, step] = b.dataset.lvClass.split('|');
+    if (!await ask('이 문제를 학생 화면에 띄워 함께 다시 풀까?<br><small>정답은 가린 채로 열리고, 그 화면에서 선생님이 ‘정답 보기’를 눌러야 공개돼. 기존 점수는 바뀌지 않아.</small>', '📺 띄우기', '취소')) return;
+    try { if (set === 'D' || set === 'S') teacherResultSet = set; await update(AP('state'), { classReview:{ set, ci:+ci, step, reveal:false }, review:null }); lvClose(); toast('학생 화면에 문제를 띄웠어'); }
+    catch (e) { console.error(e); toast('띄우지 못했어. 다시 눌러 봐.'); }
+  });
+  pop.querySelectorAll('[data-lv-idx]').forEach(b => b.onclick = () => { LV.idx = +b.dataset.lvIdx; lvRender(); });
+  pop.querySelectorAll('[data-lv-step]').forEach(b => b.onclick = () => lvStep(+b.dataset.lvStep));
+  pop.querySelectorAll('[data-lv-demo]').forEach(b => b.onclick = () => showConceptDemo());
+  pop.querySelectorAll('[data-lv-loadauc]').forEach(b => b.onclick = () => lvLoadAuction(LV.auctionCode || code));
+  pop.querySelectorAll('[data-lv-auc]').forEach(b => b.onclick = () => lvLoadAuction(b.dataset.lvAuc));
+  if (el('lvAucLoad')) el('lvAucLoad').onclick = () => lvLoadAuction(el('lvAucCode').value.trim());
+  if (el('lvAuto')) el('lvAuto').onclick = () => { LV.auto = !LV.auto; lvAutoSync(); lvRender(); };
+  if (el('lvPhoto')) el('lvPhoto').onclick = () => { LV.photo = !LV.photo; lvRender(); };
+  if (el('lvShot')) el('lvShot').onclick = lvShot;
+}
+function lvStep(d) { const n = lvScenesCache.length || 1; LV.idx = (LV.idx + d + n) % n; lvRender(); }
+function lvAutoSync() { clearInterval(lvAutoT); if (LV.auto && LV.open) lvAutoT = setInterval(() => { if (LV.tab === 'scenes') lvStep(1); }, 5000); }
+let lvH2C = null;
+async function lvShot() {
+  const node = el('lvScene'); if (!node) return;
+  const btn = el('lvShot'); if (btn) { btn.disabled = true; btn.textContent = '저장 중…'; }
+  try {
+    if (!window.html2canvas) lvH2C = lvH2C || new Promise((ok, no) => { const s = document.createElement('script'); s.src = 'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js'; s.onload = ok; s.onerror = no; document.head.appendChild(s); });
+    await lvH2C; await document.fonts?.ready;
+    const canvas = await window.html2canvas(node, { backgroundColor:'#FFF8FB', scale:2, useCORS:true });
+    const a = document.createElement('a'), cur = lvScenesCache[LV.idx] || {};
+    a.download = `시장예측_${code}_${String(LV.idx + 1).padStart(2, '0')}_${String(cur.title || '장면').replace(/[\\/:*?"<>|\s]+/g, '_')}.png`;
+    a.href = canvas.toDataURL('image/png'); a.click(); toast('PNG로 저장했어 📷');
+  } catch (e) { console.error(e); toast('자동 저장이 안 돼. 🖼 사진 모드에서 Win+Shift+S로 찍어 줘.'); }
+  finally { const b = el('lvShot'); if (b) { b.disabled = false; b.textContent = '📷 이 장면 PNG 저장'; } }
+}
+function lvKey(e) {
+  if (!LV.open || e.target.closest?.('input,textarea,select')) return;
+  if (e.key === 'Escape') { if (LV.photo) { LV.photo = false; lvRender(); } else lvClose(); }
+  else if (LV.tab === 'scenes' && (e.key === 'ArrowRight' || e.key === 'PageDown')) { e.preventDefault(); lvStep(1); }
+  else if (LV.tab === 'scenes' && (e.key === 'ArrowLeft' || e.key === 'PageUp')) { e.preventDefault(); lvStep(-1); }
+}
+function lvOpen(tab) {
+  if (!room) return toast('방 정보를 불러오는 중이야.');
+  LV.open = true; if (tab) LV.tab = tab;
+  if (!lvUnsub) lvUnsub = onValue(A(), () => { clearTimeout(lvT); lvT = setTimeout(() => { if (LV.open && !el('lvPop')?.contains(document.activeElement?.closest?.('input'))) lvRender(); }, 500); });
+  document.addEventListener('keydown', lvKey);
+  if (LV.tab === 'auction' && !LV.auction) lvLoadAuction(LV.auctionCode || code); else lvRender();
+  lvAutoSync();
+}
+function lvClose() { LV.open = false; LV.auto = false; LV.photo = false; clearInterval(lvAutoT); clearTimeout(lvT); if (lvUnsub) { lvUnsub(); lvUnsub = null; } document.removeEventListener('keydown', lvKey); el('lvPop')?.remove(); }
+if (isTeacher && code) {
+  const fab = document.createElement('button');
+  fab.type = 'button'; fab.className = 'btn lav lvFab'; fab.innerHTML = '📸 수업 돌아보기';
+  fab.title = '수업 장면 다시보기 · 많이 틀린 문제 · 경매 예측 vs 실제 (교사 기기에서만 보여)';
+  fab.onclick = () => lvOpen();
+  document.body.appendChild(fab);
 }
 
 start();
